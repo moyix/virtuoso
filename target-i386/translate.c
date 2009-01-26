@@ -6832,6 +6832,11 @@ static inline int gen_intermediate_code_internal(CPUState *env,
     pc_ptr = pc_start;
     lj = -1;
 
+    // TRL 0901 add a prologue to head of every translation block
+    // to manage info-flow stuff. 
+    // Look at op.c/op_info_flow_prologue() to know what this contains.
+    gen_op_info_flow_prologue();
+    
     for(;;) {
         if (env->nb_breakpoints > 0) {
             for(j = 0; j < env->nb_breakpoints; j++) {

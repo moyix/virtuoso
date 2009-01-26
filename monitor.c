@@ -36,6 +36,8 @@
 #include "disas.h"
 #include <dirent.h>
 
+#include "info_flow.h"
+
 #ifdef CONFIG_PROFILER
 #include "qemu-timer.h" /* for ticks_per_sec */
 #endif
@@ -1261,15 +1263,6 @@ static void do_info_flow_debug(int l) {
 }
 
 
-static void do_disable_tb_caching()
-{
-  tb_caching_off();
-}
-
-static void do_enable_tb_caching()
-{
-  tb_caching_on();
-}
 
 // these ones should be called *after* issuing a stop to halt emulation. 
 static void do_info_flow_set_keyboard_label(const char *label) {
@@ -1277,14 +1270,9 @@ static void do_info_flow_set_keyboard_label(const char *label) {
   if_set_keyboard_label(label);
 }
 
-static void do_info_flow_stats() {
-  if_stats();
-}
 
 
-static void do_info_flow_trace_keyboard_label(const char *label) {
-  if_trace_keyboard_label(label);
-}
+
   
 static void do_info_flow_save_log_file_on() {
   if_save_log_on();
@@ -1375,20 +1363,17 @@ static term_cmd_t term_cmds[] = {
       "", "change info-flow debug level (0,1,2,3,4) = (off,low,med,high,omg)",},
     { "if_key_label", "s", do_info_flow_set_keyboard_label,
       "labelstring", "Label all keyboard data with this string henceforth", },
-    { "if_stats", "", do_info_flow_stats,
-      "", "get some stats from the info-flow library", },
-    { "if_trace_key_label", "s", do_info_flow_trace_keyboard_label,
-      "", "query the info-flow library to trace a keyboard label", },
     { "if_save_log_file_on", "", do_info_flow_save_log_file_on,
       "", "turn on info-flow log file saving", },
     { "if_save_log_file_off", "", do_info_flow_save_log_file_off,
       "", "turn off info-flow log file saving", },
     // TRL 0805
+    /*
     { "disable_tb_caching", "", do_disable_tb_caching,
       "", "Turn off tb caching", },
     { "enable_tb_caching", "", do_enable_tb_caching,
       "", "Turn on tb caching", },
-
+    */
 
     { NULL, NULL, },
 };

@@ -162,6 +162,12 @@ static int tlb_flush_count;
 static int tb_flush_count;
 static int tb_phys_invalidate_count;
 
+// TRL 0901 to track current process id 
+int current_pid;
+int last_current_pid;
+int no_pid_flag = 1;  // no pid yet flag
+
+
 #define SUBPAGE_IDX(addr) ((addr) & ~TARGET_PAGE_MASK)
 typedef struct subpage_t {
     target_phys_addr_t base;

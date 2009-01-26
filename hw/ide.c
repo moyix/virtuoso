@@ -31,8 +31,8 @@
 #include "qemu-timer.h"
 #include "sysemu.h"
 #include "ppc_mac.h"
+//#include "vl.h"
 
-#include "vl.h"
 /* debug IDE devices */
 //#define DEBUG_IDE
 //#define DEBUG_IDE_ATAPI

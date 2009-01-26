@@ -23,6 +23,12 @@
 
 #include "../info_flow.h"
 
+
+extern int current_pid;
+extern int last_current_pid;
+extern int no_pid_flag;
+
+
 void my_debug_print(unsigned long long value){
   //        printf("Debug value is 0x%llx",value);
 }
@@ -2736,4 +2742,31 @@ void OPPROTO op_skinit(void)
 void OPPROTO op_invlpga(void)
 {
     helper_invlpga();
+}
+
+
+
+void OPPROTO op_info_flow_prologue(void) 
+{
+  // first, let's check if info flow log is anywhere near overflow
+  if ((if_log_ptr - if_log_base) + 100 > IF_LOG_SIZE) {
+    if_log_rollup();
+  }
+
+  // second, manage PID stuff.  
+  // computes current process id and storesin global current_pid
+  get_current_pid();  
+  if (no_pid_flag == 1) {
+    // first time.  write to log 
+    write_current_pid_to_info_flow_log();
+  }
+  else {
+    if (last_current_pid != current_pid) {
+      // current pid has changed.  write to log.
+      // write current pid to log.
+      IFLW_WRITE_CURRENT_PID(current_pid);
+    }
+  }
+  // save last pid
+  last_current_pid = current_pid;
 }

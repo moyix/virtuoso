@@ -87,9 +87,9 @@ extern uint8_t *phys_ram_base;
 #define IFLW_MMU_LD(access_type,virt_addr,real_addr) \
 IFLW_WRAPPER ( \
 	IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,access_type),_LD),CSUFFIX)); \
-	IFLW_PUT_ADDR(virt_addr); \
-	IFLW_PUT_ADDR((((unsigned char*)real_addr) - phys_ram_base)); \
-	if(((long long)real_addr-(long long)phys_ram_base)!=0xffffffffffffffffLL) { \
+	IFLW_PUT_ADDR((unsigned char *) ((unsigned long long) virt_addr)); \
+	IFLW_PUT_ADDR((((unsigned char*)real_addr) - (unsigned char *)phys_ram_base)); \
+	if(((unsigned long long )real_addr-(unsigned long long )phys_ram_base)!=0xffffffffffffffffLL) { \
   		IFLW_PUT_BYTE(*(unsigned char*)real_addr); \
    } \
 	IFLW_PUT_BYTE(ACCESS_TYPE); \
@@ -98,11 +98,11 @@ IFLW_WRAPPER ( \
 #define IFLW_MMU_ST(access_type,virt_addr,real_addr,val) \
 IFLW_WRAPPER ( \
 	IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,access_type),_ST),CSUFFIX)); \
-	IFLW_PUT_ADDR(virt_addr); \
-	IFLW_PUT_ADDR((((unsigned char*)real_addr) - phys_ram_base)); \
-	if(((long long)real_addr-(long long)phys_ram_base)!=0xffffffffffffffffLL) { \
+	IFLW_PUT_ADDR((unsigned char *) ((unsigned long long) virt_addr)); \
+	IFLW_PUT_ADDR((((unsigned char*)real_addr) - (unsigned char *) phys_ram_base)); \
+	if(((unsigned long long )real_addr-(unsigned long long )phys_ram_base)!=0xffffffffffffffffLL) { \
   		IFLW_PUT_BYTE((unsigned char)val); \
-  } \ 
+  }\
 	IFLW_PUT_BYTE(ACCESS_TYPE); \
 );
 
@@ -282,7 +282,7 @@ static inline RES_TYPE glue(glue(ld, USUFFIX), MEMSUFFIX)(target_ulong ptr)
         res = glue(glue(__ld, SUFFIX), MMUSUFFIX)(addr, mmu_idx);
     } else {
         physaddr = addr + env->tlb_table[mmu_idx][index].addend;
-        IFLW_MMU_LD(DIRECT,ptr,physaddr);
+	IFLW_MMU_LD(DIRECT,ptr,physaddr);
         res = glue(glue(ld, USUFFIX), _raw)((uint8_t *)physaddr);
     }
     return res;

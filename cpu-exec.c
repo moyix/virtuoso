@@ -734,12 +734,6 @@ int cpu_exec(CPUState *env1)
 #else
                 gen_func();
 		
-		//		if (if_debug == IF_DEBUG_HIGH) 
-		//  printf ("done with gen_func() if_debug=%d\n", if_debug);
-
-
-		// TRL 0803
-		if_maybe_rollup();
 
                 env->current_tb = NULL;
                 /* reset soft MMU for next block (it can currently

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
- #include "vl.h"
+// #include "vl.h"
 #include "hw/hw.h"
 #include "hw/boards.h"
 #include "hw/usb.h"
@@ -8695,9 +8695,13 @@ int main(int argc, char **argv)
                 break;
             
 // TRL 0805 disables tb caching
+/*
 	    case QEMU_OPTION_disable_tb_caching:
 	      tb_caching_off();
+*/
+
             }
+
         }
     }
 

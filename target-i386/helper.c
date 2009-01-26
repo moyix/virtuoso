@@ -18,6 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include "exec.h"
+#include "lookup_table.h"
 #include "host-utils.h"
 #include "../info_flow.h"
 
@@ -609,6 +610,12 @@ do {\
     sp += 4;\
 }
 
+/* Argument list sizes for sys_socketcall */
+#define AL(x) ((x) * sizeof(unsigned long))
+static unsigned char nargs[18]={AL(0),AL(3),AL(3),AL(3),AL(2),AL(3),
+                                AL(3),AL(3),AL(4),AL(4),AL(4),AL(6),
+                                AL(6),AL(2),AL(5),AL(5),AL(3),AL(3)};
+
 /* protected mode interrupt */
 static void do_interrupt_protected(int intno, int is_int, int error_code,
                                    unsigned int next_eip, int is_hw)
@@ -620,8 +627,16 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
     uint32_t e1, e2, offset, ss, esp, ss_e1, ss_e2;
     uint32_t old_eip, sp_mask;
     int svm_should_check = 1;
+    char tsbuf [1000];
 
-    if ((env->intercept & INTERCEPT_SVM_MASK) && !is_int && next_eip==-1) {
+    fprintf(logfile,"in your do interrupt protected intno:%d\n",intno);
+    
+    // Xuxian
+    target_ulong paddr, regs_ebx; 
+    char *current_task, **argvp, *command, *tempbuf;
+    int pid, len, i, old_syscall_num;
+
+
         next_eip = EIP;
         svm_should_check = 0;
     }
@@ -682,6 +697,7 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
                 stw_kernel(ssp, error_code);
             SET_ESP(esp, mask);
         }
+//	fprintf(logfile,"in your taskgate, eip:%08x\n",EIP);
         return;
     case 6: /* 286 interrupt gate */
     case 7: /* 286 trap gate */
@@ -715,7 +731,9 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
     if (!(e2 & DESC_P_MASK))
         raise_exception_err(EXCP0B_NOSEG, selector & 0xfffc);
     if (!(e2 & DESC_C_MASK) && dpl < cpl) {
-        /* to inner privilege */
+        /* to inner priviledge */
+	if(intno == 0x80)
+		fprintf(logfile,"Interrupt 0x80, dpl=%d\n",dpl);
         get_ss_esp_from_tss(&ss, &esp, dpl);
         if ((ss & 0xfffc) == 0)
             raise_exception_err(EXCP0A_TSS, ss & 0xfffc);
@@ -823,6 +841,13 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
         env->eflags &= ~IF_MASK;
     }
     env->eflags &= ~(TF_MASK | VM_MASK | RF_MASK | NT_MASK);
+
+    if (intno ==0x80) {
+#include "syscall-int.h"
+    } // if (intno == 0x80)
+	
+    free(tempbuf);
+    free(command);
 }
 
 #ifdef TARGET_X86_64
@@ -1007,6 +1032,8 @@ void helper_syscall(int next_eip_addend)
 {
     int selector;
 
+    fprintf(logfile,"in your helper_syscall ECX=0x%08x\n",env->eip + next_eip_addend);
+
     if (!(env->efer & MSR_EFER_SCE)) {
         raise_exception_err(EXCP06_ILLOP, 0);
     }
@@ -1113,6 +1140,7 @@ void helper_sysret(int dflag)
         env->eflags |= IF_MASK;
         cpu_x86_set_cpl(env, 3);
     }
+    fprintf(logfile,"In your sysret, eip:0x%08x\n", env->eip);
 #ifdef USE_KQEMU
     if (kqemu_is_ok(env)) {
         if (env->hflags & HF_LMA_MASK)
@@ -1134,6 +1162,7 @@ static void do_interrupt_real(int intno, int is_int, int error_code,
     uint32_t old_cs, old_eip;
     int svm_should_check = 1;
 
+    fprintf(logfile,"in your interrupt real intno:%d\n",intno);
     if ((env->intercept & INTERCEPT_SVM_MASK) && !is_int && next_eip==-1) {
         next_eip = EIP;
         svm_should_check = 0;
@@ -1179,6 +1208,8 @@ void do_interrupt_user(int intno, int is_int, int error_code,
     int dpl, cpl, shift;
     uint32_t e2;
 
+    fprintf(logfile,"in your interrupt user intno:%d\n",intno);
+
     dt = &env->idt;
     if (env->hflags & HF_LMA_MASK) {
         shift = 4;
@@ -1209,6 +1240,8 @@ void do_interrupt_user(int intno, int is_int, int error_code,
 void do_interrupt(int intno, int is_int, int error_code,
                   target_ulong next_eip, int is_hw)
 {
+    fprintf(logfile,"in your do interrupt intno:%d EAX:%d\n",intno,EAX);
+
     if (loglevel & CPU_LOG_INT) {
         if ((env->cr[0] & CR0_PE_MASK)) {
             static int count;
@@ -1494,6 +1527,8 @@ void helper_rsm(void)
     target_ulong sm_state;
     int i, offset;
     uint32_t val;
+
+    fprintf(logfile,"im in ur helper_rsm\n");
 
     sm_state = env->smbase + 0x8000;
 #ifdef TARGET_X86_64
@@ -2137,6 +2172,7 @@ void helper_ljmp_protected_T0_T1(int next_eip_addend)
             break;
         }
     }
+    fprintf(logfile,"protected ljmp eip:0x%08x\n",EIP);
 }
 
 /* real mode call */
@@ -2448,7 +2484,18 @@ static inline void helper_ret_protected(int shift, int is_iret, int addend)
     uint32_t new_es, new_ds, new_fs, new_gs;
     uint32_t e1, e2, ss_e1, ss_e2;
     int cpl, dpl, rpl, eflags_mask, iopl;
-    target_ulong ssp, sp, new_eip, new_esp, sp_mask;
+//    target_ulong ssp, sp, new_eip, new_esp, sp_mask;
+    target_ulong ssp, sp, new_eip, new_esp, sp_mask, esp, saved_esp, ptr, old_esp;
+    
+
+   // Xuxian
+     target_ulong paddr, regs_ebx;
+     char *current_task, **argvp, *command, *tempbuf;
+     int pid, len, i, syscall_num, offset;
+     struct syscall_entry syscall_element;
+   
+     command = malloc(120);
+  
 
 #ifdef TARGET_X86_64
     if (shift == 2)
@@ -2486,6 +2533,11 @@ static inline void helper_ret_protected(int shift, int is_iret, int addend)
         if (is_iret)
             POPW(ssp, sp, sp_mask, new_eflags);
     }
+	
+    old_esp = ESP;
+
+
+fprintf(logfile, "IRET_ new_eip:0x%08x EAX:%d\n",new_eip,EAX);
 #ifdef DEBUG_PCALL
     if (loglevel & CPU_LOG_PCALL) {
         fprintf(logfile, "lret new %04x:" TARGET_FMT_lx " s=%d addend=0x%x\n",
@@ -2607,6 +2659,37 @@ static inline void helper_ret_protected(int shift, int is_iret, int addend)
     }
     SET_ESP(sp, sp_mask);
     env->eip = new_eip;
+    
+ /*   dt = &env->idt;
+    ptr = dt->base + 128 *8;
+    e1 = ldl_kernel(ptr);
+    e2 = ldl_kernel(ptr+4);
+
+    get_ss_esp_from_tss(&ss,&esp, 0);
+    load_segment(&ss_e1,&ss_e2,ss);
+    sp_mask = get_sp_mask(ss_e2);
+    ssp = get_seg_base(ss_e1,ss_e2);
+
+    saved_esp = ESP;
+    SET_ESP(esp, sp_mask);
+    
+    ESP = saved_esp;
+ */
+    #define IS_IRET 1
+    #include "syscall-ret.h"
+    #undef IS_IRET
+    free(command);
+/*
+  	fprintf(logfile, "Printing off the stack\n");
+        for(i=0; i<50; i++){
+                 paddr = cpu_get_phys_page_debug(env, ESP+4*i);
+                 if (paddr!=-1) {
+                       cpu_physical_memory_read(paddr, &stack_val, 4);
+                 }
+                fprintf(logfile, "%d: 0x%08x\n",i,stack_val);
+        }  
+ */
+    printf("IRET returning to EIP:0x%08x EAX:%d\n",env->eip,EAX);
     if (is_iret) {
         /* NOTE: 'cpl' is the _old_ CPL */
         eflags_mask = TF_MASK | AC_MASK | ID_MASK | RF_MASK | NT_MASK;
@@ -2649,6 +2732,7 @@ void helper_iret_protected(int shift, int next_eip)
     int tss_selector, type;
     uint32_t e1, e2;
 
+fprintf("IRET_ FINAL EIP:0x%08x\n",next_eip); 
     /* specific case for TSS */
     if (env->eflags & NT_MASK) {
 #ifdef TARGET_X86_64
@@ -2665,6 +2749,7 @@ void helper_iret_protected(int shift, int next_eip)
         if (type != 3)
             raise_exception_err(EXCP0A_TSS, tss_selector & 0xfffc);
         switch_tss(tss_selector, e1, e2, SWITCH_TSS_IRET, next_eip);
+	//printf("in your NTMASK next_eip=0x%08x\n");
     } else {
         helper_ret_protected(shift, 1, 0);
     }
@@ -2690,6 +2775,50 @@ void helper_lret_protected(int shift, int addend)
 
 void helper_sysenter(void)
 {
+    // Xuxian
+       target_ulong paddr, regs_ebx;
+       char *current_task, **argvp, *command, *tempbuf;
+       int pid, len, i, old_syscall_num, stack_val;
+	char tsbuf[1000];
+	SegmentCache *dt;
+	target_ulong ssp, ptr;
+	uint32 e1,e2,ss,esp,ss_e1,ss_e2,saved_esp,sp_mask;
+
+	fprintf(logfile, "In your sys_enter EIP=0x%08x\n",EIP); 	
+	
+	fprintf(logfile, "Printing off the stack\n");
+	for(i=0; i<50; i++){
+		 paddr = cpu_get_phys_page_debug(env, ESP+4*i);
+                 if (paddr!=-1) {
+                       cpu_physical_memory_read(paddr, &stack_val, 4);
+                 }	
+		fprintf(logfile, "%d: 0x%08x\n",i,stack_val);
+	}
+ 
+       tempbuf = malloc(120);
+	command = malloc(120);
+	
+    dt = &env->idt;
+    ptr = dt->base + 128 *8;
+    e1 = ldl_kernel(ptr);
+    e2 = ldl_kernel(ptr+4); 
+
+    get_ss_esp_from_tss(&ss,&esp, 0);
+    load_segment(&ss_e1,&ss_e2,ss); 
+    sp_mask = get_sp_mask(ss_e2);
+    ssp = get_seg_base(ss_e1,ss_e2);
+
+    saved_esp = ESP;
+    SET_ESP(esp, sp_mask);
+
+    #define IS_SYSENTER 1
+    #include "syscall-int.h"
+    #undef IS_SYSENTER
+    free(tempbuf);
+    free(command);
+
+    ESP = saved_esp;
+
     if (env->sysenter_cs == 0) {
         raise_exception_err(EXCP0D_GPF, 0);
     }
@@ -2713,7 +2842,57 @@ void helper_sysexit(void)
 {
     int cpl;
 
+    //Xuxian
+    target_ulong paddr, regs_ebx;
+    char *current_task, **argvp, *command, *tempbuf;
+    int pid, len, i, syscall_num, stack_val;
+    char tsbuf[1000];
+    SegmentCache *dt;
+    target_ulong ssp, ptr;
+    uint32 e1,e2,ss,esp,ss_e1,ss_e2,saved_esp,sp_mask;
+    struct syscall_entry syscall_element;
+    int restored_eip, offset;
+
+	
+     fprintf(logfile, "In your sys_exit EDX=0x%08x\n",EDX);  
+
+    tempbuf = malloc(120);
+    command = malloc(120);
+
+    dt = &env->idt;
+    ptr = dt->base + 128 *8;
+    e1 = ldl_kernel(ptr);
+    e2 = ldl_kernel(ptr+4);
+
+    get_ss_esp_from_tss(&ss,&esp, 0);
+    load_segment(&ss_e1,&ss_e2,ss);
+    sp_mask = get_sp_mask(ss_e2);
+    ssp = get_seg_base(ss_e1,ss_e2);
+
+    saved_esp = ESP;
+    SET_ESP(esp, sp_mask);
+    
+    restored_eip = EDX;
     cpl = env->hflags & HF_CPL_MASK;
+    if (env->sysenter_cs == 0 || cpl != 0) {
+    	printf("Bingo!\n");
+    }
+	
+	fprintf(logfile, "Printing off the stack\n");
+        for(i=0; i<50; i++){
+                 paddr = cpu_get_phys_page_debug(env, ECX+4*i);
+                 if (paddr!=-1) {
+                       cpu_physical_memory_read(paddr, &stack_val, 4);
+                 }
+                fprintf(logfile, "%d: 0x%08x\n",i,stack_val);
+        }
+
+    #include "syscall-ret.h"
+    free(tempbuf);
+    free(command);
+
+    ESP = saved_esp;
+
     if (env->sysenter_cs == 0 || cpl != 0) {
         raise_exception_err(EXCP0D_GPF, 0);
     }
