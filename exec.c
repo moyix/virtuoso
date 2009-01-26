@@ -35,6 +35,7 @@
 
 #include "cpu.h"
 #include "exec-all.h"
+#include "info_flow.h"
 #if defined(CONFIG_USER_ONLY)
 #include <qemu.h>
 #endif
@@ -90,6 +91,7 @@ uint8_t *code_gen_ptr;
 int phys_ram_size;
 int phys_ram_fd;
 uint8_t *phys_ram_base;
+uint8_t *phys_ram_top;
 uint8_t *phys_ram_dirty;
 static ram_addr_t phys_ram_alloc_offset = 0;
 
@@ -2603,6 +2605,7 @@ void cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
                 addr1 = (pd & TARGET_PAGE_MASK) + (addr & ~TARGET_PAGE_MASK);
                 /* RAM case */
                 ptr = phys_ram_base + addr1;
+		IFLW_CPU_WRITE_ADDR((ptr - (unsigned long) phys_ram_base));
                 memcpy(ptr, buf, l);
                 if (!cpu_physical_memory_is_dirty(addr1)) {
                     /* invalidate code */
@@ -2637,6 +2640,7 @@ void cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
                 /* RAM case */
                 ptr = phys_ram_base + (pd & TARGET_PAGE_MASK) +
                     (addr & ~TARGET_PAGE_MASK);
+		IFLW_CPU_READ_ADDR((ptr - (unsigned long) phys_ram_base));
                 memcpy(buf, ptr, l);
             }
         }
@@ -2953,6 +2957,10 @@ void dump_exec_info(FILE *f,
     cpu_fprintf(f, "TB flush count      %d\n", tb_flush_count);
     cpu_fprintf(f, "TB invalidate count %d\n", tb_phys_invalidate_count);
     cpu_fprintf(f, "TLB flush count     %d\n", tlb_flush_count);
+}
+
+void my_print(unsigned long long ptr){
+	printf("LDST PTR = %llx\r\n",ptr);
 }
 
 #if !defined(CONFIG_USER_ONLY)

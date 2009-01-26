@@ -24,6 +24,9 @@
 #define WORDS_ALIGNED
 #endif
 
+
+#include "info_flow.h"
+
 /* some important defines:
  *
  * WORDS_ALIGNED : if defined, the host cpu can only make word aligned
@@ -135,6 +138,7 @@ typedef union {
     uint64_t ll;
 } CPU_DoubleU;
 
+
 #ifdef TARGET_SPARC
 typedef union {
     float128 q;
@@ -220,6 +224,8 @@ static inline void stb_p(void *ptr, int v)
    it is a system wide setting : bad */
 #if defined(WORDS_BIGENDIAN) || defined(WORDS_ALIGNED)
 
+// TRL0806.  Note that x86 is little endian 
+
 /* conservative code for little endian unaligned accesses */
 static inline int lduw_le_p(void *ptr)
 {
@@ -290,6 +296,10 @@ static inline void stl_le_p(void *ptr, int v)
 #endif
 }
 
+// TRL0806: Note that these call other stl or ldl things which
+// contain embedded IFLW_crap.  Can't do it twice
+
+// TRL0806.  This one might cause trouble.  Detect dynamically?
 static inline void stq_le_p(void *ptr, uint64_t v)
 {
     uint8_t *p = ptr;
@@ -297,6 +307,8 @@ static inline void stq_le_p(void *ptr, uint64_t v)
     stl_le_p(p + 4, v >> 32);
 }
 
+
+// TRL0806 no float support for now
 /* float access */
 
 static inline float32 ldfl_le_p(void *ptr)
@@ -486,6 +498,7 @@ static inline void stq_be_p(void *ptr, uint64_t v)
     stl_be_p(ptr + 4, v);
 }
 
+// TRL0806 no float support for now
 /* float access */
 
 static inline float32 ldfl_be_p(void *ptr)
@@ -561,6 +574,7 @@ static inline void stq_be_p(void *ptr, uint64_t v)
     *(uint64_t *)ptr = v;
 }
 
+// TRL0806 no float support for now
 /* float access */
 
 static inline float32 ldfl_be_p(void *ptr)
@@ -804,7 +818,9 @@ int cpu_inl(CPUState *env, int addr);
 
 extern int phys_ram_size;
 extern int phys_ram_fd;
-extern uint8_t *phys_ram_base;
+// TRL0806 had to move this to earlier in file
+//extern uint8_t *phys_ram_base;
+extern uint8_t *phys_ram_top;
 extern uint8_t *phys_ram_dirty;
 
 /* physical memory access */

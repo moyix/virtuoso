@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+ #include "vl.h"
 #include "hw.h"
 #include "isa.h"
 #include "pc.h"
@@ -280,14 +281,54 @@ static void kbd_write_command(void *opaque, uint32_t addr, uint32_t val)
     }
 }
 
+
+
+
+
+// TRL0805
+// Note that kbd_read_data is the registered read function
+// for i/o port 0x60, i.e. the keyboard.  But for some strange
+// reason it is also the mouse.  Ugh.  Hence this if stmt.  
+// Regardless, this is the function that gets called by the line
+//
+// val = ioport_read_table[0][addr](ioport_opaque[addr], addr);
+//
+// in cpu_inb.
+//
 static uint32_t kbd_read_data(void *opaque, uint32_t addr)
 {
     KBDState *s = opaque;
+    uint32_t rv;
 
-    if (s->pending == KBD_PENDING_AUX)
-        return ps2_read_data(s->mouse);
+    if (s->pending == KBD_PENDING_AUX) {
+      // TRL0805 note this is mouse data 
+      rv = ps2_read_data(s->mouse);
+    }
+    else {
+      // and this is keyboard data 
+      rv = ps2_read_data(s->kbd);
+      printf ("some kinda keyboard in -- val = %d\n", rv);
+      // if keyboard label has changed, we need
+      // to push the new label to the info-flow log
+      // before adding any new keyboard input to the log.
+      if (if_keyboard_label_changed) {
+	unsigned int i,l;
+	if_keyboard_label_changed = FALSE;
+	printf ("info_flow_new_keybaord_label [%s]\n", if_keyboard_label);
+	fflush(stdout);
+	IFLW(NEW_KEYBOARD_LABEL);
+	l = strlen(if_keyboard_label);
+	if (l>=IF_MAX_KEYBOARD_LABEL_LEN)
+	  l = IF_MAX_KEYBOARD_LABEL_LEN-1;
+	IFLW_PUT_WORD(l);
+	for (i=0; i<l; i++) {
+	  IFLW_PUT_BYTE(if_keyboard_label[i]);
+	}
+      }
+      IFLW_KEYBOARD_INPUT(rv);
+    }
 
-    return ps2_read_data(s->kbd);
+    return (rv);
 }
 
 static void kbd_write_data(void *opaque, uint32_t addr, uint32_t val)

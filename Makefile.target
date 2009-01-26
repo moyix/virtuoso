@@ -97,7 +97,8 @@ BASE_LDFLAGS+=-static
 endif
 
 # We require -O2 to avoid the stack setup prologue in EXIT_TB
-OP_CFLAGS := -Wall -O2 -g -fno-strict-aliasing
+OP_CFLAGS := -Wall -O2 -g -fno-strict-aliasing -I$(TAINT_DIR)
+#OP_CFLAGS := -Wall -O2 -g -fno-strict-aliasing
 
 # cc-option
 # Usage: OP_CFLAGS+=$(call cc-option, -falign-functions=0, -malign-functions=0)
@@ -125,7 +126,10 @@ ifdef CONFIG_STATIC
 USE_I386_LD=y
 endif
 ifdef USE_I386_LD
-BASE_LDFLAGS+=-Wl,-T,$(SRC_PATH)/$(ARCH).ld
+# TRL for btree or graph
+#BASE_LDFLAGS+=-Wl,-T,$(SRC_PATH)/$(ARCH).ld,-ltaint
+# TRL for qaint
+BASE_LDFLAGS+=-Wl,-T,$(SRC_PATH)/$(ARCH).ld,-lqaint
 else
 ifdef CONFIG_LINUX_USER
 # WARNING: this LDFLAGS is _very_ tricky : qemu is an ELF shared object
@@ -285,7 +289,14 @@ OBJS= main.o commpage.o machload.o mmap.o osdep.o signal.o syscall.o thunk.o
 endif
 
 SRCS:= $(OBJS:.o=.c)
-OBJS+= libqemu.a
+
+# TRL for btree 
+#OBJS+= libqemu.a $(TAINT_DIR)/btreeonebit/libtaint.a
+# TRL for graph
+#OBJS+= libqemu.a $(TAINT_DIR)/graph/libtaint.a
+# TRL for qaint
+OBJS+= libqemu.a $(TAINT_DIR)/qaint/lib/libqaint.a
+
 
 # cpu emulator library
 LIBOBJS=exec.o kqemu.o translate-op.o translate-all.o cpu-exec.o\
@@ -393,7 +404,7 @@ ifeq ($(ARCH),alpha)
 endif
 
 # must use static linking to avoid leaving stuff in virtual address space
-VL_OBJS=vl.o osdep.o monitor.o pci.o loader.o isa_mmio.o
+VL_OBJS=vl.o osdep.o monitor.o pci.o loader.o isa_mmio.o info_flow.o
 # XXX: suppress QEMU_TOOL tests
 ifdef CONFIG_WIN32
 VL_OBJS+=block-raw-win32.o
@@ -569,7 +580,7 @@ SDL_LIBS := $(filter-out -mwindows, $(SDL_LIBS)) -mconsole
 endif
 
 $(QEMU_SYSTEM): $(VL_OBJS) ../libqemu_common.a libqemu.a
-	$(CC) $(VL_LDFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS) $(SDL_LIBS) $(COCOA_LIBS) $(VL_LIBS)
+	$(CC) $(VL_LDFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS) $(SDL_LIBS) $(COCOA_LIBS) $(VL_LIBS) $(TAINT_DIR)/qaint/lib/libqaint.a
 
 depend: $(SRCS)
 	$(CC) -MM $(CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) $^ 1>.depend

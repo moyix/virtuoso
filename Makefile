@@ -174,7 +174,8 @@ endif
 install: all $(if $(BUILD_DOCS),install-doc)
 	mkdir -p "$(DESTDIR)$(bindir)"
 ifneq ($(TOOLS),)
-	$(INSTALL) -m 755 -s $(TOOLS) "$(DESTDIR)$(bindir)"
+#	$(INSTALL) -m 755 -s $(TOOLS) "$(DESTDIR)$(bindir)"
+	$(INSTALL) -m 755 $(TOOLS) "$(DESTDIR)$(bindir)"
 endif
 	mkdir -p "$(DESTDIR)$(datadir)"
 	for x in bios.bin vgabios.bin vgabios-cirrus.bin ppc_rom.bin \

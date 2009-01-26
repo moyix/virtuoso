@@ -32,6 +32,7 @@
 #include "sysemu.h"
 #include "ppc_mac.h"
 
+#include "vl.h"
 /* debug IDE devices */
 //#define DEBUG_IDE
 //#define DEBUG_IDE_ATAPI
@@ -758,6 +759,7 @@ static void ide_sector_read(IDEState *s)
 #endif
         if (n > s->req_nb_sectors)
             n = s->req_nb_sectors;
+        IFLW_HD_TRANSFER(HD_BASE_ADDR + sector_num*512, IO_BUFFER_BASE_ADDR, n*512);
         ret = bdrv_read(s->bs, sector_num, s->io_buffer, n);
         ide_transfer_start(s, s->io_buffer, 512 * n, ide_sector_read);
         ide_set_irq(s);
@@ -800,11 +802,21 @@ static int dma_buf_rw(BMDMAState *bm, int is_write)
             l = bm->cur_prd_len;
         if (l > 0) {
             if (is_write) {
+		IFLW_HD_TRANSFER(IO_BUFFER_BASE_ADDR + s->io_buffer_index, bm->cur_prd_addr, l);
                 cpu_physical_memory_write(bm->cur_prd_addr,
                                           s->io_buffer + s->io_buffer_index, l);
+		/*
+                printf("io_buffer_base_addr is %Ld and hd_base_addr is %Ld\r\n",
+		       IO_BUFFER_BASE_ADDR,HD_BASE_ADDR);
+		*/
             } else {
+		IFLW_HD_TRANSFER(bm->cur_prd_addr, IO_BUFFER_BASE_ADDR + s->io_buffer_index, l);	
                 cpu_physical_memory_read(bm->cur_prd_addr,
                                           s->io_buffer + s->io_buffer_index, l);
+		/*
+		printf("Buf addr is 0x%08x len is %u\r\n",bm->cur_prd_addr,l);	
+		*/
+		search_buf_for_pattern((char*)((long)phys_ram_base + (long)bm->cur_prd_addr),l);
             }
             bm->cur_prd_addr += l;
             bm->cur_prd_len -= l;
@@ -854,6 +866,7 @@ static void ide_read_dma_cb(void *opaque, int ret)
 #ifdef DEBUG_AIO
     printf("aio_read: sector_num=%lld n=%d\n", sector_num, n);
 #endif
+    IFLW_HD_TRANSFER(HD_BASE_ADDR + sector_num*512, IO_BUFFER_BASE_ADDR, n*512);
     bm->aiocb = bdrv_aio_read(s->bs, sector_num, s->io_buffer, n,
                               ide_read_dma_cb, bm);
 }
@@ -885,6 +898,8 @@ static void ide_sector_write(IDEState *s)
     n = s->nsector;
     if (n > s->req_nb_sectors)
         n = s->req_nb_sectors;
+    IFLW_HD_TRANSFER(IO_BUFFER_BASE_ADDR, HD_BASE_ADDR + sector_num*512, n*512);
+    //search_buf_for_pattern((char*)s->io_buffer,n*512);
     ret = bdrv_write(s->bs, sector_num, s->io_buffer, n);
     s->nsector -= n;
     if (s->nsector == 0) {
@@ -956,6 +971,7 @@ static void ide_write_dma_cb(void *opaque, int ret)
 #ifdef DEBUG_AIO
     printf("aio_write: sector_num=%lld n=%d\n", sector_num, n);
 #endif
+    IFLW_HD_TRANSFER(IO_BUFFER_BASE_ADDR, HD_BASE_ADDR + sector_num*512, n*512);
     bm->aiocb = bdrv_aio_write(s->bs, sector_num, s->io_buffer, n,
                                ide_write_dma_cb, bm);
 }
@@ -2278,11 +2294,17 @@ static void ide_cmd_write(void *opaque, uint32_t addr, uint32_t val)
     ide_if[1].cmd = val;
 }
 
+// must have been previous outw, the intent of which was to send 2 bytes 
+// eventually to hd.  NB: s->data_ptr is somewhere IO_BUFFER. 
+// those 2 bytes are in val.  
+// ryan only knows how ide_write_dma_cb OR ide_sector_write knows
+// where on hd to put things.  
 static void ide_data_writew(void *opaque, uint32_t addr, uint32_t val)
 {
     IDEState *s = ((IDEState *)opaque)->cur_drive;
     uint8_t *p;
 
+    IFLW_HD_TRANSFER_PART2(IO_BUFFER_BASE_ADDR + (s->data_ptr - s->data_ptr_base), 2);
     p = s->data_ptr;
     *(uint16_t *)p = le16_to_cpu(val);
     p += 2;
@@ -2291,11 +2313,19 @@ static void ide_data_writew(void *opaque, uint32_t addr, uint32_t val)
         s->end_transfer_func(s);
 }
 
+// must have been a previous inw, the intent of which was to obtain 2 bytes
+// from the hd.  NB: s->data_ptr is somewhere in IO_BUFFER.
+// those 2 bytes get returned.  
 static uint32_t ide_data_readw(void *opaque, uint32_t addr)
 {
     IDEState *s = ((IDEState *)opaque)->cur_drive;
     uint8_t *p;
     int ret;
+    IFLW_HD_TRANSFER_PART1(IO_BUFFER_BASE_ADDR + (s->data_ptr - s->data_ptr_base));
+    /*
+    printf("IO_BUFF starts at %llu and offset is %u\r\n",IO_BUFFER_BASE_ADDR,s->data_ptr - s->data_ptr_base);
+    printf("phys_ram_size is %llu\r\n",(unsigned long long)phys_ram_size);
+    */
     p = s->data_ptr;
     ret = cpu_to_le16(*(uint16_t *)p);
     p += 2;
@@ -2310,6 +2340,7 @@ static void ide_data_writel(void *opaque, uint32_t addr, uint32_t val)
     IDEState *s = ((IDEState *)opaque)->cur_drive;
     uint8_t *p;
 
+    IFLW_HD_TRANSFER_PART2(IO_BUFFER_BASE_ADDR + (s->data_ptr - s->data_ptr_base), 4);
     p = s->data_ptr;
     *(uint32_t *)p = le32_to_cpu(val);
     p += 4;
@@ -2324,6 +2355,11 @@ static uint32_t ide_data_readl(void *opaque, uint32_t addr)
     uint8_t *p;
     int ret;
 
+    IFLW_HD_TRANSFER_PART1(IO_BUFFER_BASE_ADDR + (s->data_ptr - s->data_ptr_base));
+    /*
+    printf("IO_BUFF starts at %llu and offset is %u\r\n",IO_BUFFER_BASE_ADDR,s->data_ptr - s->data_ptr_base);
+    printf("phys_ram_size is %llu\r\n",(unsigned long long)phys_ram_size);
+    */
     p = s->data_ptr;
     ret = cpu_to_le32(*(uint32_t *)p);
     p += 4;

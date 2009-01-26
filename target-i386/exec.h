@@ -92,6 +92,9 @@ register target_ulong EDI asm(AREG11);
 
 #define A0 T2
 
+// TRL 2007 11
+#define IF_A0 IF_T2
+
 extern FILE *logfile;
 extern int loglevel;
 
