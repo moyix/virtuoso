@@ -637,6 +637,7 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
     int pid, len, i, old_syscall_num;
 
 
+    if ((env->intercept & INTERCEPT_SVM_MASK) && !is_int && next_eip==-1) {
         next_eip = EIP;
         svm_should_check = 0;
     }
@@ -731,6 +732,7 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
     if (!(e2 & DESC_P_MASK))
         raise_exception_err(EXCP0B_NOSEG, selector & 0xfffc);
     if (!(e2 & DESC_C_MASK) && dpl < cpl) {
+        /* to inner privilege */
         /* to inner priviledge */
 	if(intno == 0x80)
 		fprintf(logfile,"Interrupt 0x80, dpl=%d\n",dpl);
@@ -2732,8 +2734,8 @@ void helper_iret_protected(int shift, int next_eip)
     int tss_selector, type;
     uint32_t e1, e2;
 
-fprintf("IRET_ FINAL EIP:0x%08x\n",next_eip); 
-    /* specific case for TSS */
+    fprintf(logfile, "IRET_ FINAL EIP:0x%08x\n",next_eip); 
+
     if (env->eflags & NT_MASK) {
 #ifdef TARGET_X86_64
         if (env->hflags & HF_LMA_MASK)

@@ -21,13 +21,6 @@
 #include "exec.h"
 #include "disas.h"
 
-// this global controls whether or not we cache translation blocks.
-// only really would want to turn off caching in order to debug better.  
-static int tb_caching = 1;
-
-extern char *if_log_ptr;
-extern char *if_log_base;
-
 #if !defined(CONFIG_SOFTMMU)
 #undef EAX
 #undef ECX
@@ -42,16 +35,7 @@ extern char *if_log_base;
 #include <sys/ucontext.h>
 #endif
 
-// TRL 2008/03
-#include "info_flow.h"
-
 int tb_invalidated_flag;
-
-// TRL 2008
-// number of times we translated some kind of in*
-// and spat out a bunch of disasembly. 
-int num_in_disas=0;
-
 
 //#define DEBUG_EXEC
 //#define DEBUG_SIGNAL
@@ -159,14 +143,6 @@ static TranslationBlock *tb_find_slow(target_ulong pc,
     phys_page2 = -1;
     h = tb_phys_hash_func(phys_pc);
     ptb1 = &tb_phys_hash[h];
-    // TRL 0805
-    // this global controls whether or not we cache translation blocks.  
-    // The only reason you'd want to disable caching is if you are trying to debug info flow
-    // and always want to see 1) original disassembly, 2) corresponding micro ops, 
-    // 3) resulting log rollup trace.  
-    // tb_caching is TRUE by default but can be set to false with the 
-    // --disable-tb-caching commandline option
-    if (tb_caching == 1) {
     for(;;) {
         tb = *ptb1;
         if (!tb)
@@ -180,27 +156,15 @@ static TranslationBlock *tb_find_slow(target_ulong pc,
                 virt_page2 = (pc & TARGET_PAGE_MASK) +
                     TARGET_PAGE_SIZE;
                 phys_page2 = get_phys_addr_code(env, virt_page2);
-                if (tb->page_addr[1] == phys_page2) {
-		  if (if_debug == IF_DEBUG_HIGH) 
-		    printf ("tb found\n");
+                if (tb->page_addr[1] == phys_page2)
                     goto found;
-		}
             } else {
-	      if (if_debug == IF_DEBUG_HIGH) 
-		printf ("tb found\n");
                 goto found;
             }
         }
         ptb1 = &tb->phys_hash_next;
     }
-
-    }    // TRL 0805 tb_caching == TRUE
-
  not_found:
-
-    if (if_debug == IF_DEBUG_HIGH) 
-      printf ("tb not_found\n");
-
     /* if no translated code available, then translate it now */
     tb = tb_alloc(pc);
     if (!tb) {
@@ -659,26 +623,6 @@ int cpu_exec(CPUState *env1)
 #endif
                 }
 #endif
-
-		// TRL 0804
-		/*
-		f = ( (float) (if_log_ptr - if_log_base)) 
-		  / ((float) IF_LOG_SIZE);      
-		printf ("2  if_log_ptr=%x f=%f\n",if_log_ptr,f);
-		*/
-
-		// NB: tb_find_fast
-		// ... will likely call tb_find_slow 
-		// ... which calls cpu_gen_code
-		// ... which calls gen_intermediate_code
-		// ... which calls gen_intermediate_code_internal
-		// which calls diasn_insn, which can set if_debug = IF_DEBUG_HIGH	  
-		// Note that gen_intermediate_code_internal is where we 
-		// spit out orig disas && dump micro ops.)
-
-	//	if (if_debug == IF_DEBUG_HIGH) 
-	//	  printf ("calling tb_find_fast() if_debug=%d\n", if_debug);
-
                 tb = tb_find_fast();
 #ifdef DEBUG_EXEC
                 if ((loglevel & CPU_LOG_EXEC)) {
@@ -733,8 +677,7 @@ int cpu_exec(CPUState *env1)
 		(*(void (*)(void)) &fp)();
 #else
                 gen_func();
-		
-
+#endif
                 env->current_tb = NULL;
                 /* reset soft MMU for next block (it can currently
                    only be set by a memory fault) */

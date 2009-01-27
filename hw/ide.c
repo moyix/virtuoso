@@ -22,6 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+ 
 #include "hw.h"
 #include "pc.h"
 #include "pci.h"
@@ -31,7 +32,10 @@
 #include "qemu-timer.h"
 #include "sysemu.h"
 #include "ppc_mac.h"
-//#include "vl.h"
+
+#include "info_flow.h"
+
+extern uint8_t* phys_ram_base;
 
 /* debug IDE devices */
 //#define DEBUG_IDE
@@ -364,6 +368,7 @@ typedef struct IDEState {
     /* PIO transfer handling */
     int req_nb_sectors; /* number of sectors per interrupt */
     EndTransferFunc *end_transfer_func;
+    uint8_t *data_ptr_base;
     uint8_t *data_ptr;
     uint8_t *data_end;
     uint8_t *io_buffer;
@@ -688,6 +693,7 @@ static void ide_transfer_stop(IDEState *s)
 {
     s->end_transfer_func = ide_transfer_stop;
     s->data_ptr = s->io_buffer;
+    s->data_ptr_base = s->io_buffer;
     s->data_end = s->io_buffer;
     s->status &= ~DRQ_STAT;
 }
@@ -2372,6 +2378,7 @@ static uint32_t ide_data_readl(void *opaque, uint32_t addr)
 static void ide_dummy_transfer_stop(IDEState *s)
 {
     s->data_ptr = s->io_buffer;
+    s->data_ptr_base = s->io_buffer;
     s->data_end = s->io_buffer;
     s->io_buffer[0] = 0xff;
     s->io_buffer[1] = 0xff;

@@ -721,3 +721,4 @@ void OPPROTO glue(glue(op_check_io, SUFFIX), _DX)(void)
 #undef DATA_STYPE
 #undef DATA_MASK
 #undef SUFFIX
+#undef SUFFIX_QUOTED

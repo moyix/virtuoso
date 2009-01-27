@@ -59,28 +59,36 @@
 
 void my_print(unsigned long long);
 
-//  assert (phys_ram_base <= ptr); \
+
 
 #define IFLW_MMU_LD(type,virt_addr,real_addr) \
 IFLW_WRAPPER ( \
-        IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,type),_LD),CSUFFIX)); \
-        IFLW_PUT_ADDR(virt_addr); \
-        IFLW_PUT_ADDR((((unsigned char*)real_addr) - phys_ram_base)); \
-	if(((long long)real_addr-(long long)phys_ram_base)!=0xffffffffffffffffLL) { \
-                IFLW_PUT_BYTE(*(unsigned char*)real_addr); \
-  } \ 
-	 IFLW_PUT_BYTE(access_type); \
+{ \
+  uint64_t x;\
+  IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,type),_LD),CSUFFIX)); \
+  IFLW_PUT_ADDR(((uint64_t) virt_addr));  \
+  x = (uint64_t) real_addr - (uint64_t) phys_ram_base; \
+  IFLW_PUT_ADDR(x); \
+  if (x != 0xffffffffffffffffLL) { \
+    IFLW_PUT_BYTE(*(unsigned char*)real_addr); \
+  } \
+  IFLW_PUT_UINT32_T(mmu_idx); \
+} \
 );
 
 #define IFLW_MMU_ST(type,virt_addr,real_addr,val) \
 IFLW_WRAPPER ( \
-        IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,type),_ST),CSUFFIX)); \
-        IFLW_PUT_ADDR(virt_addr); \
-        IFLW_PUT_ADDR((((unsigned char*)real_addr) - phys_ram_base)); \
-	if(((long long)real_addr-(long long)phys_ram_base)!=0xffffffffffffffffLL){ \
-                IFLW_PUT_BYTE((unsigned char)val); \
- } \
-	 IFLW_PUT_BYTE(access_type); \
+{ \
+  uint64_t x;\
+  IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,type),_ST),CSUFFIX)); \
+  IFLW_PUT_ADDR((uint64_t) virt_addr);					\
+  x = (uint64_t) real_addr - (uint64_t) phys_ram_base; \
+  IFLW_PUT_ADDR(x); \
+  if (x != 0xffffffffffffffffLL){ \
+    IFLW_PUT_BYTE((unsigned char)val); \
+  } \
+  IFLW_PUT_UINT32_T(mmu_idx); \
+ }\
 );
 
 #define IFLW_MMU_TLB_FILL() \
@@ -136,7 +144,9 @@ DATA_TYPE REGPARM(1) glue(glue(__ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
             /* IO access */
             if ((addr & (DATA_SIZE - 1)) != 0)
                 goto do_unaligned_access;
+
 	    IFLW_MMU_LD(IO_ALIGNED,addr,(long long)0xffffffffffffffffLL+(long long)phys_ram_base);
+
             res = glue(io_read, SUFFIX)(physaddr, tlb_addr);
         } else if (((addr & ~TARGET_PAGE_MASK) + DATA_SIZE - 1) >= TARGET_PAGE_SIZE) {
             /* slow unaligned access (it spans two pages or IO) */

@@ -138,7 +138,7 @@ typedef union {
     uint64_t ll;
 } CPU_DoubleU;
 
-
+// TRL 0806 had to move this up here 
 #ifdef TARGET_SPARC
 typedef union {
     float128 q;
@@ -347,7 +347,7 @@ static inline void stfq_le_p(void *ptr, float64 v)
     stl_le_p(ptr + 4, u.l.upper);
 }
 
-#else
+#else // #if defined(WORDS_BIGENDIAN) || defined(WORDS_ALIGNED)
 
 static inline int lduw_le_p(void *ptr)
 {
@@ -537,7 +537,11 @@ static inline void stfq_be_p(void *ptr, float64 v)
     stl_be_p(ptr + 4, u.l.lower);
 }
 
+// this else is for if-def !defined(WORDS_BIGENDIAN) || defined(WORDS_ALIGNED)
 #else
+// TRL0806 i.e. defined(WORDS_BIGENDIAN) && !defined(WORDS_ALIGNED) ?
+// at least the big-endianness part makes sense since we just 
+// go ahead and use deref. 
 
 static inline int lduw_be_p(void *ptr)
 {
@@ -818,8 +822,7 @@ int cpu_inl(CPUState *env, int addr);
 
 extern int phys_ram_size;
 extern int phys_ram_fd;
-// TRL0806 had to move this to earlier in file
-//extern uint8_t *phys_ram_base;
+extern uint8_t *phys_ram_base;
 extern uint8_t *phys_ram_top;
 extern uint8_t *phys_ram_dirty;
 
