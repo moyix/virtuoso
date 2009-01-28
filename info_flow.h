@@ -759,15 +759,15 @@ DUMMY_LAST_OP
 // write a string to the log 
 // first, wrirte its length as a 32-bit int
 // second, write each of its bytes.  
-#define IFLW_PUT_STRING(str)			\
-  {						\
-    int i;					\
-    int n = strlen(str);			\
-    IFLW_PUT_UINT32_T(n);			\
-    for (i=0; i<n; i++) {			\
-      IFLW_PUT_UINT8_T(str[i]);			\
-    }						\
-  }						
+#define IFLW_PUT_STRING(str)	\
+{				\
+  int i;			\
+  int n = strlen(str);		\
+  IFLW_PUT_UINT32_T(n);		\
+  for (i=0; i<n; i++) {		\
+    IFLW_PUT_UINT8_T(str[i]);	\
+  }				\
+}						
 
 
 
