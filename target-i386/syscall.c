@@ -1463,26 +1463,39 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     // long sys_sched_get_priority_min(int policy);
     IFLS_I(SCHED_GET_PRIORITY_MIN,EBX);
     break;
-  case 161 : // sys_sched_rr_get_interval
-    fprintf(logfile,"PID %3d (%16s)[sys_sch_rr  161]: pid %d\n", pid, command, EBX);
+  case 161 : 
+    // long sys_sched_rr_get_interval(pid_t pid,
+    //                                struct timespec __user *interval);
+    IFLS_I(SCHED_RR_GET_INTERVAL,EBX);
     break;
-  case 162 : // sys_nanosleep
-    fprintf(logfile,"PID %3d (%16s)[sys_nanoslee162]\n", pid, command);
+  case 162 :
+    // long sys_nanosleep(struct timespec __user *rqtp, struct timespec __user *rmtp);
+    IFLS(NANO_SLEEP);
     break;
-  case 163 : // sys_mremap
-    fprintf(logfile,"PID %3d (%16s)[sys_mremap  163]: oldaddr 0x%08x; len %d; new_addr 0x%08x; flags %d\n", 
-	    pid, command, EBX, ECX, EDX, ESI);
+  case 163 : 
+    // unsigned long sys_mremap(unsigned long addr,
+    //                          unsigned long old_len, unsigned long new_len,
+    //                          unsigned long flags, unsigned long new_addr);
+    IFLS_IIII(MREMAP,EBX,ECX,EDX,ESI);
     break;
-  case 164 : // sys_setresuid
-    fprintf(logfile,"PID %3d (%16s)[sys_setresu 164]: ruid %d; euid %d; suid %d;\n", pid, command, EBX, ECX, EDX);
+  case 164 :
+    // long sys_setresuid(uid_t ruid, uid_t euid, uid_t suid);
+    IFLS_III(SETRESUID,EBX,ECX,EDX);
     break;
-  case 165 : // sys_getresuid
+  case 165 : 
+    // long sys_getresuid16(old_uid_t __user *ruid,
+    //                      old_uid_t __user *euid, old_uid_t __user *suid);
+    IFLS_III(GETRESUID);
     fprintf(logfile,"PID %3d (%16s)[sys_getresu 165]\n", pid, command);
     break;
-  case 166 : // sys_vm86
-    fprintf(logfile,"PID %3d (%16s)[sys_vm86    166]\n", pid, command);
+  case 166 : 
+    // NB: Missing from syscalls.h
+    // sys_vm86
+    IFSL(VM86);
     break;
-  case 167 : // sys_query_module
+  case 167 : 
+    // NB: Missing from syscalls.h    
+    // sys_query_module
     fprintf(logfile,"PID %3d (%16s)[sys_query_m 167]: module ", pid, command);
     paddr = cpu_get_phys_page_debug(env, EBX);
     bzero(tempbuf, 120);
