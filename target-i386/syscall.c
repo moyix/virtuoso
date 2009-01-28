@@ -3,6 +3,13 @@
 // system call prototypes
 // from  /usr/src/linux-headers-2.6.24-19/include/linux/syscalls.h
 
+// Note, from http://www.win.tue.nl/~aeb/linux/lk/lk-4.html
+// "The Linux Kernel: Linux System Calls"
+// On i386, the parameters of a system call are transported via registers. 
+// The system call number goes into %eax, 
+// The parameters are (%ebx, %ecx, %edx, %esi, %edi, %ebp)
+// More than 6 param?  Not sure what happens.  
+
 
 #include "linux_task_struct_offsets.h"
 
@@ -36,11 +43,11 @@ void copy_string_phys(char *tempbuf, char *physaddr, uint32_t len) {
 // sys call with no args
 #define IFLS(op) \
 IF_WRAPPER ( \				
-  IFLW_PUT_OP(SYSOP(op));    \
-  IFLW_PUT_STRING(command);   \
-)
+             IFLW_PUT_OP(SYSOP(op));    \
+             IFLW_PUT_STRING(command);   \
+             )
 
-// All syscalls iferret log entries containt this info.
+     // All syscalls iferret log entries containt this info.
 #define IFLS_CORE(op)     \
   IFLW_PUT_OP(SYSOP(op)); \
   IFLW_PUT_STRING(command); \
@@ -48,14 +55,14 @@ IF_WRAPPER ( \
   IFLW_PUT_UINT32_T(eip_for_callsite); 
 
 
-// sys call with one arg -- an int
+     // sys call with one arg -- an int
 #define IFLS_I(op,val)	\
 IF_WRAPPER ( \
   IFLS_CORE(op);  \
   IFLW_PUT_UINT32_T(val); \
 ) 
 
-// sys call with two args -- both ints
+     // sys call with two args -- both ints
 #define IFLS_II(op,val1,val2) \
 IF_WRAPPER ( \
   IFLS_CORE(op);   \
@@ -63,7 +70,7 @@ IF_WRAPPER ( \
   IFLW_PUT_UINT32_T(val2); \
 ) 
 
-// sys call with three args -- all ints
+     // sys call with three args -- all ints
 #define IFLS_II(op,val1,val2,val3)  \
 IF_WRAPPER ( \
   IFLS_CORE(op);   \
@@ -73,7 +80,7 @@ IF_WRAPPER ( \
 ) 
 
 
-// sys call with one arg -- a string 
+     // sys call with one arg -- a string 
 #define IFLS_S(op,val) \
 IF_WRAPPER ( \
   IFLS_CORE(op);	       \
@@ -81,7 +88,7 @@ IF_WRAPPER ( \
 )
 
 
-// sys call with two args -- both strings
+     // sys call with two args -- both strings
 #define IFLS_SS(op,val1,val2)			\
 IF_WRAPPER ( \
   IFLS_CORE(op);	       \
@@ -89,7 +96,7 @@ IF_WRAPPER ( \
   IFLW_PUT_STRING(val2);  \
 )
 
-// sys call with two args -- a string and an int
+     // sys call with two args -- a string and an int
 #define IFLS_SI(op,val1,val2) \
 IF_WRAPPER ( \
   IFLS_CORE(op); \
@@ -97,7 +104,7 @@ IF_WRAPPER ( \
   IFLW_PUT_UINT32_T(val2); \
 ) 
 
-// sys call with three args -- a string and two ints
+     // sys call with three args -- a string and two ints
 #define IFLS_SII(op,val1,val2,val3)	\
 IF_WRAPPER ( \
   IFLS_CORE(op); \
@@ -107,16 +114,16 @@ IF_WRAPPER ( \
 ) 
 
 
-// we use these over and over. 
+     // we use these over and over. 
 #define IFLS_S_SIMP(op,r) \
 { \
   char name[120]; \
   paddr = cpu_get_phys_page_debug(env, r); \
   if (paddr!=-1) { \
     copy_string_phys(name, paddr, 120); \            
-    IFLS_S(op,name); \
-  } \
-} 
+ IFLS_S(op,name); \
+                    } \
+                        } 
 
 
 #define IFLS_SS_SIMP(op,r1,r2)	\
@@ -193,7 +200,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
       exit(1);
     }
     add_element(pid,stack_val,EAX);
-    eip_for_callsite = stack_val);
+    eip_for_callsite = stack_val ;
   }
   else {
     if(EAX != 11 && EAX != 119){
@@ -201,11 +208,11 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     }
     eip_for_callsite = old_eip;
   }
-
+  
   fprintf(logfile, "PID: %d, stack size:%d\n",pid,get_stack_size(pid));
 
-/////////////////////////////////////
-// the syscalls, by the numbers
+  /////////////////////////////////////
+  // the syscalls, by the numbers
   
   switch (EAX) {	
   case 0 : // sys_ni_syscall
@@ -267,31 +274,31 @@ void iferret_log_syscall (uint8_t is_sysenter) {
       // first, get the name
       paddr = cpu_get_phys_page_debug(env, EBX);
       if (paddr != -1) {
-	copy_string_phys(name, paddr, 120);	
-	paddr = cpu_get_phys_page_debug(env, ECX);
-	cpu_physical_memory_read(paddr, &argvp, 4);  // The first argument
-	orig_argvp = argvp;      
-	// first, figure out how many args
-	n=0;
-	while (argvp) {
-	  n++;
-	  if (n>12) break;
-	  paddr = cpu_get_phys_page_debug(env, ECX+pid*4);
-	  cpu_physical_memory_read(paddr, &argvp, 4);  // next arg
-	}
-	i = 0;
-	// write op plus num args 
-	IFLS_I(EXECVE,n);
-	while (argvp) {
-	  paddr = cpu_get_phys_page_debug(env, argvp);	
-	  copy_string_phys(name, paddr, 120); // arg 
-	  IFLW_PUT_STRING(name);
-	  i++;
-	  if (i >12) break;
-	  //paddr = cpu_get_phys_page_debug(env, argvp);
-	  paddr = cpu_get_phys_page_debug(env, ECX+pid*4);
-	  cpu_physical_memory_read(paddr, &argvp, 4);  // next arg
-	}
+        copy_string_phys(name, paddr, 120);	
+        paddr = cpu_get_phys_page_debug(env, ECX);
+        cpu_physical_memory_read(paddr, &argvp, 4);  // The first argument
+        orig_argvp = argvp;      
+        // first, figure out how many args
+        n=0;
+        while (argvp) {
+          n++;
+          if (n>12) break;
+          paddr = cpu_get_phys_page_debug(env, ECX+pid*4);
+          cpu_physical_memory_read(paddr, &argvp, 4);  // next arg
+        }
+        i = 0;
+        // write op plus num args 
+        IFLS_I(EXECVE,n);
+        while (argvp) {
+          paddr = cpu_get_phys_page_debug(env, argvp);	
+          copy_string_phys(name, paddr, 120); // arg 
+          IFLW_PUT_STRING(name);
+          i++;
+          if (i >12) break;
+          //paddr = cpu_get_phys_page_debug(env, argvp);
+          paddr = cpu_get_phys_page_debug(env, ECX+pid*4);
+          cpu_physical_memory_read(paddr, &argvp, 4);  // next arg
+        }
       }
     }
     break;
@@ -421,8 +428,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_I(DUP,EBX);
     break;
   case 42:
-    // NB: Missing from syscalls.h. 
-    // sys_pipe
+    // sys_pipe is missing from syscalls.h. 
     IFLS_(PIPE);
     //    paddr = cpu_get_phys_page_debug(env, EBX);
     //    if (paddr!=-1)	{      
@@ -438,8 +444,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS(NI_SYSCALL_44);
     break;
   case 45 : 
-    // NB: Missing from syscalls.h 
-    // sys_break
+    // sys_break is missing from syscalls.h 
     IFLS(BREAK);
     break;
   case 46 :
@@ -467,14 +472,12 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_S_SIMP(ACCT,EBX);
     break;
   case 52 : 
-    // NB: Missing from syscalls.h
-    // sys_umount2
+    // sys_umount2 is missing from syscalls.h
     // Xuxian used EBX as a ptr to a string tho...
     IFLS_S(MOUNT2,EBX);
     break;
   case 53 : 
-    // NB: Missing from syscalls.h
-    // sys_lock
+    // sys_lock is missing from syscalls.h
     IFLS(LOCK);
     break;
   case 54 : 
@@ -487,8 +490,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_III(FCNTL,EBX,ECX,EDX);
     break;
   case 56 :
-    // NB: Missing from syscalls.h
-    // sys_mpx
+    // sys_mpx is missing from syscalls.h
     IFLS(MPX);
     break;
   case 57 : 
@@ -496,13 +498,11 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_II(SETPGID,EBX,ECX);
     break;
   case 58 : 
-    // NB: Missing from syscalls.h
-    // sys_ulimit
+    // sys_ulimit is missing from syscalls.h
     IFLS(ULIMIT);
     break;
   case 59 :
-    // NB: Missing from syscalls.h
-    // sys_oldolduname
+    // sys_oldolduname is missing from syscalls.h
     IFLS(OLDOLDUNAME);
     break;
   case 60 :
@@ -534,8 +534,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS(SETSID);
     break;
   case 67 :
-    // NB: Missing from syscalls.h
-    // sys_sigaction 
+    // sys_sigaction is missing from syscalls.h
     IFLS_I(SIGACTION,EBX);
     break;
   case 68 :
@@ -555,8 +554,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_II(SETREGID,EBX,ECX);
     break;
   case 72 : 
-    // NB: Missing from syscalls.h
-    // sys_sigsuspend
+    // sys_sigsuspend is missing from syscalls.h
     IFLS(SIGSUSPEND);
     break;
   case 73 : 
@@ -608,34 +606,34 @@ void iferret_log_syscall (uint8_t is_sysenter) {
       // write op plus num fds
       IFLS_I(SELECT,EBX);
       if ( EBX > 0 ){
-	if (!ECX) {
-	  paddr = cpu_get_phys_page_debug(env, ECX);
-	  //	  fprintf(logfile, "readfds");
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, EBX*4); //-> get the fdset 
-	  i=0; ptr = (int*)tempbuf; fd = *ptr++;
-	  while (fd ) {
-	    //	    fprintf(logfile, " %d", fd);
-	    IFLW_PUT_UINT32_T(fd);
-	    i++;	
-	    if ( i<EBX) fd = *ptr++;
-	    else fd = 0;
-	  }
-	}
-	if (!EDX) {
-	  paddr = cpu_get_phys_page_debug(env, EDX);
-	  //	  fprintf(logfile, "writefds");
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, EBX*4); //-> get the fdset 
-	  i=0; ptr = (int*)tempbuf; fd = *ptr++;
-	  while (fd ) {
-	    //	    fprintf(logfile, " %d", fd);
-	    IFLW_PUT_UINT32_T(fd);
-	    i++;	
-	    if ( i<EBX) fd = *ptr++;
-	    else fd = 0;
-	  }
-	}
+        if (!ECX) {
+          paddr = cpu_get_phys_page_debug(env, ECX);
+          //	  fprintf(logfile, "readfds");
+          bzero(tempbuf, 120);
+          cpu_physical_memory_read(paddr, tempbuf, EBX*4); //-> get the fdset 
+          i=0; ptr = (int*)tempbuf; fd = *ptr++;
+          while (fd ) {
+            //	    fprintf(logfile, " %d", fd);
+            IFLW_PUT_UINT32_T(fd);
+            i++;	
+            if ( i<EBX) fd = *ptr++;
+            else fd = 0;
+          }
+        }
+        if (!EDX) {
+          paddr = cpu_get_phys_page_debug(env, EDX);
+          //	  fprintf(logfile, "writefds");
+          bzero(tempbuf, 120);
+          cpu_physical_memory_read(paddr, tempbuf, EBX*4); //-> get the fdset 
+          i=0; ptr = (int*)tempbuf; fd = *ptr++;
+          while (fd ) {
+            //	    fprintf(logfile, " %d", fd);
+            IFLW_PUT_UINT32_T(fd);
+            i++;	
+            if ( i<EBX) fd = *ptr++;
+            else fd = 0;
+          }
+        }
       }
       //      fprintf(logfile, "\n");
     }
@@ -645,8 +643,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_SS_SIMP(SYMLINK,EBX,ECX);
     break;
   case 84 :
-    // NB: Missing from syscalls.h
-    // sys_oldlstat
+    // sys_oldlstat is missing from syscalls.h
     // Xuxian takes EBX to be a ptr to a string.
     IFLS_S_SIMP(OLDLSTAT,EBX);
     break;
@@ -669,27 +666,25 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_III(REBOOT,EBX,ECX,EDX);
     break;
   case 89 : 
-    // NB: Missing from syscalls.h
-    // sys_readdir
+    // sys_readdir is missing from syscalls.h
     // Xuxian takes EBX as a ptr to a string.
     IFLS_S_SIMP(READDIR,EBX);
     break;
   case 90 :
-    // NB: Missing from syscalls.h
-    // sys_mmap
+    // sys_mmap is missing from syscalls.h
     // This is Xuxian's decoding
     {
       char buf[24];
       int addr, size, fd, *ptr;
       paddr = cpu_get_phys_page_debug(env, EBX);
       if (paddr!=-1)	{
-	copy_string_phys(buf, paddr, 24);
-	ptr = (int *)buf;
-	addr = *ptr++;
-	len = *ptr++;
-	ptr++; ptr++;
-	fd = *ptr++;
-	IFLS_III(MMAP,addr,len,fd);
+        copy_string_phys(buf, paddr, 24);
+        ptr = (int *)buf;
+        addr = *ptr++;
+        len = *ptr++;
+        ptr++; ptr++;
+        fd = *ptr++;
+        IFLS_III(MMAP,addr,len,fd);
       }
     }
     break;
@@ -723,8 +718,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_II(SETPRIORITY,EBX,ECX);
     break;
   case 98 :
-    // Missing from syscalls.h
-    // sys_profil
+    // sys_profil is missing from syscalls.h
     IFLS(PROFIL);
     break;
   case 99 : 
@@ -746,134 +740,134 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     switch (EBX) {
     case 1: // socket
       { int family, type, protocol, *ptr;
-	paddr = cpu_get_phys_page_debug(env, ECX);
-	if (paddr!=-1)	{
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	  ptr = (int*) tempbuf;
-	  family = *ptr++; type =*ptr++; protocol = *ptr++;
-	  IFLW_PUT_UINT32_T(family);
-	  IFLW_PUT_UINT32_T(type);
-	  IFLW_PUT_UINT32_T(protocol);
-	}
+      paddr = cpu_get_phys_page_debug(env, ECX);
+      if (paddr!=-1)	{
+        bzero(tempbuf, 120);
+        cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+        ptr = (int*) tempbuf;
+        family = *ptr++; type =*ptr++; protocol = *ptr++;
+        IFLW_PUT_UINT32_T(family);
+        IFLW_PUT_UINT32_T(type);
+        IFLW_PUT_UINT32_T(protocol);
+      }
       }
       break;
     case 2: // bind
       { int fd, len, group, *ptr; struct sockaddr_in *sap;
-	unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7; 
-	unsigned short *sptr;
-	unsigned char pkttype, halen, sll_addr[8];
-	paddr = cpu_get_phys_page_debug(env, ECX);
-	if (paddr!=-1)	{
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	  ptr = (int*) tempbuf;
-	  fd = *ptr++; sap=*ptr++; len= *ptr++;
-	  paddr = cpu_get_phys_page_debug(env, sap);
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the args
-	  //bptr = (unsigned char*)&sa.sin_addr.s_addr;
-	  bptr = tempbuf;
-	  b0=*bptr++; b1=*bptr++; b2=*bptr++; b3=*bptr++;
-	  b4=*bptr++; b5=*bptr++; b6=*bptr++; b7=*bptr++;
-	  bptr = tempbuf; bptr+=2;
-	  sap = (struct sockaddr_in*) tempbuf;
-	  ptr = (int*) tempbuf; ptr++; pid =*ptr++;  group = *ptr++;
-	  IFLW_PUT_UINT8_T((uint8_t) sap->sin_family);
-	  IFLW_PUT_UINT32_T(fd);
-	  if (sap->sin_family == 1 ) { // PF_LOCAL
-	    IFLW_PUT_STRING(bptr);
-	    //	    fprintf(logfile,"family  1; fd %d; file %s", fd, bptr);
-	  }
-	  else if (sap->sin_family == 2 ) { // PF_INET
-	    IFLW_PUT_UINT32_T(b4);
-	    IFLW_PUT_UINT32_T(b5);
-	    IFLW_PUT_UINT32_T(b6);
-	    IFLW_PUT_UINT32_T(b7);
-	    IFLW_PUT_UINT32_T(b2*256+b3);
-	    //	    fprintf(logfile,"family  2; fd %d; %d.%d.%d.%d:%d", 
-	    //		    fd, b4, b5, b6, b7, b2*256+b3);
-	  }
-	  else if (sap->sin_family == 16 ) {// PF_NETLINK
-	    IFLW_PUT_UINT32_T(pid);
-	    IFLW_PUT_UINT32_T(group);
-	    //	    fprintf(logfile,"family 16; fd %d; pid %d; group %d", 
-	    //		    fd, pid, group);
-	  else if (sap->sin_family == 17 )  {// PF_PACKET
-	    bptr = tempbuf; bptr += 8; sptr = (unsigned short*)bptr;
-	    bptr +=2; pkttype =*bptr; halen =*bptr++;
-	    IFLW_PUT_UINT32_T(b2*256+b3);
-	    IFLW_PUT_UINT32_T(pid);	  	    
-	    /*
-	      fprintf(logfile,"family 17; fd %d; protocol 0x%x; ifindex 0x%x",
-	              fd, b2*256+b3, pid);
-	    */
-	    /*
-	      fprintf(logfile,"family 17; fd %d; protocol %d; ifindex %d; hatype %d; pkttype %d; halen %d; addr %02x-%02x-%02x-%02x-%02x-%02x-%02x-%02x", 
-		      sap->sin_family, fd, b2*256+b3, pid, *sptr, pkttype, halen, 
-		      tempbuf[12], tempbuf[13], tempbuf[14], tempbuf[15],
-		      tempbuf[16], tempbuf[17], tempbuf[18], tempbuf[19]);
-	    */
-	  } else {
-	    IFLW_PUT_UINT32_T(b0);
-	    IFLW_PUT_UINT32_T(len);
-	    // fprintf(logfile,"family %2d; fd %d; %d.%d.%d.%d-%d.%d.%d.%d(%c%c%c%c%c%c%c%c); len %d", 
-	    //		    sap->sin_family, fd, b0, b1, b2, b3,b4, b5, b6, 
-	    //		    b7, b0, b1, b2, b3,b4, b5, b6, b7, len);
-	  }
-	}
+      unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7; 
+      unsigned short *sptr;
+      unsigned char pkttype, halen, sll_addr[8];
+      paddr = cpu_get_phys_page_debug(env, ECX);
+      if (paddr!=-1)	{
+        bzero(tempbuf, 120);
+        cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+        ptr = (int*) tempbuf;
+        fd = *ptr++; sap=*ptr++; len= *ptr++;
+        paddr = cpu_get_phys_page_debug(env, sap);
+        bzero(tempbuf, 120);
+        cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the args
+        //bptr = (unsigned char*)&sa.sin_addr.s_addr;
+        bptr = tempbuf;
+        b0=*bptr++; b1=*bptr++; b2=*bptr++; b3=*bptr++;
+        b4=*bptr++; b5=*bptr++; b6=*bptr++; b7=*bptr++;
+        bptr = tempbuf; bptr+=2;
+        sap = (struct sockaddr_in*) tempbuf;
+        ptr = (int*) tempbuf; ptr++; pid =*ptr++;  group = *ptr++;
+        IFLW_PUT_UINT8_T((uint8_t) sap->sin_family);
+        IFLW_PUT_UINT32_T(fd);
+        if (sap->sin_family == 1 ) { // PF_LOCAL
+          IFLW_PUT_STRING(bptr);
+          //	    fprintf(logfile,"family  1; fd %d; file %s", fd, bptr);
+        }
+        else if (sap->sin_family == 2 ) { // PF_INET
+          IFLW_PUT_UINT32_T(b4);
+          IFLW_PUT_UINT32_T(b5);
+          IFLW_PUT_UINT32_T(b6);
+          IFLW_PUT_UINT32_T(b7);
+          IFLW_PUT_UINT32_T(b2*256+b3);
+          //	    fprintf(logfile,"family  2; fd %d; %d.%d.%d.%d:%d", 
+          //		    fd, b4, b5, b6, b7, b2*256+b3);
+        }
+        else if (sap->sin_family == 16 ) {// PF_NETLINK
+          IFLW_PUT_UINT32_T(pid);
+          IFLW_PUT_UINT32_T(group);
+          //	    fprintf(logfile,"family 16; fd %d; pid %d; group %d", 
+          //		    fd, pid, group);
+          else if (sap->sin_family == 17 )  {// PF_PACKET
+            bptr = tempbuf; bptr += 8; sptr = (unsigned short*)bptr;
+            bptr +=2; pkttype =*bptr; halen =*bptr++;
+            IFLW_PUT_UINT32_T(b2*256+b3);
+            IFLW_PUT_UINT32_T(pid);	  	    
+            /*
+              fprintf(logfile,"family 17; fd %d; protocol 0x%x; ifindex 0x%x",
+              fd, b2*256+b3, pid);
+            */
+            /*
+              fprintf(logfile,"family 17; fd %d; protocol %d; ifindex %d; hatype %d; pkttype %d; halen %d; addr %02x-%02x-%02x-%02x-%02x-%02x-%02x-%02x", 
+              sap->sin_family, fd, b2*256+b3, pid, *sptr, pkttype, halen, 
+              tempbuf[12], tempbuf[13], tempbuf[14], tempbuf[15],
+              tempbuf[16], tempbuf[17], tempbuf[18], tempbuf[19]);
+            */
+          } else {
+            IFLW_PUT_UINT32_T(b0);
+            IFLW_PUT_UINT32_T(len);
+            // fprintf(logfile,"family %2d; fd %d; %d.%d.%d.%d-%d.%d.%d.%d(%c%c%c%c%c%c%c%c); len %d", 
+            //		    sap->sin_family, fd, b0, b1, b2, b3,b4, b5, b6, 
+            //		    b7, b0, b1, b2, b3,b4, b5, b6, b7, len);
+          }
+        }
       }
       break;
-    case 3: // connect
-      { int fd, len, *ptr; struct sockaddr_in *sap;
-	unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7; 
-	//	fprintf(logfile,"PID %3d (%16s)[sys_connect 102]%d: ", pid, command, EBX);
-	paddr = cpu_get_phys_page_debug(env, ECX);
-	if (paddr!=-1)	{
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	  ptr = (int*) tempbuf;
-	  fd = *ptr++; sap=*ptr++; len= *ptr++;
-	  paddr = cpu_get_phys_page_debug(env, sap);
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the args
-	  bptr = tempbuf;
-	  b0=*bptr++; b1=*bptr++; b2=*bptr++; b3=*bptr++;
-	  b4=*bptr++; b5=*bptr++; b6=*bptr++; b7=*bptr++;
-	  bptr = tempbuf; bptr+=2;
-	  sap = (struct sockaddr_in*) tempbuf;
-	  IFLW_PUT_UINT8_T((uint8_t) sap->sin_family);
-	  IFLW_PUT_UINT32_T(fd);
-	  if (sap->sin_family == 1) {// PF_LOCAL
-	    IFLW_PUT_STRING(bptr);
-	    //	    fprintf(logfile,"socket %d; family  1; file %s", fd, bptr);
-	  }
-	  else if (sap->sin_family == 2) { // PF_INET
-	    IFLW_PUT_UINT32_T(b4);
-	    IFLW_PUT_UINT32_T(b5);
-	    IFLW_PUT_UINT32_T(b6);
-	    IFLW_PUT_UINT32_T(b7);
-	    IFLW_PUT_UINT32_T(b2*256+b3);
-	    //	    fprintf(logfile,"socket %d; family  2; %d.%d.%d.%d:%d", 
-	    //		    fd, b4, b5, b6, b7, b2*256+b3);
-	  }
-	  else {
-	    //	    fprintf(logfile,"socket %d; family %2d;",
-	    //		    fd, sap->sin_family);
-	  }
-	}
-	//	fprintf(logfile,"\n");
-      }
-      break;
+      case 3: // connect
+        { int fd, len, *ptr; struct sockaddr_in *sap;
+        unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7; 
+        //	fprintf(logfile,"PID %3d (%16s)[sys_connect 102]%d: ", pid, command, EBX);
+        paddr = cpu_get_phys_page_debug(env, ECX);
+        if (paddr!=-1)	{
+          bzero(tempbuf, 120);
+          cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+          ptr = (int*) tempbuf;
+          fd = *ptr++; sap=*ptr++; len= *ptr++;
+          paddr = cpu_get_phys_page_debug(env, sap);
+          bzero(tempbuf, 120);
+          cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the args
+          bptr = tempbuf;
+          b0=*bptr++; b1=*bptr++; b2=*bptr++; b3=*bptr++;
+          b4=*bptr++; b5=*bptr++; b6=*bptr++; b7=*bptr++;
+          bptr = tempbuf; bptr+=2;
+          sap = (struct sockaddr_in*) tempbuf;
+          IFLW_PUT_UINT8_T((uint8_t) sap->sin_family);
+          IFLW_PUT_UINT32_T(fd);
+          if (sap->sin_family == 1) {// PF_LOCAL
+            IFLW_PUT_STRING(bptr);
+            //	    fprintf(logfile,"socket %d; family  1; file %s", fd, bptr);
+          }
+          else if (sap->sin_family == 2) { // PF_INET
+            IFLW_PUT_UINT32_T(b4);
+            IFLW_PUT_UINT32_T(b5);
+            IFLW_PUT_UINT32_T(b6);
+            IFLW_PUT_UINT32_T(b7);
+            IFLW_PUT_UINT32_T(b2*256+b3);
+            //	    fprintf(logfile,"socket %d; family  2; %d.%d.%d.%d:%d", 
+            //		    fd, b4, b5, b6, b7, b2*256+b3);
+          }
+          else {
+            //	    fprintf(logfile,"socket %d; family %2d;",
+            //		    fd, sap->sin_family);
+          }
+        }
+        //	fprintf(logfile,"\n");
+        }
+        break;
       }
     case 4: // listen
       //      fprintf(logfile,"PID %3d (%16s)[sys_listen  102]%d: ", pid, command, EBX);
       paddr = cpu_get_phys_page_debug(env, ECX);
       if (paddr!=-1)	{
-	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	//	fprintf(logfile,"socket %d", *(int*) tempbuf);
-	IFLW_PUT_UINT32_T(*((int*)tempbuf));
+        bzero(tempbuf, 120);
+        cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+        //	fprintf(logfile,"socket %d", *(int*) tempbuf);
+        IFLW_PUT_UINT32_T(*((int*)tempbuf));
       }
       //      fprintf(logfile,"\n");
       break;
@@ -881,10 +875,10 @@ void iferret_log_syscall (uint8_t is_sysenter) {
       //      fprintf(logfile,"PID %3d (%16s)[sys_accept  102]%d: ", pid, command, EBX);
       paddr = cpu_get_phys_page_debug(env, ECX);
       if (paddr!=-1)	{
-	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	//	fprintf(logfile,"socket %d", *(int*) tempbuf);
-	IFLW_PUT_UINT32_T(*((int*)tempbuf));
+        bzero(tempbuf, 120);
+        cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+        //	fprintf(logfile,"socket %d", *(int*) tempbuf);
+        IFLW_PUT_UINT32_T(*((int*)tempbuf));
       }
       //      fprintf(logfile,"\n");      
       break;
@@ -892,10 +886,10 @@ void iferret_log_syscall (uint8_t is_sysenter) {
       //      fprintf(logfile,"PID %3d (%16s)[sys_getskna 102]%d: ", pid, command, EBX);
       paddr = cpu_get_phys_page_debug(env, ECX);
       if (paddr!=-1)	{
-	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	//	fprintf(logfile,"socket %d", *(int*) tempbuf);
-	IFLW_PUT_UINT32_T(*((int*)tempbuf));
+        bzero(tempbuf, 120);
+        cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+        //	fprintf(logfile,"socket %d", *(int*) tempbuf);
+        IFLW_PUT_UINT32_T(*((int*)tempbuf));
       }
       //      fprintf(logfile,"\n");      
       break;
@@ -903,237 +897,237 @@ void iferret_log_syscall (uint8_t is_sysenter) {
       //      fprintf(logfile,"PID %3d (%16s)[sys_getpeer 102]%d: ", pid, command, EBX);
       paddr = cpu_get_phys_page_debug(env, ECX);
       if (paddr!=-1)	{
-	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	//	fprintf(logfile,"socket %d", *(int*) tempbuf);
-	IFLW_PUT_UINT32_T(*((int*)tempbuf));
+        bzero(tempbuf, 120);
+        cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+        //	fprintf(logfile,"socket %d", *(int*) tempbuf);
+        IFLW_PUT_UINT32_T(*((int*)tempbuf));
       }
       //      fprintf(logfile,"\n");     
       break;
     case 8: 
       {// socketpair
-	int domain, type, protocol, *socket_vector, *ptr;
-	//      fprintf(logfile,"PID %3d (%16s)[sys_skpair  102]%d: ", pid, command, EBX);
-	paddr = cpu_get_phys_page_debug(env, ECX);
-	if (paddr!=-1)	{
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	  ptr = (int *) tempbuf;
-	  domain =*ptr++; type=*ptr++; protocol=*ptr++; socket_vector=*ptr++;
-	  //	fprintf(logfile,"domain %d; type %d; protocol %d\n", *(int*) tempbuf);
-	  IFLW_PUT_UINT32_T(*((int*)tempbuf));	
-	}
+        int domain, type, protocol, *socket_vector, *ptr;
+        //      fprintf(logfile,"PID %3d (%16s)[sys_skpair  102]%d: ", pid, command, EBX);
+        paddr = cpu_get_phys_page_debug(env, ECX);
+        if (paddr!=-1)	{
+          bzero(tempbuf, 120);
+          cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+          ptr = (int *) tempbuf;
+          domain =*ptr++; type=*ptr++; protocol=*ptr++; socket_vector=*ptr++;
+          //	fprintf(logfile,"domain %d; type %d; protocol %d\n", *(int*) tempbuf);
+          IFLW_PUT_UINT32_T(*((int*)tempbuf));	
+        }
       }          
       break;    
     case 9: // send
       {
-	int fd, msg, len, *ptr;
+        int fd, msg, len, *ptr;
 	
-	//	fprintf(logfile,"PID %3d (%16s)[sys_send    102]%d: ", pid, command, EBX);
-	paddr = cpu_get_phys_page_debug(env, ECX);
-	if (paddr!=-1)	{
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	  ptr = (int*) tempbuf;
-	  fd = *ptr++; msg=*ptr++; len= *ptr++;
-	  //	  fprintf(logfile,"socket %d ", fd);
+        //	fprintf(logfile,"PID %3d (%16s)[sys_send    102]%d: ", pid, command, EBX);
+        paddr = cpu_get_phys_page_debug(env, ECX);
+        if (paddr!=-1)	{
+          bzero(tempbuf, 120);
+          cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+          ptr = (int*) tempbuf;
+          fd = *ptr++; msg=*ptr++; len= *ptr++;
+          //	  fprintf(logfile,"socket %d ", fd);
 	  
-	  bzero(tempbuf, 120);
-	  paddr = cpu_get_phys_page_debug(env, msg);
-	  cpu_physical_memory_read(paddr, tempbuf, 30); 
-	  for (i=0; i<30; i++)
-	    if (iscntrl(tempbuf[i])) tempbuf[i]='.';
-	  //	  fprintf(logfile,"(%s)(%d)", tempbuf, len);
-	  IFLW_PUT_UINT32_T(fd);
-	  IFLW_PUT_STRING(tempbuf);
-	  IFLW_PUT_UINT32_T(len);
-	}
-	//	fprintf(logfile,"\n");	
+          bzero(tempbuf, 120);
+          paddr = cpu_get_phys_page_debug(env, msg);
+          cpu_physical_memory_read(paddr, tempbuf, 30); 
+          for (i=0; i<30; i++)
+            if (iscntrl(tempbuf[i])) tempbuf[i]='.';
+          //	  fprintf(logfile,"(%s)(%d)", tempbuf, len);
+          IFLW_PUT_UINT32_T(fd);
+          IFLW_PUT_STRING(tempbuf);
+          IFLW_PUT_UINT32_T(len);
+        }
+        //	fprintf(logfile,"\n");	
       }
       break;
     case 10: // recv
       {
-	int fd, len, *ptr;
-	unsigned int msg;
+        int fd, len, *ptr;
+        unsigned int msg;
 	
-	//	fprintf(logfile,"PID %3d (%16s)[sys_recv    102]%d: ", pid, command, EBX);
-	paddr = cpu_get_phys_page_debug(env, ECX);
-	if (paddr!=-1)	{
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	  ptr = (int*) tempbuf;
-	  fd = *ptr++; msg=*ptr++; len= *ptr;
-	  //	  fprintf(logfile,"socket %d, msg 0x%08x\n", fd, msg);
-	  IFLW_PUT_UINT32_T(fd);
-	  IFLW_PUT_UINT32_T(msg);
-	}
+        //	fprintf(logfile,"PID %3d (%16s)[sys_recv    102]%d: ", pid, command, EBX);
+        paddr = cpu_get_phys_page_debug(env, ECX);
+        if (paddr!=-1)	{
+          bzero(tempbuf, 120);
+          cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+          ptr = (int*) tempbuf;
+          fd = *ptr++; msg=*ptr++; len= *ptr;
+          //	  fprintf(logfile,"socket %d, msg 0x%08x\n", fd, msg);
+          IFLW_PUT_UINT32_T(fd);
+          IFLW_PUT_UINT32_T(msg);
+        }
       }
       break;
     case 11: // sendto
       {
-	int fd,msg, len, *ptr; struct sockaddr_in *sap;
-	unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7;
+        int fd,msg, len, *ptr; struct sockaddr_in *sap;
+        unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7;
 	
-	//	fprintf(logfile,"PID %3d (%16s)[sys_sendto  102]%d: ", pid, command, EBX);
-	paddr = cpu_get_phys_page_debug(env, ECX);
-	if (paddr!=-1)	{
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	  ptr = (int*) tempbuf;
-	  fd = *ptr++; msg=*ptr++; len= *ptr++; ptr++; sap=(struct sockaddr_in *)*ptr;
-	  //	  fprintf(logfile,"socket %d --> ", fd);
-	  bzero(tempbuf, 120);
-	  paddr = cpu_get_phys_page_debug(env, sap);
-	  cpu_physical_memory_read(paddr, tempbuf, 120); 
-	  bptr = tempbuf;
-	  b0=*bptr++; b1=*bptr++; b2=*bptr++; b3=*bptr++;
-	  b4=*bptr++; b5=*bptr++; b6=*bptr++; b7=*bptr++;
-	  bptr = tempbuf; bptr+=2;	  
-	  sap = (struct sockaddr_in*) tempbuf;
-	  IFLW_PUT_UINT8_T(sap->sin_family);
-	  IFLW_PUT_UINT32_T(fd);
-	  if (sap->sin_family == 1 ) {// PF_LOCAL
-	    IFLW_PUT_STRING(bptr);
-	    //	    fprintf(logfile,"[dest: family  1; file %s]", bptr);
-	  }
-	  else if (sap->sin_family == 2 ) {// PF_INET
-	    IFLW_PUT_UINT32_T(b4);
-	    IFLW_PUT_UINT32_T(b5);
-	    IFLW_PUT_UINT32_T(b6);
-	    IFLW_PUT_UINT32_T(b7);
-	    IFLW_PUT_UINT32_T(b2*256+b3);
-	    //	    fprintf(logfile,"[dest: family  2; %d.%d.%d.%d:%d]", 
-	    //		    b4, b5, b6, b7, b2*256+b3);
-	  }
-	  else {
-	    //fprintf(logfile,"[dest: family %2d]", sap->sin_family);
-	  }
-	  bzero(tempbuf, 120);
-	  paddr = cpu_get_phys_page_debug(env, msg);
-	  cpu_physical_memory_read(paddr, tempbuf, 30); 
-	  for (i=0; i<30; i++)
-	    if (iscntrl(tempbuf[i])) tempbuf[i]='.';
-	  IFLW_PUT_STRING(tempbuf);
-	  IFLW_PUT_UINT32_T(len);
-	  //	  fprintf(logfile," (%s)(%d)", tempbuf, len);
+        //	fprintf(logfile,"PID %3d (%16s)[sys_sendto  102]%d: ", pid, command, EBX);
+        paddr = cpu_get_phys_page_debug(env, ECX);
+        if (paddr!=-1)	{
+          bzero(tempbuf, 120);
+          cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+          ptr = (int*) tempbuf;
+          fd = *ptr++; msg=*ptr++; len= *ptr++; ptr++; sap=(struct sockaddr_in *)*ptr;
+          //	  fprintf(logfile,"socket %d --> ", fd);
+          bzero(tempbuf, 120);
+          paddr = cpu_get_phys_page_debug(env, sap);
+          cpu_physical_memory_read(paddr, tempbuf, 120); 
+          bptr = tempbuf;
+          b0=*bptr++; b1=*bptr++; b2=*bptr++; b3=*bptr++;
+          b4=*bptr++; b5=*bptr++; b6=*bptr++; b7=*bptr++;
+          bptr = tempbuf; bptr+=2;	  
+          sap = (struct sockaddr_in*) tempbuf;
+          IFLW_PUT_UINT8_T(sap->sin_family);
+          IFLW_PUT_UINT32_T(fd);
+          if (sap->sin_family == 1 ) {// PF_LOCAL
+            IFLW_PUT_STRING(bptr);
+            //	    fprintf(logfile,"[dest: family  1; file %s]", bptr);
+          }
+          else if (sap->sin_family == 2 ) {// PF_INET
+            IFLW_PUT_UINT32_T(b4);
+            IFLW_PUT_UINT32_T(b5);
+            IFLW_PUT_UINT32_T(b6);
+            IFLW_PUT_UINT32_T(b7);
+            IFLW_PUT_UINT32_T(b2*256+b3);
+            //	    fprintf(logfile,"[dest: family  2; %d.%d.%d.%d:%d]", 
+            //		    b4, b5, b6, b7, b2*256+b3);
+          }
+          else {
+            //fprintf(logfile,"[dest: family %2d]", sap->sin_family);
+          }
+          bzero(tempbuf, 120);
+          paddr = cpu_get_phys_page_debug(env, msg);
+          cpu_physical_memory_read(paddr, tempbuf, 30); 
+          for (i=0; i<30; i++)
+            if (iscntrl(tempbuf[i])) tempbuf[i]='.';
+          IFLW_PUT_STRING(tempbuf);
+          IFLW_PUT_UINT32_T(len);
+          //	  fprintf(logfile," (%s)(%d)", tempbuf, len);
 	  
 	  
-	}
-	//	fprintf(logfile,"\n");	
+        }
+        //	fprintf(logfile,"\n");	
       }
       break;
     case 12: // recvfrom
       {
-	int fd, *ptr;
+        int fd, *ptr;
 	
-	//	fprintf(logfile,"PID %3d (%16s)[sys_recvfro 102]%d: ", pid, command, EBX);
-	paddr = cpu_get_phys_page_debug(env, ECX);
-	if (paddr!=-1)	{
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	  ptr = (int*) tempbuf;
-	  fd = *ptr++; 
-	  //	  fprintf(logfile,"socket %d  ", fd);
-	  IFLW_PUT_UINT32_T(fd);
-	}
-	//	fprintf(logfile,"\n");	
+        //	fprintf(logfile,"PID %3d (%16s)[sys_recvfro 102]%d: ", pid, command, EBX);
+        paddr = cpu_get_phys_page_debug(env, ECX);
+        if (paddr!=-1)	{
+          bzero(tempbuf, 120);
+          cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+          ptr = (int*) tempbuf;
+          fd = *ptr++; 
+          //	  fprintf(logfile,"socket %d  ", fd);
+          IFLW_PUT_UINT32_T(fd);
+        }
+        //	fprintf(logfile,"\n");	
       }
       break;
     case 13: // shutdown
       {
-	int fd, *ptr;
+        int fd, *ptr;
 	
-	//	fprintf(logfile,"PID %3d (%16s)[sys_shutdow 102]%d: ", pid, command, EBX);
-	paddr = cpu_get_phys_page_debug(env, ECX);
-	if (paddr!=-1)	{
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	  ptr = (int*) tempbuf;
-	  fd = *ptr++; 
-	  IFLW_PUT_UINT8_T((uint8_t) *ptr);
-	  IFLW_PUT_UINT32_T(fd);
-	  /*
-	  if (*ptr == 0 ) 
-	    fprintf(logfile,"socket %d (SHUT_RD)",   fd);
-	  else if (*ptr == 1 )
-	    fprintf(logfile,"socket %d (SHUT_WR)",   fd);
-	  else if (*ptr == 2 )
-	    fprintf(logfile,"socket %d (SHUT_RDWR)", fd);
-	  */
-	}
-	//	fprintf(logfile,"\n");
+        //	fprintf(logfile,"PID %3d (%16s)[sys_shutdow 102]%d: ", pid, command, EBX);
+        paddr = cpu_get_phys_page_debug(env, ECX);
+        if (paddr!=-1)	{
+          bzero(tempbuf, 120);
+          cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+          ptr = (int*) tempbuf;
+          fd = *ptr++; 
+          IFLW_PUT_UINT8_T((uint8_t) *ptr);
+          IFLW_PUT_UINT32_T(fd);
+          /*
+            if (*ptr == 0 ) 
+            fprintf(logfile,"socket %d (SHUT_RD)",   fd);
+            else if (*ptr == 1 )
+            fprintf(logfile,"socket %d (SHUT_WR)",   fd);
+            else if (*ptr == 2 )
+            fprintf(logfile,"socket %d (SHUT_RDWR)", fd);
+          */
+        }
+        //	fprintf(logfile,"\n");
       }
       break;
     case 14: // setsockopt
       {
-	int fd, level, option, *ptr;
+        int fd, level, option, *ptr;
 	
-	//	fprintf(logfile,"PID %3d (%16s)[sys_setskop 102]%d: ", pid, command, EBX);
-	paddr = cpu_get_phys_page_debug(env, ECX);
-	if (paddr!=-1)	{
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	  ptr = (int*) tempbuf;
-	  fd = *ptr++; level=*ptr++; option=*ptr++;
-	  IFLW_PUT_UINT32_T(fd);
-	  IFLW_PUT_UINT32_T(level);
-	  IFLW_PUT_UINT32_T(option);
-	  //	  fprintf(logfile,"socket %d; level %d; option %d", fd, level, option);
-	}
-	//	fprintf(logfile,"\n");
+        //	fprintf(logfile,"PID %3d (%16s)[sys_setskop 102]%d: ", pid, command, EBX);
+        paddr = cpu_get_phys_page_debug(env, ECX);
+        if (paddr!=-1)	{
+          bzero(tempbuf, 120);
+          cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+          ptr = (int*) tempbuf;
+          fd = *ptr++; level=*ptr++; option=*ptr++;
+          IFLW_PUT_UINT32_T(fd);
+          IFLW_PUT_UINT32_T(level);
+          IFLW_PUT_UINT32_T(option);
+          //	  fprintf(logfile,"socket %d; level %d; option %d", fd, level, option);
+        }
+        //	fprintf(logfile,"\n");
       }
       break;
     case 15: // getsockopt
       {
-	int fd, level, option, *ptr;
+        int fd, level, option, *ptr;
 	
-	//	fprintf(logfile,"PID %3d (%16s)[sys_getskop 102]%d: ", pid, command, EBX);
-	paddr = cpu_get_phys_page_debug(env, ECX);
-	if (paddr!=-1)	{
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	  ptr = (int*) tempbuf;
-	  fd = *ptr++; level=*ptr++; option=*ptr++;
-	  IFLW_PUT_UINT32_T(fd);
-	  IFLW_PUT_UINT32_T(level);
-	  IFLW_PUT_UINT32_T(option);
-	  //	  fprintf(logfile,"socket %d; level %d; option %d", fd, level, option);
-	}
-	//	fprintf(logfile,"\n");
+        //	fprintf(logfile,"PID %3d (%16s)[sys_getskop 102]%d: ", pid, command, EBX);
+        paddr = cpu_get_phys_page_debug(env, ECX);
+        if (paddr!=-1)	{
+          bzero(tempbuf, 120);
+          cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+          ptr = (int*) tempbuf;
+          fd = *ptr++; level=*ptr++; option=*ptr++;
+          IFLW_PUT_UINT32_T(fd);
+          IFLW_PUT_UINT32_T(level);
+          IFLW_PUT_UINT32_T(option);
+          //	  fprintf(logfile,"socket %d; level %d; option %d", fd, level, option);
+        }
+        //	fprintf(logfile,"\n");
       }
       break;
     case 16: // sendmsg
       {
-	int fd, *ptr;
+        int fd, *ptr;
 	
-	//	fprintf(logfile,"PID %3d (%16s)[sys_sendmsg 102]%d: ", pid, command, EBX);
-	paddr = cpu_get_phys_page_debug(env, ECX);
-	if (paddr!=-1)	{
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	  ptr = (int*) tempbuf;
-	  fd = *ptr++; 
-	  //	  fprintf(logfile,"socket %d", fd);
-	  IFLW_PUT_UINT32_T(fd);
-	}
-	//	fprintf(logfile,"\n");
+        //	fprintf(logfile,"PID %3d (%16s)[sys_sendmsg 102]%d: ", pid, command, EBX);
+        paddr = cpu_get_phys_page_debug(env, ECX);
+        if (paddr!=-1)	{
+          bzero(tempbuf, 120);
+          cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+          ptr = (int*) tempbuf;
+          fd = *ptr++; 
+          //	  fprintf(logfile,"socket %d", fd);
+          IFLW_PUT_UINT32_T(fd);
+        }
+        //	fprintf(logfile,"\n");
       }
       break;
     case 17: // recvmsg
       {
-	int fd, *ptr;
+        int fd, *ptr;
 	
-	//	fprintf(logfile,"PID %3d (%16s)[sys_recvmsg 102]%d: ", pid, command, EBX);
-	paddr = cpu_get_phys_page_debug(env, ECX);
-	if (paddr!=-1)	{
-	  bzero(tempbuf, 120);
-	  cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
-	  ptr = (int*) tempbuf;
-	  fd = *ptr++; 
-	  //	  fprintf(logfile,"socket %d", fd);
-	  IFLW_PUT_UINT32_T(fd);
-	}
-	//	fprintf(logfile,"\n");
+        //	fprintf(logfile,"PID %3d (%16s)[sys_recvmsg 102]%d: ", pid, command, EBX);
+        paddr = cpu_get_phys_page_debug(env, ECX);
+        if (paddr!=-1)	{
+          bzero(tempbuf, 120);
+          cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+          ptr = (int*) tempbuf;
+          fd = *ptr++; 
+          //	  fprintf(logfile,"socket %d", fd);
+          IFLW_PUT_UINT32_T(fd);
+        }
+        //	fprintf(logfile,"\n");
       }
       break;
     }
@@ -1148,7 +1142,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
       if (EDX>0 && EDX <= 30) size = EDX; 
       cpu_physical_memory_read(paddr, tempbuf, size); 
       for (i=0; i<size; i++)
-	if (iscntrl(tempbuf[i])) tempbuf[i]='.';
+        if (iscntrl(tempbuf[i])) tempbuf[i]='.';
       //      fprintf(logfile,"(%s)(%d)\n", tempbuf, EDX);
       IFLS_SI(SYSLOG,tempbuf,EDX);
     }
@@ -1179,13 +1173,11 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_I_SIMP(FSTAT,EBX);
     break;
   case 109 : 
-    // NB: Missing from syscalls.h
-    // sys_olduname
+    // sys_olduname is missing from syscalls.h
     IFLS(OLDUNAME);
     break;
   case 110 : 
-    // NB: Missing from syscalls.h
-    // sys_iopl
+    // sys_iopl is missing from syscalls.h
     IFLS(IOPL);
     break;
   case 111 : 
@@ -1193,13 +1185,11 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS(VHANGUP);
     break;
   case 112 :
-    // NB: Missing from syscalls.h
-    // sys_idle
+    // sys_idle is missing from syscalls.h
     IFLS(IDLE);
     break;
   case 113 :
-    // NB: Missing from syscalls.h
-    // sys_vm86old
+    // sys_vm86old is missing from syscalls.h
     IFLS(VM86OLD);
     break;
   case 114 :
@@ -1216,8 +1206,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS(SYSINFO);
     break;
   case 117 :
-    // NB: Missing from syscalls.h
-    // sys_ipc  
+    // sys_ipc is missing from syscalls.h
     // Xuxian seems to know what to do with it, though. 
 
     // call first second third ptr fifth
@@ -1227,25 +1216,25 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_IIIII(IPC,EBX,ECX,EDX,ESI,EDI);
     //    fprintf(logfile,"PID %3d (%16s)[sys_ipc     117]: ", pid, command);
     /*
-    switch (EBX){
-    case 1: // SEMOP
+      switch (EBX){
+      case 1: // SEMOP
       fprintf(logfile, "SEMOP sem_id %d, sembuf 0x%08x, nsops %d\n", ECX, EDI, EDX);
       break;
-    case 2: // SEMGET
+      case 2: // SEMGET
       fprintf(logfile, "SEMGET key %d, nsems %d, semflags %d\n", ECX, EDX, ESI);
       break;
-    case 3: // SEMCTL
+      case 3: // SEMCTL
       fprintf(logfile, "SEMCTL sem_id %d, sem_num %d, cmd %d arg 0x%08x\n", ECX, EDX, ESI, EDI);
       break;
-    case 11: // MSGSND
+      case 11: // MSGSND
       fprintf(logfile, "MSGSND msg_id %d, msg 0x%08x, size %d, flag %d\n", 
-	      ECX, EDI, EDX, ESI);
+      ECX, EDI, EDX, ESI);
       break;
-    default:
+      default:
       fprintf(logfile, "call %d, first %d, second %d, third %d, ptr 0x%08x, fifth %d\n", 
-	      EBX, ECX, EDX, ESI, EDI, EBP);
+      EBX, ECX, EDX, ESI, EDI, EBP);
       break;
-    }
+      }
     */
     break;
   case 118 : 
@@ -1253,13 +1242,11 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_I(FSYNC,EBX);
     break;
   case 119 :
-    // NB: Missing in syscalls.h
-    // sys_sigreturn
+    // sys_sigreturn is missing in syscalls.h
     IFLS(SIGRETURN);
     break;
   case 120 : 
-    // NB: Missing in syscalls.h
-    // sys_clone
+    // sys_clone is missing in syscalls.h
     IFLS(CLONE);
     break;
   case 121 : 
@@ -1267,13 +1254,11 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_SI_SIMP(SETDOMAINNAME,EBX,ECX);
     break;
   case 122 :
-    // NB: Missing in syscalls.h
-    // sys_uname
+    // sys_uname is missing in syscalls.h
     IFLS(UNAME);
     break;
   case 123 : 
-    // NB: Missing in syscalls.h
-    // sys_modify_ldt
+    // sys_modify_ldt is missing in syscalls.h
     IFLS(MODIFY_LDT);
     break;
   case 124 : 
@@ -1291,8 +1276,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_II(SIGPROCMASK,EBX,ECX);
     break;
   case 127 : 
-    // NB: Missing from syscalls.h
-    // sys_create_module
+    // sys_create_module is missing from syscalls.h
     // Xuxian seems to know what to do with it. 
     IFLS_S_SIMP(CREATE_MODULE,EBX);
     break;
@@ -1303,11 +1287,11 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     // WTF? How can Xuxian be using EBX as the string ptr? 
     // shouldnt it be EDX? 
     /*
-    fprintf(logfile,"PID %3d (%16s)[sys_ini_mod 128]: module ", pid, command);
-    paddr = cpu_get_phys_page_debug(env, EBX);
-    bzero(tempbuf, 120);
-    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
-    fprintf(logfile,"%s\n", tempbuf);
+      fprintf(logfile,"PID %3d (%16s)[sys_ini_mod 128]: module ", pid, command);
+      paddr = cpu_get_phys_page_debug(env, EBX);
+      bzero(tempbuf, 120);
+      cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+      fprintf(logfile,"%s\n", tempbuf);
     */
     break;
   case 129 : 
@@ -1316,8 +1300,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_S_SIMP(DELETE_MODULE,EBX);
     break;
   case 130 : 
-    // NB: Missing from syscalls.h
-    // sys_get_kernel_syms
+    // sys_get_kernel_syms is missing from syscalls.h
     IFLS(GET_KERNEL_SYMS);
     break;
   case 131 : 
@@ -1347,8 +1330,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFSL_I(PERSONALITY,EBX);
     break;
   case 137 :
-    // NB: Missing from syscalls.h
-    // sys_afs_syscall
+    // sys_afs_syscall is missing from syscalls.h
     IFLS(AFS_SYSCALL);
     break;
   case 138 : 
@@ -1385,27 +1367,27 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     //                     unsigned long vlen);
     IFLS_II(WRITEV,EBX,EDX);
     /*
-    { int i, len; struct iovec *iovp; 
+      { int i, len; struct iovec *iovp; 
       fprintf(logfile,"PID %3d (%16s)[sys_writev  146]: fd %d;", pid, command, EBX);
       if (EDX>0) {
-	paddr = cpu_get_phys_page_debug(env, ECX);
-	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, EDX*sizeof(struct iovec)); //-> get the iov list
-	iovp = (struct iov*) tempbuf;
-	for(i=0; i<EDX; i++, iovp++) {
-	  fprintf(logfile," iov[%d].base 0x%08x len %d;", i, iovp->iov_base, iovp->iov_len);
-	} // for
-	iovp = (struct iov*) tempbuf;
-	paddr = cpu_get_phys_page_debug(env, iovp->iov_base);
-	if (iovp->iov_len > 30) len = 30;	
-	else len = iovp->iov_len;
-	bzero(tempbuf, 120); 
-	cpu_physical_memory_read(paddr, tempbuf, len); //-> get the iov list
-	for (i=0; i<30; i++)
-	  if (iscntrl(tempbuf[i])) tempbuf[i]='.';
-	fprintf(logfile," iov[0] (%s)\n", tempbuf);				
+      paddr = cpu_get_phys_page_debug(env, ECX);
+      bzero(tempbuf, 120);
+      cpu_physical_memory_read(paddr, tempbuf, EDX*sizeof(struct iovec)); //-> get the iov list
+      iovp = (struct iov*) tempbuf;
+      for(i=0; i<EDX; i++, iovp++) {
+      fprintf(logfile," iov[%d].base 0x%08x len %d;", i, iovp->iov_base, iovp->iov_len);
+      } // for
+      iovp = (struct iov*) tempbuf;
+      paddr = cpu_get_phys_page_debug(env, iovp->iov_base);
+      if (iovp->iov_len > 30) len = 30;	
+      else len = iovp->iov_len;
+      bzero(tempbuf, 120); 
+      cpu_physical_memory_read(paddr, tempbuf, len); //-> get the iov list
+      for (i=0; i<30; i++)
+      if (iscntrl(tempbuf[i])) tempbuf[i]='.';
+      fprintf(logfile," iov[0] (%s)\n", tempbuf);				
       } // if
-    } // case
+      } // case
     */
     break;
   case 147 : 
@@ -1489,349 +1471,500 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     fprintf(logfile,"PID %3d (%16s)[sys_getresu 165]\n", pid, command);
     break;
   case 166 : 
-    // NB: Missing from syscalls.h
-    // sys_vm86
+    // sys_vm86 is missing from syscalls.h
     IFSL(VM86);
     break;
   case 167 : 
-    // NB: Missing from syscalls.h    
-    // sys_query_module
-    fprintf(logfile,"PID %3d (%16s)[sys_query_m 167]: module ", pid, command);
-    paddr = cpu_get_phys_page_debug(env, EBX);
-    bzero(tempbuf, 120);
-    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the mod name
-    fprintf(logfile,"%s\n", tempbuf);
+    // sys_query_module is missing from syscalls.h    
+    IFSL_S_SIMP(QUERY_MODULE,EBX);
     break;
-  case 168 : // sys_poll
+  case 168 :
+    // long sys_poll(struct pollfd __user *ufds, unsigned int nfds,
+    //               long timeout);
     { int i, len; struct pollfd *iovp; 
-      fprintf(logfile,"PID %3d (%16s)[sys_poll    168]: nfd %d; timeout %d; ", 
-	      pid, command, ECX, EDX);
-      if (ECX>0) {
-	paddr = cpu_get_phys_page_debug(env, EBX);
-	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, ECX*sizeof(struct pollfd)); 
-	iovp = (struct pollfd*) tempbuf;
-	for(i=0; i<ECX; i++, iovp++) {
-	  fprintf(logfile," fds[%d].fd %d (events %d);", i, iovp->fd, iovp->events);
-	} // for
-      } // if
-      fprintf(logfile,"\n");
-    } // case
-    break;
-  case 169 : // sys_nfsservctl
-    fprintf(logfile,"PID %3d (%16s)[sys_nfsserv 169]\n", pid, command);
-    break;
-  case 170 : // sys_setresgid
-    fprintf(logfile,"PID %3d (%16s)[sys_setresg 170]: ruid %d; euid %d; suid %d;\n", pid, command, EBX, ECX, EDX);
-    break;
-  case 171 : // sys_getresgid
-    fprintf(logfile,"PID %3d (%16s)[sys_getresg 171]\n", pid, command);
-    break;
-  case 172 : // sys_prctl
-    fprintf(logfile,"PID %3d (%16s)[sys_prctl   172]\n", pid, command);
-    break;
-  case 173 : // sys_rt_sigreturn
-    fprintf(logfile,"PID %3d (%16s)[sys_rt_sigr 173]\n", pid, command);
-    break;
-  case 174 : // sys_rt_sigaction
-    fprintf(logfile,"PID %3d (%16s)[sys_rt_siga 174]: sig %d; handler 0x%08x\n", 
-	    pid, command, EBX, ECX);
-    break;
-  case 175 : // sys_rt_sigprocmask
-    fprintf(logfile,"PID %3d (%16s)[sys_rt_mask 175]: how %d; set 0x%08x\n", 
-	    pid, command, EBX, ECX);
-    break;
-  case 176 : // sys_rt_sigpending
-    fprintf(logfile,"PID %3d (%16s)[sys_rt_pend 176]\n", pid, command);
-    break;
-  case 177 : // sys_rt_sigtimedwait
-    fprintf(logfile,"PID %3d (%16s)[sys_rt_sigt 177]\n", pid, command);
-    break;
-  case 178 : // sys_rt_sigqueueinfo
-    fprintf(logfile,"PID %3d (%16s)[sys_rt_sigq 178]\n", pid, command);
-    break;
-  case 179 : // sys_rt_sigsuspend
-    fprintf(logfile,"PID %3d (%16s)[sys_rt_sigs 179]\n", pid, command);
-    break;
-  case 180 : // sys_pread64
-    fprintf(logfile,"PID %3d (%16s)[sys_pread64 180]: fd %d; count %d; offset %d\n", pid, command, EBX, EDX, ESI);
-    break;
-  case 181 : // sys_pwrite64
-    fprintf(logfile,"PID %3d (%16s)[sys_pwrit64 181]: fd %d; count %d; offset %d\n", pid, command, EBX, EDX, ESI);
-    break;
-  case 182 : // sys_chown
-    fprintf(logfile,"PID %3d (%16s)[sys_chown   182]\n", pid, command);
-    paddr = cpu_get_phys_page_debug(env, EBX);
-    bzero(tempbuf, 120);
-    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
-    fprintf(logfile,"%s (uid %d, gid %d)\n", tempbuf, ECX, EDX);
-    break;
-  case 183 : // sys_getcwd
-    fprintf(logfile,"PID %3d (%16s)[sys_getcwd  183]\n", pid, command);
-    break;
-  case 184 : // sys_capget
-    fprintf(logfile,"PID %3d (%16s)[sys_capget  184]\n", pid, command);
-    break;
-  case 185 : // sys_capset
-    fprintf(logfile,"PID %3d (%16s)[sys_capset  185]\n", pid, command);
-    break;
-  case 186 : // sys_sigaltstack
-    fprintf(logfile,"PID %3d (%16s)[sys_sigalts 186]\n", pid, command);
-    break;
-  case 187 : // sys_sendfile
-    fprintf(logfile,"PID %3d (%16s)[sys_sendfil 187]: out-fd %d; in-fd %d\n", pid, command, EBX, ECX);
-    break;
-  case 188 : // sys_getpmsg
-    fprintf(logfile,"PID %3d (%16s)[sys_getpmsg 188]\n", pid, command);
-    break;
-  case 189 : // sys_putpmsg
-    fprintf(logfile,"PID %3d (%16s)[sys_putpmsg 189]\n", pid, command);
-    break;
-  case 190 : // sys_vfork
-    fprintf(logfile,"PID %3d (%16s)[sys_vfork   190]\n", pid, command);
-    break;
-  case 191 : // sys_getrlimit
-    fprintf(logfile,"PID %3d (%16s)[sys_getrlim 191]: resource %d\n", pid, command, EBX);
-    break;
-  case 192 : // sys_mmap2
-    fprintf(logfile,"PID %3d (%16s)[sys_mmap2   192]: addr 0x%08x, len 0x%08x, prot %d, flags %d, fd %d, offset 0x%08x\n", pid, command, EBX, ECX, EDX, ESI, EDI, EBP);
-    break;
-  case 193 : // sys_truncate64
-    fprintf(logfile,"PID %3d (%16s)[sys_trunc64 193]\n", pid, command);
-    paddr = cpu_get_phys_page_debug(env, EBX);
-    bzero(tempbuf, 120);
-    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the link name
-    fprintf(logfile,"file %s; length %d\n", tempbuf, ECX);
-    break;
-  case 194 : // sys_ftruncate64
-    fprintf(logfile,"PID %3d (%16s)[sys_ftrun64 194]: fd %d; length %d\n", pid, command, EBX, ECX);
-    break;
-  case 195 : // sys_stat64
-    //fprintf(logfile,"PID %3d (%16s)[sys_stat64  195]\n", pid, command);
-    paddr = cpu_get_phys_page_debug(env, EBX);
-    if (paddr!=-1)  {
-      fprintf(logfile,"PID %3d (%16s)", pid, command);
-      fprintf(logfile,"[sys_stat64  195]: ");
+    //      fprintf(logfile,"PID %3d (%16s)[sys_poll    168]: nfd %d; timeout %d; ", 
+    //	      pid, command, ECX, EDX);
+    IFLS_II(POLL,ECX,EDX);
+    if (ECX>0) {
+      paddr = cpu_get_phys_page_debug(env, EBX);
       bzero(tempbuf, 120);
-      cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
-      fprintf(logfile,"%s \n", tempbuf);
+      cpu_physical_memory_read(paddr, tempbuf, ECX*sizeof(struct pollfd)); 
+      iovp = (struct pollfd*) tempbuf;
+      for(i=0; i<ECX; i++, iovp++) {
+        //	  fprintf(logfile," fds[%d].fd %d (events %d);", i, iovp->fd, iovp->events);
+        IFLW_PUT_UINT32_T(iovp->fp);
+        IFLW_PUT_UINT32_T(iovp->events);
+      } 
     }
+    //      fprintf(logfile,"\n");
+    } 
     break;
-  case 196 : // sys_lstat64
-    paddr = cpu_get_phys_page_debug(env, EBX);
-    if (paddr!=-1)  {
-      fprintf(logfile,"PID %3d (%16s)", pid, command);
-      fprintf(logfile,"[sys_lstat64 196]: ");
-      bzero(tempbuf, 120);
-      cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
-      fprintf(logfile,"%s \n", tempbuf);
-    }
+  case 169 :
+    // long sys_nfsservctl(int cmd,
+    //                     struct nfsctl_arg __user *arg,
+    //                     void __user *res);
+    IFLS_I(NFSSERVCTL,EBX);
     break;
-  case 197 : // sys_fstat64
+  case 170 : 
+    // sys_setresgid(gid_t rgid, gid_t egid, gid_t sgid);
+    IFLS_III(SETRESGID,EBX,ECX,EDX);
+    break;
+  case 171 : 
+    // long sys_getresgid(gid_t __user *rgid, gid_t __user *egid, gid_t __user *sgid);
+    IFLS(GETRESGID);
+    break;
+  case 172 : 
+    // long sys_prctl(int option, unsigned long arg2, unsigned long arg3,
+    //                unsigned long arg4, unsigned long arg5);
+    IFLS_III(PRCTL,EBX,ECX,EDX);
+    break;
+  case 173 : 
+    // sys_rt_sigreturn is missing from syscalls.h
+    IFLS(SIGRETURN);
+    break;
+  case 174 :
+    // sys_rt_sigaction is missing from syscalls.h
+    // Xuxian seems to know how to decode it. 
+    IFLS_II(RT_SIGACTION,EBX,ECX);
+    //    fprintf(logfile,"PID %3d (%16s)[sys_rt_siga 174]: sig %d; handler 0x%08x\n", 
+    //	    pid, command, EBX, ECX);
+    break;
+  case 175 : 
+    // sys_rt_sigprocmask(int how, sigset_t __user *set,
+    //                    sigset_t __user *oset, size_t sigsetsize);
+    IFLS_I(RT_SIGPROCMASK,EBX);
+    // Why is Xuxian logging the set pointer?
+    //    fprintf(logfile,"PID %3d (%16s)[sys_rt_mask 175]: how %d; set 0x%08x\n", 
+    //	    pid, command, EBX, ECX);
+    break;
+  case 176 : 
+    // long sys_rt_sigpending(sigset_t __user *set, size_t sigsetsize);
+    IFLS(RT_SIGPENDING);
+    break;
+  case 177 : 
+    // long sys_rt_sigtimedwait(const sigset_t __user *uthese,
+    //                          siginfo_t __user *uinfo,
+    //                          const struct timespec __user *uts,
+    //            	        size_t sigsetsize);
+    IFLS(RT_SIGTIMEDWAIT);
+    break;
+  case 178 : 
+    // long sys_rt_sigqueueinfo(int pid, int sig, siginfo_t __user *uinfo);
+    IFLS_II(RT_SIGQUEUINFO,EBX,ECX);
+    break;
+  case 179 :
+    // sys_rt_sigsuspend is missing from syscalls.h
+    IFLS(RT_SIGSUSPEND);
+    break;
+  case 180 : 
+    // ssize_t sys_pread64(unsigned int fd, char __user *buf,
+    //                     size_t count, loff_t pos);
+    IFLS_III(PREAD64,EBX,EDX,ESI);
+    break;
+  case 181 : 
+    // ssize_t sys_pwrite64(unsigned int fd, const char __user *buf,
+    //             	    size_t count, loff_t pos);
+    IFLS_III(PWRITE64,EBX,EDX,ESI);
+    break;
+  case 182 : 
+    // long sys_chown(const char __user *filename,
+    //                uid_t user, gid_t group);
+    IFLS_SII_SIMP(CHOWN,EBX,ECX,EDX);
+    break;
+  case 183 : 
+    // long sys_getcwd(char __user *buf, unsigned long size);
+    IFLS_SI_SIMP(GETCWD,EBX,ECX);
+    break;
+  case 184 : 
+    // long sys_capget(cap_user_header_t header,
+    //                 cap_user_data_t dataptr);
+    IFLS(CAPGET);
+    break;
+  case 185 : 
+    // long sys_capset(cap_user_header_t header,
+    //                 const cap_user_data_t data);
+    IFLS(CAPSET);
+    break;
+  case 186 : 
+    // sys_sigaltstack is missing from syscalls.h
+    IFLS(SIGALTSTACK);
+    break;
+  case 187 : 
+    // ssize_t sys_sendfile(int out_fd, int in_fd,
+    //                      off_t __user *offset, size_t count);
+    IFLS_II(SENDFILE,EBX,ECX,ESI);
+    break;
+  case 188 : 
+    // sys_getpmsg is missing from syscalls.h
+    IFLS(GETPMSG);
+    break;
+  case 189 : 
+    // sys_putpmsg is missing from syscalls.h
+    IFLS(PUTPMSG);
+    break;
+  case 190 :
+    // sys_vfork is missing from syscalls.h
+    IFLS(VFORK);
+    break;
+  case 191 : 
+    // long sys_getrlimit(unsigned int resource,
+    //                    struct rlimit __user *rlim);
+    IFLS_I(GETRLIMIT,EBX);
+    break;
+  case 192 :
+    // sys_mmap2 is missing from syscalls.h
+    // yet Xuxian knows how to decode it..
+    IFLS_IIIIII(MMAP2,EBX,ECX,EDX,ESI,EDI,EBP);
+    //    fprintf(logfile,"PID %3d (%16s)[sys_mmap2   192]: addr 0x%08x, len 0x%08x, prot %d, flags %d, fd %d, offset 0x%08x\n", pid, command, EBX, ECX, EDX, ESI, EDI, EBP);
+    break;
+  case 193 : 
+    // long sys_truncate64(const char __user *path, loff_t length);
+    IFLS_SI_SIMP(TRUNCATE64,EBX,ECX);
+    break;
+  case 194 : 
+    // long sys_ftruncate64(unsigned int fd, loff_t length);
+    IFLS_II(FTRUNCATE64,EBX,ECX);
+    break;
+  case 195 : 
+    // long sys_stat64(char __user *filename,
+    //                 struct stat64 __user *statbuf);
+    IFLS_S_SIMP(STAT64,EBX);
+    break;
+  case 196 : 
+    // long sys_lstat64(char __user *filename,
+    //                  struct stat64 __user *statbuf);
+    IFLS_S_SIMP(LSTAT64,EBX);
+    break;
+  case 197 : 
+    // long sys_fstat64(unsigned long fd, struct stat64 __user *statbuf);
+    IFLS_I(FSTAT64,EBX);
     //fprintf(logfile,"PID %3d (%16s)[sys_fstat64 197]\n", pid, command);
-    paddr = cpu_get_phys_page_debug(env, EBX);
-    if (paddr!=-1)  {
+    // What's up with this.  EBX should be a file descriptor, not a pointer.
+    // I think this is just wrong. 
+    /*
+      paddr = cpu_get_phys_page_debug(env, EBX);
+      if (paddr!=-1)  {
       fprintf(logfile,"PID %3d (%16s)", pid, command);
       fprintf(logfile,"[sys_fstat64 108]: ");
       bzero(tempbuf, 120);
       cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
       fprintf(logfile,"%s \n", tempbuf);
-    }
-
+      }
+    */
     break;
-  case 198 : // sys_lchown32
-    fprintf(logfile,"PID %3d (%16s)[sys_lchow32 198]\n", pid, command);
-    paddr = cpu_get_phys_page_debug(env, EBX);
-    bzero(tempbuf, 120);
-    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
-    fprintf(logfile,"%s (uid %d, gid %d)\n", tempbuf, ECX, EDX);
+  case 198 :
+    // sys_lchown32 is missing from syscalls.h
+    // Xuxian seems to know how to decode it.
+    IFLS_SII_SIMP(LCHOWN32,EBX,ECX,EDX);
+    /*
+      fprintf(logfile,"PID %3d (%16s)[sys_lchow32 198]\n", pid, command);
+      paddr = cpu_get_phys_page_debug(env, EBX);
+      bzero(tempbuf, 120);
+      cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+      fprintf(logfile,"%s (uid %d, gid %d)\n", tempbuf, ECX, EDX);
+    */
     break;
-  case 199 : // sys_getuid32
-    fprintf(logfile,"PID %3d (%16s)[sys_getuid3 199]\n", pid, command);
+  case 199 : 
+    // sys_getuid32 is missing from syscalls.h
+    IFLS(GETUID32);
     break;
-  case 200 : // sys_getgid32
-    fprintf(logfile,"PID %3d (%16s)[sys_getgid3 200]\n", pid, command);
+  case 200 : 
+    // sys_getgid32 is missing from syscalls.h
+    IFLS(GETGID32);
     break;
-  case 201 : // sys_geteuid32
-    fprintf(logfile,"PID %3d (%16s)[sys_geteu32 201]\n", pid, command);
+  case 201 : 
+    // sys_geteuid32 is missing from syscalls.h
+    IFLS(GETEUID32);
     break;
-  case 202 : // sys_getegid32
-    fprintf(logfile,"PID %3d (%16s)[sys_geteg32 202]\n", pid, command);
+  case 202 : 
+    // sys_getegid32 is missing from syscalls.h
+    IFLS(GETEGID32);
     break;
-  case 203 : // sys_setreuid32
-    fprintf(logfile,"PID %3d (%16s)[sys_seteu32 203]: ruid %d; euid %d\n", pid, command, EBX, ECX);
+  case 203 : 
+    // sys_setreuid32 is missing from syscalls.h
+    // Xuxian knows how to decode.
+    IFLS_II(SETREUID32,EBX,ECX);
+    //    fprintf(logfile,"PID %3d (%16s)[sys_seteu32 203]: ruid %d; euid %d\n", pid, command, EBX, ECX);
     break;
-  case 204 : // sys_setregid32
-    fprintf(logfile,"PID %3d (%16s)[sys_seteg32 204]: rgid %d; egid %d\n", pid, command, EBX, ECX);
+  case 204 : 
+    // sys_setregid32 is missing from syscalls.h
+    // Xuxian knows how to decode.
+    IFLS_II(SETREGID32,EBX,ECX);
+    //    fprintf(logfile,"PID %3d (%16s)[sys_seteg32 204]: rgid %d; egid %d\n", pid, command, EBX, ECX);
     break;
-  case 205 : // sys_getgroups32
-    fprintf(logfile,"PID %3d (%16s)[sys_getgr32 205]\n", pid, command);
+  case 205 : 
+    // sys_getgroups32 is missing from syscalls.h
+    IFLS(GETGROUPS32);
+    //    fprintf(logfile,"PID %3d (%16s)[sys_getgr32 205]\n", pid, command);
     break;
-  case 206 : // sys_setgroups32
-    fprintf(logfile,"PID %3d (%16s)[sys_setgr32 206]\n", pid, command);
+  case 206 : 
+    // sys_setgroups32 is missing from syscalls.h
+    IFLS(SETGROUPS32);
     break;
-  case 207 : // sys_fchown32
-    fprintf(logfile,"PID %3d (%16s)[sys_fchow32 207]: fd %d; uid %d; gid %d\n", pid, command, EBX, ECX, EDX);
+  case 207 : 
+    // sys_fchown32 is missing from syscalls.h
+    // Xuxian knows how to decode.
+    IFLS_III(FCHOWN32,EBX,ECX,EDX);
+    //    fprintf(logfile,"PID %3d (%16s)[sys_fchow32 207]: fd %d; uid %d; gid %d\n", pid, command, EBX, ECX, EDX);
     break;
-  case 208 : // sys_setresuid32
-    fprintf(logfile,"PID %3d (%16s)[sys_setsu32 208]: ruid %d; euid %d; suid %d;\n", pid, command, EBX, ECX, EDX);
+  case 208 : 
+    // sys_setresuid32 is missing from syscalls.h
+    // Xuxian knows how to decode
+    IFLS_III(SETRESUID32,EBX,ECX,EDX);
+    //    fprintf(logfile,"PID %3d (%16s)[sys_setsu32 208]: ruid %d; euid %d; suid %d;\n", pid, command, EBX, ECX, EDX);
     break;
-  case 209 : // sys_getresuid32
-    fprintf(logfile,"PID %3d (%16s)[sys_getes32 209]\n", pid, command);
+  case 209 : 
+    // sys_getresuid32 is missing from syscalls.h
+    IFLS(GETRESUID32);
     break;
-  case 210 : // sys_setresgid32
-    fprintf(logfile,"PID %3d (%16s)[sys_setes32 208]: rgid %d; egid %d; sgid %d;\n", pid, command, EBX, ECX, EDX);
+  case 210 :
+    // sys_setresgid32 is missing from syscalls.h
+    // Xuxian knows how to decode.
+    IFLS_III(SETRESGID32,EBX,ECX,EDX);
+    //    fprintf(logfile,"PID %3d (%16s)[sys_setes32 208]: rgid %d; egid %d; sgid %d;\n", pid, command, EBX, ECX, EDX);
     break;
-  case 211 : // sys_getresgid32
-    fprintf(logfile,"PID %3d (%16s)[sys_getes32 211]\n", pid, command);
+  case 211 : 
+    // sys_getresgid32 is missing from syscalls.h
+    IFLS(GETRESGID32);
     break;
-  case 212 : // sys_chown32
-    fprintf(logfile,"PID %3d (%16s)[sys_chown32 212]: ", pid, command);
-    paddr = cpu_get_phys_page_debug(env, EBX);
-    bzero(tempbuf, 120);
-    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
-    fprintf(logfile,"%s (uid %d, gid %d)\n", tempbuf, ECX, EDX);
+  case 212 : 
+    // sys_chown32 is missing from syscalls.h
+    // Xuxian knows how to decode.
+    IFLS_SII_SIMP(EBX,ECX,EDX);
+    /*
+      fprintf(logfile,"PID %3d (%16s)[sys_chown32 212]: ", pid, command);
+      paddr = cpu_get_phys_page_debug(env, EBX);
+      bzero(tempbuf, 120);
+      cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+      fprintf(logfile,"%s (uid %d, gid %d)\n", tempbuf, ECX, EDX);
+    */
     break;
-  case 213 : // sys_setuid32
-    fprintf(logfile,"PID %3d (%16s)[sys_setui32 213]: uid %d\n", pid, command, EBX);
+  case 213 :
+    // sys_setuid32 is missing from syscalls.h
+    // Xuxian knows how to decode.
+    IFLS_I(SETUID32,EBX);
+    //    fprintf(logfile,"PID %3d (%16s)[sys_setui32 213]: uid %d\n", pid, command, EBX);
     break;
-  case 214 : // sys_setgid32
-    fprintf(logfile,"PID %3d (%16s)[sys_setgi32 214]: gid %d\n", pid, command, EBX);
+  case 214 : 
+    // sys_setgid32 is missing from syscalls.h
+    // Xuxian knows how to decode.
+    IFLS_I(SETGID32,EBX);
+    //    fprintf(logfile,"PID %3d (%16s)[sys_setgi32 214]: gid %d\n", pid, command, EBX);
     break;
-  case 215 : // sys_setfsuid32
-    fprintf(logfile,"PID %3d (%16s)[sys_setfs32 215]: fsuid %d\n", pid, command, EBX);
+  case 215 : 
+    // sys_setfsuid32 is missing from syscalls.h
+    // Xuxian knows how to decode.
+    IFLS_I(SETFSUID32,EBX);
+    //    fprintf(logfile,"PID %3d (%16s)[sys_setfs32 215]: fsuid %d\n", pid, command, EBX);
     break;
-  case 216 : // sys_setfsgid32
-    fprintf(logfile,"PID %3d (%16s)[sys_setfs32 216]: fsgid %d\n", pid, command, EBX);
+  case 216 : 
+    // sys_setfsgid32 is missing from syscalls.h
+    // Xuxian knows how to decode.
+    IFLS_I(SETFSGID32,EBX);
+    //    fprintf(logfile,"PID %3d (%16s)[sys_setfs32 216]: fsgid %d\n", pid, command, EBX);
     break;
-  case 217 : // sys_pivot_root
-    fprintf(logfile,"PID %3d (%16s)[sys_pivot_r 217]: ", pid, command);
-    paddr = cpu_get_phys_page_debug(env, EBX);
-    bzero(tempbuf, 120);
-    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
-    fprintf(logfile,"%s\n", tempbuf);
+  case 217 :
+    // long sys_pivot_root(const char __user *new_root,
+    //                     const char __user *put_old);
+    IFLS_SS_SIMP(PIVOT_ROOT,EBX,ECX);
+    // Why not log 2nd string?
+    /*
+      fprintf(logfile,"PID %3d (%16s)[sys_pivot_r 217]: ", pid, command);
+      paddr = cpu_get_phys_page_debug(env, EBX);
+      bzero(tempbuf, 120);
+      cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+      fprintf(logfile,"%s\n", tempbuf);
+    */
     break;
-  case 218 : // sys_mincore
-    fprintf(logfile,"PID %3d (%16s)[sys_mincore 218]\n", pid, command);
+  case 218 : 
+    // long sys_mincore(unsigned long start, size_t len,
+    //                  unsigned char __user * vec);
+    IFLS_II(MINCORE,EBX,ECX);
     break;
-  case 219 : // sys_madvise
-    fprintf(logfile,"PID %3d (%16s)[sys_madvise 219]\n", pid, command);
+  case 219 : 
+    // long sys_madvise(unsigned long start, size_t len, int behavior);
+    IFLS_III(MADVISE,EBX,ECX,EDX);
     break;
-  case 220 : // sys_getdents64
-    fprintf(logfile,"PID %3d (%16s)[sys_getde64 220]: fd %d\n", pid, command, EBX);
+  case 220 : 
+    // long sys_getdents64(unsigned int fd,
+    //                     struct linux_dirent64 __user *dirent,
+    //                     unsigned int count);
+    IFLS_II(GETDETS64,EBX,EDX);
     break;
-  case 221 : // sys_fcntl64
-    fprintf(logfile,"PID %3d (%16s)[sys_fcntl64 221]: fd %d; cmd %d; arg 0x%08x\n", 
-	    pid, command, EBX, ECX, EDX);
+  case 221 : 
+    // long sys_fcntl64(unsigned int fd,
+    //	                unsigned int cmd, unsigned long arg);
+    IFLS_III(FCNTL64,EBX,ECX,EDX);
     break;
-  case 224 : // sys_gettid
-    fprintf(logfile,"PID %3d (%16s)[sys_gettid  224]\n", pid, command);
+  case 224 : 
+    //  long sys_gettid(void);
+    IFLS(GETTID);
     break;
-  case 225 : // sys_readahead
-    fprintf(logfile,"PID %3d (%16s)[sys_readahe 225]\n", pid, command);
+  case 225 : 
+    // ssize_t sys_readahead(int fd, loff_t offset, size_t count);
+    IFLS_III(READAHEAD,EBX,ECX,EDX);
     break;
-  case 226 : // sys_setxattr
-    fprintf(logfile,"PID %3d (%16s)[sys_setxatt 226]\n", pid, command);
+  case 226 : 
+    // long sys_setxattr(const char __user *path, const char __user *name,
+    //                   const void __user *value, size_t size, int flags);
+    IFLS_SSII(SETXATTR,EBX,ECX,ESI,EDI);
     break;
-  case 227 : // sys_lsetxattr
-    fprintf(logfile,"PID %3d (%16s)[sys_lsetxat 227]\n", pid, command);
+  case 227 : 
+    // long sys_lsetxattr(const char __user *path, const char __user *name,
+    //                    const void __user *value, size_t size, int flags);
+    IFLS_SSII(LSETXATTR,EBX,ECX,ESI,EDI);
     break;
-  case 228 : // sys_fsetxattr
-    fprintf(logfile,"PID %3d (%16s)[sys_fsetxat 228]\n", pid, command);
+  case 228 : 
+    //  long sys_fsetxattr(int fd, const char __user *name,
+    //                     const void __user *value, size_t size, int flags);
+    IFLS_ISII(FSETXATTR,EBX,ECX,ESI,EDI);
     break;
-  case 229 : // sys_getxattr
-    fprintf(logfile,"PID %3d (%16s)[sys_getxatt 229]\n", pid, command);
+  case 229 : 
+    // ssize_t sys_getxattr(const char __user *path, const char __user *name,
+    //              	    void __user *value, size_t size);
+    IFLS_SSI(GETXATTR,EBX,ECX,ESI);
     break;
-  case 230 : // sys_lgetxattr
-    fprintf(logfile,"PID %3d (%16s)[sys_lgetxat 230]\n", pid, command);
+  case 230 : 
+    // ssize_t sys_lgetxattr(const char __user *path, const char __user *name,
+    //                       void __user *value, size_t size);
+    IFLS_SSI(LGETXATTR,EBX,ECX,ESI);
     break;
   case 231 : // sys_fgetxattr
-    fprintf(logfile,"PID %3d (%16s)[sys_fgetxat 231]\n", pid, command);
+    // ssize_t sys_fgetxattr(int fd, const char __user *name,
+    //                       void __user *value, size_t size);
+    IFLS_ISI(FGETXATTR,EBX,ECX,ESI);
     break;
-  case 232 : // sys_listxattr
-    fprintf(logfile,"PID %3d (%16s)[sys_listxat 232]\n", pid, command);
+  case 232 : 
+    // ssize_t sys_listxattr(const char __user *path, char __user *list,
+    //	                     size_t size);
+    IFLS_SI(LISTXATTR,EBX,EDX);
     break;
-  case 233 : // sys_llistxattr
-    fprintf(logfile,"PID %3d (%16s)[sys_llistxa 233]\n", pid, command);
+  case 233 :
+    // ssize_t sys_llistxattr(const char __user *path, char __user *list,
+    //                        size_t size);
+    IFLS_SI(LLISTXATTR,EBX,EDX);
     break;
-  case 234 : // sys_flistxattr
-    fprintf(logfile,"PID %3d (%16s)[sys_flistxa 234]\n", pid, command);
+  case 234 : 
+    // ssize_t sys_flistxattr(int fd, char __user *list, size_t size);
+    IFLS_II(FLISTXATTR,EBX,EDX);
     break;
-  case 235 : // sys_removexattr
-    fprintf(logfile,"PID %3d (%16s)[sys_removex 235]\n", pid, command);
+  case 235 : 
+    // long sys_removexattr(const char __user *path,
+    //                      const char __user *name);
+    IFLS_SS_SIMP(REMOVEXATTR,EBX,ECX);
     break;
-  case 236 : // sys_lremovexattr
-    fprintf(logfile,"PID %3d (%16s)[sys_lremove 236]\n", pid, command);
+  case 236 :     
+    // long sys_lremovexattr(const char __user *path,
+    //                       const char __user *name);
+    IFLS_SS_SIMP(LREMOVEXATTR,EBX,ECX);
     break;
-  case 237 : // sys_fremovexattr
-    fprintf(logfile,"PID %3d (%16s)[sys_fremove 237]\n", pid, command);
+  case 237 : 
+    // long sys_fremovexattr(int fd, const char __user *name);
+    IFLS_IS(FREMOVEXATTR,EBX,ECX);
     break;
-  case 238 : // sys_tkill
-    fprintf(logfile,"PID %3d (%16s)[sys_tkill   238]: pid %d; sig %d\n", pid, 
-	    command, EBX, ECX);
+  case 238 : 
+    // long sys_tkill(int pid, int sig);
+    IFLS_II(TKILL,EBX,ECX);
     break;
-  case 239 : // sys_sendfile64
-    fprintf(logfile,"PID %3d (%16s)[sys_sendf64 239]\n", pid, command);
+  case 239 : 
+    //  ssize_t sys_sendfile64(int out_fd, int in_fd,
+    //                         loff_t __user *offset, size_t count);
+    IFLS_III(SENDFILE64,EBX,ECX,ESI);
     break;
-  case 240 : // sys_futex
-    fprintf(logfile,"PID %3d (%16s)[sys_futex   240]\n", pid, command);
+  case 240 : 
+    // long sys_futex(u32 __user *uaddr, int op, u32 val,
+    //                struct timespec __user *utime, u32 __user *uaddr2,
+    //                u32 val3);
+    IFLS_I(FUTEX,ECX);
     break;
-  case 241 : // sys_sched_setaffinity
-    fprintf(logfile,"PID %3d (%16s)[sys_sch_saf 241]\n", pid, command);
+  case 241 : 
+    // long sys_sched_setaffinity(pid_t pid, unsigned int len,
+    //                            unsigned long __user *user_mask_ptr);
+    IFLS_II(SCHED_SETAFFINITY,EBX,ECX);
     break;
-  case 242 : // sys_sched_getaffinity
-    fprintf(logfile,"PID %3d (%16s)[sys_sch_gaf 242]\n", pid, command);
+  case 242 : 
+    // long sys_sched_getaffinity(pid_t pid, unsigned int len,
+    //                            unsigned long __user *user_mask_ptr);
+    IFLS_II(SCHED_GETAFFINITY,EBX,ECX);
     break;
-  case 243 : // sys_set_thread_area
-    fprintf(logfile,"PID %3d (%16s)[sys_set_thr 243]\n", pid, command);
+  case 243 :
+    // sys_set_thread_area is missing from syscalls.h    
+    IFLS(SET_THREAD_AREA);
     break;
-  case 244 : // sys_get_thread_area
-    fprintf(logfile,"PID %3d (%16s)[sys_get_thr 244]\n", pid, command);
+  case 244 :
+    // sys_get_thread_area is missing from syscall.h
+    IFLS(GET_THREAD_AREA);
     break;
-  case 245 : // sys_io_setup
-    fprintf(logfile,"PID %3d (%16s)[sys_io_setu 245]\n", pid, command);
+  case 245 : 
+    //  sys_io_setup(unsigned nr_reqs, aio_context_t __user *ctx);
+    IFLS(IO_SETUP);
     break;
-  case 246 : // sys_io_destroy
-    fprintf(logfile,"PID %3d (%16s)[sys_io_detr 246]\n", pid, command);
+  case 246 : 
+    // long sys_io_destroy(aio_context_t ctx);
+    IFLS(IO_DESTROY);
     break;
-  case 247 : // sys_io_getevents
-    fprintf(logfile,"PID %3d (%16s)[sys_io_gete 247]\n", pid, command);
+  case 247 : 
+    //  long sys_io_getevents(aio_context_t ctx_id,
+    //                        long min_nr,
+    //                        long nr,
+    //                        struct io_event __user *events,
+    //                        struct timespec __user *timeout);
+    IFLS(IO_GETEVENTS);
     break;
-  case 248 : // sys_io_submit
-    fprintf(logfile,"PID %3d (%16s)[sys_io_subm 248]\n", pid, command);
+  case 248 :
+    // long sys_io_submit(aio_context_t, long,
+    //                    struct iocb __user * __user *);
+    IFLS(IO_SUBMIT);
     break;
-  case 249 : // sys_io_cancel
-    fprintf(logfile,"PID %3d (%16s)[sys_io_canc 249]\n", pid, command);
+  case 249 : 
+    // long sys_io_cancel(aio_context_t ctx_id, struct iocb __user *iocb,
+    //                    struct io_event __user *result);
+    IFLS(IO_CANCEL);
     break;
-  case 250 : // sys_fadvise64
-    fprintf(logfile,"PID %3d (%16s)[sys_fadvi64 250]\n", pid, command);
+  case 250 : 
+    // sys_fadvise64(int fd, loff_t offset, size_t len, int advice);
+    IFLS_IIII(FADVISE64,EBX,ECX,EDX,ESI);
     break;
-  case 252 : // sys_exit_group
-    fprintf(logfile,"PID %3d (%16s)[sys_exit_gr 252]\n", pid, command);
+  case 252 : 
+    // void sys_exit_group(int error_code);
+    IFLS_I(EXIT_GROUP,EBX);
     break;
-  case 253 : // sys_lookup_dcookie
-    fprintf(logfile,"PID %3d (%16s)[sys_lkup_dc 253]\n", pid, command);
+  case 253 : 
+    //  long sys_lookup_dcookie(u64 cookie64, char __user *buf, size_t len);
+    IFLS(LOOKUP_DCOOKIE);
     break;
-  case 254 : // sys_epoll_create
-    fprintf(logfile,"PID %3d (%16s)[sys_epollcr 254]\n", pid, command);
+  case 254 :
+    // long sys_epoll_create(int size);
+    IFLS_I(EPOLL_CREATE,EBX);
     break;
-  case 255 : // sys_epoll_ctl
-    fprintf(logfile,"PID %3d (%16s)[sys_epollct 255]\n", pid, command);
+  case 255 :
+    //  long sys_epoll_ctl(int epfd, int op, int fd,
+    //                     struct epoll_event __user *event);
+    IFLS_III(EPOLL_CTL,EBX,ECX,EDX);
     break;
-  case 256 : // sys_epoll_wait
-    fprintf(logfile,"PID %3d (%16s)[sys_epoll_w 256]\n", pid, command);
+  case 256 : 
+    // ong sys_epoll_wait(int epfd, struct epoll_event __user *events,
+    //                    int maxevents, int timeout);
+    IFLS_III(EPOLL_WAIT,EBX,EDX,ESI);
     break;
-  case 257 : // sys_remap_file_pages
-    fprintf(logfile,"PID %3d (%16s)[sys_remap_f 257]\n", pid, command);
+  case 257 : 
+    // long sys_remap_file_pages(unsigned long start, unsigned long size,
+    //                           unsigned long prot, unsigned long pgoff,
+    //                           unsigned long flags);
+    IFLS_IIIII(REMAP_FILE_PAGES,EBX,ECX,EDX,ESI,EDI);
     break;
-  case 258 : // sys_set_tid_address
-    fprintf(logfile,"PID %3d (%16s)[sys_set_tid 258]\n", pid, command);
+  case 258 :
+    // long sys_set_tid_address(int __user *tidptr);
+    IFLS(SET_TID_ADDRESS);
     break;
-  case 259 : // sys_timer_create
-    fprintf(logfile,"PID %3d (%16s)[sys_timercr 259]\n", pid, command);
+  case 259 : 
+    // long sys_timer_create(clockid_t which_clock,
+    //                       struct sigevent __user *timer_event_spec,
+    //                       timer_t __user * created_timer_id);
+    IFLS_I(TIMER_CREATE,EBX);
     break;
-    */
   default:
-    fprintf(logfile,"PID %3d (%16s)[unknown_syscall %d]\n", pid, command, EAX);
+    IFLS_IIIIIII(UNKNOWN,EAX,EBX,ECX,EDX,ESI,EDI,EBP);
     break;
-  }  //switch
+  }
+}
