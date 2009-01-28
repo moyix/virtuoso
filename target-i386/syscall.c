@@ -2,6 +2,7 @@
 // Note: 
 // system call prototypes
 // from  /usr/src/linux-headers-2.6.24-19/include/linux/syscalls.h
+// Look in /usr/include/asm/unistd_32.h for the syscall numbers
 
 // Note, from http://www.win.tue.nl/~aeb/linux/lk/lk-4.html
 // "The Linux Kernel: Linux System Calls"
@@ -11,7 +12,14 @@
 // More than 6 param?  Not sure what happens.  
 
 
+#include <string.h>
+#include "exec.h"
+#include "lookup_table.h"
+
+
 #include "linux_task_struct_offsets.h"
+
+extern struct CPUX86State *env;
 
 
 // current_task is pointer to vm physical memory at which linux task structure is
@@ -19,13 +27,14 @@
 // slot_offset is where in task_struct to find this slot.
 // slot_size is size of data for that slot, in bytes.
 // dest is where to copy that data
-void copy_task_struct_slot(char *current_task, unsigned int slot_offset, slot_size, char *dest) {
-  target_ulong paddr;
+void copy_task_struct_slot(char *current_task, uint32_t slot_offset,
+                           uint32_t slot_size, char *dest) {
+  uint32_t paddr;
 
   bzero(dest,slot_size);
   paddr = cpu_get_phys_page_debug(env, current_task+slot_offset);
   if (paddr != -1) {
-    cpu_physical_memory_read(paddr, &current_task, sizeof_slot);
+    cpu_physical_memory_read(paddr, &current_task, slot_size);
   }
 }
 
@@ -39,23 +48,22 @@ void copy_string_phys(char *tempbuf, char *physaddr, uint32_t len) {
 
 
 #define SYSOP(op) glue(INFO_FLOW_OP_SYS_,op)
-
-// sys call with no args
-#define IFLS(op) \
-IF_WRAPPER ( \				
-             IFLW_PUT_OP(SYSOP(op));    \
-             IFLW_PUT_STRING(command);   \
-             )
-
-     // All syscalls iferret log entries containt this info.
+     
+// All syscalls iferret log entries containt this info.
 #define IFLS_CORE(op)     \
   IFLW_PUT_OP(SYSOP(op)); \
   IFLW_PUT_STRING(command); \
   IFLW_PUT_UINT32_T(pid); \
   IFLW_PUT_UINT32_T(eip_for_callsite); 
 
+// sys call with no args
+#define IFLS(op) \
+IF_WRAPPER ( \
+  IFLS_CORE(op); \
+)
 
-     // sys call with one arg -- an int
+
+// sys call with one arg -- an int
 #define IFLS_I(op,val)	\
 IF_WRAPPER ( \
   IFLS_CORE(op);  \
@@ -71,7 +79,7 @@ IF_WRAPPER ( \
 ) 
 
      // sys call with three args -- all ints
-#define IFLS_II(op,val1,val2,val3)  \
+#define IFLS_III(op,val1,val2,val3)  \
 IF_WRAPPER ( \
   IFLS_CORE(op);   \
   IFLW_PUT_UINT32_T(val1); \
@@ -121,9 +129,10 @@ IF_WRAPPER ( \
   paddr = cpu_get_phys_page_debug(env, r); \
   if (paddr!=-1) { \
     copy_string_phys(name, paddr, 120); \            
- IFLS_S(op,name); \
-                    } \
-                        } 
+  } \
+  IFLS_S(op,name); \
+} 
+
 
 
 #define IFLS_SS_SIMP(op,r1,r2)	\
@@ -168,7 +177,7 @@ IF_WRAPPER ( \
 // current system call 
 void iferret_log_syscall (uint8_t is_sysenter) {
   
-  target_ulong paddr, regs_ebx; 
+  uint32_t paddr, regs_ebx; 
   char *current_task, **argvp, *tempbuf;
   char command[COMM_SIZE];
   int pid, uid, len, i, old_syscall_num;
@@ -223,8 +232,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS(EXIT);
     break;
   case 2 :
-    // NB: missing from syscalls.h?  defunct?
-    // long sys_fork(void);
+    // sys_fork is missing from syscalls.h
     IFLS(FORK);
     break;
   case 3 : 
@@ -264,7 +272,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_S_SIMP(UNLINK,EBX);
     break;
   case 11: 
-    // Also missing from syscalls.h 
+    // sys_execve is missing from syscalls.h 
     // This one is there, though? 
     // long sys_execve(char *name, char **argv,char **envp, struct pt_regs regs)
     {
@@ -1967,4 +1975,17 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_IIIIIII(UNKNOWN,EAX,EBX,ECX,EDX,ESI,EDI,EBP);
     break;
   }
+}
+
+
+
+
+// log syscall originating in an interrupt
+void iferret_log_syscall_interrupt(void) {
+  iferret_log_syscall(0);
+}
+
+// log syscall originating in a sysenter
+void iferret_log_syscall_sysenter(void) {
+  iferret_log_syscall(1);
 }

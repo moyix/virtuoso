@@ -311,7 +311,7 @@ endif
 CPPFLAGS+=-I$(SRC_PATH)/fpu
 
 ifeq ($(TARGET_ARCH), i386)
-LIBOBJS+=helper.o helper2.o
+LIBOBJS+=helper.o helper2.o syscall.o
 endif
 
 ifeq ($(TARGET_ARCH), x86_64)
@@ -619,6 +619,8 @@ op.o: op.c
 ifeq ($(TARGET_BASE_ARCH), i386)
 # XXX: rename helper.c to op_helper.c
 helper.o: helper.c
+	$(CC) $(HELPER_CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) -c -o $@ $<
+syscall.o: syscall.c
 	$(CC) $(HELPER_CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) -c -o $@ $<
 else
 op_helper.o: op_helper.c

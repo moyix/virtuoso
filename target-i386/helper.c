@@ -18,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include "exec.h"
-#include "lookup_table.h"
+//#include "lookup_table.h"
 #include "host-utils.h"
 #include "../info_flow.h"
 
@@ -845,7 +845,7 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
     env->eflags &= ~(TF_MASK | VM_MASK | RF_MASK | NT_MASK);
 
     if (intno ==0x80) {
-#include "syscall-int.h"
+      iferret_log_syscall_interrupt();
     } // if (intno == 0x80)
 	
     free(tempbuf);
@@ -2813,9 +2813,13 @@ void helper_sysenter(void)
     saved_esp = ESP;
     SET_ESP(esp, sp_mask);
 
+    iferret_log_syscall_sysenter(1);
+    /*
     #define IS_SYSENTER 1
     #include "syscall-int.h"
     #undef IS_SYSENTER
+    */
+
     free(tempbuf);
     free(command);
 
