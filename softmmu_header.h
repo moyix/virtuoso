@@ -314,6 +314,7 @@ static inline int glue(glue(lds, SUFFIX), MEMSUFFIX)(target_ulong ptr)
         res = (DATA_STYPE)glue(glue(__ld, SUFFIX), MMUSUFFIX)(addr, mmu_idx);
     } else {
         physaddr = addr + env->tlb_table[mmu_idx][index].addend;
+        res = glue(glue(lds, SUFFIX), _raw)((uint8_t *)physaddr);
        IFLW_MMU_LD(DIRECT,ptr,physaddr);
     }
     return res;
