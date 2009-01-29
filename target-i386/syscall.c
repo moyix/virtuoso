@@ -224,8 +224,9 @@ void iferret_log_syscall (uint8_t is_sysenter) {
   // the syscalls, by the numbers
   
   switch (EAX) {	
-  case 0 : // sys_ni_syscall
-    IFLS(NI_SYSCALL_0);
+  case 0 : 
+    // long sys_restart_syscall(void);
+    IFLS(RESTART_SYSCALL);
     break;
   case 1 : 
     // long sys_exit(int error_code);
@@ -325,20 +326,20 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     break;
   case 15 :
     // long sys_chmod(const char __user *filename, mode_t mode);
-    IFLS_SI_SIMP(MKNOD,EBX,ECX);
+    IFLS_SI_SIMP(CHMOD,EBX,ECX);
     break;
   case 16 : 
-    // long sys_lchown16(const char __user *filename,
-    //                   old_uid_t user, old_gid_t group);
-    IFLS_SII_SIMP(LCHOWN16,EBX,ECX,EDX);
+    // long sys_lchown(const char __user *filename,
+    //                 uid_t user, gid_t group);
+    IFLS_SII_SIMP(LCHOWN,EBX,ECX,EDX);
     break;
-  case 17 : // sys_ni_syscall
-    IFLS(NI_SYSCALL_17);
+  case 17 : // sys_break
+    IFLS(BREAK);
     break;
   case 18 :
-    // long sys_stat(char __user *filename,
-    //               struct __old_kernel_stat __user *statbuf);
-    IFLS_S_SIMP(STAT,EBX);
+    // sys_oldstat missing from syscalls.h
+    // Xuxian seems to know ebx is a ptr to a string
+    IFLS_S_SIMP(OLDSTAT,EBX);
     break;
   case 19 :
     // off_t sys_lseek(unsigned int fd, off_t offset,
@@ -353,19 +354,19 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     // long sys_mount(char __user *dev_name, char __user *dir_name,
     //                char __user *type, unsigned long flags,
     //	              void __user *data);
-    IFLS_SS_SIMP(MOUNT,EBX,ECX);
+    IFLS_SSSI_SIMP(MOUNT,EBX,ECX,EDX,ESI);
     break;
   case 22 :
-    // long sys_oldumount(char __user *name);
-    IFLS_S_SIMP(OLDUMOUNT,EBX);
+    // long sys_umount(char __user *name, int flags);
+    IFLS_SI_SIMP(UMOUNT,EBX,ECX);
     break;
   case 23 : 
-    // long sys_setuid16(old_uid_t uid);
-    IFLS_I(SETUID16,EBX);
+    // long sys_setuid(uid_t uid);
+    IFLS_I(SETUID,EBX);
     break;
   case 24 : 
-    // long sys_getuid16(void);
-    IFLS(GETUID16);
+    // long sys_getuid(void);
+    IFLS(GETUID);
     break;
   case 25 :
     // long sys_stime(time_t __user *tptr);
@@ -380,6 +381,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_I(ALARM,EBX);
     break;
   case 28 : 
+    // sys_oldfstat not in syscalls.h
     // I think this is really oldfstat.  can't find a prototype
     IFLS(OLDFSTAT);
     break;
@@ -392,11 +394,13 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     //                struct utimbuf __user *times);
     IFLS_SI_SIMP(UTIME,EBX,ECX);
     break;
-  case 31 : // sys_ni_syscall
-    IFLS(NI_SYSCALL_31);
+  case 31 : 
+    // sys_stty not in syscalls.h
+    IFLS(STTY);
     break;
-  case 32 : // sys_ni_syscall
-    IFLS(NI_SYSCALL_32);
+  case 32 : 
+    // sys_gtty not in syscalls.h
+    IFLS(GTTY);
     break;
   case 33 :
     // long sys_access(const char __user *filename, int mode);
@@ -407,8 +411,8 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS_I(NICE,EBX);
     break;
   case 35 : 
-    // sys_ni_syscall
-    IFLS(NI_SYSCALL_35);
+    // sys_ftime not in syscalls.h
+    IFLS(FTIME);
     break;
   case 36 : 
     // long sys_sync(void);
@@ -437,43 +441,44 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     break;
   case 42:
     // sys_pipe is missing from syscalls.h. 
-    IFLS_(PIPE);
+    IFLS_III(PIPE,EBX,ECX,EDX);
     //    paddr = cpu_get_phys_page_debug(env, EBX);
     //    if (paddr!=-1)	{      
     //      fprintf(logfile,"PID %3d (%16s)", pid, command);
     //      fprintf(logfile,"[sys_pipe     42]\n");
     //} 
     break;
-  case 43 : // sys_times
+  case 43 : 
     // long sys_times(struct tms __user *tbuf);
     IFLS(TIMES);
     break;
-  case 44 : // sys_ni_syscall    
-    IFLS(NI_SYSCALL_44);
+  case 44 : 
+    // sys_prof missing from syscalls.h
+    IFLS(PROF);
     break;
   case 45 : 
-    // sys_break is missing from syscalls.h 
-    IFLS(BREAK);
+    // unsigned long sys_brk(unsigned long brk);
+    IFLS_I(BRK,EBX);
     break;
   case 46 :
-    // long sys_setgid16(old_gid_t gid);
-    IFLS_I(SETGID16,EBX);
+    // long sys_setgid(gid_t gid);
+    IFLS_I(SETGID,EBX);
     break;
-  case 47 : // sys_getgid16
-    // long sys_getgid16(void);
-    IFLS(GETGID16);
+  case 47 : 
+    // long sys_getgid(void);
+    IFLS(GETGID);
     break;
   case 48 : 
     // unsigned long sys_signal(int sig, __sighandler_t handler);
     IFLS_II(SIGNAL,EBX,ECX);
     break;
   case 49 : 
-    // long sys_geteuid16(void);
-    IFLS(GETEUID16);
+    // long sys_geteuid(void);
+    IFLS(GETEUID);
     break;
   case 50 :
-    // long sys_getegid16(void);
-    IFLS(GETEGID16);
+    // long sys_getegid(void);
+    IFLS(GETEGID);
     break;
   case 51 : 
     // long sys_acct(const char __user *name);
@@ -482,7 +487,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
   case 52 : 
     // sys_umount2 is missing from syscalls.h
     // Xuxian used EBX as a ptr to a string tho...
-    IFLS_S(MOUNT2,EBX);
+    IFLS_S(UMOUNT2,EBX);
     break;
   case 53 : 
     // sys_lock is missing from syscalls.h
@@ -608,11 +613,10 @@ void iferret_log_syscall (uint8_t is_sysenter) {
   case 82 :
     // long sys_select(int n, fd_set __user *inp, fd_set __user *outp,
     // fd_set __user *exp, struct timeval __user *tvp);
+    IFLS_I(SELECT,EBX);
     {
       int fd, *ptr;
       //      fprintf(logfile,"PID %3d (%16s)[sys_select   82]: ", pid, command);
-      // write op plus num fds
-      IFLS_I(SELECT,EBX);
       if ( EBX > 0 ){
         if (!ECX) {
           paddr = cpu_get_phys_page_debug(env, ECX);
@@ -1349,12 +1353,19 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     // long sys_setfsgid(gid_t gid);
     IFSL_I(SETFSGID,EBX);
     break;
+  case 140 :
+    // sys__llseek missing from syscalls.h
+    // NOTE: Two "_" in that symbol, as per unistd_32.h
+    IFSL(_LLSEEK);
   case 141 : 
     // long sys_getdents(unsigned int fd,
     //                   struct linux_dirent __user *dirent,
     //                   unsigned int count);
     IFLS_I(GETDENTS,EBX);
     break;
+  case 142 : 
+    // sys__newselect missing from syscalls.h
+    IFSL(_NEWSELECT);
   case 143 : 
     // long sys_flock(unsigned int fd, unsigned int cmd);
     IFLS_II(FLOCK,EBX,ECX);
@@ -1406,6 +1417,9 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     // long sys_fdatasync(unsigned int fd);
     IFLS_I(FDATASYNC,EBX);
     break;
+  case 149:
+    // sys__sysctl missing from syscalls.h
+    IFLS(_SYSCTL);
   case 150 :
     // long sys_mlock(unsigned long start, size_t len);
     IFLS_II(MLOCK,EBX,ECX);
@@ -1460,7 +1474,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     break;
   case 162 :
     // long sys_nanosleep(struct timespec __user *rqtp, struct timespec __user *rmtp);
-    IFLS(NANO_SLEEP);
+    IFLS(NANOSLEEP);
     break;
   case 163 : 
     // unsigned long sys_mremap(unsigned long addr,
@@ -1528,7 +1542,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     break;
   case 173 : 
     // sys_rt_sigreturn is missing from syscalls.h
-    IFLS(SIGRETURN);
+    IFLS(RT_SIGRETURN);
     break;
   case 174 :
     // sys_rt_sigaction is missing from syscalls.h
@@ -1615,9 +1629,8 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     IFLS(VFORK);
     break;
   case 191 : 
-    // long sys_getrlimit(unsigned int resource,
-    //                    struct rlimit __user *rlim);
-    IFLS_I(GETRLIMIT,EBX);
+    // sys_ugetrlimit missing from sysalls.h
+    IFLS_I(UGETRLIMIT,EBX);
     break;
   case 192 :
     // sys_mmap2 is missing from syscalls.h
@@ -1738,7 +1751,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
   case 212 : 
     // sys_chown32 is missing from syscalls.h
     // Xuxian knows how to decode.
-    IFLS_SII_SIMP(EBX,ECX,EDX);
+    IFLS_SII_SIMP(CHOWN32,EBX,ECX,EDX);
     /*
       fprintf(logfile,"PID %3d (%16s)[sys_chown32 212]: ", pid, command);
       paddr = cpu_get_phys_page_debug(env, EBX);
@@ -1797,7 +1810,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     // long sys_getdents64(unsigned int fd,
     //                     struct linux_dirent64 __user *dirent,
     //                     unsigned int count);
-    IFLS_II(GETDETS64,EBX,EDX);
+    IFLS_II(GETDENTS64,EBX,EDX);
     break;
   case 221 : 
     // long sys_fcntl64(unsigned int fd,
@@ -1971,6 +1984,368 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     //                       timer_t __user * created_timer_id);
     IFLS_I(TIMER_CREATE,EBX);
     break;
+  case 260: 
+    // long sys_timer_settime(timer_t timer_id, int flags,
+    //                        const struct itimerspec __user *new_setting,
+    //                        struct itimerspec __user *old_setting);
+    IFLS_II(TIMER_SETTIME,EBX,ECX);
+    break;
+  case 261: 
+    // timer_gettime	(__NR_timer_create+2)
+    // long sys_timer_gettime(timer_t timer_id,
+    //                        struct itimerspec __user *setting);
+    IFLS_I(TIMER_GETTIME,EBX);
+    break;
+  case 262: 
+    // sys_timer_getoverrun missing from syscalls.h
+    IFLS(TIMER_GETOVERRUN);
+    break;   
+  case 263: 
+    //  long sys_timer_delete(timer_t timer_id);
+    IFLS_I(TIMER_DELETE,EBX);
+    break;
+  case 264: 
+    // long sys_clock_settime(clockid_t which_clock,
+    //                        const struct timespec __user *tp);
+    IFLS_I(CLOCK_SETTIME,EBX);
+    break;
+  case 265: 
+    // long sys_clock_gettime(clockid_t which_clock,
+    //                        struct timespec __user *tp);
+    IFLS_I(CLOCK_GETTIME,EBX);
+    break;
+  case 266:
+    // clock_getres	(__NR_timer_create+7)
+    // long sys_clock_getres(clockid_t which_clock,
+    //                       struct timespec __user *tp);
+    IFLS_I(CLOCK_GETRES,EBX);
+    break;
+  case 267: 
+    // clock_nanosleep	(__NR_timer_create+8)
+    // long sys_clock_nanosleep(clockid_t which_clock, int flags,
+    //                          const struct timespec __user *rqtp,
+    //                          struct timespec __user *rmtp);
+    IFLS_II(CLOCK_NANOSLEEP,EBX,ECX);
+    break;
+  case 268: 
+    // long sys_statfs64(const char __user *path, size_t sz,
+    //                   struct statfs64 __user *buf);
+    IFLS_SI(STATFS64,EBX,ECX);
+    break;
+  case 269: 
+    // long sys_fstatfs64(unsigned int fd, size_t sz,
+    //                    struct statfs64 __user *buf);
+    IFLS_II(FSTATFS64,EBX,ECX);
+    break;
+  case 270: 
+    // long sys_tgkill(int tgid, int pid, int sig);
+    IFLS_III(TGKILL,EBX,ECX,EDX);
+    break;
+  case 271: 
+    //long sys_utimes(char __user *filename,
+    //                struct timeval __user *utimes);
+    IFLS_S_SIMP(UTIMES,EBX);
+    break;
+  case 272:
+    // long sys_fadvise64_64(int fd, loff_t offset, loff_t len, int advice);
+    IFLS_IIII(FADVISE64_64,EBX,ECX,EDX,ESI);
+    break;
+  case 273: 
+    // sys_vserver missing from syscalls.h
+    IFLS(VSERVER);
+    break;
+  case 274: 
+    // long sys_mbind(unsigned long start, unsigned long len,
+    //                unsigned long mode,
+    //                unsigned long __user *nmask,
+    //                unsigned long maxnode,
+    //                unsigned flags);
+    IFLS_IIII(MBIND,EBX,ECX,EDX,EDI,EBP);
+    break;
+  case 275: 
+    // long sys_get_mempolicy(int __user *policy,
+    //                        unsigned long __user *nmask,
+    //                        unsigned long maxnode,
+    //                        unsigned long addr, unsigned long flags);
+    IFLS_II(GET_MEMPOLICY,ESI,EDI);
+    break;
+  case 277: 
+    //  long sys_set_mempolicy(int mode, unsigned long __user *nmask,
+    //                         unsigned long maxnode);
+    IFLS_I(SET_MEMPOLICY,EBX);
+    break;
+  case 277: 
+    // long sys_mq_open(const char __user *name, int oflag, mode_t mode, 
+    //                  struct mq_attr __user *attr);
+    IFLS_SII_SIMP(MQ_OPEN,EBX,ECX,EDX);
+    break;
+  case 278: 
+    // long sys_mq_unlink(const char __user *name);
+    IFLS_S_SIMP(MQ_UNLINK,EBX);
+    break;
+  case 279: 
+    // long sys_mq_timedsend(mqd_t mqdes, const char __user *msg_ptr, 
+    //                       size_t msg_len, unsigned int msg_prio, 
+    //                       const struct timespec __user *abs_timeout);
+    IFLS(MQ_TIMEDSEND);
+    break;
+  case 280: 
+    // mq_timedreceive	(__NR_mq_open+3)
+    // ssize_t sys_mq_timedreceive(mqd_t mqdes, char __user *msg_ptr, 
+    //                             size_t msg_len, unsigned int __user *msg_prio,
+    //                             const struct timespec __user *abs_timeout);
+    IFLS(MQ_TIMEDRECEIVE);
+    break;
+  case 281: 
+    // long sys_mq_notify(mqd_t mqdes, const struct sigevent __user *notification);
+    IFLS(MQ_NOTIFY);
+    break;
+  case 282:
+    // long sys_mq_getsetattr(mqd_t mqdes, const struct mq_attr __user *mqstat, 
+    //                        struct mq_attr __user *omqstat);
+    IFLS(MQ_GETSETATTR);
+    break;
+  case 283: 
+    // long sys_kexec_load(unsigned long entry, unsigned long nr_segments,
+    //                     struct kexec_segment __user *segments,
+    //                     unsigned long flags);
+    IFLS_III(KEXEC_LOAD,EBX,ECX,ESI);
+    break;
+  case 284: 
+    // long sys_waitid(int which, pid_t pid,
+    //                 struct siginfo __user *infop,
+    //                 int options, struct rusage __user *ru);
+    IFLS_III(WAITID,EBX,ECX,ESI);
+    break;
+  case 285: 
+    // sys_setaltroot missing from syscalls.h
+    IFLS(SETALTROOT);
+    break;
+  case 286: 
+    // long sys_add_key(const char __user *_type,
+    //                  const char __user *_description,
+    //                  const void __user *_payload,
+    //                  size_t plen,
+    //                  key_serial_t destringid);
+    IFLS_SSI_SIMP(ADD_KEY,EBX,ECX,EDI);
+    break;
+  case 287: 
+    // long sys_request_key(const char __user *_type,
+    //                      const char __user *_description,
+    //                      const char __user *_callout_info,
+    //                      key_serial_t destringid);
+    IFLS_SSSI_SIMP(REQUEST_KEY,EBX,ECX,EDX,ESI);
+    break;
+  case 288:
+    // long sys_keyctl(int cmd, unsigned long arg2, unsigned long arg3,
+    //                 unsigned long arg4, unsigned long arg5);
+    IFLS_IIIII(KEYCTL,EBX,ECX,EDX,ESI,EDI);
+    break;
+  case 289: 
+    // long sys_ioprio_set(int which, int who, int ioprio);
+    IFLS_III(IOPRIO_SET,EBX,ECX,EDX);
+    break;
+  case 290: 
+    // long sys_ioprio_get(int which, int who);
+    IFLS_II(IOPRIO_GET,EBX,ECX);
+    break;
+  case 291: 
+    // long sys_inotify_init(void);
+    IFLS(INOTIFY_INIT);
+    break;
+  case 292:
+    // long sys_inotify_add_watch(int fd, const char __user *path,
+    //                            u32 mask);
+    IFLS_ISI_SIMP(INOTIFY_ADD_WATCH,EBX,ECX,EDX);
+    break;   
+  case 293 :
+    // long sys_inotify_rm_watch(int fd, u32 wd);
+    IFLS_II(INOTIFY_RM_WATCH,EBX,ECX);
+    break;
+  case 294:
+    // long sys_migrate_pages(pid_t pid, unsigned long maxnode,
+    //                        const unsigned long __user *from,
+    //                        const unsigned long __user *to); 
+    IFLS_II(MIGRATE_PAGES,EBX,ECX);
+    break;
+  case 295: 
+    // long sys_openat(int dfd, const char __user *filename, int flags,
+    //                 int mode);
+    IFLS_ISII_SIMP(OPENAT,EBX,ECX,EDX,ESI);
+    break;
+  case 296: 
+    // long sys_mkdirat(int dfd, const char __user * pathname, int mode);
+    IFLS_ISI_SIMP(MKDIRAT,EBX,ECX,EDX);
+    break;
+  case 297: 
+    // long sys_mknodat(int dfd, const char __user * filename, int mode,
+    //                  unsigned dev);
+    IFLS_ISII_SIMP(MKNODAT,EBX,ECX,EDX,ESI);
+    break;
+  case 298: 
+    // long sys_fchownat(int dfd, const char __user *filename, uid_t user,
+    //                   gid_t group, int flag);
+    IFLS_ISIII_SIMP(FCHOWNAT,EBX,ECX,EDX,ESI,EDI);
+    break;
+  case 299: 
+    // long sys_futimesat(int dfd, char __user *filename,
+    //                    struct timeval __user *utimes);
+    IFLS_IS_SIMP(FUTIMESAT,EBX,ECX);
+    break;
+  case 300: 
+    // long sys_fstatat64(int dfd, char __user *filename,
+    //                    struct stat64 __user *statbuf, int flag);
+    IFLS_ISI_SIMP(FSTATAT64,EBX,ECX,ESI);
+    break;
+  case 301: 
+    // long sys_unlinkat(int dfd, const char __user * pathname, int flag);
+    IFLS_ISI_SIMP(UNLINKAT,EBX,ECX,EDX);
+    break;
+  case 302: 
+    // long sys_renameat(int olddfd, const char __user * oldname,
+    //                   int newdfd, const char __user * newname);
+    IFLS_ISIS_SIMP(RENAMEAT,EBX,ECX,EDX,ESI);
+    break;
+  case 303: 
+    // long sys_linkat(int olddfd, const char __user *oldname,
+    //                 int newdfd, const char __user *newname, int flags);
+    IFLS_ISISI_SIMP(LINKAT,EBX,ECX,EDX,ESI,EDI);
+    break;
+  case 304: 
+    //  long sys_symlinkat(const char __user * oldname,
+    //                     int newdfd, const char __user * newname)
+    IFLS_SIS_SIMP(SYMLINKAT,EBX,ECX,EDX,ESI);
+    break;
+  case 305: 
+    // long sys_readlinkat(int dfd, const char __user *path, char __user *buf,
+    // int bufsiz);
+    IFLS_ISS_SIMP(READLINKAT,EBX,ECX,EDX);
+    break;
+  case 306: 
+    // long sys_fchmodat(int dfd, const char __user * filename,
+    //                   mode_t mode);
+    IFLS_ISI(FCHMODAT,EBX,ECX,EDX);
+    break;
+  case 307: 
+    // long sys_faccessat(int dfd, const char __user *filename, int mode);
+    IFLS_ISI(FACCESSAT,EBX,ECX,EDX);
+    break;
+  case 308: 
+    // sys_pselect6 missing from syscalls.h
+    IFLS(PSELECT6);
+    break;
+  case 309: 
+    // sys_ppoll missing from syscalls.h
+    IFLS(PPOL);
+    break;
+  case 310: 
+    // long sys_unshare(unsigned long unshare_flags);
+    IFLS_I(UNSHARE,EBX);
+    break;
+  case 311: 
+    // long sys_set_robust_list(struct robust_list_head __user *head,
+    //                          size_t len);
+    IFLS(SET_ROBUST_LIST);
+    break;
+  case 312:
+    // long sys_get_robust_list(int pid,
+    //                          struct robust_list_head __user * __user *head_ptr,
+    //                          size_t __user *len_ptr);
+    IFLS_I(GET_ROBUST_LIST);
+    break;
+  case 313:
+    // long sys_splice(int fd_in, loff_t __user *off_in,
+    //                 int fd_out, loff_t __user *off_out,
+    //                 size_t len, unsigned int flags);
+    IFLS_IIII(SPLICE,EBX,EDX,EDI,EBP);
+    break;
+  case 314: 
+    // long sys_sync_file_range(int fd, loff_t offset, loff_t nbytes,
+    //                          unsigned int flags);
+    IFLS_IIII(SYNC_FILE_RANGE,EBX,ECX,EDX,ESI);
+    break;
+  case 315: 
+    // long sys_tee(int fdin, int fdout, size_t len, unsigned int flags);
+    IFLS_IIII(TEE,,EBX,ECX,EDX,ESI);
+    break;
+  case 316: 
+    // long sys_vmsplice(int fd, const struct iovec __user *iov,
+    //                   unsigned long nr_segs, unsigned int flags);
+    IFLS_II(VMSPLICE,EBX,ESI);
+    break;
+  case 317: 
+    // long sys_move_pages(pid_t pid, unsigned long nr_pages,
+    //                     const void __user * __user *pages,
+    //                     const int __user *nodes,
+    //                     int __user *status,
+    //                     int flags);
+    IFLS_III(MOVE_PAGES,EBX,ECX,EBP);
+    break;
+  case 318:
+    // long sys_getcpu(unsigned __user *cpu, unsigned __user *node, 
+    //                 struct getcpu_cache __user *cache);
+    IFLS(GET_CPU);
+    break;
+  case 319: 
+    // long sys_epoll_wait(int epfd, struct epoll_event __user *events,
+    //                     int maxevents, int timeout);
+    IFLS_III(EPOLL_WAIT,EBX,EDX,ESI);
+    break;
+  case 320: 
+    // long sys_utimensat(int dfd, char __user *filename,
+    //                    struct timespec __user *utimes, int flags);
+    IFLS_ISI(UTIMENSAT,EBX,ECX,ESI);
+    break;
+  case 321: 
+    // long sys_signalfd(int ufd, sigset_t __user *user_mask, size_t sizemask);
+    IFLS_I(SIGNALFD,EBX);
+    break;
+  case 322: 
+    //  long sys_timerfd_create(int clockid, int flags);
+    IFLS_II(TIMER_CREATE,EBX,ECX);
+    break;
+  case 323: 
+    // long sys_eventfd(unsigned int count);
+    IFLS_I(EVENTFD,EBX);
+    break;
+  case 324:
+    // long sys_fallocate(int fd, int mode, loff_t offset, loff_t len);
+    IFLS_IIII(FALLOCATE,EBX,ECX,EDX,ESI);
+    break;
+  case 325:
+    // long sys_timerfd_settime(int ufd, int flags,
+    //                          const struct itimerspec __user *utmr,
+    //                          struct itimerspec __user *otmr);
+    IFLS_II(TIMERFD_SETTIME,EBX,ECX);
+    break;
+  case 326: 
+    //  long sys_timerfd_gettime(int ufd, struct itimerspec __user *otmr); 
+    IFLS_I(TIMERFD_GETTIME,EBX);
+    break;
+  case 327: 
+    // long sys_signalfd4(int ufd, sigset_t __user *user_mask, size_t sizemask, int flags);
+    IFLS_II(SIGNALFD4,EBX,ESI);
+    break;
+  case 328: 
+    //  long sys_eventfd2(unsigned int count, int flags);
+    IFLS_II(EVENTFD2,EBX,ECX);
+    break;
+  case 329: 
+    //  long sys_epoll_create1(int flags);
+    IFLS_I(EPOLL_CREATE1,EBX);
+    break;
+  case330: 
+    // long sys_dup3(unsigned int oldfd, unsigned int newfd, int flags); 
+    IFLS_III(DUP3,EBX,ECX,EDX);
+    break;
+  case 331: 
+    // sys_pipe2 missing from syscalls.h
+    IFLS(PIPE2);
+  case 332: 
+    // long sys_inotify_init1(int flags);
+    IFLS_I(INOTIFY_INIT1,EBX);
+    break;
+
   default:
     IFLS_IIIIIII(UNKNOWN,EAX,EBX,ECX,EDX,ESI,EDI,EBP);
     break;

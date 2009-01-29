@@ -282,7 +282,17 @@ static inline RES_TYPE glue(glue(ld, USUFFIX), MEMSUFFIX)(target_ulong ptr)
         res = glue(glue(__ld, SUFFIX), MMUSUFFIX)(addr, mmu_idx);
     } else {
         physaddr = addr + env->tlb_table[mmu_idx][index].addend;
-	IFLW_MMU_LD(DIRECT,ptr,physaddr);
+
+	IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,DIRECT),_LD),CSUFFIX)); 
+        // this next line gets a "cast to pointer from integer of different size"
+	IFLW_PUT_ADDR((unsigned long long) ptr); 
+	IFLW_PUT_ADDR((((unsigned long long) physaddr) - (unsigned long long)phys_ram_base)); 
+        // and this one gets a "cast from pointer to integer of different size"
+	if((((unsigned long long)physaddr)
+            - ((unsigned long long )phys_ram_base))!=0xffffffffffffffffLL) { 
+          IFLW_PUT_BYTE(*(unsigned char*)physaddr); 
+        }
+        //	IFLW_MMU_LD(DIRECT,ptr,physaddr);
         res = glue(glue(ld, USUFFIX), _raw)((uint8_t *)physaddr);
     }
     return res;
