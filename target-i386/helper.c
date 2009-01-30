@@ -628,7 +628,7 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
     uint32_t e1, e2, offset, ss, esp, ss_e1, ss_e2;
     uint32_t old_eip, sp_mask;
     int svm_should_check = 1;
-    char tsbuf [1000];
+    //    char tsbuf [1000];
 
     fprintf(logfile,"in your do interrupt protected intno:%d\n",intno);
     
@@ -2492,17 +2492,17 @@ static inline void helper_ret_protected(int shift, int is_iret, int addend)
     uint32_t e1, e2, ss_e1, ss_e2;
     int cpl, dpl, rpl, eflags_mask, iopl;
 //    target_ulong ssp, sp, new_eip, new_esp, sp_mask;
-    target_ulong ssp, sp, new_eip, new_esp, sp_mask, esp, saved_esp, ptr, old_esp;
+    target_ulong ssp, sp, new_eip, new_esp, sp_mask,  old_esp;
     
 
    // Xuxian
-
-     target_ulong paddr, regs_ebx;
-     char *current_task, **argvp, *command, *tempbuf;
-     int pid, len, i, syscall_num, offset;
-     struct syscall_entry syscall_element;
     
-     command = malloc(120);
+    //     target_ulong  regs_ebx;
+    //     char *current_task, **argvp, *command, *tempbuf;
+    //     int pid, len, i, syscall_num, offset;
+     //     struct syscall_entry syscall_element;
+    
+     //     command = malloc(120);
   
 
 #ifdef TARGET_X86_64
@@ -2691,7 +2691,7 @@ fprintf(logfile, "IRET_ new_eip:0x%08x EAX:%d\n",new_eip,EAX);
     free(command);
     */
 
-    iferret_log_syscall_ret(1, old_esp, new_eip);
+    iferret_log_syscall_ret_iret(old_esp, new_eip);
 
 /*
   	fprintf(logfile, "Printing off the stack\n");
@@ -2790,28 +2790,32 @@ void helper_lret_protected(int shift, int addend)
 void helper_sysenter(void)
 {
   // Xuxian
-  target_ulong paddr, regs_ebx;
-  char *current_task, **argvp, *command, *tempbuf;
-  int pid, len, i, old_syscall_num, stack_val;
-  char tsbuf[1000];
+  //target_ulong paddr, regs_ebx;
+  //  char *current_task, **argvp, *command, *tempbuf;
+  //  int pid, len, i, old_syscall_num;
+  //  int stack_val, i;
+  //  char tsbuf[1000];
   SegmentCache *dt;
   target_ulong ssp, ptr;
   uint32 e1,e2,ss,esp,ss_e1,ss_e2,saved_esp,sp_mask;
-  
+
+  /*  
   fprintf(logfile, "In your sys_enter EIP=0x%08x\n",EIP); 	
   
   fprintf(logfile, "Printing off the stack\n");
   for(i=0; i<50; i++){
     paddr = cpu_get_phys_page_debug(env, ESP+4*i);
     if (paddr!=-1) {
-      cpu_physical_memory_read(paddr, &stack_val, 4);
+      cpu_physical_memory_read(paddr, (char *) &stack_val, 4);
     }	
     fprintf(logfile, "%d: 0x%08x\n",i,stack_val);
   }
   
+  
   tempbuf = malloc(120);
   command = malloc(120);
-	
+  */	
+
     dt = &env->idt;
     ptr = dt->base + 128 *8;
     e1 = ldl_kernel(ptr);
@@ -2860,19 +2864,19 @@ void helper_sysexit(void)
     int cpl;
 
     // Ryan's additions begin
-    target_ulong paddr, regs_ebx;
-    char *current_task, **argvp, *command, *tempbuf;
-    int pid, len, i, syscall_num, stack_val;
-    char tsbuf[1000];
+    //    target_ulong paddr, regs_ebx;
+    //    char *current_task, **argvp, *command, *tempbuf;
+    //    int pid, len, i, syscall_num, stack_val;
+    //    char tsbuf[1000];
     SegmentCache *dt;
     target_ulong ssp, ptr;
     uint32 e1,e2,ss,esp,ss_e1,ss_e2,saved_esp,sp_mask;
-    struct syscall_entry syscall_element;
-    int restored_eip, offset;
+    //    struct syscall_entry syscall_element;
+    int restored_eip; //, offset;
 	
     //    fprintf(logfile, "In your sys_exit EDX=0x%08x\n",EDX);  
-    tempbuf = malloc(120);
-    command = malloc(120);
+    //    tempbuf = malloc(120);
+    //    command = malloc(120);
 
     dt = &env->idt;
     ptr = dt->base + 128 * 8;
@@ -2914,7 +2918,7 @@ void helper_sysexit(void)
     free(command);
     */
 
-    iferret_log_syscall_ret_sysexit(ESP, new_eip);
+    iferret_log_syscall_ret_sysexit(ESP);
 
     ESP = saved_esp;
 

@@ -1,13 +1,3 @@
-struct syscall_entry{
-  int syscall_num;
-  int eip;
-};
-
-struct syscall_stack{
-  int size;
-  int capacity;
-  struct syscall_entry* stack;
-};
 
 int table_initialized=0;
 
@@ -101,21 +91,22 @@ struct syscall_entry find_element(int PID, int offset){
 }
 
 
-// search backward in the stack (start with most recently added
-// element) until you find first item matching eip. 
-// Return that element. NB: special element with .eip slot set to
-// -1 will be returned if not found. 
-struct syscall_entry find_element_with_eip(int PID, int eip) {
+// search the stack (start with most recently added element) 
+// for this pid linearly until you find first item matching eip. 
+// Return that element. 
+// NB: special element with .eip slot set to -1 will be returned if not found. 
+struct syscall_entry find_element_with_eip(int PID, int this_eip, int another_eip) {
   int offset;
   struct syscall_entry syscall_element;
-
+  
   offset = 0; 
   do {
     syscall_element = find_element(pid,offset);
     offset++;
   } while ((syscall_element.eip != -1)
-	   && (syscall_element.eip != new_eip)
-	   && (syscall_element.eip != stack_val));
+	   
+	   && (syscall_element.eip != this_eip)
+	   && ((or_this_eip != -1) && (syscall_element.eip != another_eip)));
   return (syscall_element);
 }
 

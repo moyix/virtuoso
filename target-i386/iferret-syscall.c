@@ -13,10 +13,9 @@
 
 
 #include <string.h>
+#include <assert.h>
 #include "exec.h"
 #include "lookup_table.h"
-
-
 #include "linux_task_struct_offsets.h"
 
 extern struct CPUX86State *env;
@@ -31,20 +30,35 @@ void copy_task_struct_slot(char *current_task, uint32_t slot_offset,
                            uint32_t slot_size, char *dest) {
   uint32_t paddr;
 
+  assert (slot_size > 0);
   bzero(dest,slot_size);
-  paddr = cpu_get_phys_page_debug(env, current_task+slot_offset);
+  paddr = cpu_get_phys_page_debug(env, (uint8_t *) current_task+slot_offset);
   if (paddr != -1) {
     cpu_physical_memory_read(paddr, &current_task, slot_size);
   }
 }
 
 // copy string of length at most len-1
-// from physical adddress phsaddr into buffer tempbuf
+// from physical adddress physaddr into buffer tempbuf
 // null terminate
+// NB: assumes empbuf allocated!
 void copy_string_phys(char *tempbuf, char *physaddr, uint32_t len) {
+  assert (len > 0);
   bzero(tempbuf, len);
   cpu_physical_memory_read(physaddr,tempbuf,len-1);
 }
+
+
+uint32_t get_uint32_t_phys(uint32_t virt_addr) {
+  char *paddr;
+  uint32_t retval;
+  paddr = cpu_get_phys_page_debug(env, virt_addr);
+  if (paddr!=-1) {
+    cpu_physical_memory_read(paddr, &retval, sizeof(uint32_t));
+  }    
+  return(retval);
+}
+
 
 
 #define SYSOP(op) glue(INFO_FLOW_OP_SYS_,op)
@@ -175,7 +189,7 @@ IF_WRAPPER ( \
 // write an entry to iferret log to capture
 // context (eip & pid), number, and arguments of 
 // current system call 
-void iferret_log_syscall (uint8_t is_sysenter) {
+void iferret_log_syscall_enter (uint8_t is_sysenter) {
   
   uint32_t paddr, regs_ebx; 
   char *current_task, **argvp, *tempbuf;
@@ -190,7 +204,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
     cpu_physical_memory_read(paddr, &current_task, 4);
   }
 
-  // grab process id, i.e. current_task->pid
+  // grab process id, uid and command string. 
   copy_task_struct_slot(current_task, PID_OFFSET, PID_SIZE, &pid);
   copy_task_struct_slot(current_task, UID_OFFSET, UID_SIZE, &uid);
   copy_task_struct_slot(current_task, COMM_OFFSET, COMM_SIZE, command);
@@ -201,6 +215,7 @@ void iferret_log_syscall (uint8_t is_sysenter) {
   }
 
   if (is_sysenter) {
+    // Ryan: why esp + 4*3?  
     paddr = cpu_get_phys_page_debug(env, saved_esp+4*3);
     if (paddr!=-1) {
       cpu_physical_memory_read(paddr, &stack_val, 4);
@@ -208,17 +223,18 @@ void iferret_log_syscall (uint8_t is_sysenter) {
       printf("paddr is -1, oops!\n");	
       exit(1);
     }
-    add_element(pid,stack_val,EAX);
-    eip_for_callsite = stack_val ;
+    eip_for_callsite = stack_val;
   }
   else {
-    if(EAX != 11 && EAX != 119){
-      add_element(pid,old_eip,EAX);
-    }
     eip_for_callsite = old_eip;
   }
   
-  fprintf(logfile, "PID: %d, stack size:%d\n",pid,get_stack_size(pid));
+  if (EAX != 11 && EAX != 119) {
+    add_element(pid,eip_for_callsite,EAX);
+  }
+
+  
+  // fprintf(logfile, "PID: %d, stack size:%d\n",pid,get_stack_size(pid));
 
   /////////////////////////////////////
   // the syscalls, by the numbers
@@ -2357,10 +2373,80 @@ void iferret_log_syscall (uint8_t is_sysenter) {
 
 // log syscall originating in an interrupt
 void iferret_log_syscall_interrupt(void) {
-  iferret_log_syscall(0);
+  iferret_log_syscall_enter(0);
 }
 
 // log syscall originating in a sysenter
 void iferret_log_syscall_sysenter(void) {
-  iferret_log_syscall(1);
+  iferret_log_syscall_enter(1);
+}
+
+
+
+// log system call return value
+// is_ret is 1 (TRUE) iff this is a return via iret.
+// is_ret is 0 (FALSE) iff this is a return via sys_exit.
+// callsite_esp is stack pointer for callsite. 
+// what's this another_eip?  
+void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t another_eip) {
+  char *current_task;
+  uint32_t paddr;
+  struct syscall_entry syscall_element;
+  int pid,uid;
+  char command[COMM_SIZE];
+
+  // get addr of pointer to current task
+  current_task = callsite_esp & CURRENT_TASK_MASK;  
+  paddr = cpu_get_phys_page_debug(env, current_task); 
+  if (paddr!=-1) {
+    cpu_physical_memory_read(paddr, &current_task, 4);
+  }
+  pid = 0;
+  // grab process id, uid and command string. 
+  copy_task_struct_slot(current_task, PID_OFFSET, PID_SIZE, &pid);
+  copy_task_struct_slot(current_task, UID_OFFSET, UID_SIZE, &uid);
+  copy_task_struct_slot(current_task, COMM_OFFSET, COMM_SIZE, command);
+  // get callsite eip. 
+  if (is_iret) {
+    // Return was via iret instruction.
+    // Call site eip is 3 4-byte params up the stack.
+    paddr = cpu_get_phys_page_debug(env, ESP+4*3);
+  }
+  else {
+    // Return was via sysexit.
+    // Why is callsite eip at ECX+4*3? 
+    paddr = cpu_get_phys_page_debug(env, ECX+4*3);
+  }
+  if (paddr!=-1) {
+    // callsite eip is stack_val
+    cpu_physical_memory_read(paddr, &callsite_eip, 4);    
+    // find corresponding call to do_interrupt or sys_enter that preceded this return
+    if (is_iret) {
+      syscall_element = find_element_with_eip(pid, callsite_eip, another_eip);
+    }
+    else {
+      syscall_element = find_element_with_eip(pid, callsite_eip, -1);
+    }
+    if (syscall_element.eip != -1){
+      // found it!  Log it. 
+      syscall_num = syscall_element.syscall_num;
+      // NB: PID & EIP should be enough to match up.  EAX is the retval. 
+      IFLS_I(RET_FROM_SYS_CALL,pid, callsite_eip, syscall_element.syscall_num, EAX);
+      // and remove that call site item from the stack
+      del_element(pid,offset-1);
+    }	      
+  }
+}
+
+
+
+// log system call (via sysexit) return value 
+void iferret_log_syscall_ret_sysexit(uint32_tint callsite_esp) {
+  iferret_log_syscall_ret(0, callsite_esp, -1);
+}
+
+
+// log system call (vial iret) return value 
+void iferret_log_syscall_ret_iret(uint32_t callsite_esp, uint32_t another_eip) {
+  iferret_log_syscall_ret(1, callsite_esp, another_eip);
 }
