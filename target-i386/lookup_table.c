@@ -6,10 +6,13 @@ struct syscall_stack table[32768];
 void init_table(){
   int i;
 
-  for(i=0; i<32768; i++){
-    table[i].size =0;
-    table[i].capacity =0;
-    table[i].stack=0;
+  if (table_initialized == 0) {
+    for(i=0; i<32768; i++){
+      table[i].size =0;
+      table[i].capacity =0;
+      table[i].stack=0;
+    }
+    table_initialized = 1;
   }
 }
 

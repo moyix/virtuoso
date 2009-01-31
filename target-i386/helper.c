@@ -611,12 +611,6 @@ do {\
     sp += 4;\
 }
 
-/* Argument list sizes for sys_socketcall */
-#define AL(x) ((x) * sizeof(unsigned long))
-static unsigned char nargs[18]={AL(0),AL(3),AL(3),AL(3),AL(2),AL(3),
-                                AL(3),AL(3),AL(4),AL(4),AL(4),AL(6),
-                                AL(6),AL(2),AL(5),AL(5),AL(3),AL(3)};
-
 /* protected mode interrupt */
 static void do_interrupt_protected(int intno, int is_int, int error_code,
                                    unsigned int next_eip, int is_hw)
@@ -847,8 +841,8 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
     env->eflags &= ~(TF_MASK | VM_MASK | RF_MASK | NT_MASK);
 
 
-    if (intno ==0x80) {
-      iferret_log_syscall_interrupt();
+    if (intno == 0x80) {
+      iferret_log_syscall_enter(0, old_eip);
     } // if (intno == 0x80)
 	
     /*
@@ -2829,8 +2823,19 @@ void helper_sysenter(void)
     saved_esp = ESP;
     SET_ESP(esp, sp_mask);
 
-    iferret_log_syscall_sysenter();
- 
+    {
+      char *paddr;
+      uint32_t eip_for_callsite;
+      paddr = cpu_get_phys_page_debug(env, saved_esp+4*3);
+      if (paddr!=-1) {
+	cpu_physical_memory_read(paddr, &eip_for_callsite, 4);
+      } else {
+	printf("paddr is -1, oops!\n");	
+	exit(1);
+      }
+      iferret_log_syscall_enter(1, eip_for_callsite);
+    }
+
     /*
     free(tempbuf);
     free(command);

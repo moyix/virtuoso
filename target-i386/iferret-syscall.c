@@ -21,6 +21,13 @@
 extern struct CPUX86State *env;
 
 
+/* Argument list sizes for sys_socketcall */
+#define AL(x) ((x) * sizeof(unsigned long))
+static unsigned char nargs[18]={AL(0),AL(3),AL(3),AL(3),AL(2),AL(3),
+                                AL(3),AL(3),AL(4),AL(4),AL(4),AL(6),
+                                AL(6),AL(2),AL(5),AL(5),AL(3),AL(3)};
+
+
 // current_task is pointer to vm physical memory at which linux task structure is
 // located. 
 // slot_offset is where in task_struct to find this slot.
@@ -32,9 +39,9 @@ void copy_task_struct_slot(char *current_task, uint32_t slot_offset,
 
   assert (slot_size > 0);
   bzero(dest,slot_size);
-  paddr = cpu_get_phys_page_debug(env, (uint8_t *) current_task+slot_offset);
+  paddr = cpu_get_phys_page_debug(env, (target_ulong) current_task+slot_offset);
   if (paddr != -1) {
-    cpu_physical_memory_read(paddr, &current_task, slot_size);
+    cpu_physical_memory_read((target_phys_addr_t) paddr, &current_task, slot_size);
   }
 }
 
@@ -65,6 +72,7 @@ uint32_t get_uint32_t_phys(uint32_t virt_addr) {
      
 // All syscalls iferret log entries containt this info.
 #define IFLS_CORE(op)     \
+  IFLW_PUT_UINT8_T(is_sysenter); \
   IFLW_PUT_OP(SYSOP(op)); \
   IFLW_PUT_STRING(command); \
   IFLW_PUT_UINT32_T(pid); \
@@ -72,21 +80,24 @@ uint32_t get_uint32_t_phys(uint32_t virt_addr) {
 
 // sys call with no args
 #define IFLS(op) \
-IF_WRAPPER ( \
+IFLW_WRAPPER ( \
   IFLS_CORE(op); \
 )
 
 
+
+
+
 // sys call with one arg -- an int
 #define IFLS_I(op,val)	\
-IF_WRAPPER ( \
+IFLW_WRAPPER ( \
   IFLS_CORE(op);  \
   IFLW_PUT_UINT32_T(val); \
 ) 
 
      // sys call with two args -- both ints
 #define IFLS_II(op,val1,val2) \
-IF_WRAPPER ( \
+IFLW_WRAPPER ( \
   IFLS_CORE(op);   \
   IFLW_PUT_UINT32_T(val1); \
   IFLW_PUT_UINT32_T(val2); \
@@ -94,17 +105,64 @@ IF_WRAPPER ( \
 
      // sys call with three args -- all ints
 #define IFLS_III(op,val1,val2,val3)  \
-IF_WRAPPER ( \
+IFLW_WRAPPER ( \
   IFLS_CORE(op);   \
   IFLW_PUT_UINT32_T(val1); \
   IFLW_PUT_UINT32_T(val2); \
   IFLW_PUT_UINT32_T(val3); \
 ) 
 
+     // sys call with four args -- all ints
+#define IFLS_IIII(op,val1,val2,val3,val4)		\
+IFLW_WRAPPER ( \
+  IFLS_CORE(op);   \
+  IFLW_PUT_UINT32_T(val1); \
+  IFLW_PUT_UINT32_T(val2); \
+  IFLW_PUT_UINT32_T(val3); \
+  IFLW_PUT_UINT32_T(val4); \
+) 
+
+     // sys call with five args -- all ints
+#define IFLS_IIIII(op,val1,val2,val3,val4,val5)	\
+IFLW_WRAPPER ( \
+  IFLS_CORE(op);   \
+  IFLW_PUT_UINT32_T(val1); \
+  IFLW_PUT_UINT32_T(val2); \
+  IFLW_PUT_UINT32_T(val3); \
+  IFLW_PUT_UINT32_T(val4); \
+  IFLW_PUT_UINT32_T(val5); \
+) 
+
+     // sys call with six args -- all ints
+#define IFLS_IIIIII(op,val1,val2,val3,val4,val5,val6)	\
+IFLW_WRAPPER ( \
+  IFLS_CORE(op);   \
+  IFLW_PUT_UINT32_T(val1); \
+  IFLW_PUT_UINT32_T(val2); \
+  IFLW_PUT_UINT32_T(val3); \
+  IFLW_PUT_UINT32_T(val4); \
+  IFLW_PUT_UINT32_T(val5); \
+  IFLW_PUT_UINT32_T(val6); \
+) 
+
+     // sys call with seven args -- all ints
+#define IFLS_IIIIIII(op,val1,val2,val3,val4,val5,val6,val7)	\
+IFLW_WRAPPER ( \
+  IFLS_CORE(op);   \
+  IFLW_PUT_UINT32_T(val1); \
+  IFLW_PUT_UINT32_T(val2); \
+  IFLW_PUT_UINT32_T(val3); \
+  IFLW_PUT_UINT32_T(val4); \
+  IFLW_PUT_UINT32_T(val5); \
+  IFLW_PUT_UINT32_T(val6); \
+  IFLW_PUT_UINT32_T(val7); \
+) 
+
+
 
      // sys call with one arg -- a string 
 #define IFLS_S(op,val) \
-IF_WRAPPER ( \
+IFLW_WRAPPER ( \
   IFLS_CORE(op);	       \
   IFLW_PUT_STRING(val);  \
 )
@@ -112,7 +170,7 @@ IF_WRAPPER ( \
 
      // sys call with two args -- both strings
 #define IFLS_SS(op,val1,val2)			\
-IF_WRAPPER ( \
+IFLW_WRAPPER ( \
   IFLS_CORE(op);	       \
   IFLW_PUT_STRING(val1);  \
   IFLW_PUT_STRING(val2);  \
@@ -120,15 +178,23 @@ IF_WRAPPER ( \
 
      // sys call with two args -- a string and an int
 #define IFLS_SI(op,val1,val2) \
-IF_WRAPPER ( \
+IFLW_WRAPPER ( \
   IFLS_CORE(op); \
   IFLW_PUT_STRING(val1); \
   IFLW_PUT_UINT32_T(val2); \
 ) 
 
+     // sys call -- int string
+#define IFLS_IS(op,val1,val2) \
+IFLW_WRAPPER ( \
+  IFLS_CORE(op); \
+  IFLW_PUT_UINT32_T(val1); \
+  IFLW_PUT_STRING(val2); \
+) 
+
      // sys call with three args -- a string and two ints
 #define IFLS_SII(op,val1,val2,val3)	\
-IF_WRAPPER ( \
+IFLW_WRAPPER ( \
   IFLS_CORE(op); \
   IFLW_PUT_STRING(val1); \
   IFLW_PUT_UINT32_T(val2); \
@@ -136,66 +202,214 @@ IF_WRAPPER ( \
 ) 
 
 
-     // we use these over and over. 
-#define IFLS_S_SIMP(op,r) \
+     // sys call -- int string int 
+#define IFLS_ISI(op,val1,val2,val3)			\
+IFLW_WRAPPER ( \
+  IFLS_CORE(op); \
+  IFLW_PUT_UINT32_T(val1); \
+  IFLW_PUT_STRING(val2); \
+  IFLW_PUT_UINT32_T(val3); \
+) 
+
+     // sys call -- string int string
+#define IFLS_SIS(op,val1,val2,val3)			\
+IFLW_WRAPPER ( \
+  IFLS_CORE(op); \
+  IFLW_PUT_STRING(val1); \
+  IFLW_PUT_UINT32_T(val2); \
+  IFLW_PUT_STRING(val3); \
+) 
+
+     // sys call -- string string int
+#define IFLS_SSI(op,val1,val2,val3)			\
+IFLW_WRAPPER ( \
+  IFLS_CORE(op); \
+  IFLW_PUT_STRING(val1); \
+  IFLW_PUT_STRING(val2); \
+  IFLW_PUT_UINT32_T(val3); \
+) 
+
+     // sys call -- int string string
+#define IFLS_ISS(op,val1,val2,val3)			\
+IFLW_WRAPPER ( \
+  IFLS_CORE(op); \
+  IFLW_PUT_UINT32_T(val1); \
+  IFLW_PUT_STRING(val2); \
+  IFLW_PUT_STRING(val3); \
+) 
+
+
+     // sys call -- int string int int int
+#define IFLS_ISIII(op,val1,val2,val3,val4,val5)	\
+IFLW_WRAPPER ( \
+  IFLS_CORE(op); \
+  IFLW_PUT_UINT32_T(val1); \
+  IFLW_PUT_STRING(val2); \
+  IFLW_PUT_UINT32_T(val3); \
+  IFLW_PUT_UINT32_T(val4); \
+  IFLW_PUT_UINT32_T(val5); \
+) 
+
+     // sys call -- int string int int
+#define IFLS_ISII(op,val1,val2,val3,val4)	\
+IFLW_WRAPPER ( \
+  IFLS_CORE(op); \
+  IFLW_PUT_UINT32_T(val1); \
+  IFLW_PUT_STRING(val2); \
+  IFLW_PUT_UINT32_T(val3); \
+  IFLW_PUT_UINT32_T(val4); \
+) 
+
+     // sys call -- int string int string int
+#define IFLS_ISISI(op,val1,val2,val3,val4,val5)	\
+IFLW_WRAPPER ( \
+  IFLS_CORE(op); \
+  IFLW_PUT_UINT32_T(val1); \
+  IFLW_PUT_STRING(val2); \
+  IFLW_PUT_UINT32_T(val3); \
+  IFLW_PUT_STRING(val4); \
+  IFLW_PUT_UINT32_T(val5); \
+) 
+
+     // sys call -- int string int string
+#define IFLS_ISIS(op,val1,val2,val3,val4)	\
+IFLW_WRAPPER ( \
+  IFLS_CORE(op); \
+  IFLW_PUT_UINT32_T(val1); \
+  IFLW_PUT_STRING(val2); \
+  IFLW_PUT_UINT32_T(val3); \
+  IFLW_PUT_STRING(val4); \
+) 
+
+     // sys call -- string string int int
+#define IFLS_SSII(op,val1,val2,val3,val4)	\
+IFLW_WRAPPER ( \
+  IFLS_CORE(op); \
+  IFLW_PUT_STRING(val1); \
+  IFLW_PUT_STRING(val2); \
+  IFLW_PUT_UINT32_T(val3); \
+  IFLW_PUT_UINT32_T(val4); \
+)
+
+
+     // sys call -- string string string int
+#define IFLS_SSSI(op,val1,val2,val3,val4)	\
+IFLW_WRAPPER ( \
+  IFLS_CORE(op); \
+  IFLW_PUT_STRING(val1); \
+  IFLW_PUT_STRING(val2); \
+  IFLW_PUT_STRING(val3); \
+  IFLW_PUT_UINT32_T(val4); \
+)
+
+
+
+
+
+#define WITH_NAME(r,rest) \
 { \
   char name[120]; \
   paddr = cpu_get_phys_page_debug(env, r); \
-  if (paddr!=-1) { \
-    copy_string_phys(name, paddr, 120); \            
+  if (paddr!=-1)	{ \
+    copy_string_phys(name, paddr, 120); \
+    rest; \
   } \
-  IFLS_S(op,name); \
 } 
 
-
-
-#define IFLS_SS_SIMP(op,r1,r2)	\
+#define WITH_NAMES(r1,r2,rest) \
 { \
   char name1[120], name2[120]; \
+  paddr = cpu_get_phys_page_debug(env, r2); \
+  if (paddr!=-1)	{ \
+    copy_string_phys(name1, paddr, 120); \
+    paddr = cpu_get_phys_page_debug(env, r4); \
+    if (paddr!=-1)	{ \
+      copy_string_phys(name2, paddr, 120);  \
+      rest; \
+    } \
+  } \
+}
+
+
+
+// one arg
+#define IFLS_S_SIMP(op,r) \
+  WITH_NAME(r,IFLS_S(op,name))
+
+// two args
+#define IFLS_IS_SIMP(op,r1,r2) \
+  WITH_NAME(r2,IFLS_IS(op,r1,namwwe))
+
+#define IFLS_SI_SIMP(op,r1,r2) \
+  WITH_NAME(r1,IFLS_SI(op,name,r2))
+
+#define IFLS_SS_SIMP(op,r1,r2) \
+  WITH_NAMES(r1,r2,IFLS_SS(op,name1,name2))
+
+// three args
+#define IFLS_SII_SIMP(op,r1,r2,r3) \
+ WITH_NAME(r1,IFLS_ISI(op,name,r2,r3))
+
+#define IFLS_ISI_SIMP(op,r1,r2,r3) \
+ WITH_NAME(r2,IFLS_ISI(op,r1,name,r3))
+
+#define IFLS_IIS_SIMP(op,r1,r2,r3) \
+  WITH_NAME(r3,IFLS_IIS(op,r1,r2,name))
+
+#define IFLS_ISS_SIMP(op,r1,r2,r3) \
+ WITH_NAMES(r2,r3,IFLS_ISS(op,r1,name1,name2))
+
+#define IFLS_SSI_SIMP(op,r1,r2,r3) \
+ WITH_NAMES(r1,r2,IFLS_ISS(op,name1,name2,r3))
+
+#define IFLS_SIS_SIMP(op,r1,r2,r3) \
+ WITH_NAMES(r1,r3,IFLS_ISS(op,name1,r2,name2))
+
+// four args
+#define IFLS_ISIII_SIMP(op,r1,r2,r3,r4,r5) \
+ WITH_NAME (r2,IFLS_ISIII(op,r1,name,r3,r4,r5))
+
+#define IFLS_ISII_SIMP(op,r1,r2,r3,r4) \
+  WITH_NAME(r2,IFLS_ISII(op,r1,name,r3,r4))
+
+#define IFLS_ISISI_SIMP(op,r1,r2,r3,r4,r5) \
+ WITH_NAMES(r2,r4,IFLS_ISISI(op,r1,name1,r3,name2,r5))
+
+#define IFLS_ISIS_SIMP(op,r1,r2,r3,r4) \
+ WITH_NAMES(r2,r4,IFLS_ISIS(op,r1,name1,r3,name2))
+
+#define IFLS_SSII_SIMP(op,r1,r2,r3,r4) \
+  WITH_NAMES(r1,r2,IFLS_SSII(op,name1,name2,r3,r4))
+
+// ugh.  three strings!
+#define IFLS_SSSI_SIMP(op,r1,r2,r3,r4) \
+{ \
+  char name1[120], name2[120], name3[120];		    \
   paddr = cpu_get_phys_page_debug(env, r1); \
   if (paddr!=-1)	{ \
     copy_string_phys(name1, paddr, 120); \
     paddr = cpu_get_phys_page_debug(env, r2); \
     if (paddr!=-1)	{ \
       copy_string_phys(name2, paddr, 120);  \
-      IFLS_SS(LINK,name1,name2); \
-    } \
-  } \
-} 
-
-
-#define IFLS_SI_SIMP(op,r1,r2)	\
-{ \
-  char name[120]; \
-  paddr = cpu_get_phys_page_debug(env, r1); \
-  if (paddr!=-1)	{ \
-    copy_string_phys(name, paddr, 120); \
-    IFLS_SI(op,name,r2); \
-  }  \
-} \
-
-
-#define IFLS_SII_SIMP(op,r1,r2,r3)   \
-{ \
-  char name[120]; \
-  paddr = cpu_get_phys_page_debug(env, r1); \
-  if (paddr!=-1)	{ \
-    copy_string_phys(name, paddr, 120);  \
-    IFLS_SII(MKNOD,name,r2,r3); \
+      paddr = cpu_get_phys_page_debug(env, r3); \
+      if (paddr!=-1)	{			\
+        copy_string_phys(name3, paddr, 120);	\
+	IFLS_SSSI(op,name1,name2,name3,r4);	\
+      }						\
+    }						\
   } \
 }
-
 
 // write an entry to iferret log to capture
 // context (eip & pid), number, and arguments of 
 // current system call 
-void iferret_log_syscall_enter (uint8_t is_sysenter) {
+void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t callsite_eip) {
   
   uint32_t paddr, regs_ebx; 
   char *current_task, **argvp, *tempbuf;
   char command[COMM_SIZE];
   int pid, uid, len, i, old_syscall_num;
-  uint32_t eip_for_callsite;
+  uint32_t eip_for_callsite, stack_val;
 
   // find current_task, the ptr to the currently executing process' task_struct
   current_task = ESP & (CURRENT_TASK_MASK);
@@ -209,26 +423,8 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
   copy_task_struct_slot(current_task, UID_OFFSET, UID_SIZE, &uid);
   copy_task_struct_slot(current_task, COMM_OFFSET, COMM_SIZE, command);
   
-  if(!table_initialized){
-    init_table();
-    table_initialized = 1;	
-  }
+  init_table();
 
-  if (is_sysenter) {
-    // Ryan: why esp + 4*3?  
-    paddr = cpu_get_phys_page_debug(env, saved_esp+4*3);
-    if (paddr!=-1) {
-      cpu_physical_memory_read(paddr, &stack_val, 4);
-    } else {
-      printf("paddr is -1, oops!\n");	
-      exit(1);
-    }
-    eip_for_callsite = stack_val;
-  }
-  else {
-    eip_for_callsite = old_eip;
-  }
-  
   if (EAX != 11 && EAX != 119) {
     add_element(pid,eip_for_callsite,EAX);
   }
@@ -503,7 +699,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
   case 52 : 
     // sys_umount2 is missing from syscalls.h
     // Xuxian used EBX as a ptr to a string tho...
-    IFLS_S(UMOUNT2,EBX);
+    IFLS_S_SIMP(UMOUNT2,EBX);
     break;
   case 53 : 
     // sys_lock is missing from syscalls.h
@@ -723,7 +919,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
   case 92 : 
     // long sys_truncate(const char __user *path,
     //                   unsigned long length);
-    IFLS_SI(TRUNCATE,EBX,ECX);
+    IFLS_SI_SIMP(TRUNCATE,EBX,ECX);
     break;
   case 93 : 
     // long sys_ftruncate(unsigned int fd, unsigned long length);
@@ -1172,7 +1368,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
       for (i=0; i<size; i++)
         if (iscntrl(tempbuf[i])) tempbuf[i]='.';
       //      fprintf(logfile,"(%s)(%d)\n", tempbuf, EDX);
-      IFLS_SI(SYSLOG,tempbuf,EDX);
+      IFLS_SI_SIMP(SYSLOG,tempbuf,EDX);
     }
     break;
   case 104 : 
@@ -1198,7 +1394,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
   case 108 : 
     // long sys_fstat(unsigned int fd,
     //                struct __old_kernel_stat __user *statbuf);
-    IFLS_I_SIMP(FSTAT,EBX);
+    IFLS_I(FSTAT,EBX);
     break;
   case 109 : 
     // sys_olduname is missing from syscalls.h
@@ -1311,7 +1507,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
   case 128 : 
     // long sys_init_module(void __user *umod, unsigned long len,
     //                      const char __user *uargs);
-    IFLS_SI(INIT_MODULE,ECX,EDX);
+    IFLS_SI_SIMP(INIT_MODULE,ECX,EDX);
     // WTF? How can Xuxian be using EBX as the string ptr? 
     // shouldnt it be EDX? 
     /*
@@ -1334,7 +1530,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
   case 131 : 
     // long sys_quotactl(unsigned int cmd, const char __user *special,
     //                   qid_t id, void __user *addr);
-    IFLS_ISI(QUOTACTL,EBX,ECX,EDX);
+    IFLS_ISI_SIMP(QUOTACTL,EBX,ECX,EDX);
     break;
   case 132 :
     // long sys_getpgid(pid_t pid);
@@ -1505,7 +1701,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
   case 165 : 
     // long sys_getresuid16(old_uid_t __user *ruid,
     //                      old_uid_t __user *euid, old_uid_t __user *suid);
-    IFLS_III(GETRESUID);
+    IFLS(GETRESUID);
     fprintf(logfile,"PID %3d (%16s)[sys_getresu 165]\n", pid, command);
     break;
   case 166 : 
@@ -1630,7 +1826,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
   case 187 : 
     // ssize_t sys_sendfile(int out_fd, int in_fd,
     //                      off_t __user *offset, size_t count);
-    IFLS_II(SENDFILE,EBX,ECX,ESI);
+    IFLS_III(SENDFILE,EBX,ECX,ESI);
     break;
   case 188 : 
     // sys_getpmsg is missing from syscalls.h
@@ -1844,42 +2040,42 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
   case 226 : 
     // long sys_setxattr(const char __user *path, const char __user *name,
     //                   const void __user *value, size_t size, int flags);
-    IFLS_SSII(SETXATTR,EBX,ECX,ESI,EDI);
+    IFLS_SSII_SIMP(SETXATTR,EBX,ECX,ESI,EDI);
     break;
   case 227 : 
     // long sys_lsetxattr(const char __user *path, const char __user *name,
     //                    const void __user *value, size_t size, int flags);
-    IFLS_SSII(LSETXATTR,EBX,ECX,ESI,EDI);
+    IFLS_SSII_SIMP(LSETXATTR,EBX,ECX,ESI,EDI);
     break;
   case 228 : 
     //  long sys_fsetxattr(int fd, const char __user *name,
     //                     const void __user *value, size_t size, int flags);
-    IFLS_ISII(FSETXATTR,EBX,ECX,ESI,EDI);
+    IFLS_ISII_SIMP(FSETXATTR,EBX,ECX,ESI,EDI);
     break;
   case 229 : 
     // ssize_t sys_getxattr(const char __user *path, const char __user *name,
     //              	    void __user *value, size_t size);
-    IFLS_SSI(GETXATTR,EBX,ECX,ESI);
+    IFLS_SSI_SIMP(GETXATTR,EBX,ECX,ESI);
     break;
   case 230 : 
     // ssize_t sys_lgetxattr(const char __user *path, const char __user *name,
     //                       void __user *value, size_t size);
-    IFLS_SSI(LGETXATTR,EBX,ECX,ESI);
+    IFLS_SSI_SIMP(LGETXATTR,EBX,ECX,ESI);
     break;
   case 231 : // sys_fgetxattr
     // ssize_t sys_fgetxattr(int fd, const char __user *name,
     //                       void __user *value, size_t size);
-    IFLS_ISI(FGETXATTR,EBX,ECX,ESI);
+    IFLS_ISI_SIMP(FGETXATTR,EBX,ECX,ESI);
     break;
   case 232 : 
     // ssize_t sys_listxattr(const char __user *path, char __user *list,
     //	                     size_t size);
-    IFLS_SI(LISTXATTR,EBX,EDX);
+    IFLS_SI_SIMP(LISTXATTR,EBX,EDX);
     break;
   case 233 :
     // ssize_t sys_llistxattr(const char __user *path, char __user *list,
     //                        size_t size);
-    IFLS_SI(LLISTXATTR,EBX,EDX);
+    IFLS_SI_SIMP(LLISTXATTR,EBX,EDX);
     break;
   case 234 : 
     // ssize_t sys_flistxattr(int fd, char __user *list, size_t size);
@@ -1897,7 +2093,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
     break;
   case 237 : 
     // long sys_fremovexattr(int fd, const char __user *name);
-    IFLS_IS(FREMOVEXATTR,EBX,ECX);
+    IFLS_IS_SIMP(FREMOVEXATTR,EBX,ECX);
     break;
   case 238 : 
     // long sys_tkill(int pid, int sig);
@@ -2046,7 +2242,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
   case 268: 
     // long sys_statfs64(const char __user *path, size_t sz,
     //                   struct statfs64 __user *buf);
-    IFLS_SI(STATFS64,EBX,ECX);
+    IFLS_SI_SIMP(STATFS64,EBX,ECX);
     break;
   case 269: 
     // long sys_fstatfs64(unsigned int fd, size_t sz,
@@ -2076,7 +2272,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
     //                unsigned long __user *nmask,
     //                unsigned long maxnode,
     //                unsigned flags);
-    IFLS_IIII(MBIND,EBX,ECX,EDX,EDI,EBP);
+    IFLS_IIIII(MBIND,EBX,ECX,EDX,EDI,EBP);
     break;
   case 275: 
     // long sys_get_mempolicy(int __user *policy,
@@ -2230,7 +2426,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
   case 304: 
     //  long sys_symlinkat(const char __user * oldname,
     //                     int newdfd, const char __user * newname)
-    IFLS_SIS_SIMP(SYMLINKAT,EBX,ECX,EDX,ESI);
+    IFLS_SIS_SIMP(SYMLINKAT,EBX,ECX,EDX);
     break;
   case 305: 
     // long sys_readlinkat(int dfd, const char __user *path, char __user *buf,
@@ -2240,11 +2436,11 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
   case 306: 
     // long sys_fchmodat(int dfd, const char __user * filename,
     //                   mode_t mode);
-    IFLS_ISI(FCHMODAT,EBX,ECX,EDX);
+    IFLS_ISI_SIMP(FCHMODAT,EBX,ECX,EDX);
     break;
   case 307: 
     // long sys_faccessat(int dfd, const char __user *filename, int mode);
-    IFLS_ISI(FACCESSAT,EBX,ECX,EDX);
+    IFLS_ISI_SIMP(FACCESSAT,EBX,ECX,EDX);
     break;
   case 308: 
     // sys_pselect6 missing from syscalls.h
@@ -2267,7 +2463,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
     // long sys_get_robust_list(int pid,
     //                          struct robust_list_head __user * __user *head_ptr,
     //                          size_t __user *len_ptr);
-    IFLS_I(GET_ROBUST_LIST);
+    IFLS_I(GET_ROBUST_LIST,EBX);
     break;
   case 313:
     // long sys_splice(int fd_in, loff_t __user *off_in,
@@ -2282,7 +2478,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
     break;
   case 315: 
     // long sys_tee(int fdin, int fdout, size_t len, unsigned int flags);
-    IFLS_IIII(TEE,,EBX,ECX,EDX,ESI);
+    IFLS_IIII(TEE,EBX,ECX,EDX,ESI);
     break;
   case 316: 
     // long sys_vmsplice(int fd, const struct iovec __user *iov,
@@ -2310,7 +2506,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
   case 320: 
     // long sys_utimensat(int dfd, char __user *filename,
     //                    struct timespec __user *utimes, int flags);
-    IFLS_ISI(UTIMENSAT,EBX,ECX,ESI);
+    IFLS_ISI_SIMP(UTIMENSAT,EBX,ECX,ESI);
     break;
   case 321: 
     // long sys_signalfd(int ufd, sigset_t __user *user_mask, size_t sizemask);
@@ -2371,18 +2567,6 @@ void iferret_log_syscall_enter (uint8_t is_sysenter) {
 
 
 
-// log syscall originating in an interrupt
-void iferret_log_syscall_interrupt(void) {
-  iferret_log_syscall_enter(0);
-}
-
-// log syscall originating in a sysenter
-void iferret_log_syscall_sysenter(void) {
-  iferret_log_syscall_enter(1);
-}
-
-
-
 // log system call return value
 // is_ret is 1 (TRUE) iff this is a return via iret.
 // is_ret is 0 (FALSE) iff this is a return via sys_exit.
@@ -2431,7 +2615,7 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
       // found it!  Log it. 
       syscall_num = syscall_element.syscall_num;
       // NB: PID & EIP should be enough to match up.  EAX is the retval. 
-      IFLS_I(RET_FROM_SYS_CALL,pid, callsite_eip, syscall_element.syscall_num, EAX);
+      IFLS_IIII(RET_FROM_SYS_CALL, pid, callsite_eip, syscall_element.syscall_num, EAX);
       // and remove that call site item from the stack
       del_element(pid,offset-1);
     }	      
