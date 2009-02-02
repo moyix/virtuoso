@@ -41,7 +41,7 @@ static unsigned char nargs[18]={AL(0),AL(3),AL(3),AL(3),AL(2),AL(3),
 // dest is where to copy that data
 void copy_task_struct_slot(char *current_task, uint32_t slot_offset,
                            uint32_t slot_size, char *dest) {
-  uint32_t paddr;
+  target_phys_addr_t paddr;
 
   assert (slot_size > 0);
   bzero(dest,slot_size);
@@ -63,7 +63,7 @@ void copy_string_phys(char *tempbuf, char *physaddr, uint32_t len) {
 
 
 uint32_t get_uint32_t_phys(uint32_t virt_addr) {
-  uint32_t paddr;
+  target_phys_addr_t paddr;
   uint32_t retval;
   paddr = cpu_get_phys_page_debug(env, virt_addr);
   if (paddr!=-1) {
@@ -411,7 +411,7 @@ IFLW_WRAPPER ( \
 // current system call 
 void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) {
   
-  uint32_t paddr; 
+  target_phys_addr_t paddr; 
   char *current_task, tempbuf[1204];
   char command[COMM_SIZE];
   int pid, uid, len, i;
@@ -2583,7 +2583,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
 void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t another_eip) {
   uint8_t is_sysenter;
   char *current_task;
-  uint32_t paddr, eip_for_callsite;
+  target_phys_addr_t paddr, eip_for_callsite;
   struct syscall_entry syscall_element;
   int pid,uid;
   char command[COMM_SIZE];
