@@ -59,7 +59,12 @@
 
 void my_print(unsigned long long);
 
+// widen to 64 bits without gcc complaining.  
+#define PHYS_RAM_BASE_64 (unsigned long long) (unsigned long) phys_ram_base
 
+#define RYANS_MAGIC_NUMBER_1 0xffffffffffffffffLL
+
+#define RYANS_MAGIC_NUMBER_2 (unsigned long long) RYANS_MAGIC_NUMBER_1 + PHYS_RAM_BASE_64
 
 #define IFLW_MMU_LD(type,virt_addr,real_addr) \
 IFLW_WRAPPER ( \
@@ -67,9 +72,9 @@ IFLW_WRAPPER ( \
   uint64_t x;\
   IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,type),_LD),CSUFFIX)); \
   IFLW_PUT_ADDR(((uint64_t) virt_addr));  \
-  x = (uint64_t) real_addr - (uint64_t) phys_ram_base; \
+  x = (uint64_t) real_addr - PHYS_RAM_BASE_64; \
   IFLW_PUT_ADDR(x); \
-  if (x != 0xffffffffffffffffLL) { \
+  if (x != RYANS_MAGIC_NUMBER_1) { \
     IFLW_PUT_BYTE(*(unsigned char*)real_addr); \
   } \
   IFLW_PUT_UINT32_T(mmu_idx); \
@@ -82,9 +87,9 @@ IFLW_WRAPPER ( \
   uint64_t x;\
   IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,type),_ST),CSUFFIX)); \
   IFLW_PUT_ADDR((uint64_t) virt_addr);					\
-  x = (uint64_t) real_addr - (uint64_t) phys_ram_base; \
+  x = (uint64_t) real_addr - PHYS_RAM_BASE_64; \
   IFLW_PUT_ADDR(x); \
-  if (x != 0xffffffffffffffffLL){ \
+  if (x != RYANS_MAGIC_NUMBER_1){ \
     IFLW_PUT_BYTE((unsigned char)val); \
   } \
   IFLW_PUT_UINT32_T(mmu_idx); \
@@ -145,7 +150,7 @@ DATA_TYPE REGPARM(1) glue(glue(__ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
             if ((addr & (DATA_SIZE - 1)) != 0)
                 goto do_unaligned_access;
 
-	    IFLW_MMU_LD(IO_ALIGNED,addr,(long long)0xffffffffffffffffLL+(long long)phys_ram_base);
+	    IFLW_MMU_LD(IO_ALIGNED,addr, RYANS_MAGIC_NUMBER_2);
 
             res = glue(io_read, SUFFIX)(physaddr, tlb_addr);
         } else if (((addr & ~TARGET_PAGE_MASK) + DATA_SIZE - 1) >= TARGET_PAGE_SIZE) {
@@ -201,14 +206,14 @@ static DATA_TYPE glue(glue(slow_ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
             /* IO access */
             if ((addr & (DATA_SIZE - 1)) != 0)
                 goto do_unaligned_access;
-	    IFLW_MMU_LD(UNALIGNED_DIFFERENT_PAGE_IO_PART2,addr,(long long)0xffffffffffffffffLL+(long long)phys_ram_base);
+	    IFLW_MMU_LD(UNALIGNED_DIFFERENT_PAGE_IO_PART2,addr, RYANS_MAGIC_NUMBER_2);
             res = glue(io_read, SUFFIX)(physaddr, tlb_addr);
         } else if (((addr & ~TARGET_PAGE_MASK) + DATA_SIZE - 1) >= TARGET_PAGE_SIZE) {
         do_unaligned_access:
             /* slow unaligned access (it spans two pages) */
             addr1 = addr & ~(DATA_SIZE - 1);
             addr2 = addr1 + DATA_SIZE;
-	    IFLW_MMU_LD(UNALIGNED_DIFFERENT_PAGE_PART1,addr,(long long)0xffffffffffffffffLL+(long long)phys_ram_base);
+	    IFLW_MMU_LD(UNALIGNED_DIFFERENT_PAGE_PART1,addr, RYANS_MAGIC_NUMBER_2);
             res1 = glue(glue(slow_ld, SUFFIX), MMUSUFFIX)(addr1,
                                                           mmu_idx, retaddr);
             res2 = glue(glue(slow_ld, SUFFIX), MMUSUFFIX)(addr2,
@@ -286,7 +291,7 @@ void REGPARM(2) glue(glue(__st, SUFFIX), MMUSUFFIX)(target_ulong addr,
             if ((addr & (DATA_SIZE - 1)) != 0)
                 goto do_unaligned_access;
             retaddr = GETPC();
-	    IFLW_MMU_ST(IO_ALIGNED,addr,(long long)0xffffffffffffffffLL + (long long)phys_ram_base,val);
+	    IFLW_MMU_ST(IO_ALIGNED,addr, RYANS_MAGIC_NUMBER_2, val);
             glue(io_write, SUFFIX)(physaddr, val, tlb_addr, retaddr);
         } else if (((addr & ~TARGET_PAGE_MASK) + DATA_SIZE - 1) >= TARGET_PAGE_SIZE) {
         do_unaligned_access:
@@ -339,11 +344,11 @@ static void glue(glue(slow_st, SUFFIX), MMUSUFFIX)(target_ulong addr,
             /* IO access */
             if ((addr & (DATA_SIZE - 1)) != 0)
                 goto do_unaligned_access;
-	    IFLW_MMU_ST(UNALIGNED_DIFFERENT_PAGE_IO_PART2,addr,(long long)0xffffffffffffffffLL+(long long)phys_ram_base,val);
+	    IFLW_MMU_ST(UNALIGNED_DIFFERENT_PAGE_IO_PART2, addr, RYANS_MAGIC_NUMBER_2, val);
             glue(io_write, SUFFIX)(physaddr, val, tlb_addr, retaddr);
         } else if (((addr & ~TARGET_PAGE_MASK) + DATA_SIZE - 1) >= TARGET_PAGE_SIZE) {
         do_unaligned_access:
-           IFLW_MMU_ST(UNALIGNED_DIFFERENT_PAGE_PART1,addr,(long long)0xffffffffffffffffLL+(long long)phys_ram_base,val);
+           IFLW_MMU_ST(UNALIGNED_DIFFERENT_PAGE_PART1, addr, RYANS_MAGIC_NUMBER_2, val);
             /* XXX: not efficient, but simple */
             /* Note: relies on the fact that tlb_fill() does not remove the
              * previous page from the TLB cache.  */

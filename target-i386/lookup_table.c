@@ -107,9 +107,9 @@ struct syscall_entry find_element_with_eip(int PID, int this_eip, int another_ei
     syscall_element = find_element(pid,offset);
     offset++;
   } while ((syscall_element.eip != -1)
-	   
-	   && (syscall_element.eip != this_eip)
+           && (syscall_element.eip != this_eip)
 	   && ((or_this_eip != -1) && (syscall_element.eip != another_eip)));
+  syscall_element.offset = offset;  
   return (syscall_element);
 }
 

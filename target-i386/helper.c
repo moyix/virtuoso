@@ -23,6 +23,8 @@
 #include "../info_flow.h"
 #include "iferret-syscall.h"
 
+void exit(int status);
+
 struct _IO_FILE;
 /* Standard streams.  */
 extern struct _IO_FILE *stdin;          /* Standard input stream.  */
@@ -2824,11 +2826,11 @@ void helper_sysenter(void)
     SET_ESP(esp, sp_mask);
 
     {
-      char *paddr;
+      target_phys_addr_t paddr;
       uint32_t eip_for_callsite;
       paddr = cpu_get_phys_page_debug(env, saved_esp+4*3);
       if (paddr!=-1) {
-	cpu_physical_memory_read(paddr, &eip_for_callsite, 4);
+	cpu_physical_memory_read(paddr, (char *) &eip_for_callsite, 4);
       } else {
 	printf("paddr is -1, oops!\n");	
 	exit(1);

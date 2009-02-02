@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <zlib.h>
+#include <stdint.h>
 #include "info_flow.h"
 
 

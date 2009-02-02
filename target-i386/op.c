@@ -31,6 +31,8 @@ extern int current_pid;
 extern int last_current_pid;
 extern int no_pid_flag;
 
+#define PTR_TO_ADDR(ptr) (unsigned long long) ((unsigned long) ptr)
+
 
 void my_debug_print(unsigned long long value){
   //        printf("Debug value is 0x%llx",value);
@@ -579,15 +581,17 @@ void OPPROTO op_addl_A0_im(void)
     A0 = (uint32_t)(A0 + PARAM1);
 }
 
+
+
 void OPPROTO op_movl_A0_seg(void)
 {
-  IFLW_ADDR(MOVL_A0_SEG, (char *)env + PARAM1);
+  IFLW_ADDR(MOVL_A0_SEG, PTR_TO_ADDR(env) + PARAM1);
     A0 = (uint32_t)*(target_ulong *)((char *)env + PARAM1);
 }
 
 void OPPROTO op_addl_A0_seg(void)
 {
-  IFLW_ADDR(ADDL_A0_SEG, (char *)env + PARAM1);
+  IFLW_ADDR(ADDL_A0_SEG, PTR_TO_ADDR(env) + PARAM1);
     A0 = (uint32_t)(A0 + *(target_ulong *)((char *)env + PARAM1));
 }
 
@@ -1496,43 +1500,43 @@ void OPPROTO op_invlpg_A0(void)
 
 void OPPROTO op_movl_T0_env(void)
 {
-  IFLW_ADDR(MOVL_T0_ENV, (char *) env + PARAM1);
+  IFLW_ADDR(MOVL_T0_ENV, PTR_TO_ADDR(env) + PARAM1);
     T0 = *(uint32_t *)((char *)env + PARAM1);
 }
 
 void OPPROTO op_movl_env_T0(void)
 {
-  IFLW_ADDR(MOVL_ENV_T0, (char *)env + PARAM1);
+  IFLW_ADDR(MOVL_ENV_T0, PTR_TO_ADDR(env) + PARAM1);
     *(uint32_t *)((char *)env + PARAM1) = T0;
 }
 
 void OPPROTO op_movl_env_T1(void)
 {
-  IFLW_ADDR(MOVL_ENV_T1, (char *)env + PARAM1);
+  IFLW_ADDR(MOVL_ENV_T1, PTR_TO_ADDR(env) + PARAM1);
     *(uint32_t *)((char *)env + PARAM1) = T1;
 }
 
 void OPPROTO op_movtl_T0_env(void)
 {
-  IFLW_ADDR(MOVTL_T0_ENV, (char *)env + PARAM1);
+  IFLW_ADDR(MOVTL_T0_ENV, PTR_TO_ADDR(env) + PARAM1);
     T0 = *(target_ulong *)((char *)env + PARAM1);
 }
 
 void OPPROTO op_movtl_env_T0(void)
 {
-  IFLW_ADDR(MOVTL_ENV_T0, (char *)env + PARAM1);
+  IFLW_ADDR(MOVTL_ENV_T0, PTR_TO_ADDR(env) + PARAM1);
     *(target_ulong *)((char *)env + PARAM1) = T0;
 }
 
 void OPPROTO op_movtl_T1_env(void)
 {
-  IFLW_ADDR(MOVTL_T1_ENV, (char *)env + PARAM1);
+  IFLW_ADDR(MOVTL_T1_ENV, PTR_TO_ADDR(env) + PARAM1);
     T1 = *(target_ulong *)((char *)env + PARAM1);
 }
 
 void OPPROTO op_movtl_env_T1(void)
 {
-  IFLW_ADDR(MOVTL_ENV_T1, (char *)env + PARAM1);
+  IFLW_ADDR(MOVTL_ENV_T1, PTR_TO_ADDR(env) + PARAM1);
     *(target_ulong *)((char *)env + PARAM1) = T1;
 }
 

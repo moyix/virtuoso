@@ -1,12 +1,13 @@
 struct syscall_entry{
-	int syscall_num;
-	int eip;
+  int syscall_num;
+  int eip;
+  int offset;
 };
 
 struct syscall_stack{
-	int size;
-	int capacity;
-	struct syscall_entry* stack;
+  int size;
+  int capacity;
+  struct syscall_entry* stack;
 };
 
 

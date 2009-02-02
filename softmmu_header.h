@@ -84,13 +84,16 @@
 // TRL 0806 had to move this up here 
 extern uint8_t *phys_ram_base;
 
+#define RYANS_MAGIC_NUMBER_1  0xffffffffffffffffLL 
+
+
 #define IFLW_MMU_LD(access_type,virt_addr,real_addr) \
 IFLW_WRAPPER ( \
 	IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,access_type),_LD),CSUFFIX)); \
-	IFLW_PUT_ADDR((unsigned char *) ((unsigned long long) virt_addr)); \
-	IFLW_PUT_ADDR((((unsigned char*)real_addr) - (unsigned char *)phys_ram_base)); \
-	if(((unsigned long long )real_addr-(unsigned long long )phys_ram_base)!=0xffffffffffffffffLL) { \
-  		IFLW_PUT_BYTE(*(unsigned char*)real_addr); \
+	IFLW_PUT_ADDR(virt_addr); \
+	IFLW_PUT_ADDR((((unsigned long long) real_addr) - (unsigned long long) (unsigned long)phys_ram_base)); \
+	if (((unsigned long long) real_addr - (unsigned long long) (unsigned long) phys_ram_base) != RYANS_MAGIC_NUMBER_1) { \
+  		IFLW_PUT_BYTE((unsigned long long)real_addr); \
    } \
 	IFLW_PUT_BYTE(ACCESS_TYPE); \
 );
@@ -98,9 +101,9 @@ IFLW_WRAPPER ( \
 #define IFLW_MMU_ST(access_type,virt_addr,real_addr,val) \
 IFLW_WRAPPER ( \
 	IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,access_type),_ST),CSUFFIX)); \
-	IFLW_PUT_ADDR((unsigned char *) ((unsigned long long) virt_addr)); \
-	IFLW_PUT_ADDR((((unsigned char*)real_addr) - (unsigned char *) phys_ram_base)); \
-	if(((unsigned long long )real_addr-(unsigned long long )phys_ram_base)!=0xffffffffffffffffLL) { \
+	IFLW_PUT_ADDR(virt_addr); \
+	IFLW_PUT_ADDR(((unsigned long long) real_addr) - (unsigned long long) (unsigned long) phys_ram_base); \
+	if (((unsigned long long) real_addr - (unsigned long long) (unsigned long) phys_ram_base) != RYANS_MAGIC_NUMBER_1) { \
   		IFLW_PUT_BYTE((unsigned char)val); \
   }\
 	IFLW_PUT_BYTE(ACCESS_TYPE); \
@@ -283,16 +286,27 @@ static inline RES_TYPE glue(glue(ld, USUFFIX), MEMSUFFIX)(target_ulong ptr)
     } else {
         physaddr = addr + env->tlb_table[mmu_idx][index].addend;
 
+        /*
 	IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,DIRECT),_LD),CSUFFIX)); 
         // this next line gets a "cast to pointer from integer of different size"
-	IFLW_PUT_ADDR((unsigned long long) ptr); 
-	IFLW_PUT_ADDR((((unsigned long long) physaddr) - (unsigned long long)phys_ram_base)); 
+	IFLW_PUT_ADDR(ptr); 
+	IFLW_PUT_ADDR((((unsigned long long) physaddr) 
+                       - (unsigned long long) (unsigned long) phys_ram_base)); 
+
+        *((MemByteAddr *)if_log_ptr) = (MemByteAddr)
+           ((unsigned long long) physaddr)           
+          - (unsigned long long) (unsigned long) phys_ram_base ;	
+
+        MOVE_LOG_PTR(sizeof(MemByteAddr));
+
+
         // and this one gets a "cast from pointer to integer of different size"
 	if((((unsigned long long)physaddr)
-            - ((unsigned long long )phys_ram_base))!=0xffffffffffffffffLL) { 
+            - ((unsigned long long ) (unsigned long) phys_ram_base))!=0xffffffffffffffffLL) { 
           IFLW_PUT_BYTE(*(unsigned char*)physaddr); 
         }
-        //	IFLW_MMU_LD(DIRECT,ptr,physaddr);
+        */
+        	IFLW_MMU_LD(DIRECT,ptr,physaddr);
         res = glue(glue(ld, USUFFIX), _raw)((uint8_t *)physaddr);
     }
     return res;
