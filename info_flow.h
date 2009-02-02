@@ -8,17 +8,16 @@
 #ifndef __INFO_FLOW_H_
 #define __INFO_FLOW_H_
 
-#include "stdint.h"
 
-
+typedef MemByteAddr unsigned long long;
 
 #define USE_SENTINEL
 
 void search_buf_for_pattern(char* buf,int len);
 
 void push_key_label(char*);
-void info_flow_label(unsigned long long, size_t,char*);
-void info_flow_copy(unsigned long long, unsigned long long, size_t);
+void info_flow_label(MemByteAddr, size_t,char*);
+void info_flow_copy(MemByteAddr, MemByteAddr, size_t);
 
 #define IF_MAX_KEYBOARD_LABEL_LEN 1024
 #define IF_MAX_NETWORK_LABEL_LEN 2048
@@ -32,7 +31,7 @@ typedef uint32_t if_op_t;
 // an arg to an info-flow op
 typedef uint32_t if_arg_t;
 // an address used by an info-flow op
-typedef unsigned long long if_addr_t;
+typedef MemByteAddr if_addr_t;
 // the number of the register this info-flow op uses
 typedef u_char if_regnum_t;
 // memory suffix index number (kernel, user, etc)
@@ -60,7 +59,7 @@ typedef u_char if_mem_write_t;
 // address of a register.  So we use fake registers for the info-flow graph.
 
 // an array of addresses, all fake.
-extern unsigned long long ifregaddr[];
+extern MemByteAddr ifregaddr[];
 
 
 // pointer to current place in info-flow log
@@ -880,8 +879,8 @@ stuff
   IFLW_PUT_WORD(if_arg)
 
 #define IFLW_PUT_ADDR(if_addr) \
-  *((char **)if_log_ptr) = (char *) if_addr;	\
-  MOVE_LOG_PTR(sizeof(char *));
+  *((MemByteAddr *)if_log_ptr) = (MemByteAddr) if_addr;	\
+  MOVE_LOG_PTR(sizeof(MemByteAddr));
 
 
 #define IFLW(op) \
@@ -892,7 +891,7 @@ IFLW_WRAPPER ( \
 #define IFLW_ADDR(op,addr) \
 IFLW_WRAPPER( \
   IFLW_PUT_OP(glue(INFO_FLOW_OP_ADDR_,op));	\
-  IFLW_PUT_ADDR( (char *) addr);		\
+  IFLW_PUT_ADDR(addr);		\
 )
 
 void new_network_label_check();
@@ -993,13 +992,13 @@ IFLW_WRAPPER ( \
 #define IFLW_CPU_READ_ADDR(addr) \
 IFLW_WRAPPER ( \
   IFLW_PUT_OP(INFO_FLOW_OP_CPU_READ_ADDR); \
-  IFLW_PUT_LONG_LONG(addr); \
+  IFLW_PUT_ADDR(addr); \
 )
 
 #define IFLW_CPU_WRITE_ADDR(addr) \
 IFLW_WRAPPER ( \
   IFLW_PUT_OP(INFO_FLOW_OP_CPU_WRITE_ADDR); \
-  IFLW_PUT_LONG_LONG(addr); \
+  IFLW_PUT_ADDR(addr); \
 )
 
 
