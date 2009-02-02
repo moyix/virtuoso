@@ -39,15 +39,15 @@ static unsigned char nargs[18]={AL(0),AL(3),AL(3),AL(3),AL(2),AL(3),
 // slot_offset is where in task_struct to find this slot.
 // slot_size is size of data for that slot, in bytes.
 // dest is where to copy that data
-void copy_task_struct_slot(char *current_task, uint32_t slot_offset,
+void copy_task_struct_slot(target_ulong current_task, uint32_t slot_offset,
                            uint32_t slot_size, char *dest) {
   target_phys_addr_t paddr;
 
   assert (slot_size > 0);
   bzero(dest,slot_size);
-  paddr = cpu_get_phys_page_debug(env, (target_ulong) current_task+slot_offset);
+  paddr = cpu_get_phys_page_debug(env, current_task + slot_offset);
   if (paddr != -1) {
-    cpu_physical_memory_read((target_phys_addr_t) paddr, (char *) &current_task, slot_size);
+    cpu_physical_memory_read(paddr, dest, slot_size);
   }
 }
 
@@ -412,12 +412,13 @@ IFLW_WRAPPER ( \
 void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) {
   
   target_phys_addr_t paddr; 
-  char *current_task, tempbuf[1204];
+  char tempbuf[1204];
+  target_ulong current_task;
   char command[COMM_SIZE];
   int pid, uid, len, i;
 
   // find current_task, the ptr to the currently executing process' task_struct
-  paddr = cpu_get_phys_page_debug(env, (unsigned long) (ESP & CURRENT_TASK_MASK)); 
+  paddr = cpu_get_phys_page_debug(env, (target_ulong) (ESP & CURRENT_TASK_MASK)); 
   if (paddr!=-1) {
     cpu_physical_memory_read(paddr, (char *) &current_task, 4);
   }
