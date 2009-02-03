@@ -312,14 +312,14 @@ static uint32_t kbd_read_data(void *opaque, uint32_t addr)
     else {
       // and this is keyboard data 
       rv = ps2_read_data(s->kbd);
-      printf ("some kinda keyboard in -- val = %d\n", rv);
+      //      printf ("some kinda keyboard in -- val = %d\n", rv);
       // if keyboard label has changed, we need
       // to push the new label to the info-flow log
       // before adding any new keyboard input to the log.
       if (if_keyboard_label_changed) {
 	unsigned int i,l;
 	if_keyboard_label_changed = 0;
-	printf ("info_flow_new_keybaord_label [%s]\n", if_keyboard_label);
+	//	printf ("info_flow_new_keybaord_label [%s]\n", if_keyboard_label);
 	fflush(stdout);
 	IFLW(NEW_KEYBOARD_LABEL);
 	l = strlen(if_keyboard_label);

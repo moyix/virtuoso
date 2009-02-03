@@ -2759,7 +2759,7 @@ void OPPROTO op_invlpga(void)
 void OPPROTO op_info_flow_prologue(void) 
 {
   // first, let's check if info flow log is anywhere near overflow
-  if ((if_log_ptr - if_log_base) + 100000 > IF_LOG_SIZE) {
+  if ((if_log_ptr - if_log_base) + 10 > IF_LOG_SIZE) {
     if_log_rollup();
   }
   // second, manage PID stuff.  

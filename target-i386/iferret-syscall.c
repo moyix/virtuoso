@@ -90,8 +90,10 @@ target_ulong get_task_struct_ptr (target_ulong current_esp) {
 void get_current_pid_uid() {
   target_ulong current_task; 
   current_task = get_task_struct_ptr(ESP);
-  copy_task_struct_slot(current_task, PID_OFFSET, PID_SIZE, (char *) &current_pid);
-  copy_task_struct_slot(current_task, UID_OFFSET, UID_SIZE, (char *) &current_uid);  
+  if (current_task != 0) {
+    copy_task_struct_slot(current_task, PID_OFFSET, PID_SIZE, (char *) &current_pid);
+    copy_task_struct_slot(current_task, UID_OFFSET, UID_SIZE, (char *) &current_uid);  
+  }
 }
 
 
@@ -2642,6 +2644,9 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
 
   // get addr of pointer to current task
   current_task = get_task_struct_ptr(callsite_esp);
+  if (current_task == 0) {
+    return;
+  }
 
   pid = 0;
   // grab process id, uid and command string. 

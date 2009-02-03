@@ -43,7 +43,7 @@ typedef u_char if_shift_t;
 typedef u_char if_mem_write_t;
 
 #define ONE_MILLION 1048576
-#define IF_LOG_SIZE ONE_MILLION * 100
+#define IF_LOG_SIZE ONE_MILLION * 1000
 
 // used to signal a value is uninit.  not very safe.  
 #define UNINITIALIZED 255

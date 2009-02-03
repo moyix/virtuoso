@@ -2724,7 +2724,7 @@ static inline void helper_ret_protected(int shift, int is_iret, int addend)
                 fprintf(logfile, "%d: 0x%08x\n",i,stack_val);
         }  
  */
-    printf("IRET returning to EIP:0x%08x EAX:%d\n",env->eip,EAX);
+//    printf("IRET returning to EIP:0x%08x EAX:%d\n",env->eip,EAX);
     if (is_iret) {
         /* NOTE: 'cpl' is the _old_ CPL */
         eflags_mask = TF_MASK | AC_MASK | ID_MASK | RF_MASK | NT_MASK;
@@ -2857,7 +2857,6 @@ void helper_sysenter(void)
       if (paddr!=-1) {
 	cpu_physical_memory_read(paddr, (char *) &eip_for_callsite, 4);
       } else {
-	printf("paddr is -1, oops!\n");	
 	exit(1);
       }
       iferret_log_syscall_enter(1, eip_for_callsite);
@@ -2931,7 +2930,7 @@ void helper_sysexit(void)
     
     // Back to Ryan's additions
     if (env->sysenter_cs == 0 || cpl != 0) {
-    	printf("Bingo!\n");
+      //    	printf("Bingo!\n");
     }
 
     /*	

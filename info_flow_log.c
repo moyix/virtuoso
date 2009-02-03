@@ -86,6 +86,9 @@ void if_log_to_file() {
   gzFile out;
   //  FILE *fp;
 
+  printf ("if_log_ptr - if_log_base = %d\n", if_log_ptr - if_log_base);
+  printf ("IF_LOG_SIZE = %d\n", IF_LOG_SIZE);
+
   snprintf (filename, 1024, "/scratch/tmp/ifl-%d-%d", getpid(), if_log_rollup_count);
   //  fp = fopen (filename, "w");
   out = gzopen(filename,"wb");
