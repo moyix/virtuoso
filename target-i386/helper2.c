@@ -87,7 +87,7 @@ static void add_flagname_to_bitmaps(char *flagname, uint32_t *features,
             *ext3_features |= 1 << i;
             return;
         }
-    fprintf(stderr, "CPU feature %s not found\n", flagname);
+        fprintf(stderr, "CPU feature %s not found\n", flagname);
 }
 
 CPUX86State *cpu_x86_init(const char *cpu_model)

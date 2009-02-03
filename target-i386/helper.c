@@ -647,7 +647,7 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
     int svm_should_check = 1;
     //    char tsbuf [1000];
 
-    fprintf(logfile,"in your do interrupt protected intno:%d\n",intno);
+    //    fprintf(logfile,"in your do interrupt protected intno:%d\n",intno);
     
     // Xuxian
     /*
@@ -753,8 +753,10 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
     if (!(e2 & DESC_C_MASK) && dpl < cpl) {
         /* to inner privilege */
         /* to inner priviledge */
+      /*
 	if(intno == 0x80)
 		fprintf(logfile,"Interrupt 0x80, dpl=%d\n",dpl);
+      */
         get_ss_esp_from_tss(&ss, &esp, dpl);
         if ((ss & 0xfffc) == 0)
             raise_exception_err(EXCP0A_TSS, ss & 0xfffc);
@@ -1056,7 +1058,7 @@ void helper_syscall(int next_eip_addend)
 {
     int selector;
 
-    fprintf(logfile,"in your helper_syscall ECX=0x%08x\n",env->eip + next_eip_addend);
+    //    fprintf(logfile,"in your helper_syscall ECX=0x%08x\n",env->eip + next_eip_addend);
 
     if (!(env->efer & MSR_EFER_SCE)) {
         raise_exception_err(EXCP06_ILLOP, 0);
@@ -1164,7 +1166,7 @@ void helper_sysret(int dflag)
         env->eflags |= IF_MASK;
         cpu_x86_set_cpl(env, 3);
     }
-    fprintf(logfile,"In your sysret, eip:0x%08x\n", env->eip);
+    //    fprintf(logfile,"In your sysret, eip:0x%08x\n", env->eip);
 #ifdef USE_KQEMU
     if (kqemu_is_ok(env)) {
         if (env->hflags & HF_LMA_MASK)
@@ -1186,7 +1188,7 @@ static void do_interrupt_real(int intno, int is_int, int error_code,
     uint32_t old_cs, old_eip;
     int svm_should_check = 1;
 
-    fprintf(logfile,"in your interrupt real intno:%d\n",intno);
+    //    fprintf(logfile,"in your interrupt real intno:%d\n",intno);
     if ((env->intercept & INTERCEPT_SVM_MASK) && !is_int && next_eip==-1) {
         next_eip = EIP;
         svm_should_check = 0;
@@ -1232,7 +1234,7 @@ void do_interrupt_user(int intno, int is_int, int error_code,
     int dpl, cpl, shift;
     uint32_t e2;
 
-    fprintf(logfile,"in your interrupt user intno:%d\n",intno);
+    //    fprintf(logfile,"in your interrupt user intno:%d\n",intno);
 
     dt = &env->idt;
     if (env->hflags & HF_LMA_MASK) {
@@ -1264,7 +1266,7 @@ void do_interrupt_user(int intno, int is_int, int error_code,
 void do_interrupt(int intno, int is_int, int error_code,
                   target_ulong next_eip, int is_hw)
 {
-    fprintf(logfile,"in your do interrupt intno:%d EAX:%d\n",intno,EAX);
+  //    fprintf(logfile,"in your do interrupt intno:%d EAX:%d\n",intno,EAX);
 
     if (loglevel & CPU_LOG_INT) {
         if ((env->cr[0] & CR0_PE_MASK)) {
@@ -1552,7 +1554,7 @@ void helper_rsm(void)
     int i, offset;
     uint32_t val;
 
-    fprintf(logfile,"im in ur helper_rsm\n");
+    //    fprintf(logfile,"im in ur helper_rsm\n");
 
     sm_state = env->smbase + 0x8000;
 #ifdef TARGET_X86_64
@@ -2101,8 +2103,10 @@ void load_seg(int seg_reg, int selector)
                        e2);
 #if 0
 	    IFLW_LDST2(LD1,physaddr,2);
+	    /*
         fprintf(logfile, "load_seg: sel=0x%04x base=0x%08lx limit=0x%08lx flags=%08x\n",
                 selector, (unsigned long)sc->base, sc->limit, sc->flags);
+	    */
 #endif
     }
 }
@@ -2196,7 +2200,7 @@ void helper_ljmp_protected_T0_T1(int next_eip_addend)
             break;
         }
     }
-    fprintf(logfile,"protected ljmp eip:0x%08x\n",EIP);
+    //    fprintf(logfile,"protected ljmp eip:0x%08x\n",EIP);
 }
 
 /* real mode call */
@@ -2562,7 +2566,7 @@ static inline void helper_ret_protected(int shift, int is_iret, int addend)
     old_esp = ESP;
 
 
-fprintf(logfile, "IRET_ new_eip:0x%08x EAX:%d\n",new_eip,EAX);
+    //fprintf(logfile, "IRET_ new_eip:0x%08x EAX:%d\n",new_eip,EAX);
 #ifdef DEBUG_PCALL
     if (loglevel & CPU_LOG_PCALL) {
         fprintf(logfile, "lret new %04x:" TARGET_FMT_lx " s=%d addend=0x%x\n",
@@ -2763,7 +2767,7 @@ void helper_iret_protected(int shift, int next_eip)
     int tss_selector, type;
     uint32_t e1, e2;
 
-    fprintf(logfile, "IRET_ FINAL EIP:0x%08x\n",next_eip); 
+    //    fprintf(logfile, "IRET_ FINAL EIP:0x%08x\n",next_eip); 
 
     if (env->eflags & NT_MASK) {
 #ifdef TARGET_X86_64

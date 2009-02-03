@@ -42,7 +42,7 @@ static unsigned char nargs[18]={AL(0),AL(3),AL(3),AL(3),AL(2),AL(3),
                                 AL(6),AL(2),AL(5),AL(5),AL(3),AL(3)};
 
 
-
+#define fprintf fprintf_blech
 
 
 // current_task is pointer to vm physical memory at which linux task structure is
@@ -1761,7 +1761,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       // long sys_getresuid16(old_uid_t __user *ruid,
       //                      old_uid_t __user *euid, old_uid_t __user *suid);
       IFLS(GETRESUID);
-      fprintf(logfile,"PID %3d (%16s)[sys_getresu 165]\n", pid, command);
+      //      fprintf(logfile,"PID %3d (%16s)[sys_getresu 165]\n", pid, command);
       break;
     case 166 : 
       // sys_vm86 is missing from syscalls.h
