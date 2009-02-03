@@ -227,22 +227,23 @@ char *if_memsuffix_str(if_memsuffixnum_t msn) {
 }    
 
 
+// if flag has been set, write new network label in the log
 void new_network_label_check(){
- if (if_network_label_changed) { 
-   unsigned int i,l; 
-   if_network_label_changed = FALSE; 
-   printf ("info_flow_new_network_label [%s]\r\n", if_network_label); 
-   IFLW_WRAPPER(
-   IFLW_PUT_OP(INFO_FLOW_OP_NEW_NETWORK_LABEL); 
-   l = strlen(if_network_label); 
-   if (l>=IF_MAX_NETWORK_LABEL_LEN) 
-     l = IF_MAX_NETWORK_LABEL_LEN-1; 
-     IFLW_PUT_WORD(l); 
-     for (i=0; i<l; i++) { 
-        IFLW_PUT_BYTE(if_network_label[i]); 
-     } 
-    );
-}
+  if (if_network_label_changed) { 
+    unsigned int i,l; 
+    if_network_label_changed = FALSE; 
+    printf ("info_flow_new_network_label [%s]\r\n", if_network_label); 
+    IFLW_WRAPPER(
+		 IFLW_PUT_OP(INFO_FLOW_OP_NEW_NETWORK_LABEL); 
+		 l = strlen(if_network_label); 
+		 if (l>=IF_MAX_NETWORK_LABEL_LEN) 
+		   l = IF_MAX_NETWORK_LABEL_LEN-1; 
+		 IFLW_PUT_WORD(l); 
+		 for (i=0; i<l; i++) { 
+		   IFLW_PUT_BYTE(if_network_label[i]); 
+		 } 
+		 );
+ }
 }
 
 // NB: Don't edit this!  

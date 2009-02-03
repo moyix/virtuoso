@@ -63,6 +63,9 @@
 #endif
 
 
+extern unsigned long long ifregaddr[];
+
+
 #define IFLW_SHIFT(op) \
 IFLW_WRAPPER ( \
   IFLW_PUT_OP(glue(INFO_FLOW_OP_SHIFT_,op)); \

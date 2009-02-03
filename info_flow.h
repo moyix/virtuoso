@@ -21,6 +21,7 @@ void info_flow_copy(MemByteAddr, MemByteAddr, size_t);
 
 #define IF_MAX_KEYBOARD_LABEL_LEN 1024
 #define IF_MAX_NETWORK_LABEL_LEN 2048
+#define MAX_STRING_LEN 2048
 
 typedef unsigned char u_char;
 typedef uint8_t trl_boolean;
@@ -774,6 +775,9 @@ INFO_FLOW_OP_SYS_INOTIFY_INIT1,    // 332
 INFO_FLOW_OP_SYS_UNKNOWN, // ?
 INFO_FLOW_OP_SYS_IRET_OR_SYSEXIT, 
 
+INFO_FLOW_OP_PID_CHANGE,
+INFO_FLOW_OP_UID_CHANGE,
+
 DUMMY_LAST_OP
 } info_flow_op_enum_t;
 
@@ -853,6 +857,8 @@ DUMMY_LAST_OP
 {				\
   int i;			\
   int n = strlen(str);		\
+  if (n > MAX_STRING_LEN) \
+    n = MAX_STRING_LEN; \
   IFLW_PUT_UINT32_T(n);		\
   for (i=0; i<n; i++) {		\
     IFLW_PUT_UINT8_T(str[i]);	\

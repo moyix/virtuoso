@@ -1259,15 +1259,17 @@ static void do_wav_capture (const char *path,
 
 
 static void do_info_flow_debug(int l) {
-  if_debug_set(l);
+  //  if_debug_set(l);
 }
 
 
 
 // these ones should be called *after* issuing a stop to halt emulation. 
 static void do_info_flow_set_keyboard_label(const char *label) {
+  /*
   term_printf ("im in ur do_info_flow_set_keyboard_label %s\n", label);
   if_set_keyboard_label(label);
+  */
 }
 
 
@@ -1275,11 +1277,11 @@ static void do_info_flow_set_keyboard_label(const char *label) {
 
   
 static void do_info_flow_save_log_file_on() {
-  if_save_log_on();
+  //  if_save_log_on();
 }
 
 static void do_info_flow_save_log_file_off() {
-  if_save_log_off();
+  //  if_save_log_off();
 }
 
 

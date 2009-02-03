@@ -822,7 +822,7 @@ static int dma_buf_rw(BMDMAState *bm, int is_write)
 		/*
 		printf("Buf addr is 0x%08x len is %u\r\n",bm->cur_prd_addr,l);	
 		*/
-		search_buf_for_pattern((char*)((long)phys_ram_base + (long)bm->cur_prd_addr),l);
+		// search_buf_for_pattern((char*)((long)phys_ram_base + (long)bm->cur_prd_addr),l);
             }
             bm->cur_prd_addr += l;
             bm->cur_prd_len -= l;

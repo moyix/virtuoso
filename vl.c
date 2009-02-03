@@ -8859,6 +8859,9 @@ int main(int argc, char **argv)
     }
 
     //RWS we need phys_ram_base for if_log_create, so we're inserting here
+    if_log_create();
+
+
     bdrv_init();
 
     /* we always create the cdrom drive, even if no disk is there */

@@ -1,3 +1,8 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include "lookup_table.h"
+
+
 
 int table_initialized=0;
 
@@ -18,7 +23,7 @@ void init_table(){
 
 // push this (eip,syscall_num) pair to stack for PID.
 void add_element(int PID, int eip, int syscall_num){
-  int old_syscall_num;
+  //  int old_syscall_num;
 
   if(PID > 32767){
     printf("Error PID out of range\n");
@@ -98,7 +103,7 @@ struct syscall_entry find_element(int PID, int offset){
 // for this pid linearly until you find first item matching eip. 
 // Return that element. 
 // NB: special element with .eip slot set to -1 will be returned if not found. 
-struct syscall_entry find_element_with_eip(int PID, int this_eip, int another_eip) {
+struct syscall_entry find_element_with_eip(int pid, int this_eip, int another_eip) {
   int offset;
   struct syscall_entry syscall_element;
   
@@ -108,7 +113,7 @@ struct syscall_entry find_element_with_eip(int PID, int this_eip, int another_ei
     offset++;
   } while ((syscall_element.eip != -1)
            && (syscall_element.eip != this_eip)
-	   && ((or_this_eip != -1) && (syscall_element.eip != another_eip)));
+	   && ((another_eip != -1) && (syscall_element.eip != another_eip)));
   syscall_element.offset = offset;  
   return (syscall_element);
 }

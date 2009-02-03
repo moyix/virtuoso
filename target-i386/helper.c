@@ -17,6 +17,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include <sys/types.h>
+#include <unistd.h>
+
 #include "exec.h"
 //#include "lookup_table.h"
 #include "host-utils.h"
@@ -34,6 +38,10 @@ extern struct _IO_FILE *stderr;         /* Standard error output stream.  */
 #define stdin stdin
 #define stdout stdout
 #define stderr stderr
+
+extern pid_t current_pid;
+extern uid_t current_uid;
+
 
 //#define DEBUG_PCALL
 
@@ -612,6 +620,19 @@ do {\
     val = (uint32_t)ldl_kernel((ssp) + (sp & (sp_mask)));\
     sp += 4;\
 }
+
+
+
+void write_current_pid_to_info_flow_log() {
+  IFLW_PUT_OP(INFO_FLOW_OP_PID_CHANGE);
+  IFLW_PUT_UINT32_T(current_pid);
+}
+
+void write_current_uid_to_info_flow_log() {
+  IFLW_PUT_OP(INFO_FLOW_OP_UID_CHANGE);
+  IFLW_PUT_UINT32_T(current_uid);
+}
+
 
 /* protected mode interrupt */
 static void do_interrupt_protected(int intno, int is_int, int error_code,

@@ -311,7 +311,7 @@ endif
 CPPFLAGS+=-I$(SRC_PATH)/fpu
 
 ifeq ($(TARGET_ARCH), i386)
-LIBOBJS+=helper.o helper2.o iferret-syscall.o
+LIBOBJS+=helper.o helper2.o iferret-syscall.o lookup_table.o
 endif
 
 ifeq ($(TARGET_ARCH), x86_64)
@@ -621,6 +621,8 @@ ifeq ($(TARGET_BASE_ARCH), i386)
 helper.o: helper.c
 	$(CC) $(HELPER_CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) -c -o $@ $<
 iferret-syscall.o: iferret-syscall.c
+	$(CC) $(HELPER_CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) -c -o $@ $<
+lookup_table.o: lookup_table.c
 	$(CC) $(HELPER_CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) -c -o $@ $<
 else
 op_helper.o: op_helper.c

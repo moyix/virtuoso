@@ -1,3 +1,6 @@
+#ifndef __LOOKUP_TABLE_
+#define __LOOKUP_TABLE_
+
 struct syscall_entry{
   int syscall_num;
   int eip;
@@ -27,3 +30,6 @@ void del_element(int PID, int offset);
 struct syscall_entry find_element(int PID, int offset);
 
 struct syscall_entry find_element_with_eip(int PID, int this_eip, int another_eip);
+
+
+#endif

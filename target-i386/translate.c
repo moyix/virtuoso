@@ -5000,11 +5000,13 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
 	printf ("---------------------------------\n\n");
 	*/
 
+	/*
 	if (if_debug > 0) {
 	  printf ("saw 0x6c 0x6d. if_debug now high.\n");
 	  if_debug = IF_DEBUG_HIGH;
 	  if_debug_high_counter = 0;
 	}
+	*/
 
         break;
     case 0x6e: /* outsS */
@@ -5064,11 +5066,13 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
 	}
 	*/
 
+	/*
 	if (if_debug > 0) {
 	  printf ("saw 0xe4 or 0xe5. if_debug now high.\n");
 	  if_debug = IF_DEBUG_HIGH;
 	  if_debug_high_counter = 0;
 	}
+	*/
 
         break;
     case 0xe6:
@@ -5113,11 +5117,13 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
 	printf ("---------------------------------\n\n");
 	*/
 
+	/*
 	if (if_debug > 0) {
 	  printf ("saw 0xec or 0xed. if_debug now high.\n");
 	  if_debug = IF_DEBUG_HIGH;
 	  if_debug_high_counter = 0;
 	}
+	*/
 
         break;
     case 0xee:
@@ -6376,7 +6382,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
 	printf("translating special x86 insn #%d\r\n",val);
 //	IFLW_X86_INSN(X86_marker++);
 	IFLW_X86_INSN(val);
-        if_debug = IF_DEBUG_HIGH; 
+	//        if_debug = IF_DEBUG_HIGH; 
 	break;
     default:
         goto illegal_op;
@@ -6902,6 +6908,7 @@ static inline int gen_intermediate_code_internal(CPUState *env,
     // it seems?).
 
     // TRL0805
+    /*
     if (if_debug == IF_DEBUG_HIGH) {
 
         int disas_flags;
@@ -6921,7 +6928,7 @@ static inline int gen_intermediate_code_internal(CPUState *env,
 	dump_ops_stdout(gen_opc_buf, gen_opparam_buf);
 	fprintf(stdout, "\n");  fflush(stdout);
     }
-
+    */
 
 
     if (loglevel & CPU_LOG_TB_IN_ASM) {

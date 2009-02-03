@@ -28,6 +28,11 @@
 #include "ps2.h"
 #include "sysemu.h"
 
+// TRL info-flow 
+extern uint8_t if_keyboard_label_changed;
+extern char *if_keyboard_label;
+
+
 /* debug PC keyboard */
 //#define DEBUG_KBD
 

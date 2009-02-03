@@ -16,7 +16,7 @@
 // /usr/src/linux-headers-2.6.24-23/include/linux/sched.h
 
 #define PID_OFFSET 204
-#define UID_OFFSET 400 // WRONG!  A guess!
+#define UID_OFFSET 396
 #define COMM_OFFSET 461
 
 #define PID_SIZE 4
