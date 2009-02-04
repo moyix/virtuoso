@@ -15,9 +15,9 @@
 // NB: the task_struct is defined in 
 // /usr/src/linux-headers-2.6.24-23/include/linux/sched.h
 
-#define PID_OFFSET 204
-#define UID_OFFSET 396
-#define COMM_OFFSET 461
+#define PID_OFFSET 500
+#define UID_OFFSET 704
+#define COMM_OFFSET 792
 
 #define PID_SIZE 4
 #define UID_SIZE 4

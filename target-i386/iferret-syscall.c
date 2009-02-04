@@ -28,6 +28,8 @@
 
 extern struct CPUX86State *env;
 
+target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
+
 
 pid_t current_pid, last_pid;
 uid_t current_uid, last_uid;
@@ -42,7 +44,6 @@ static unsigned char nargs[18]={AL(0),AL(3),AL(3),AL(3),AL(2),AL(3),
                                 AL(6),AL(2),AL(5),AL(5),AL(3),AL(3)};
 
 
-#define fprintf fprintf_blech
 
 
 // current_task is pointer to vm physical memory at which linux task structure is
@@ -50,59 +51,56 @@ static unsigned char nargs[18]={AL(0),AL(3),AL(3),AL(3),AL(2),AL(3),
 // slot_offset is where in task_struct to find this slot.
 // slot_size is size of data for that slot, in bytes.
 // dest is where to copy that data
-void copy_task_struct_slot(target_ulong current_task, uint32_t slot_offset,
+static inline void copy_task_struct_slot(target_ulong current_task, uint32_t slot_offset,
                            uint32_t slot_size, char *dest) {
   target_phys_addr_t paddr;
 
   assert (slot_size > 0);
   bzero(dest,slot_size);
-  paddr = cpu_get_phys_page_debug(env, current_task + slot_offset);
+  paddr = cpu_get_phys_addr(env, current_task + slot_offset);
   if (paddr != -1) {
     cpu_physical_memory_read(paddr, dest, slot_size);
   }
 }
 
+
 // copy string of length at most len-1
 // from physical adddress physaddr into buffer tempbuf
 // null terminate
 // NB: assumes tempbuf allocated!
-void copy_string_phys(char *tempbuf, target_phys_addr_t physaddr, uint32_t len) {
+static inline void copy_string_phys(char *tempbuf, target_phys_addr_t physaddr, uint32_t len) {
   assert (len > 0);
   bzero(tempbuf, len);
   cpu_physical_memory_read((unsigned long) physaddr, tempbuf, len-1);
 }
 
 
-
-target_ulong get_task_struct_ptr (target_ulong current_esp) {
+static inline target_ulong get_task_struct_ptr (target_ulong current_esp) {
   target_phys_addr_t paddr;
   target_ulong current_task;
   // find current_task, the ptr to the currently executing process' task_struct
-  paddr = cpu_get_phys_page_debug(env, (target_ulong) (current_esp & CURRENT_TASK_MASK)); 
+  paddr = cpu_get_phys_addr(env, (target_ulong) (current_esp & CURRENT_TASK_MASK)); 
   if (paddr!=-1) {
     cpu_physical_memory_read(paddr, (char *) &current_task, 4);
     return (current_task);
   }
-  return 0;
+  assert (paddr != -1);
+  return (0);
 }
 
 
 void get_current_pid_uid() {
   target_ulong current_task; 
   current_task = get_task_struct_ptr(ESP);
-  if (current_task != 0) {
-    copy_task_struct_slot(current_task, PID_OFFSET, PID_SIZE, (char *) &current_pid);
-    copy_task_struct_slot(current_task, UID_OFFSET, UID_SIZE, (char *) &current_uid);  
-  }
+  copy_task_struct_slot(current_task, PID_OFFSET, PID_SIZE, (char *) &current_pid);
+  copy_task_struct_slot(current_task, UID_OFFSET, UID_SIZE, (char *) &current_uid);  
 }
 
 
-
-
-uint32_t get_uint32_t_phys(uint32_t virt_addr) {
+static inline uint32_t get_uint32_t_phys(uint32_t virt_addr) {
   target_phys_addr_t paddr;
   uint32_t retval;
-  paddr = cpu_get_phys_page_debug(env, virt_addr);
+  paddr = cpu_get_phys_addr(env, virt_addr);
   if (paddr!=-1) {
     cpu_physical_memory_read((unsigned long) paddr, (char*) &retval, sizeof(uint32_t));
   }    
@@ -353,7 +351,7 @@ IFLW_WRAPPER ( \
 { \
   char name[120]; \
   target_phys_addr_t paddr; \
-  paddr = cpu_get_phys_page_debug(env, r); \
+  paddr = cpu_get_phys_addr(env, r); \
   if (paddr!=-1)	{ \
     copy_string_phys(name, paddr, 120); \
     rest; \
@@ -364,10 +362,10 @@ IFLW_WRAPPER ( \
 { \
   char name1[120], name2[120]; \
   target_phys_addr_t paddr; \
-  paddr = cpu_get_phys_page_debug(env, r1); \
+  paddr = cpu_get_phys_addr(env, r1); \
   if (paddr!=-1)	{ \
     copy_string_phys(name1, paddr, 120); \
-    paddr = cpu_get_phys_page_debug(env, r2); \
+    paddr = cpu_get_phys_addr(env, r2); \
     if (paddr!=-1)	{ \
       copy_string_phys(name2, paddr, 120);  \
       rest; \
@@ -430,13 +428,13 @@ IFLW_WRAPPER ( \
 #define IFLS_SSSI_SIMP(op,r1,r2,r3,r4) \
 { \
   char name1[120], name2[120], name3[120];		    \
-  paddr = cpu_get_phys_page_debug(env, r1); \
+  paddr = cpu_get_phys_addr(env, r1); \
   if (paddr!=-1)	{ \
     copy_string_phys(name1, paddr, 120); \
-    paddr = cpu_get_phys_page_debug(env, r2); \
+    paddr = cpu_get_phys_addr(env, r2); \
     if (paddr!=-1)	{ \
       copy_string_phys(name2, paddr, 120);  \
-      paddr = cpu_get_phys_page_debug(env, r3); \
+      paddr = cpu_get_phys_addr(env, r3); \
       if (paddr!=-1)	{			\
         copy_string_phys(name3, paddr, 120);	\
 	IFLS_SSSI(op,name1,name2,name3,r4);	\
@@ -458,10 +456,6 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
 
   // find current_task, the ptr to the currently executing process' task_struct
   current_task = get_task_struct_ptr(ESP);
-  if (current_task == 0) {
-    // couldn't find current task
-    return;
-  }
 
   // grab process id, uid and command string. 
   copy_task_struct_slot(current_task, PID_OFFSET, PID_SIZE, (char *) &pid);
@@ -537,17 +531,17 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
 	target_phys_addr_t paddr;
 
         // first, get the name
-        paddr = cpu_get_phys_page_debug(env, EBX);
+        paddr = cpu_get_phys_addr(env, EBX);
         if (paddr != -1) {
           copy_string_phys(name, paddr, 120);	
-          paddr = cpu_get_phys_page_debug(env, ECX);
+          paddr = cpu_get_phys_addr(env, ECX);
           cpu_physical_memory_read(paddr, (char *) &argvp, 4);  // The first argument
           orig_argvp = argvp;      
           // first, figure out how many args
           n=0;
           while (argvp && (n<12)) {
             n++;
-            paddr = cpu_get_phys_page_debug(env, ECX+n*4);
+            paddr = cpu_get_phys_addr(env, ECX+n*4);
             cpu_physical_memory_read(paddr, (char *) &argvp, 4);  // next arg
           }
           i = 0;
@@ -555,7 +549,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           IFLS_I(EXECVE,n);
 	  argvp = orig_argvp;
 	  for (i=0; i<n; i++) {
-            paddr = cpu_get_phys_page_debug(env, ECX+i*4);	
+            paddr = cpu_get_phys_addr(env, ECX+i*4);	
             copy_string_phys(name, paddr, 120); // arg 
             IFLW_PUT_STRING(name);
           }
@@ -693,7 +687,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
     case 42:
       // sys_pipe is missing from syscalls.h. 
       IFLS_III(PIPE,EBX,ECX,EDX);
-      //    paddr = cpu_get_phys_page_debug(env, EBX);
+      //    paddr = cpu_get_phys_addr(env, EBX);
       //    if (paddr!=-1)	{      
       //      fprintf(logfile,"PID %3d (%16s)", pid, command);
       //      fprintf(logfile,"[sys_pipe     42]\n");
@@ -870,7 +864,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
         //      fprintf(logfile,"PID %3d (%16s)[sys_select   82]: ", pid, command);
         if ( EBX > 0 ){
           if (!ECX) {
-            paddr = cpu_get_phys_page_debug(env, ECX);
+            paddr = cpu_get_phys_addr(env, ECX);
             //	  fprintf(logfile, "readfds");
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, EBX*4); //-> get the fdset 
@@ -884,7 +878,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
             }
           }
           if (!EDX) {
-            paddr = cpu_get_phys_page_debug(env, EDX);
+            paddr = cpu_get_phys_addr(env, EDX);
             //	  fprintf(logfile, "writefds");
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, EBX*4); //-> get the fdset 
@@ -939,7 +933,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       {
         char buf[24];
         int addr, fd, *ptr;
-        paddr = cpu_get_phys_page_debug(env, EBX);
+        paddr = cpu_get_phys_addr(env, EBX);
         if (paddr!=-1)	{
           copy_string_phys(buf, paddr, 24);
           ptr = (int *)buf;
@@ -1004,7 +998,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       case 1: // socket
         { 
           int family, type, protocol, *ptr;
-          paddr = cpu_get_phys_page_debug(env, ECX);
+          paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
@@ -1022,7 +1016,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7; 
           unsigned short *sptr;
           unsigned char pkttype, halen; // , sll_addr[8];
-          paddr = cpu_get_phys_page_debug(env, ECX);
+          paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
 	    target_ulong sap_addr;
             bzero(tempbuf, 120);
@@ -1031,7 +1025,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
             fd = *ptr++;
 	    sap_addr = (target_ulong) *ptr++; 
 	    len= *ptr++;
-            paddr = cpu_get_phys_page_debug(env, sap_addr);
+            paddr = cpu_get_phys_addr(env, sap_addr);
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the args
             //bptr = (unsigned char*)&sa.sin_addr.s_addr;
@@ -1092,7 +1086,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           int fd, len, *ptr; struct sockaddr_in *sap;
           unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7; 
           //	fprintf(logfile,"PID %3d (%16s)[sys_connect 102]%d: ", pid, command, EBX);
-          paddr = cpu_get_phys_page_debug(env, ECX);
+          paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
 	    target_ulong sap_addr;
             bzero(tempbuf, 120);
@@ -1101,7 +1095,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
             fd = *ptr++; 
 	    sap_addr = *ptr++; 
 	    len = *ptr++;
-            paddr = cpu_get_phys_page_debug(env, (target_ulong) sap_addr);
+            paddr = cpu_get_phys_addr(env, (target_ulong) sap_addr);
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the args
             bptr = tempbuf;
@@ -1134,7 +1128,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
         break;
       case 4: // listen
         //      fprintf(logfile,"PID %3d (%16s)[sys_listen  102]%d: ", pid, command, EBX);
-        paddr = cpu_get_phys_page_debug(env, ECX);
+        paddr = cpu_get_phys_addr(env, ECX);
         if (paddr!=-1)	{
           bzero(tempbuf, 120);
           cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
@@ -1145,7 +1139,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
         break;
       case 5: // accept
         //      fprintf(logfile,"PID %3d (%16s)[sys_accept  102]%d: ", pid, command, EBX);
-        paddr = cpu_get_phys_page_debug(env, ECX);
+        paddr = cpu_get_phys_addr(env, ECX);
         if (paddr!=-1)	{
           bzero(tempbuf, 120);
           cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
@@ -1156,7 +1150,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
         break;
       case 6: // getsockname
         //      fprintf(logfile,"PID %3d (%16s)[sys_getskna 102]%d: ", pid, command, EBX);
-        paddr = cpu_get_phys_page_debug(env, ECX);
+        paddr = cpu_get_phys_addr(env, ECX);
         if (paddr!=-1)	{
           bzero(tempbuf, 120);
           cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
@@ -1167,7 +1161,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
         break;
       case 7: // getpeername
         //      fprintf(logfile,"PID %3d (%16s)[sys_getpeer 102]%d: ", pid, command, EBX);
-        paddr = cpu_get_phys_page_debug(env, ECX);
+        paddr = cpu_get_phys_addr(env, ECX);
         if (paddr!=-1)	{
           bzero(tempbuf, 120);
           cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
@@ -1181,7 +1175,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           int domain, type, protocol, *ptr;
 	  // int * socket_vector;
           //      fprintf(logfile,"PID %3d (%16s)[sys_skpair  102]%d: ", pid, command, EBX);
-          paddr = cpu_get_phys_page_debug(env, ECX);
+          paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
@@ -1202,7 +1196,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           int fd, msg, len, *ptr;
           
           //	fprintf(logfile,"PID %3d (%16s)[sys_send    102]%d: ", pid, command, EBX);
-          paddr = cpu_get_phys_page_debug(env, ECX);
+          paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
@@ -1211,7 +1205,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
             //	  fprintf(logfile,"socket %d ", fd);
             
             bzero(tempbuf, 120);
-            paddr = cpu_get_phys_page_debug(env, msg);
+            paddr = cpu_get_phys_addr(env, msg);
             cpu_physical_memory_read(paddr, tempbuf, 30); 
             for (i=0; i<30; i++)
               if (iscntrl(tempbuf[i])) tempbuf[i]='.';
@@ -1229,7 +1223,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           unsigned int msg;
           
           //	fprintf(logfile,"PID %3d (%16s)[sys_recv    102]%d: ", pid, command, EBX);
-          paddr = cpu_get_phys_page_debug(env, ECX);
+          paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
@@ -1247,7 +1241,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7;
 	
           //	fprintf(logfile,"PID %3d (%16s)[sys_sendto  102]%d: ", pid, command, EBX);
-          paddr = cpu_get_phys_page_debug(env, ECX);
+          paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
 	    target_ulong sap_addr;
             bzero(tempbuf, 120);
@@ -1260,7 +1254,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
 	    sap_addr = *ptr;
             //	  fprintf(logfile,"socket %d --> ", fd);
             bzero(tempbuf, 120);
-            paddr = cpu_get_phys_page_debug(env, sap_addr);
+            paddr = cpu_get_phys_addr(env, sap_addr);
             cpu_physical_memory_read(paddr, tempbuf, 120); 
             bptr = tempbuf;
             b0=*bptr++; b1=*bptr++; b2=*bptr++; b3=*bptr++;
@@ -1286,7 +1280,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
               //fprintf(logfile,"[dest: family %2d]", sap->sin_family);
             }
             bzero(tempbuf, 120);
-            paddr = cpu_get_phys_page_debug(env, msg);
+            paddr = cpu_get_phys_addr(env, msg);
             cpu_physical_memory_read(paddr, tempbuf, 30); 
             for (i=0; i<30; i++)
               if (iscntrl(tempbuf[i])) tempbuf[i]='.';
@@ -1304,7 +1298,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           int fd, *ptr;
 	
           //	fprintf(logfile,"PID %3d (%16s)[sys_recvfro 102]%d: ", pid, command, EBX);
-          paddr = cpu_get_phys_page_debug(env, ECX);
+          paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
@@ -1321,7 +1315,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           int fd, *ptr;
 	
           //	fprintf(logfile,"PID %3d (%16s)[sys_shutdow 102]%d: ", pid, command, EBX);
-          paddr = cpu_get_phys_page_debug(env, ECX);
+          paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
@@ -1346,7 +1340,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           int fd, level, option, *ptr;
 	
           //	fprintf(logfile,"PID %3d (%16s)[sys_setskop 102]%d: ", pid, command, EBX);
-          paddr = cpu_get_phys_page_debug(env, ECX);
+          paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
@@ -1365,7 +1359,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           int fd, level, option, *ptr;
 	
           //	fprintf(logfile,"PID %3d (%16s)[sys_getskop 102]%d: ", pid, command, EBX);
-          paddr = cpu_get_phys_page_debug(env, ECX);
+          paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
@@ -1384,7 +1378,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           int fd, *ptr;
 	
           //	fprintf(logfile,"PID %3d (%16s)[sys_sendmsg 102]%d: ", pid, command, EBX);
-          paddr = cpu_get_phys_page_debug(env, ECX);
+          paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
@@ -1401,7 +1395,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           int fd, *ptr;
 	
           //	fprintf(logfile,"PID %3d (%16s)[sys_recvmsg 102]%d: ", pid, command, EBX);
-          paddr = cpu_get_phys_page_debug(env, ECX);
+          paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
@@ -1419,7 +1413,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       // long sys_syslog(int type, char __user *buf, int len);
       {
         int size=30;
-        paddr = cpu_get_phys_page_debug(env, ECX);
+        paddr = cpu_get_phys_addr(env, ECX);
         //      fprintf(logfile,"PID %3d (%16s)[sys_syslog  103]: \n", pid, command);
         bzero(tempbuf, 120);
         if (EDX>0 && EDX <= 30) size = EDX; 
@@ -1571,7 +1565,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       // shouldnt it be EDX? 
       /*
         fprintf(logfile,"PID %3d (%16s)[sys_ini_mod 128]: module ", pid, command);
-        paddr = cpu_get_phys_page_debug(env, EBX);
+        paddr = cpu_get_phys_addr(env, EBX);
         bzero(tempbuf, 120);
         cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
         fprintf(logfile,"%s\n", tempbuf);
@@ -1662,7 +1656,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
         { int i, len; struct iovec *iovp; 
         fprintf(logfile,"PID %3d (%16s)[sys_writev  146]: fd %d;", pid, command, EBX);
         if (EDX>0) {
-        paddr = cpu_get_phys_page_debug(env, ECX);
+        paddr = cpu_get_phys_addr(env, ECX);
         bzero(tempbuf, 120);
         cpu_physical_memory_read(paddr, tempbuf, EDX*sizeof(struct iovec)); //-> get the iov list
         iovp = (struct iov*) tempbuf;
@@ -1670,7 +1664,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
         fprintf(logfile," iov[%d].base 0x%08x len %d;", i, iovp->iov_base, iovp->iov_len);
         } // for
         iovp = (struct iov*) tempbuf;
-        paddr = cpu_get_phys_page_debug(env, iovp->iov_base);
+        paddr = cpu_get_phys_addr(env, iovp->iov_base);
         if (iovp->iov_len > 30) len = 30;	
         else len = iovp->iov_len;
         bzero(tempbuf, 120); 
@@ -1782,7 +1776,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
         //	      pid, command, ECX, EDX);
         IFLS_II(POLL,ECX,EDX);
         if (ECX>0) {
-          paddr = cpu_get_phys_page_debug(env, EBX);
+          paddr = cpu_get_phys_addr(env, EBX);
           bzero(tempbuf, 120);
           cpu_physical_memory_read(paddr, tempbuf, ECX*sizeof(struct pollfd)); 
           iovp = (struct pollfd*) tempbuf;
@@ -1937,7 +1931,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       // What's up with this.  EBX should be a file descriptor, not a pointer.
       // I think this is just wrong. 
       /*
-        paddr = cpu_get_phys_page_debug(env, EBX);
+        paddr = cpu_get_phys_addr(env, EBX);
         if (paddr!=-1)  {
         fprintf(logfile,"PID %3d (%16s)", pid, command);
         fprintf(logfile,"[sys_fstat64 108]: ");
@@ -1953,7 +1947,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       IFLS_SII_SIMP(LCHOWN32,EBX,ECX,EDX);
       /*
         fprintf(logfile,"PID %3d (%16s)[sys_lchow32 198]\n", pid, command);
-        paddr = cpu_get_phys_page_debug(env, EBX);
+        paddr = cpu_get_phys_addr(env, EBX);
         bzero(tempbuf, 120);
         cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
         fprintf(logfile,"%s (uid %d, gid %d)\n", tempbuf, ECX, EDX);
@@ -2028,7 +2022,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       IFLS_SII_SIMP(CHOWN32,EBX,ECX,EDX);
       /*
         fprintf(logfile,"PID %3d (%16s)[sys_chown32 212]: ", pid, command);
-        paddr = cpu_get_phys_page_debug(env, EBX);
+        paddr = cpu_get_phys_addr(env, EBX);
         bzero(tempbuf, 120);
         cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
         fprintf(logfile,"%s (uid %d, gid %d)\n", tempbuf, ECX, EDX);
@@ -2065,7 +2059,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       // Why not log 2nd string?
       /*
         fprintf(logfile,"PID %3d (%16s)[sys_pivot_r 217]: ", pid, command);
-        paddr = cpu_get_phys_page_debug(env, EBX);
+        paddr = cpu_get_phys_addr(env, EBX);
         bzero(tempbuf, 120);
         cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
         fprintf(logfile,"%s\n", tempbuf);
@@ -2644,26 +2638,26 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
 
   // get addr of pointer to current task
   current_task = get_task_struct_ptr(callsite_esp);
-  if (current_task == 0) {
-    return;
-  }
-
+  printf ("current_task = 0x%x\n", current_task);
+  
   pid = 0;
   // grab process id, uid and command string. 
   copy_task_struct_slot(current_task, PID_OFFSET, PID_SIZE, (char *) &pid);
   copy_task_struct_slot(current_task, UID_OFFSET, UID_SIZE, (char *) &uid);
   copy_task_struct_slot(current_task, COMM_OFFSET, COMM_SIZE, command);
+  printf ("pid = %d  uid = %d\n", pid, uid);
+
   // get callsite eip. 
   if (is_iret) {
     // Return was via iret instruction.
     // Call site eip is 3 4-byte params up the stack.
-    paddr = cpu_get_phys_page_debug(env, ESP+4*3);
+    paddr = cpu_get_phys_addr(env, ESP+4*3);
     is_sysenter = 0;
   }
   else {
     // Return was via sysexit.
     // Why is callsite eip at ECX+4*3? 
-    paddr = cpu_get_phys_page_debug(env, ECX+4*3);
+    paddr = cpu_get_phys_addr(env, ECX+4*3);
     is_sysenter = 1;
   }
   if (paddr!=-1) {
