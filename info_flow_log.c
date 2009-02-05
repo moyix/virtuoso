@@ -7,6 +7,8 @@
 #include <string.h>
 #include "info_flow.h"
 
+//#define COMPRESSED 1
+
 // ptr to first byte of info flow log
 char *if_log_base = NULL;      
 
@@ -83,23 +85,36 @@ void new_network_label_check(){
 // save current if log to a file for some reason    
 void if_log_to_file() {
   char filename[1024];
+#ifdef COMPRESSED 
   gzFile out;
-  //  FILE *fp;
+#else 
+  FILE *fp;
+#endif
+
 
   printf ("if_log_ptr - if_log_base = %Lu\n", (unsigned long long) (if_log_ptr - if_log_base));
   printf ("IF_LOG_SIZE = %d\n", IF_LOG_SIZE);
 
   snprintf (filename, 1024, "/scratch/tmp/ifl-%d-%d", getpid(), if_log_rollup_count);
-  //  fp = fopen (filename, "w");
+
+#ifdef COMPRESSED
   out = gzopen(filename,"wb");
+#else
+  fp = fopen (filename, "w");
+#endif
 
-  //  fwrite(if_log_base, 1, if_log_ptr-if_log_base, fp);
+
+#ifdef COMPRESSED
   gzwrite(out, (char *) if_log_base, (unsigned int) (if_log_ptr - if_log_base)); 
-  //  fclose(fp);
   gzclose(out);
-
+#else
+  fwrite(if_log_base, 1, if_log_ptr-if_log_base, fp);
+  fclose(fp);
+#endif
+  
   printf ("wrote if log to %s\n", filename);
   if_log_rollup_count ++;
+
 
   // processing complete; ready to write over old log.  
   if_log_ptr = if_log_base; 

@@ -27,6 +27,8 @@
 #include "linux_task_struct_offsets.h"
 
 extern struct CPUX86State *env;
+extern pid_t pid;
+extern uid_t uid;
 
 target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 
@@ -113,8 +115,8 @@ static inline uint32_t get_uint32_t_phys(uint32_t virt_addr) {
      
 // All syscalls iferret log entries containt this info.
 #define IFLS_CORE(op)     \
-  IFLW_PUT_UINT8_T(is_sysenter); \
   IFLW_PUT_OP(SYSOP(op)); \
+  IFLW_PUT_UINT8_T(is_sysenter); \
   IFLW_PUT_STRING(command); \
   IFLW_PUT_UINT32_T(pid); \
   IFLW_PUT_UINT32_T(eip_for_callsite); 
@@ -2638,14 +2640,14 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
 
   // get addr of pointer to current task
   current_task = get_task_struct_ptr(callsite_esp);
-  printf ("current_task = 0x%x\n", current_task);
+  //  printf ("current_task = 0x%x\n", current_task);
   
   pid = 0;
   // grab process id, uid and command string. 
   copy_task_struct_slot(current_task, PID_OFFSET, PID_SIZE, (char *) &pid);
   copy_task_struct_slot(current_task, UID_OFFSET, UID_SIZE, (char *) &uid);
   copy_task_struct_slot(current_task, COMM_OFFSET, COMM_SIZE, command);
-  printf ("pid = %d  uid = %d\n", pid, uid);
+  //  printf ("pid = %d  uid = %d\n", pid, uid);
 
   // get callsite eip. 
   if (is_iret) {
