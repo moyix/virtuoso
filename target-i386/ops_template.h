@@ -398,13 +398,15 @@ void OPPROTO glue(op_setb_T0_sub, SUFFIX)(void)
     src1 = CC_DST + CC_SRC;
     src2 = CC_SRC;
 
-  IFLW_SHIFT(SETB_T0_SUB);
+    //  IFLW_SHIFT(SETB_T0_SUB);
+    info_flow_log_op_setb_t0_sub(1,SHIFT);
     T0 = ((DATA_TYPE)src1 < (DATA_TYPE)src2);
 }
 
 void OPPROTO glue(op_setz_T0_sub, SUFFIX)(void)
 {
-  IFLW_SHIFT(SETZ_T0_SUB);
+  //  IFLW_SHIFT(SETZ_T0_SUB);
+  info_flow_log_op_setz_t0_sub(1,SHIFT);
     T0 = ((DATA_TYPE)CC_DST == 0);
 }
 
@@ -414,13 +416,15 @@ void OPPROTO glue(op_setbe_T0_sub, SUFFIX)(void)
     src1 = CC_DST + CC_SRC;
     src2 = CC_SRC;
 
-  IFLW_SHIFT(SETBE_T0_SUB);
+    //  IFLW_SHIFT(SETBE_T0_SUB);
+    info_flow_log_op_setbe_t0_sub(1,SHIFT);
     T0 = ((DATA_TYPE)src1 <= (DATA_TYPE)src2);
 }
 
 void OPPROTO glue(op_sets_T0_sub, SUFFIX)(void)
 {
-  IFLW_SHIFT(SETS_T0_SUB);
+  //  IFLW_SHIFT(SETS_T0_SUB);
+  info_flow_log_op_sets_t0_sub(1,SHIFT);
     T0 = lshift(CC_DST, -(DATA_BITS - 1)) & 1;
 }
 
@@ -429,8 +433,9 @@ void OPPROTO glue(op_setl_T0_sub, SUFFIX)(void)
     target_long src1, src2;
     src1 = CC_DST + CC_SRC;
     src2 = CC_SRC;
-
-  IFLW_SHIFT(SETL_T0_SUB);
+    
+    //  IFLW_SHIFT(SETL_T0_SUB);
+    info_flow_log_op_setl_t0_sub(1,SHIFT);
     T0 = ((DATA_STYPE)src1 < (DATA_STYPE)src2);
 }
 
@@ -440,7 +445,8 @@ void OPPROTO glue(op_setle_T0_sub, SUFFIX)(void)
     src1 = CC_DST + CC_SRC;
     src2 = CC_SRC;
 
-  IFLW_SHIFT(SETLE_T0_SUB);
+    //  IFLW_SHIFT(SETLE_T0_SUB);
+    info_flow_log_op_setle_t0_sub(1,SHIFT);
     T0 = ((DATA_STYPE)src1 <= (DATA_STYPE)src2);
 }
 
@@ -450,7 +456,8 @@ void OPPROTO glue(glue(op_shl, SUFFIX), _T0_T1)(void)
 {
     int count;
 
-  IFLW_SHIFT(SHL_T0_T1);
+    //  IFLW_SHIFT(SHL_T0_T1);
+    info_flow_log_op_shl_t0_t1(1,SHIFT);
     count = T1 & SHIFT1_MASK;
     T0 = T0 << count;
     FORCE_RET();
@@ -460,7 +467,8 @@ void OPPROTO glue(glue(op_shr, SUFFIX), _T0_T1)(void)
 {
     int count;
 
-  IFLW_SHIFT(SHR_T0_T1);
+    //  IFLW_SHIFT(SHR_T0_T1);
+    info_flow_log_op_shr_t0_t1(1,SHIFT);
     count = T1 & SHIFT1_MASK;
     T0 &= DATA_MASK;
     T0 = T0 >> count;
@@ -472,7 +480,8 @@ void OPPROTO glue(glue(op_sar, SUFFIX), _T0_T1)(void)
     int count;
     target_long src;
 
-  IFLW_SHIFT(SAR_T0_T1);
+    //  IFLW_SHIFT(SAR_T0_T1);
+    info_flow_log_op_sar_t0_t1(1,SHIFT);
     count = T1 & SHIFT1_MASK;
     src = (DATA_STYPE)T0;
     T0 = src >> count;
@@ -508,7 +517,8 @@ void OPPROTO glue(glue(op_bts, SUFFIX), _T0_T1_cc)(void)
     int count;
     count = T1 & SHIFT_MASK;
 
-    IFLW_SHIFT(BTS_T0_T1_CC);
+    //    IFLW_SHIFT(BTS_T0_T1_CC);
+    info_flow_log_op_bts_t0_t1_cc(1,SHIFT);
     
     T1 = T0 >> count;
     T0 |= (((target_long)1) << count);
@@ -519,7 +529,8 @@ void OPPROTO glue(glue(op_btr, SUFFIX), _T0_T1_cc)(void)
     int count;
     count = T1 & SHIFT_MASK;
 
-    IFLW_SHIFT(BTR_T0_T1_CC);
+    //    IFLW_SHIFT(BTR_T0_T1_CC);
+    info_flow_log_op_btr_t0_t1_cc(1,SHIFT);
 
     T1 = T0 >> count;
     T0 &= ~(((target_long)1) << count);
@@ -530,7 +541,8 @@ void OPPROTO glue(glue(op_btc, SUFFIX), _T0_T1_cc)(void)
     int count;
     count = T1 & SHIFT_MASK;
 
-    IFLW_SHIFT(BTC_T0_T1_CC);
+    //    IFLW_SHIFT(BTC_T0_T1_CC);
+    info_flow_log_op_btc_t0_t1_cc(1,SHIFT);
 
     T1 = T0 >> count;
     T0 ^= (((target_long)1) << count);
@@ -539,7 +551,8 @@ void OPPROTO glue(glue(op_btc, SUFFIX), _T0_T1_cc)(void)
 void OPPROTO glue(glue(op_add_bit, SUFFIX), _A0_T1)(void)
 {
 
-  IFLW_SHIFT(ADD_BIT_A0_T1);
+  //  IFLW_SHIFT(ADD_BIT_A0_T1);
+  info_flow_log_op_add_bit_a0_t1(1,SHIFT);
 
     A0 += ((DATA_STYPE)T1 >> (3 + SHIFT)) << SHIFT;
 }
@@ -557,7 +570,8 @@ void OPPROTO glue(glue(op_bsf, SUFFIX), _T0_cc)(void)
             res >>= 1;
         }
 
-	IFLW_SHIFT(BSF_T0_CC);
+	//	IFLW_SHIFT(BSF_T0_CC);
+	info_flow_log_op_bsf_t0_cc(1,SHIFT);
 
         T1 = count;
         CC_DST = 1; /* ZF = 0 */
@@ -580,7 +594,8 @@ void OPPROTO glue(glue(op_bsr, SUFFIX), _T0_cc)(void)
             res <<= 1;
         }
 
-	IFLW_SHIFT(BSR_T0_CC);
+	//	IFLW_SHIFT(BSR_T0_CC);
+	info_glow_log_op_bsr_t0_cc(1,SHIFT);
 
         T1 = count;
         CC_DST = 1; /* ZF = 0 */
@@ -604,7 +619,8 @@ void OPPROTO op_update_bt_cc(void)
 void OPPROTO glue(op_movl_T0_Dshift, SUFFIX)(void)
 {
 
-  IFLW_SHIFT(MOVL_T0_DSHIFT);
+  //  IFLW_SHIFT(MOVL_T0_DSHIFT);
+  info_flow_log_op_movl_t0_dshift(1,SHIFT);
 
     T0 = DF << SHIFT;
 }
@@ -638,8 +654,10 @@ void OPPROTO glue(glue(op_out, SUFFIX), _T0_T1)(void)
 void OPPROTO glue(glue(op_in, SUFFIX), _T0_T1)(void)
 {
   
-  IFLW_SHIFT(IN_T0_T1);
+  //  IFLW_SHIFT(IN_T0_T1);
+  info_flow_log_op_in_t0_t1(1,SHIFT);
     T1 = glue(cpu_in, SUFFIX)(env, T0);
+
   if(T0 == 0xc110){
 #if SUFFIX_QUOTED == 'b'
 	IFLW_NETWORK_INPUT_BYTE_T1(T1);	
@@ -661,7 +679,8 @@ void OPPROTO glue(glue(op_in, SUFFIX), _T0_T1)(void)
 
 void OPPROTO glue(glue(op_in, SUFFIX), _DX_T0)(void)
 {
-  IFLW_SHIFT(IN_DX_T0);
+  //  IFLW_SHIFT(IN_DX_T0);
+  info_flow_log_op_in_dx_t0(1,SHIFT);
     T0 = glue(cpu_in, SUFFIX)(env, EDX & 0xffff);
   if((EDX & 0xffff) == 0xc110){
 #if SUFFIX_QUOTED == 'b'
