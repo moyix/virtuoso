@@ -662,7 +662,8 @@ static inline void cpu_x86_set_cpl(CPUX86State *s, int cpl)
 {
 #if HF_CPL_MASK == 3
     s->hflags = (s->hflags & ~HF_CPL_MASK) | cpl;
-    IFLW_SET_CPL(cpl);
+    //    IFLW_SET_CPL(cpl);
+    info_flow_log_op_write(IFLO_SET_CPL,cpl);
 #else
 #error HF_CPL_MASK is hardcoded
 #endif

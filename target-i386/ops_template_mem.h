@@ -44,6 +44,7 @@
 
 #ifdef MEM_WRITE
 
+/*
 #define IFLW_CMPXCHG_T0_T1_EAX_CC(op) \
 IFLW_WRAPPER(\
   IFLW_PUT_OP(op); \
@@ -54,6 +55,7 @@ IFLW_WRAPPER ( \
   IFLW_PUT_OP(glue(INFO_FLOW_OP_SHIFT_MEM_WRITE_,op)); \
   IFLW_PUT_ARG((SHIFT << 2) | MEM_WRITE) ; \
 ) 
+*/
 
 #if MEM_WRITE == 0
 
@@ -99,6 +101,7 @@ IFLW_WRAPPER ( \
 
 #else
 
+/*
 #define IFLW_CMPXCHG_T0_T1_EAX_CC(op) \
 IFLW_WRAPPER(\
   IFLW_PUT_OP(op); \
@@ -109,6 +112,7 @@ IFLW_WRAPPER ( \
   IFLW_PUT_OP(glue(INFO_FLOW_OP_SHIFT_MEM_WRITE_,op)); \
   IFLW_PUT_ARG(SHIFT << 2); \
 ) 
+*/
 
 // MEM_WRITE is undefined if we are here 
 #define MEM_SUFFIX SUFFIX
@@ -118,7 +122,7 @@ IFLW_WRAPPER ( \
 
 
 
-
+/*
 #if !defined(IFLW_WRAPPER)
 #error "Why is IFLW_WRAPPER not defined?"
 #endif
@@ -126,7 +130,7 @@ IFLW_WRAPPER ( \
 #if !defined(IFLW_SHIFT_MEM_WRITE)
 #error "Why is IFLW_SHIFT_MEM_WRITE not defined?"
 #endif
-
+*/
 
 // pack SHIFT and MEMWRITE into 2nd byte
 
@@ -140,15 +144,15 @@ void OPPROTO glue(glue(op_rol, MEM_SUFFIX), _T0_T1_cc)(void)
         count = T1 & SHIFT_MASK;
         src = T0;
 
-        IFLW_SHIFT_MEM_WRITE(ROL_T0_T1_CC);
+	//        IFLW_SHIFT_MEM_WRITE(ROL_T0_T1_CC);
 
         T0 &= DATA_MASK;
         T0 = (T0 << count) | (T0 >> (DATA_BITS - count));
 #ifdef MEM_WRITE
-	// TRL raincheck
-	// we should be info-flowing these.  a bit painful
+	info_flow_log_op_write(IFLO_ROL_T0_T1_CC_MEMWRITE,SHIFT,A0);
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
+	info_flow_log_op_write(IFLO_ROL_T0_T1_CC,SHIFT);
         /* gcc 3.2 workaround. This is really a bug in gcc. */
         asm volatile("" : : "r" (T0));
 #endif
@@ -169,13 +173,15 @@ void OPPROTO glue(glue(op_ror, MEM_SUFFIX), _T0_T1_cc)(void)
         count = T1 & SHIFT_MASK;
         src = T0;
 
-	IFLW_SHIFT_MEM_WRITE(ROR_T0_T1_CC);
+	//	IFLW_SHIFT_MEM_WRITE(ROR_T0_T1_CC);
 
         T0 &= DATA_MASK;
         T0 = (T0 >> count) | (T0 << (DATA_BITS - count));
 #ifdef MEM_WRITE
+	info_flow_log_op_write(IFLO_ROR_T0_T1_CC_MEMRITE,SHIFT,A0);
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
+	info_flow_log_op_write(IFLO_ROR_T0_T1_CC,SHIFT);
         /* gcc 3.2 workaround. This is really a bug in gcc. */
         asm volatile("" : : "r" (T0));
 #endif
@@ -193,12 +199,15 @@ void OPPROTO glue(glue(op_rol, MEM_SUFFIX), _T0_T1)(void)
     count = T1 & SHIFT_MASK;
     if (count) {
 
-      IFLW_SHIFT_MEM_WRITE(ROL_T0_T1);
+      //      IFLW_SHIFT_MEM_WRITE(ROL_T0_T1);
 
         T0 &= DATA_MASK;
         T0 = (T0 << count) | (T0 >> (DATA_BITS - count));
 #ifdef MEM_WRITE
+	info_flow_log_op_write(IFLO_ROL_T0_T1_MEMRITE,SHIFT,A0);
         glue(st, MEM_SUFFIX)(A0, T0);
+#else
+	info_flow_log_op_write(IFLO_ROL_T0_T1,SHIFT);
 #endif
     }
     FORCE_RET();
@@ -210,12 +219,15 @@ void OPPROTO glue(glue(op_ror, MEM_SUFFIX), _T0_T1)(void)
     count = T1 & SHIFT_MASK;
     if (count) {
 
-      IFLW_SHIFT_MEM_WRITE(ROR_T0_T1);
+      //      IFLW_SHIFT_MEM_WRITE(ROR_T0_T1);
 
         T0 &= DATA_MASK;
         T0 = (T0 >> count) | (T0 << (DATA_BITS - count));
 #ifdef MEM_WRITE
+	info_flow_log_op_write(IFLO_ROR_T0_T1_MEMWRITE,SHIFT,A0);
         glue(st, MEM_SUFFIX)(A0, T0);
+#else
+	info_flow_log_op_write(IFLO_ROR_T0_T1,SHIFT);
 #endif
     }
     FORCE_RET();
@@ -236,7 +248,7 @@ void OPPROTO glue(glue(op_rcl, MEM_SUFFIX), _T0_T1_cc)(void)
     if (count) {
         eflags = cc_table[CC_OP].compute_all();
 
-	IFLW_SHIFT_MEM_WRITE(RCL_T0_T1_CC);
+	//	IFLW_SHIFT_MEM_WRITE(RCL_T0_T1_CC);
 
         T0 &= DATA_MASK;
         src = T0;
@@ -245,7 +257,10 @@ void OPPROTO glue(glue(op_rcl, MEM_SUFFIX), _T0_T1_cc)(void)
             res |= T0 >> (DATA_BITS + 1 - count);
         T0 = res;
 #ifdef MEM_WRITE
+	info_flow_log_op_write(IFLO_RCL_T0_T1_CC_MEMWRITE,SHIFT,A0);
         glue(st, MEM_SUFFIX)(A0, T0);
+#else
+	info_flow_log_op_write(IFLO_RCL_T0_T1_CC,SHIFT);
 #endif
         CC_SRC = (eflags & ~(CC_C | CC_O)) |
             (lshift(src ^ T0, 11 - (DATA_BITS - 1)) & CC_O) |
@@ -270,7 +285,7 @@ void OPPROTO glue(glue(op_rcr, MEM_SUFFIX), _T0_T1_cc)(void)
     if (count) {
         eflags = cc_table[CC_OP].compute_all();
 
-	IFLW_SHIFT_MEM_WRITE(RCR_T0_T1_CC);
+	//	IFLW_SHIFT_MEM_WRITE(RCR_T0_T1_CC);
 
         T0 &= DATA_MASK;
         src = T0;
@@ -279,7 +294,10 @@ void OPPROTO glue(glue(op_rcr, MEM_SUFFIX), _T0_T1_cc)(void)
             res |= T0 << (DATA_BITS + 1 - count);
         T0 = res;
 #ifdef MEM_WRITE
+	info_flow_log_op_write(IFLO_RCR_T0_T1_CC_MEMWRITE,SHIFT,A0);
         glue(st, MEM_SUFFIX)(A0, T0);
+#else
+	info_flow_log_op_write(IFLO_RCR_T0_T1_CC,SHIFT);
 #endif
         CC_SRC = (eflags & ~(CC_C | CC_O)) |
             (lshift(src ^ T0, 11 - (DATA_BITS - 1)) & CC_O) |
@@ -297,12 +315,15 @@ void OPPROTO glue(glue(op_shl, MEM_SUFFIX), _T0_T1_cc)(void)
     count = T1 & SHIFT1_MASK;
     if (count) {
 
-      IFLW_SHIFT_MEM_WRITE(SHL_T0_T1_CC);
+      //      IFLW_SHIFT_MEM_WRITE(SHL_T0_T1_CC);
 
         src = (DATA_TYPE)T0 << (count - 1);
         T0 = T0 << count;
 #ifdef MEM_WRITE
+	info_flow_log_op_write(IFLO_SHL_T0_T1_CC_MEMWRITE,SHIFT,A0);
         glue(st, MEM_SUFFIX)(A0, T0);
+#else
+	info_flow_log_op_write(IFLO_SHL_T0_T1_CC,SHIFT);
 #endif
         CC_SRC = src;
         CC_DST = T0;
@@ -319,13 +340,16 @@ void OPPROTO glue(glue(op_shr, MEM_SUFFIX), _T0_T1_cc)(void)
     count = T1 & SHIFT1_MASK;
     if (count) {
       
-      IFLW_SHIFT_MEM_WRITE(SHR_T0_T1_CC);
+      //      IFLW_SHIFT_MEM_WRITE(SHR_T0_T1_CC);
 
         T0 &= DATA_MASK;
         src = T0 >> (count - 1);
         T0 = T0 >> count;
 #ifdef MEM_WRITE
+	info_flow_log_op_write(IFLO_SHR_T0_T1_CC_MEMWRITE, SHIFT, A0);
         glue(st, MEM_SUFFIX)(A0, T0);
+#else
+	info_flow_log_op_write(IFLO_SHR_T0_T1_CC, SHIFT);
 #endif
         CC_SRC = src;
         CC_DST = T0;
@@ -342,13 +366,16 @@ void OPPROTO glue(glue(op_sar, MEM_SUFFIX), _T0_T1_cc)(void)
     count = T1 & SHIFT1_MASK;
     if (count) {
 
-      IFLW_SHIFT_MEM_WRITE(SAR_T0_T1_CC);
+      //      IFLW_SHIFT_MEM_WRITE(SAR_T0_T1_CC);
 
         src = (DATA_STYPE)T0;
         T0 = src >> count;
         src = src >> (count - 1);
 #ifdef MEM_WRITE
+	info_flow_log_op_write(IFLO_SAR_T0_T1_CC_MEMWRITE,SHIFT,A0);
         glue(st, MEM_SUFFIX)(A0, T0);
+#else
+	info_flow_log_op_write(IFLO_SAR_T0_T1_CC,SHIFT);
 #endif
         CC_SRC = src;
         CC_DST = T0;
@@ -365,7 +392,7 @@ void OPPROTO glue(glue(op_shld, MEM_SUFFIX), _T0_T1_im_cc)(void)
     unsigned int res, tmp;
     count = PARAM1;
  
-    IFLW_SHIFT_MEM_WRITE(SHLD_T0_T1_IM_CC);
+    //    IFLW_SHIFT_MEM_WRITE(SHLD_T0_T1_IM_CC);
 
     T1 &= 0xffff;
     res = T1 | (T0 << 16);
@@ -375,7 +402,10 @@ void OPPROTO glue(glue(op_shld, MEM_SUFFIX), _T0_T1_im_cc)(void)
         res |= T1 << (count - 16);
     T0 = res >> 16;
 #ifdef MEM_WRITE
+    info_flow_log_op_write(IFLO_SHLD_T0_T1_IM_CC_MEMWRITE,SHIFT,A0);
     glue(st, MEM_SUFFIX)(A0, T0);
+#else
+    info_flow_log_op_write(IFLO_SHLD_T0_T1_IM_CC,SHIFT);
 #endif
     CC_SRC = tmp;
     CC_DST = T0;
@@ -388,7 +418,7 @@ void OPPROTO glue(glue(op_shld, MEM_SUFFIX), _T0_T1_ECX_cc)(void)
     count = ECX & 0x1f;
     if (count) {
 
-      IFLW_SHIFT_MEM_WRITE(SHLD_T0_T1_ECX_CC);
+      //      IFLW_SHIFT_MEM_WRITE(SHLD_T0_T1_ECX_CC);
 
         T1 &= 0xffff;
         res = T1 | (T0 << 16);
@@ -398,7 +428,10 @@ void OPPROTO glue(glue(op_shld, MEM_SUFFIX), _T0_T1_ECX_cc)(void)
           res |= T1 << (count - 16);
         T0 = res >> 16;
 #ifdef MEM_WRITE
+	info_flow_log_op_write(IFLO_SHLD_T0_T1_ECX_CC_MEMWRITE,SHIFT,A0);
         glue(st, MEM_SUFFIX)(A0, T0);
+#else
+	info_flow_log_op_write(IFLO_SHLD_T0_T1_ECX_CC,SHIFT);
 #endif
         CC_SRC = tmp;
         CC_DST = T0;
@@ -412,7 +445,7 @@ void OPPROTO glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_im_cc)(void)
     int count;
     unsigned int res, tmp;
 
-    IFLW_SHIFT_MEM_WRITE(SHRD_T0_T1_IM_CC);
+    //    IFLW_SHIFT_MEM_WRITE(SHRD_T0_T1_IM_CC);
 
     count = PARAM1;
     res = (T0 & 0xffff) | (T1 << 16);
@@ -422,7 +455,10 @@ void OPPROTO glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_im_cc)(void)
         res |= T1 << (32 - count);
     T0 = res;
 #ifdef MEM_WRITE
+    info_flow_log_op_write(IFLO_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,A0);
     glue(st, MEM_SUFFIX)(A0, T0);
+#else
+    info_flow_log_op_write(IFLO_SHRD_T0_T1_IM_CC,SHIFT);
 #endif
     CC_SRC = tmp;
     CC_DST = T0;
@@ -437,7 +473,7 @@ void OPPROTO glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_ECX_cc)(void)
     count = ECX & 0x1f;
     if (count) {
 
-      IFLW_SHIFT_MEM_WRITE(SHRD_T0_T1_ECX_CC);
+      //      IFLW_SHIFT_MEM_WRITE(SHRD_T0_T1_ECX_CC);
 
         res = (T0 & 0xffff) | (T1 << 16);
         tmp = res >> (count - 1);
@@ -446,7 +482,10 @@ void OPPROTO glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_ECX_cc)(void)
             res |= T1 << (32 - count);
         T0 = res;
 #ifdef MEM_WRITE
+	info_flow_log_op_write(IFLO_SHRD_T0_T1_ECX_CC_MEMWRITE,SHIFT,A0);
         glue(st, MEM_SUFFIX)(A0, T0);
+#else
+	info_flow_log_op_write(IFLO_SHRD_T0_T1_ECX_CC,SHIFT);
 #endif
         CC_SRC = tmp;
         CC_DST = T0;
@@ -468,7 +507,10 @@ void OPPROTO glue(glue(op_shld, MEM_SUFFIX), _T0_T1_im_cc)(void)
     tmp = T0 << (count - 1);
     T0 = (T0 << count) | (T1 >> (DATA_BITS - count));
 #ifdef MEM_WRITE
+    info_flow_log_op_write(IFLO_SHLD_T0_T1_IM_CC_MEMWRITE,SHIFT,A0);
     glue(st, MEM_SUFFIX)(A0, T0);
+#else
+    info_flow_log_op_write(IFLO_SHLD_T0_T1_IM_CC,SHIFT);
 #endif
     CC_SRC = tmp;
     CC_DST = T0;
@@ -482,14 +524,17 @@ void OPPROTO glue(glue(op_shld, MEM_SUFFIX), _T0_T1_ECX_cc)(void)
     count = ECX & SHIFT1_MASK;
     if (count) {
 
-      IFLW_SHIFT_MEM_WRITE(SHLD_T0_T1_ECX_CC);
+      //      IFLW_SHIFT_MEM_WRITE(SHLD_T0_T1_ECX_CC);
 
         T0 &= DATA_MASK;
         T1 &= DATA_MASK;
         tmp = T0 << (count - 1);
         T0 = (T0 << count) | (T1 >> (DATA_BITS - count));
 #ifdef MEM_WRITE
+	info_flow_log_op_write(IFLO_SHLD_T0_T1_ECX_CC_MEMWRITE,SHIFT,A0);
         glue(st, MEM_SUFFIX)(A0, T0);
+#else 
+	info_flow_log_op_write(IFLO_SHLD_T0_T1_ECX_CC,SHIFT);
 #endif
         CC_SRC = tmp;
         CC_DST = T0;
@@ -503,7 +548,7 @@ void OPPROTO glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_im_cc)(void)
     int count;
     target_long tmp;
 
-    IFLW_SHIFT_MEM_WRITE(SHRD_T0_T1_IM_CC);
+    //    IFLW_SHIFT_MEM_WRITE(SHRD_T0_T1_IM_CC);
 
     count = PARAM1;
     T0 &= DATA_MASK;
@@ -511,7 +556,10 @@ void OPPROTO glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_im_cc)(void)
     tmp = T0 >> (count - 1);
     T0 = (T0 >> count) | (T1 << (DATA_BITS - count));
 #ifdef MEM_WRITE
+    info_flow_log_op_write(IFLO_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,A0);
     glue(st, MEM_SUFFIX)(A0, T0);
+#else
+    info_flow_log_op_write(IFLO_SHRD_T0_T1_IM_CC,SHIFT);
 #endif
     CC_SRC = tmp;
     CC_DST = T0;
@@ -526,14 +574,17 @@ void OPPROTO glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_ECX_cc)(void)
     count = ECX & SHIFT1_MASK;
     if (count) {
 
-      IFLW_SHIFT_MEM_WRITE(SHRD_T0_T1_ECX_CC);
+      //      IFLW_SHIFT_MEM_WRITE(SHRD_T0_T1_ECX_CC);
 
         T0 &= DATA_MASK;
         T1 &= DATA_MASK;
         tmp = T0 >> (count - 1);
         T0 = (T0 >> count) | (T1 << (DATA_BITS - count));
 #ifdef MEM_WRITE
+	info_flow_log_op_write(IFLO_SHRD_T0_T1_ECX_CC_MEMWRITE,SHIFT,A0);
         glue(st, MEM_SUFFIX)(A0, T0);
+#else
+	info_flow_log_op_write(IFLO_SHRD_T0_T1_ECX_CC,SHIFT);
 #endif
         CC_SRC = tmp;
         CC_DST = T0;
@@ -549,12 +600,15 @@ void OPPROTO glue(glue(op_adc, MEM_SUFFIX), _T0_T1_cc)(void)
 {
     int cf;
 
-    IFLW_SHIFT_MEM_WRITE(ADC_T0_T1_CC);
+    //    IFLW_SHIFT_MEM_WRITE(ADC_T0_T1_CC);
 
     cf = cc_table[CC_OP].compute_c();
     T0 = T0 + T1 + cf;
 #ifdef MEM_WRITE
+    info_flow_log_op_write(IFLO_ADC_T0_T1_CC_MEMWRITE,SHIFT,A0);
     glue(st, MEM_SUFFIX)(A0, T0);
+#else
+    info_flow_log_op_write(IFLO_ADC_T0_T1_CC,SHIFT);
 #endif
     CC_SRC = T1;
     CC_DST = T0;
@@ -565,12 +619,15 @@ void OPPROTO glue(glue(op_sbb, MEM_SUFFIX), _T0_T1_cc)(void)
 {
     int cf;
 
-    IFLW_SHIFT_MEM_WRITE(SBB_T0_T1_CC);
+    //    IFLW_SHIFT_MEM_WRITE(SBB_T0_T1_CC);
     
     cf = cc_table[CC_OP].compute_c();
     T0 = T0 - T1 - cf;
 #ifdef MEM_WRITE
+    info_flow_log_op_write(IFLO_SBB_T0_T1_CC_MEMWRITE,SHIFT,A0);
     glue(st, MEM_SUFFIX)(A0, T0);
+#else
+    info_flow_log_op_write(IFLO_SBB_T0_T1_CC,SHIFT);
 #endif
     CC_SRC = T1;
     CC_DST = T0;
@@ -586,14 +643,18 @@ void OPPROTO glue(glue(op_cmpxchg, MEM_SUFFIX), _T0_T1_EAX_cc)(void)
     dst = EAX - T0;
     if ((DATA_TYPE)dst == 0) {
         T0 = T1;
-        IFLW_CMPXCHG_T0_T1_EAX_CC(INFO_FLOW_OP_CMPXCHG_T0_T1_EAX_CC_CASE1);
+	//        IFLW_CMPXCHG_T0_T1_EAX_CC(INFO_FLOW_OP_CMPXCHG_T0_T1_EAX_CC_CASE1);
 #ifdef MEM_WRITE
-        IFLW_CMPXCHG_T0_T1_EAX_CC(INFO_FLOW_OP_CMPXCHG_T0_T1_EAX_CC_CASE2);
+	//        IFLW_CMPXCHG_T0_T1_EAX_CC(INFO_FLOW_OP_CMPXCHG_T0_T1_EAX_CC_CASE2);
+	info_flow_log_op_write(IFLO_CMPXCHG_T0_T1_EAX_CC_MEMWRITE,SHIFT,A0);
         glue(st, MEM_SUFFIX)(A0, T0);
+#else
+	info_flow_log_op_write(IFLO_CMPXCHG_T0_T1_EAX_CC,SHIFT);
 #endif
     } else {
         EAX = (EAX & ~DATA_MASK) | (T0 & DATA_MASK);
-        IFLW_CMPXCHG_T0_T1_EAX_CC(INFO_FLOW_OP_CMPXCHG_T0_T1_EAX_CC_CASE3);
+	//        IFLW_CMPXCHG_T0_T1_EAX_CC(INFO_FLOW_OP_CMPXCHG_T0_T1_EAX_CC_CASE3);
+	info_flow_log_op_write(IFLO_CMPXCHG_T0_T1_EAX_CC_CASE2,SHIFT);
     }
     CC_SRC = src;
     CC_DST = dst;
@@ -603,4 +664,4 @@ void OPPROTO glue(glue(op_cmpxchg, MEM_SUFFIX), _T0_T1_EAX_cc)(void)
 #undef MEM_WRITE
 #undef MEM_SUFFIX
 #undef MEM_WRITE
-#undef IFLW_SHIFT_MEM_WRITE
+//#undef IFLW_SHIFT_MEM_WRITE

@@ -454,6 +454,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
   char tempbuf[1204];
   target_ulong current_task;
   char command[COMM_SIZE];
+  char str1[MAX_STRING_LEN], str2[MAX_STR_LEN];
   int pid, uid, len, i;
 
   // find current_task, the ptr to the currently executing process' task_struct
@@ -477,51 +478,56 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
     switch (EAX) {	
     case 0 : 
       // long sys_restart_syscall(void);
-      IFLS(RESTART_SYSCALL);
+      info_flow_log_op_write(IFLO_SYS_RESTART_SYSCALL);
       break;
     case 1 : 
       // long sys_exit(int error_code);
-      IFLS(EXIT);
+      info_flow_log_op_write(IFLO_SYS_EXIT,EBX);
       break;
     case 2 :
       // sys_fork is missing from syscalls.h
-      IFLS(FORK);
+      info_flow_log_op_write(IFLO_SYS_FORK);
       break;
     case 3 : 
       // ssize_t sys_read(unsigned int fd, char __user *buf,
       //	                size_t count);
-      IFLS_I(READ,EBX);
+      info_flow_log_op_write(IFLO_SYS_READ,EBX);      
       break;
     case 4 :
       // ssize_t sys_write(unsigned int fd, const char __user *buf,
       //                   size_t count);
-      IFLS_II(WRITE,EBX,EDX);
+      info_flow_log_op_write(IFLO_SYS_WRITE,EBX,EDX);
       break;
     case 5 :
       // long sys_open(const char __user *filename,
       //               int flags, int mode);
-      IFLS_SII_SIMP(OPEN,EBX,ECX,EDX);
+      copy_string(str1,EBX);
+      info_flow_log_op_write(IFLO_SYS_OPEN,str1,ECX,EDX);
       break;
     case 6 :
       // long sys_close(unsigned int fd);
-      IFLS_I(CLOSE,EBX);    
+      info_flow_log_op_write(IFLO_SYS_CLOSE,EBX);            
       break;
     case 7 :
       // long sys_waitpid(pid_t pid, int __user *stat_addr, int options);
-      IFLS(WAITPID);
+      info_flow_log_op_write(IFLO_SYS_WAITPID);      
       break;
     case 8 : 
       // long sys_creat(const char __user *pathname, int mode);    
-      IFLS_SI_SIMP(CREAT,EBX,ECX);
+      copy_string(str1,EBX);
+      info_flow_log_op_write(IFLO_SYS_READ,str1,ECX);      
       break;
     case 9: 
       // long sys_link(const char __user *oldname,
       //	             const char __user *newname);
-      IFLS_SS_SIMP(LINK,EBX,ECX);
+      copy_string(str1,EBX);
+      copy_string(str2,ECX);
+      info_flow_log_op_write(IFLO_SYS_LINK,str1,str2);
       break;
     case 10 : 
       // long sys_unlink(const char __user *pathname);
-      IFLS_S_SIMP(UNLINK,EBX);
+      copy_string(str1,EBX);
+      info_flow_log_op_write(IFLO_SYS_UNLINK,str1);      
       break;
     case 11: 
       // sys_execve is missing from syscalls.h 
@@ -548,7 +554,8 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           }
           i = 0;
           // write op plus num args 
-          IFLS_I(EXECVE,n);
+	  IFLS_I(EXECVE,n);
+	  wtf???
 	  argvp = orig_argvp;
 	  for (i=0; i<n; i++) {
             paddr = cpu_get_phys_addr(env, ECX+i*4);	
@@ -560,98 +567,110 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       break;
     case 12 :
       //  long sys_chdir(const char __user *filename);
-      IFLS_S_SIMP(CHDIR,EBX);
+      copy_string(str1,EBX);
+      info_flow_log_op_write(IFLO_SYS_CHDIR,str1);
       break;
     case 13 : 
       // long sys_time(time_t __user *tloc);
-      IFLS(TIME);
+      info_flow_log_op_write(IFLO_SYS_TIME);
       break;
     case 14 :
       // long sys_mknod(const char __user *filename, int mode,
       //	              unsigned dev);
-      IFLS_SII_SIMP(MKNOD,EBX,ECX,EDX);
+      copy_string(str1,EBX);
+      info_flow_log_op_write(IFLO_SYS_MKNOD,str1,ECX,EDX);
       break;
     case 15 :
       // long sys_chmod(const char __user *filename, mode_t mode);
-      IFLS_SI_SIMP(CHMOD,EBX,ECX);
+      copy_string(str1,EBX);
+      info_flow_log_op_write(IFLO_SYS_CHMOD,str1,ECX);
       break;
     case 16 : 
       // long sys_lchown(const char __user *filename,
       //                 uid_t user, gid_t group);
-      IFLS_SII_SIMP(LCHOWN,EBX,ECX,EDX);
+      copy_string(str1,EBX);
+      info_flow_log_op_write(IFLO_SYS_LCHOWN,str1,ECX,EDX);
       break;
-    case 17 : // sys_break
-      IFLS(BREAK);
+    case 17 :
+      // sys_break missing from syscalls.h
+      info_flow_log_op_write(IFLO_SYS_BREAK);
       break;
     case 18 :
       // sys_oldstat missing from syscalls.h
       // Xuxian seems to know ebx is a ptr to a string
-      IFLS_S_SIMP(OLDSTAT,EBX);
+      copy_string(str1,EBX);
+      info_flow_log_op_write(IFLO_SYS_OLDSTAT,str1);      
       break;
     case 19 :
       // off_t sys_lseek(unsigned int fd, off_t offset,
       //                 unsigned int origin);
-      IFLS_III(LSEEK,EBX,ECX,EDX);
+      info_flow_log_op_write(IFLO_SYS_LSEEK,EBX,ECX,EDX);
       break;
     case 20 :
       // long sys_getpid(void);
-      IFLS(GETPID);
+      info_flow_log_op_write(IFLO_SYS_GETPID);     
       break;
     case 21: 
       // long sys_mount(char __user *dev_name, char __user *dir_name,
       //                char __user *type, unsigned long flags,
       //	              void __user *data);
-      IFLS_SSSI_SIMP(MOUNT,EBX,ECX,EDX,ESI);
+      copy_string(str1,EBX);
+      copy_string(str2,ECX);
+      copy_string(str3,EDX);
+      info_flow_log_op_write(IFLO_SYS_MOUNT,str1,str2,ESI);
       break;
     case 22 :
       // long sys_umount(char __user *name, int flags);
-      IFLS_SI_SIMP(UMOUNT,EBX,ECX);
+      copy_string(str1,EBX);
+      info_flow_log_op_write(IFLO_SYS_UMOUNT,str1,ECX);
       break;
     case 23 : 
       // long sys_setuid(uid_t uid);
-      IFLS_I(SETUID,EBX);
+      info_flow_log_op_write(IFLO_SYS_SETUID,EBX);      
       break;
     case 24 : 
       // long sys_getuid(void);
-      IFLS(GETUID);
+      info_flow_log_op_write(IFLO_SYS_GETUID);
       break;
     case 25 :
       // long sys_stime(time_t __user *tptr);
-      IFLS(STIME);
+      info_flow_log_op_write(IFLO_SYS_STIME);
       break;
     case 26 :
       // long sys_ptrace(long request, long pid, long addr, long data);
-      IFLS_III(PTRACE,EBX,ECX,EDX);
+      info_flow_log_op_write(IFLO_SYS_PTRACE,EBX,ECX,EDX);
       break;
     case 27 :
       // unsigned long sys_alarm(unsigned int seconds);
-      IFLS_I(ALARM,EBX);
+      info_flow_log_op_write(IFLO_SYS_ALARM,EBX);
       break;
     case 28 : 
       // sys_oldfstat not in syscalls.h
       // I think this is really oldfstat.  can't find a prototype
-      IFLS(OLDFSTAT);
+      info_flow_log_op_write(IFLO_SYS_OLDFSTAT);
       break;
     case 29 : 
       //  long sys_pause(void);
-      IFLS(PAUSE);
+      info_flow_log_op_write(IFLO_SYS_PAUSE);
       break;
     case 30 :     
       // long sys_utime(char __user *filename,
       //                struct utimbuf __user *times);
-      IFLS_SI_SIMP(UTIME,EBX,ECX);
+      copy_string(str1,EBX);
+      info_flow_log_op_write(IFLO_SYS_UTIME,str1);
       break;
     case 31 : 
       // sys_stty not in syscalls.h
-      IFLS(STTY);
+      info_flow_log_op_write(IFLO_STTY);
       break;
     case 32 : 
       // sys_gtty not in syscalls.h
-      IFLS(GTTY);
+      info_flow_log_op_write(IFLO_GTTY);
       break;
     case 33 :
       // long sys_access(const char __user *filename, int mode);
-      IFLS_SI_SIMP(ACCESS,EBX,ECX);
+      copy_string(str1,EBX);
+      info_flow_log_op_write(IFLO_ACCESS,str1,ECX);
       break;
     case 34 :
       // long sys_nice(int increment);

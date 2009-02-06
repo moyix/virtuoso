@@ -45,10 +45,12 @@ extern uid_t current_uid;
 
 //#define DEBUG_PCALL
 
+/*
 #define IFLW_SAVE_RESTORE_ENV(op) \
 IFLW_WRAPPER ( \
         IFLW_PUT_OP(glue(INFO_FLOW_OP_,op)); \
 );
+*/
 
 #if 0
 #define raise_exception_err(a, b)\
@@ -383,22 +385,35 @@ static void switch_tss(int tss_selector,
         /* 32 bit */
         stl_kernel(env->tr.base + 0x20, next_eip);
         stl_kernel(env->tr.base + 0x24, old_eflags);
-        IFLW_SAVE_REG(IFRN_EAX);
         stl_kernel(env->tr.base + (0x28 + 0 * 4), EAX);
-        IFLW_SAVE_REG(IFRN_ECX);
         stl_kernel(env->tr.base + (0x28 + 1 * 4), ECX);
-        IFLW_SAVE_REG(IFRN_EDX);
         stl_kernel(env->tr.base + (0x28 + 2 * 4), EDX);
-        IFLW_SAVE_REG(IFRN_EBX);
         stl_kernel(env->tr.base + (0x28 + 3 * 4), EBX);
-        IFLW_SAVE_REG(IFRN_ESP);
         stl_kernel(env->tr.base + (0x28 + 4 * 4), ESP);
-        IFLW_SAVE_REG(IFRN_EBP);
         stl_kernel(env->tr.base + (0x28 + 5 * 4), EBP);
-        IFLW_SAVE_REG(IFRN_ESI);
         stl_kernel(env->tr.base + (0x28 + 6 * 4), ESI);
-        IFLW_SAVE_REG(IFRN_EDI);
         stl_kernel(env->tr.base + (0x28 + 7 * 4), EDI);
+
+
+/*         IFLW_SAVE_REG(IFRN_EAX); */
+/*         IFLW_SAVE_REG(IFRN_ECX); */
+/*         IFLW_SAVE_REG(IFRN_EDX); */
+/*         IFLW_SAVE_REG(IFRN_EBX); */
+/*         IFLW_SAVE_REG(IFRN_ESP); */
+/*         IFLW_SAVE_REG(IFRN_EBP); */
+/*         IFLW_SAVE_REG(IFRN_ESI); */
+/*         IFLW_SAVE_REG(IFRN_EDI); */
+
+
+	info_flow_log_op_write(IFLO_SAVE_REG,EAX);
+	info_flow_log_op_write(IFLO_SAVE_REG,ECX);
+	info_flow_log_op_write(IFLO_SAVE_REG,EDX);
+	info_flow_log_op_write(IFLO_SAVE_REG,EBX);
+	info_flow_log_op_write(IFLO_SAVE_REG,ESP);
+	info_flow_log_op_write(IFLO_SAVE_REG,EBP);
+	info_flow_log_op_write(IFLO_SAVE_REG,ESI);
+	info_flow_log_op_write(IFLO_SAVE_REG,EDI);
+
         for(i = 0; i < 6; i++)
             stw_kernel(env->tr.base + (0x48 + i * 4), env->segs[i].selector);
     } else {
@@ -624,13 +639,15 @@ do {\
 
 
 void write_current_pid_to_info_flow_log() {
-  IFLW_PUT_OP(INFO_FLOW_OP_PID_CHANGE);
-  IFLW_PUT_UINT32_T(current_pid);
+  /*     IFLW_PUT_OP(INFO_FLOW_OP_PID_CHANGE); */
+  /*     IFLW_PUT_UINT32_T(current_pid); */
+  info_flow_log_op_write(IFLO_PID_CHANGE,current_pid);
 }
 
 void write_current_uid_to_info_flow_log() {
-  IFLW_PUT_OP(INFO_FLOW_OP_UID_CHANGE);
-  IFLW_PUT_UINT32_T(current_uid);
+  /*     IFLW_PUT_OP(INFO_FLOW_OP_UID_CHANGE); */
+  /*     IFLW_PUT_UINT32_T(current_uid); */
+  info_flow_log_op_write(IFLO_UID_CHANGE,current_uid);
 }
 
 
@@ -1712,7 +1729,9 @@ void helper_divl_EAX_T0(void)
     if (q > 0xffffffff)
         raise_exception(EXCP00_DIVZ);
 
-  IFLW(DIVL_EAX_T0);
+    //  IFLW(DIVL_EAX_T0);
+    info_flow_log_op_write(IFLO_DIVL_EAX_T0);
+
     EAX = (uint32_t)q;
     EDX = (uint32_t)r;
 }
@@ -1735,7 +1754,10 @@ void helper_idivl_EAX_T0(void)
 #endif
     if (q != (int32_t)q)
         raise_exception(EXCP00_DIVZ);
-  IFLW(IDIVL_EAX_T0);
+
+    //  IFLW(IDIVL_EAX_T0);
+    info_flow_log_op_write(IFLO_IDIVL_EAX_T0);
+    
     EAX = (uint32_t)q;
     EDX = (uint32_t)r;
 }
@@ -1748,7 +1770,10 @@ void helper_cmpxchg8b(void)
     eflags = cc_table[CC_OP].compute_all();
     d = ldq(A0);
     if (d == (((uint64_t)EDX << 32) | EAX)) {
-      IFLW(CMPXCHG8B_PART1);
+
+      //      IFLW(CMPXCHG8B_PART1);
+      info_flow_log_op_write(IFLO_CMPXCHG8B_PART1);
+
         stq(A0, ((uint64_t)ECX << 32) | EBX);
 	// NB: we'll expect this stq to resolve to some cpu-all.h stX_p thingey.
 	// that should push sanother info-flow op and addr (physical one A0 corresponds to) 
@@ -1757,7 +1782,10 @@ void helper_cmpxchg8b(void)
     } else {
         EDX = d >> 32;
         EAX = d;
-	IFLW(CMPXCHG8B_PART2);	
+
+	//	IFLW(CMPXCHG8B_PART2);	
+	info_flow_log_op_write(IFLO_CMPXCHG8B_PART2);
+
 	// no addr necessary here -- we are just setting EDX/EAX to the 64bits that 
 	// we loaded from addr A0.  Right?
         eflags &= ~CC_Z;
@@ -2102,7 +2130,7 @@ void load_seg(int seg_reg, int selector)
                        get_seg_limit(e1, e2),
                        e2);
 #if 0
-	    IFLW_LDST2(LD1,physaddr,2);
+
 	    /*
         fprintf(logfile, "load_seg: sel=0x%04x base=0x%08lx limit=0x%08lx flags=%08x\n",
                 selector, (unsigned long)sc->base, sc->limit, sc->flags);
@@ -4228,7 +4256,10 @@ void tlb_fill(target_ulong addr, int is_write, int mmu_idx, void *retaddr)
             raise_exception_err_norestore(env->exception_index, env->error_code);
     }
     env = saved_env;
-    IFLW_SAVE_RESTORE_ENV(RESTORE_ENV);
+
+    //    IFLW_SAVE_RESTORE_ENV(RESTORE_ENV);
+    info_flow_log_op_write(IFLO_RESTORE_ENV);
+
 }
 
 
