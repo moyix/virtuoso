@@ -263,10 +263,50 @@ void info_flow_log_sssi_read(info_flow_op_enum_t op, char *s1, char *s2, char *s
   info_flow_log_read_int(ai1);
 }
 
-void 
+void info_flow_log_op(uint8_t write, info_flow_op_enum_t op) {
+  info_flow_log_uint32_t(op);
+}
 
-void info_flow_log_sssi(uint8_t write, info_flow_op_enum_t op, char *s1, char *s2, char *s3, int *ai1) {
-  info_flow_log_uint32_t(write,op);  
+void info_flow_log_sentinel(uint8_t write) {
+#ifdef USE_SENTINEL
+  if (write) {
+    info_flow_log_write_uint32_t(THE_SENTINEL);
+  }
+  else {
+    uint32_t sent;
+    info_flow_log_read_uint32_t(&sent);
+    assert (sent == THE_SENTINEL);
+  }
+}
+#endif
+
+void info_flow_log_uint32_t(uint8_t write, uint32_t *ai) {
+  if (write) {   
+    *((uint32_t *)if_log_ptr) = *ai;	
+  }
+  else {
+    *ai =  *((uint32_t *)if_log_ptr);
+  }
+  if_log_ptr += sizeof(uint32_t);  
+}
+
+
+void info_flow_log_string(uint8_t write, char *s) {
+  int i;			
+  if (write) {
+    int n = strlen(s);		
+    if (n > MAX_STRING_LEN) { 
+      n = MAX_STRING_LEN; 
+    }
+    info_flow_log_uint32_t(1, &n);
+    for (i=0; i<n; i++) {		
+      info_flow_log_uint8_t(1, &(str[i]));
+    }
+  }				
+
+
+void info_flow_log_sssi(uint8_t write, info_flow_op_enum_t op, char *s1, char *s2, char *s3, uint32_t *ai1) {
+  info_flow_log_op(write,op);  
   info_flow_log_sentinel(write);
   info_flow_log_string(write,s1);
   info_flow_log_string(write,s2);
