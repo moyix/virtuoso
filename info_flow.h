@@ -443,6 +443,7 @@ IFLO_SET_CPL,
 // /usr/include/asm/unistd_32.h
 // linux kernel 
 // Linux snowy 2.6.27-9-generic #1 SMP Thu Nov 20 21:57:00 UTC 2008 i686 GNU/Linux
+IFLO_SYS_CALLS_START, // dummy
 IFLO_SYS_RESTART_SYSCALL,    // 0 
 IFLO_SYS_EXIT,    // 1 
 IFLO_SYS_FORK,    // 2 

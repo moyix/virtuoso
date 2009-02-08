@@ -143,20 +143,12 @@ static inline void info_flow_log_string_read(char *str) {
 }
 
 
-// write an info-flow op and all its args to the log
-// op is the op number
-// op_fmt is a string telling us how to interpret the elements in op_args
-// op_args is a va_list containing the op args.
-void info_flow_log_op_write(info_flow_op_enum_t op_num, ...) {
-  va_list op_args;
+
+void info_flow_log_op_args_read(info_flow_op_enum_t op_num, va_list op_args) {
   char *op_fmt, *p;
 
-  // write the op and the sentinel
-  info_flow_log_op_only_write(op_num);
-  info_flow_log_sentinel();
-
   op_fmt = info_flow_op_args_format[op_num];
-  va_start(op_args, op_fmt);
+  //  va_start(op_args, op_num);
   for (p=op_fmt; *p!='\0'; p++) {
     switch (*p) {
     case IFLA_NONE: // no args at all
@@ -197,6 +189,22 @@ void info_flow_log_op_write(info_flow_op_enum_t op_num, ...) {
 }
 
 
+
+
+// write an info-flow op and all its args to the log
+// op is the op number
+// op_fmt is a string telling us how to interpret the elements in op_args
+// op_args is a va_list containing the op args.
+void info_flow_log_op_write(info_flow_op_enum_t op_num, ...) {
+  va_list op_args;
+
+  // write the op and the sentinel
+  info_flow_log_op_only_write(op_num);
+  info_flow_log_sentinel();
+  // write the args specific to this op
+  va_start(op_args, op_num);
+  info_flow_log_args_write(op_num, op_args);
+}
 
 
 // read an info-flow op and all its args from the log
@@ -247,9 +255,32 @@ void info_flow_log_op_args_read(Info_flow_op_t *op) {
 
 
 
+typedef struct Info_flow_syscall_struct_t {
+  uint32_t eax;
+  uint8_t is_sysenter;
+  uint32_t pid;
+  uint32_t callsite_eip;
+  char *command;
+} Info_flow_syscall_t;
+  
 
 
 
+void info_flow_log_syscall_write(Info_flow_syscall_t *sc, ...) {
+  va_list op_args;
+
+  // write the op and the sentinel
+  info_flow_log_op_only_write(sc->eax + IFLO_SYS_CALLS_START);
+  info_flow_log_sentinel();
+  // write the std syscall other args.
+  info_flow_log_uint8_t(sc->is_sysenter);  
+  info_flow_log_uint32_t(sc->pid);
+  info_flow_log_uint32_t(sc->callsite_eip);
+  info_flow_log_string(sc->command);
+  // write the args specific to this call
+  va_start(op_args, sc);
+  info_flow_log_args_write(sc->op_num, op_args);
+}  
 
 
 
