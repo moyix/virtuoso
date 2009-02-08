@@ -207,6 +207,37 @@ void info_flow_log_op_write(info_flow_op_enum_t op_num, ...) {
 }
 
 
+
+
+typedef struct Info_flow_syscall_struct_t {
+  uint32_t eax;
+  uint8_t is_sysenter;
+  uint32_t pid;
+  uint32_t callsite_eip;
+  char *command;
+} Info_flow_syscall_t;
+  
+
+
+
+void info_flow_log_syscall_write(Info_flow_syscall_t *sc, ...) {
+  va_list op_args;
+
+  // write the op and the sentinel
+  info_flow_log_op_only_write(sc->eax + IFLO_SYS_CALLS_START + 1);
+  info_flow_log_sentinel();
+  // write the std syscall other args.
+  info_flow_log_uint8_t(sc->is_sysenter);  
+  info_flow_log_uint32_t(sc->pid);
+  info_flow_log_uint32_t(sc->callsite_eip);
+  info_flow_log_string(sc->command);
+  // write the args specific to this call
+  va_start(op_args, sc);
+  info_flow_log_args_write(sc->op_num, op_args);
+}  
+
+
+
 // read an info-flow op and all its args from the log
 // op_fmt is a string telling us how to interpret the elements in op_args
 // op_args is a va_list containing the *addresses* of the arguments.
@@ -253,34 +284,6 @@ void info_flow_log_op_args_read(Info_flow_op_t *op) {
 
 }
 
-
-
-typedef struct Info_flow_syscall_struct_t {
-  uint32_t eax;
-  uint8_t is_sysenter;
-  uint32_t pid;
-  uint32_t callsite_eip;
-  char *command;
-} Info_flow_syscall_t;
-  
-
-
-
-void info_flow_log_syscall_write(Info_flow_syscall_t *sc, ...) {
-  va_list op_args;
-
-  // write the op and the sentinel
-  info_flow_log_op_only_write(sc->eax + IFLO_SYS_CALLS_START + 1);
-  info_flow_log_sentinel();
-  // write the std syscall other args.
-  info_flow_log_uint8_t(sc->is_sysenter);  
-  info_flow_log_uint32_t(sc->pid);
-  info_flow_log_uint32_t(sc->callsite_eip);
-  info_flow_log_string(sc->command);
-  // write the args specific to this call
-  va_start(op_args, sc);
-  info_flow_log_args_write(sc->op_num, op_args);
-}  
 
 
 

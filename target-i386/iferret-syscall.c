@@ -158,7 +158,17 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
     Info_flow_syscall_t sc, *scp;
 
     scp = &sc;
-    scp->eax = EAX;
+    scp->op_num = EAX + IFLO_SYS_CALLS_START + 1;
+    if (EAX==102) {
+      // sys_socketcall has 17 sub-possibilities.
+      // EBX=1 (socket) ... EBX=17 (recvmsg)
+      // each with its own arg format.
+      scp->op_num += EBX;
+    }
+    if (EAX>102) {
+      scp->op_num += 18;
+    }
+    
     scp->is_sysenter = is_sysenter;
     scp->pid = pid;
     scp->callsite_eip = eip_for_callsite;
@@ -293,68 +303,76 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
     case 14 :
       // long sys_mknod(const char __user *filename, int mode,
       //	              unsigned dev);
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_MKNOD,str1,ECX,EDX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1,ECX,EDX);
+      }
       break;
     case 15 :
       // long sys_chmod(const char __user *filename, mode_t mode);
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_CHMOD,str1,ECX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1,ECX);
+      }
       break;
     case 16 : 
       // long sys_lchown(const char __user *filename,
       //                 uid_t user, gid_t group);
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_LCHOWN,str1,ECX,EDX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1,ECX,EDX);
+      }
       break;
     case 17 :
       // sys_break missing from syscalls.h
-      info_flow_log_syscall_write(IFLO_SYS_BREAK);
+      info_flow_log_syscall_write(scp);
       break;
     case 18 :
       // sys_oldstat missing from syscalls.h
       // Xuxian seems to know ebx is a ptr to a string
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_OLDSTAT,str1);      
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(IFLO_SYS_OLDSTAT,str1);      
+      }
       break;
     case 19 :
       // off_t sys_lseek(unsigned int fd, off_t offset,
       //                 unsigned int origin);
-      info_flow_log_syscall_write(IFLO_SYS_LSEEK,EBX,ECX,EDX);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX);
       break;
     case 20 :
       // long sys_getpid(void);
-      info_flow_log_syscall_write(IFLO_SYS_GETPID);     
+      info_flow_log_syscall_write(scp);
       break;
     case 21: 
       // long sys_mount(char __user *dev_name, char __user *dir_name,
       //                char __user *type, unsigned long flags,
       //	              void __user *data);
-      copy_string(str1,EBX);
-      copy_string(str2,ECX);
-      copy_string(str3,EDX);
-      info_flow_log_syscall_write(IFLO_SYS_MOUNT,str1,str2,ESI);
+      if (copy_string(str1,EBX)) {
+        if (copy_string(str2,ECX)) {
+          if (copy_string(str3,EDX)) {
+            info_flow_log_syscall_write(scp,str1,str2,ESI);
+          }
+        }
+      }
       break;
     case 22 :
       // long sys_umount(char __user *name, int flags);
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_UMOUNT,str1,ECX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(IFLO_SYS_UMOUNT,str1,ECX);
+      }
       break;
     case 23 : 
       // long sys_setuid(uid_t uid);
-      info_flow_log_syscall_write(IFLO_SYS_SETUID,EBX);      
+      info_flow_log_syscall_write(scp);
       break;
     case 24 : 
       // long sys_getuid(void);
-      info_flow_log_syscall_write(IFLO_SYS_GETUID);
+      info_flow_log_syscall_write(scp);
       break;
     case 25 :
       // long sys_stime(time_t __user *tptr);
-      info_flow_log_syscall_write(IFLO_SYS_STIME);
+      info_flow_log_syscall_write(scp);
       break;
     case 26 :
       // long sys_ptrace(long request, long pid, long addr, long data);
-      info_flow_log_syscall_write(IFLO_SYS_PTRACE,EBX,ECX,EDX);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX);
       break;
     case 27 :
       // unsigned long sys_alarm(unsigned int seconds);
@@ -363,17 +381,18 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
     case 28 : 
       // sys_oldfstat not in syscalls.h
       // I think this is really oldfstat.  can't find a prototype
-      info_flow_log_syscall_write(IFLO_SYS_OLDFSTAT);
+      info_flow_log_syscall_write(scp);
       break;
     case 29 : 
       //  long sys_pause(void);
-      info_flow_log_syscall_write(IFLO_SYS_PAUSE);
+      info_flow_log_syscall_write(scp);
       break;
     case 30 :     
       // long sys_utime(char __user *filename,
       //                struct utimbuf __user *times);
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_UTIME,str1);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1);
+      }
       break;
     case 31 : 
       // sys_stty not in syscalls.h
@@ -381,53 +400,58 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       break;
     case 32 : 
       // sys_gtty not in syscalls.h
-      info_flow_log_syscall_write(IFLO_SYS_GTTY);
+      info_flow_log_syscall_write(scp);
       break;
     case 33 :
       // long sys_access(const char __user *filename, int mode);
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_ACCESS,str1,ECX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1,ECX);
       break;
     case 34 :
       // long sys_nice(int increment);
-      info_flow_log_syscall_write(IFLO_SYS_NICE,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 35 : 
       // sys_ftime not in syscalls.h
-      info_flow_log_syscall_write(IFLO_SYS_FTIME);
+      info_flow_log_syscall_write(scp);
       break;
     case 36 : 
       // long sys_sync(void);
-      info_flow_log_syscall_write(IFLO_SYS_SYNC);
+      info_flow_log_syscall_write(scp);
       break;
     case 37 :
       // long sys_kill(int pid, int sig);
-      info_flow_log_syscall_write(IFLO_SYS_KILL,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 38: 
       //  long sys_rename(const char __user *oldname,
       //	                const char __user *newname);
-      copy_string(str1,EBX);
-      copy_string(str2,ECX);
-      info_flow_log_syscall_write(IFLO_SYS_RENAME,str1,str2);
+      if (copy_string(str1,EBX)) {
+        if (copy_string(str2,ECX)) {
+          info_flow_log_syscall_write(scp,str1,str2);
+        }
+      }
       break;
     case 39: 
       // long sys_mkdir(const char __user *pathname, int mode);
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_MKDIR,str1,EBX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1,EBX);
+      }
       break;
     case 40: 
       //  long sys_rmdir(const char __user *pathname);
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_RMDIR,str1);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1);
+      }
       break;
     case 41: 
       //  long sys_dup(unsigned int fildes);
-      info_flow_log_syscall_write(IFLO_SYS_DUP,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 42:
       // sys_pipe is missing from syscalls.h. 
-      info_flow_log_syscall_write(IFLO_SYS_PIPE,EBX,ECX,EDX);
+      //        int pipe(int pipefd[2]);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX);
       //    paddr = cpu_get_phys_addr(env, EBX);
       //    if (paddr!=-1)	{      
       //      fprintf(logfile,"PID %3d (%16s)", pid, command);
@@ -436,173 +460,183 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       break;
     case 43 : 
       // long sys_times(struct tms __user *tbuf);
-      info_flow_log_syscall_write(IFLO_SYS_TIMES);
+      info_flow_log_syscall_write(scp);
       break;
     case 44 : 
       // sys_prof missing from syscalls.h
-      info_flow_log_syscall_write(IFLO_SYS_PROF);
+      info_flow_log_syscall_write(Iscp);
       break;
     case 45 : 
       // unsigned long sys_brk(unsigned long brk);
-      info_flow_log_syscall_write(IFLO_SYS_BRK,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 46 :
       // long sys_setgid(gid_t gid);
-      info_flow_log_syscall_write(IFLO_SYS_SETGID,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 47 : 
       // long sys_getgid(void);
-      info_flow_log_syscall_write(IFLO_SYS_GETGID);
+      info_flow_log_syscall_write(scp);
       break;
     case 48 : 
       // unsigned long sys_signal(int sig, __sighandler_t handler);
-      info_flow_log_syscall_write(IFLO_SYS_SIGNAL,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 49 : 
       // long sys_geteuid(void);
-      info_flow_log_syscall_write(IFLO_SYS_GETEUID);
+      info_flow_log_syscall_write(scp);
       break;
     case 50 :
       // long sys_getegid(void);
-      info_flow_log_syscall_write(IFLO_SYS_GETEGID);
+      info_flow_log_syscall_write(scp);
       break;
     case 51 : 
       // long sys_acct(const char __user *name);
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_ACCT,str1);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1);
+      }
       break;
     case 52 : 
       // sys_umount2 is missing from syscalls.h
       // Xuxian used EBX as a ptr to a string tho...
-      info_flow_log_syscall_write(IFLO_SYS_UMOUNT2,EBX);
+      // man 2 umount 2 gets:
+      //        int umount2(const char *target, int flags);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1);
+      }
       break;
     case 53 : 
       // sys_lock is missing from syscalls.h
-      info_flow_log_syscall_write(IFLO_SYS_LOCK);
+      info_flow_log_syscall_write(scp);
       break;
     case 54 : 
       // long sys_ioctl(unsigned int fd, unsigned int cmd,
       //                unsigned long arg);
-      info_flow_log_syscall_write(IFLO_SYS_IOCTL,EBX,ECX,EDX);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX);
       break;
     case 55 : 
       // long sys_fcntl(unsigned int fd, unsigned int cmd, unsigned long arg);
-      info_flow_log_syscall_write(IFLO_SYS_FCNTL,EBX,ECX,EDX);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX);
       break;
     case 56 :
       // sys_mpx is missing from syscalls.h
-      info_flow_log_syscall_write(IFLO_SYS_MPX);
+      info_flow_log_syscall_write(scp);
       break;
     case 57 : 
       // long sys_setpgid(pid_t pid, pid_t pgid);    
-      info_flow_log_syscall_write(IFLO_SYS_SETPGID,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 58 : 
       // sys_ulimit is missing from syscalls.h
-      info_flow_log_syscall_write(IFLO_SYS_ULIMIT);
+      info_flow_log_syscall_write(scp);
       break;
     case 59 :
       // sys_oldolduname is missing from syscalls.h
-      info_flow_log_syscall_write(IFLO_SYS_OLDOLDUNAME);
+      info_flow_log_syscall_write(scp);
       break;
     case 60 :
       // long sys_umask(int mask);
-      info_flow_log_syscall_write(IFLO_SYS_UMASK,EBX);
+      info_flow_log_syscall_write(scp);
       break;
     case 61 :
       // long sys_chroot(const char __user *filename);
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_CHROOT,str1);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1);
+      }
       break;
     case 62 :
       // long sys_ustat(unsigned dev, struct ustat __user *ubuf);
-      info_flow_log_syscall_write(IFLO_SYS_USTAT);
+      info_flow_log_syscall_write(scp);
       break;
     case 63 : 
       // long sys_dup2(unsigned int oldfd, unsigned int newfd);
-      info_flow_log_syscall_write(IFLO_SYS_DUP2,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 64 : 
       // long sys_getppid(void);
-      info_flow_log_syscall_write(IFLO_SYS_GETPPID);
+      info_flow_log_syscall_write(scp);
       break;
     case 65 : 
       // long sys_getpgrp(void);
-      info_flow_log_syscall_write(IFLO_SYS_GETPGRP);
+      info_flow_log_syscall_write(scp);
       break;
     case 66 : 
       // long sys_setsid(void);
-      info_flow_log_syscall_write(IFLO_SYS_SETSID);
+      info_flow_log_syscall_write(scp);
       break;
     case 67 :
       // sys_sigaction is missing from syscalls.h
-      info_flow_log_syscall_write(IFLO_SYS_SIGACTION,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 68 :
       // long sys_sgetmask(void);
-      info_flow_log_syscall_write(IFLO_SYS_SGETMASK);
+      info_flow_log_syscall_write(scp);
       break;
     case 69 : 
       // long sys_ssetmask(int newmask);
-      info_flow_log_syscall_write(IFLO_SYS_SSETMASK,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 70 : 
       // long sys_setreuid(uid_t ruid, uid_t euid);
-      info_flow_log_syscall_write(IFLO_SYS_SETREUID,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 71 :
       // long sys_setregid(gid_t rgid, gid_t egid);
-      info_flow_log_syscall_write(IFLO_SYS_SETREGID,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 72 : 
       // sys_sigsuspend is missing from syscalls.h
-      info_flow_log_syscall_write(IFLO_SYS_SIGSUSPEND);
+      info_flow_log_syscall_write(scp);
       break;
     case 73 : 
       // long sys_sigpending(old_sigset_t __user *set);
-      info_flow_log_syscall_write(IFLO_SYS_SIGPENDING);
+      info_flow_log_syscall_write(scp);
       break;
     case 74 : 
       // long sys_sethostname(char __user *name, int len);
-      info_flow_log_syscall_write(IFLO_SYS_SETHOSTNAME,EBX,ECX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1,ECX);
+      }
       break;
     case 75 : 
       // long sys_setrlimit(unsigned int resource,
       //                    struct rlimit __user *rlim);
-      info_flow_log_syscall_write(IFLO_SYS_SETRLIMIT,EBX,ECX);
+      // might want that ptr?
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 76 : 
       // long sys_getrlimit(unsigned int resource,
       //                    struct rlimit __user *rlim);
-      info_flow_log_syscall_write(IFLO_SYS_GETRLIMIT,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 77 : 
       //  long sys_getrusage(int who, struct rusage __user *ru);
-      info_flow_log_syscall_write(IFLO_SYS_GETRUSAGE,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 78 : 
       // long sys_gettimeofday(struct timeval __user *tv,
       //                       struct timezone __user *tz);
-      info_flow_log_syscall_write(IFLO_SYS_GETTIMEOFDAY);
+      info_flow_log_syscall_write(scp);
       break;
     case 79 : 
       // long sys_settimeofday(struct timeval __user *tv,
       //                       struct timezone __user *tz);
-      info_flow_log_syscall_write(IFLO_SYS_SETTIMEOFDAY);
+      info_flow_log_syscall_write(scp);
       break;
     case 80 :
       // long sys_getgroups(int gidsetsize, gid_t __user *grouplist);
-      info_flow_log_syscall_write(IFLO_SYS_GETGROUPS);
+      info_flow_log_syscall_write(scp);
       break;
     case 81 : 
       // long sys_setgroups(int gidsetsize, gid_t __user *grouplist);
-      info_flow_log_syscall_write(IFLO_SYS_SETGROUPS);
+      info_flow_log_syscall_write(scp);
       break;
     case 82 :
       // long sys_select(int n, fd_set __user *inp, fd_set __user *outp,
       // fd_set __user *exp, struct timeval __user *tvp);
       //      info_flow_log_syscall_write(IFLO_SYS_SELECT,EBX);
       // TRL 2009 02 06 probably not useful?
+      info_flow_log_syscall_write(scp);
       /*
       {
         int fd, *ptr;
@@ -643,37 +677,43 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       break;
     case 83 :
       // long sys_symlink(const char __user *old, const char __user *new);
-      copy_string(str1,EBX);
-      copy_string(str2,ECX);
-      info_flow_log_syscall_write(IFLO_SYS_SYMLINK,str1,str2);
+      if (copy_string(str1,EBX)) {
+        if (copy_string(str2,ECX)) {
+          info_flow_log_syscall_write(scp,str1,str2);
+        }
+      }
       break;
     case 84 :
       // sys_oldlstat is missing from syscalls.h
       // Xuxian takes EBX to be a ptr to a string.
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_OLDLSTAT,str1);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1);
+      }
       break;
     case 85 :
       // long sys_readlink(const char __user *path,
       //                   char __user *buf, int bufsiz);
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_READLINK,str1);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1);
+      }
       break;
     case 86 : 
       // long sys_uselib(const char __user *library);
       //                   char __user *buf, int bufsiz);
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_USELIB,str1);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1);
+      }
       break;
     case 87 : // sys_swapon
       // long sys_swapon(const char __user *specialfile, int swap_flags);
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_SWAPON,str1);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1);
+      }
       break;
     case 88 :
       // long sys_reboot(int magic1, int magic2, unsigned int cmd,
       //                 void __user *arg);    
-      info_flow_log_syscall_write(IFLO_SYS_REBOOT);
+      info_flow_log_syscall_write(scp);
       break;
     case 89 : 
       // sys_readdir is missing from syscalls.h
@@ -682,8 +722,9 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       //        int readdir(unsigned int fd, struct dirent *dirp,
       //                    unsigned int count);
       //
-      copy_string(str1,ECX);
-      info_flow_log_syscall_write(IFLO_SYS_READDIR,EBX,str1);
+      if (copy_string(str1,ECX)) {
+        info_flow_log_syscall_write(scp,EBX,str1);
+      } 
       break;
     case 90 :
       // sys_mmap is missing from syscalls.h
@@ -704,57 +745,57 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           len = *ptr++;
           ptr++; ptr++;
           fd = *ptr++;
-	  info_flow_log_syscall_write(IFLO_SYS_MMAP,addr,len,fd);
+	  info_flow_log_syscall_write(scp,addr,len,fd);
         }
       }
       break;
     case 91 :
       //  long sys_munmap(unsigned long addr, size_t len);
-      IFLS_II(MUNMAP,EBX,ECX);
-      info_flow_log_syscall_write(IFLO_SYS_MUNMAP,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 92 : 
       // long sys_truncate(const char __user *path,
       //                   unsigned long length);
-      copy_string(str1,EBX);
-      info_flow_log_syscall_write(IFLO_SYS_TRUNCATE,str1,ECX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1,ECX);
+      }
       break;
     case 93 : 
       // long sys_ftruncate(unsigned int fd, unsigned long length);
-      info_flow_log_syscall_write(IFLO_SYS_FTRUNCATE,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 94 : 
       // long sys_fchmod(unsigned int fd, mode_t mode);
-      info_flow_log_syscall_write(IFLO_SYS_FCHMOD,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 95 : 
       // long sys_fchown(unsigned int fd, uid_t user, gid_t group);
-      info_flow_log_syscall_write(IFLO_SYS_FCHOWN,EBX,ECX,EDX);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX);
       break;
     case 96 : 
       // long sys_getpriority(int which, int who);
-      info_flow_log_syscall_write(IFLO_SYS_GETPRIORITY,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 97 : 
       // long sys_setpriority(int which, int who, int niceval);
-      info_flow_log_syscall_write(IFLO_SYS_SETPRIORITY,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 98 :
       // sys_profil is missing from syscalls.h
-      info_flow_log_syscall_write(IFLO_SYS_PROFIL);
+      info_flow_log_syscall_write(scp);
       break;
     case 99 : 
       // long sys_statfs(const char __user * path,
       //                 struct statfs __user *buf);
-      info_flow_log_syscall_write(IFLO_SYS_STATFS,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 100 :
       // long sys_fstatfs(unsigned int fd, struct statfs __user *buf);
-      info_flow_log_syscall_write(IFLO_SYS_FSTATFS,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 101 : 
       // long sys_ioperm(unsigned long from, unsigned long num, int on);
-      info_flow_log_syscall_write(IFLO_SYS_IOPERM,EBX,ECX,EDX);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX);
       break;
     case 102 : 
       // long sys_socketcall(int call, unsigned long __user *args);
@@ -772,7 +813,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
 	    //            IFLW_PUT_UINT32_T(family);
 	    //            IFLW_PUT_UINT32_T(type);
 	    //            IFLW_PUT_UINT32_T(protocol);
-	    info_flow_log_syscall_write(IFLO_SYS_SOCKETCALL_SOCKET,family,type,protocol);
+	    info_flow_log_syscall_write(scp,EBX,family,type,protocol);
           }
         }
         break;
@@ -801,52 +842,45 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
             bptr = tempbuf; bptr+=2;
             sap = (struct sockaddr_in*) tempbuf;
             ptr = (int*) tempbuf; ptr++; pid =*ptr++;  group = *ptr++;
-	    //            IFLW_PUT_UINT8_T((uint8_t) sap->sin_family);
-	    //            IFLW_PUT_UINT32_T(fd);
             if (sap->sin_family == 1 ) { // PF_LOCAL
-	      //              IFLW_PUT_STRING(bptr);
-	      info_flow_log_syscall_write(IFLO_SYS_SOCKETCALL_BIND_PF_LOCAL,
-				     fd, bptr);
+	      info_flow_log_syscall_write(scp,EBX,sap->sin_family,fd, bptr);
               //	    fprintf(logfile,"family  1; fd %d; file %s", fd, bptr);
             }
             else if (sap->sin_family == 2 ) { // PF_INET
-	      //              IFLW_PUT_UINT32_T(b4);
-	      //              IFLW_PUT_UINT32_T(b5);
-	      //              IFLW_PUT_UINT32_T(b6);
-	      //              IFLW_PUT_UINT32_T(b7);
-	      //              IFLW_PUT_UINT32_T(b2*256+b3);
 	      char addrPort[1024];
 	      sprintf(addrPort,"%d.%d.%d.%d:%d",b4,b5,b6,b7,b2*256+b3);
-	      info_flow_log_syscall_write(IFLO_SYS_SOCKETCALL_BIND_PF_INET,fd,addrPort);
-				     b4,b5,b6,b7,b2*256+b3);
+	      info_flow_log_syscall_write(scp,EBX,sap->sin_family,fd,addrPort);
               //	    fprintf(logfile,"family  2; fd %d; %d.%d.%d.%d:%d", 
               //		    fd, b4, b5, b6, b7, b2*256+b3);
             }
             else if (sap->sin_family == 16 ) {// PF_NETLINK
-              IFLW_PUT_UINT32_T(pid);
-              IFLW_PUT_UINT32_T(group);
-	      info_flow_log_syscall_write(IFLO_SYS_SOCKETCALL_BIND_PF_NETLINK,
-				     
+	      info_flow_log_syscall_write(scp,EBX,sap->sin_family,fd);				     
               //	    fprintf(logfile,"family 16; fd %d; pid %d; group %d", 
               //		    fd, pid, group);
             }
             else if (sap->sin_family == 17 )  {// PF_PACKET
+              char addr[1024];
               bptr = tempbuf; bptr += 8; sptr = (unsigned short*)bptr;
               bptr +=2; pkttype =*bptr; halen =*bptr++;
-              IFLW_PUT_UINT32_T(b2*256+b3);
-              IFLW_PUT_UINT32_T(pid);	  	    
 	      //                fprintf(logfile,"family 17; fd %d; protocol 0x%x; ifindex 0x%x",
 	      //                fd, b2*256+b3, pid);
 	      //                fprintf(logfile,"family 17; fd %d; protocol %d; ifindex %d; hatype %d; pkttype %d; halen %d; addr %02x-%02x-%02x-%02x-%02x-%02x-%02x-%02x", 
 	      //                sap->sin_family, fd, b2*256+b3, pid, *sptr, pkttype, halen, 
 	      //                tempbuf[12], tempbuf[13], tempbuf[14], tempbuf[15],
 	      //                tempbuf[16], tempbuf[17], tempbuf[18], tempbuf[19]);
+              sprintf(addr,"%02x-%02x-%02x-%02x-%02x-%02x-%02x-%02x", 
+                      tempbuf[12], tempbuf[13], tempbuf[14], tempbuf[15],
+                      tempbuf[16], tempbuf[17], tempbuf[18], tempbuf[19]);
+              info_flow_log_syscall_write(scp,EBX,sap->sin_family,fd,*sptr,pktype,halen,addr);
             } else {
-              IFLW_PUT_UINT32_T(b0);
-              IFLW_PUT_UINT32_T(len);
+              char godknowswhat[1024];
               // fprintf(logfile,"family %2d; fd %d; %d.%d.%d.%d-%d.%d.%d.%d(%c%c%c%c%c%c%c%c); len %d", 
               //		    sap->sin_family, fd, b0, b1, b2, b3,b4, b5, b6, 
               //		    b7, b0, b1, b2, b3,b4, b5, b6, b7, len);
+              sprintf(godknowswhat,"%d.%d.%d.%d-%d.%d.%d.%d(%c%c%c%c%c%c%c%c", 
+                      b0, b1, b2, b3,b4, b5, b6, 
+                      b7, b0, b1, b2, b3,b4, b5, b6, b7);
+              info_flow_log_syscall_write(scp,EBX,sap->sin_family,fd,godknowswhast);
             }
           }
         }
@@ -873,24 +907,21 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
             b4=*bptr++; b5=*bptr++; b6=*bptr++; b7=*bptr++;
             bptr = tempbuf; bptr+=2;
             sap = (struct sockaddr_in*) tempbuf;
-            IFLW_PUT_UINT8_T((uint8_t) sap->sin_family);
-            IFLW_PUT_UINT32_T(fd);
             if (sap->sin_family == 1) {// PF_LOCAL
-              IFLW_PUT_STRING(bptr);
               //	    fprintf(logfile,"socket %d; family  1; file %s", fd, bptr);
+              info_flow_log_syscall_write(scp,EBX,sap->sin_family,fd,bptr);
             }
             else if (sap->sin_family == 2) { // PF_INET
-              IFLW_PUT_UINT32_T(b4);
-              IFLW_PUT_UINT32_T(b5);
-              IFLW_PUT_UINT32_T(b6);
-              IFLW_PUT_UINT32_T(b7);
-              IFLW_PUT_UINT32_T(b2*256+b3);
+              char addrport[1024];
               //	    fprintf(logfile,"socket %d; family  2; %d.%d.%d.%d:%d", 
               //		    fd, b4, b5, b6, b7, b2*256+b3);
+              sprintf(addrport,"%d.%d.%d.%d:%d", b4, b5, b6, b7, b2*256+b3);              
+              info_flow_log_syscall_write(scp,EBX,sap->sin_family,fd,addrport);
             }
             else {
               //	    fprintf(logfile,"socket %d; family %2d;",
               //		    fd, sap->sin_family);
+              info_flow_log_syscall_write(scp,EBX,sap->sin_family,fd);
             }
           }
           //	fprintf(logfile,"\n");
@@ -903,7 +934,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           bzero(tempbuf, 120);
           cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
           //	fprintf(logfile,"socket %d", *(int*) tempbuf);
-          IFLW_PUT_UINT32_T(*((int*)tempbuf));
+          info_flow_log_syscall_write(scp,EBX, *((int*) tempbuf));
         }
         //      fprintf(logfile,"\n");
         break;
@@ -914,7 +945,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           bzero(tempbuf, 120);
           cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
           //	fprintf(logfile,"socket %d", *(int*) tempbuf);
-          IFLW_PUT_UINT32_T(*((int*)tempbuf));
+          info_flow_log_syscall_write(scp,EBX,*(int*) tempbuf); 
         }
         //      fprintf(logfile,"\n");      
         break;
@@ -925,7 +956,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           bzero(tempbuf, 120);
           cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
           //	fprintf(logfile,"socket %d", *(int*) tempbuf);
-          IFLW_PUT_UINT32_T(*((int*)tempbuf));
+          info_flow_log_syscall_write(scp,EBX,*(int*) tempbuf); 
         }
         //      fprintf(logfile,"\n");      
         break;
@@ -936,7 +967,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
           bzero(tempbuf, 120);
           cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
           //	fprintf(logfile,"socket %d", *(int*) tempbuf);
-          IFLW_PUT_UINT32_T(*((int*)tempbuf));
+          info_flow_log_syscall_write(scp,EBX,*(int*) tempbuf); 
         }
         //      fprintf(logfile,"\n");     
         break;
@@ -958,13 +989,13 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
             IFLW_PUT_UINT32_T(domain);
             IFLW_PUT_UINT32_T(type);
             IFLW_PUT_UINT32_T(protocol);
+            info_flow_log_syscall_write(scp,EBX,domain,type,protocol,*(int*)tempbuf); 
           }
         }          
         break;    
       case 9: // send
         {
           int fd, msg, len, *ptr;
-          
           //	fprintf(logfile,"PID %3d (%16s)[sys_send    102]%d: ", pid, command, EBX);
           paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
@@ -983,6 +1014,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
             IFLW_PUT_UINT32_T(fd);
             IFLW_PUT_STRING(tempbuf);
             IFLW_PUT_UINT32_T(len);
+            info_flow_log_syscall_write(scp,EBX,fd,tempbuf);
           }
           //	fprintf(logfile,"\n");	
         }
@@ -1000,8 +1032,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
             ptr = (int*) tempbuf;
             fd = *ptr++; msg=*ptr++; len= *ptr;
             //	  fprintf(logfile,"socket %d, msg 0x%08x\n", fd, msg);
-            IFLW_PUT_UINT32_T(fd);
-            IFLW_PUT_UINT32_T(msg);
+            info_flow_log_syscall_write(scp,EBX,fd,msg);
           }
         }
         break;
@@ -1031,34 +1062,28 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
             b4=*bptr++; b5=*bptr++; b6=*bptr++; b7=*bptr++;
             bptr = tempbuf; bptr+=2;	  
             sap = (struct sockaddr_in*) tempbuf;
-            IFLW_PUT_UINT8_T(sap->sin_family);
-            IFLW_PUT_UINT32_T(fd);
             if (sap->sin_family == 1 ) {// PF_LOCAL
-              IFLW_PUT_STRING(bptr);
+              //              IFLW_PUT_STRING(bptr);
               //	    fprintf(logfile,"[dest: family  1; file %s]", bptr);
+              info_flow_log_syscall_write(scp,EBX,sap->sin_family,bptr);
             }
             else if (sap->sin_family == 2 ) {// PF_INET
-              IFLW_PUT_UINT32_T(b4);
-              IFLW_PUT_UINT32_T(b5);
-              IFLW_PUT_UINT32_T(b6);
-              IFLW_PUT_UINT32_T(b7);
-              IFLW_PUT_UINT32_T(b2*256+b3);
+              char addrport[1024];
               //	    fprintf(logfile,"[dest: family  2; %d.%d.%d.%d:%d]", 
               //		    b4, b5, b6, b7, b2*256+b3);
+              sprintf(addrport,"%d.%d.%d.%d:%d", b4, b5, b6, b7, b2*256+b3);
+              info_flow_log_syscall_write(scp,EBX,sap->sin_family,addrport);
             }
             else {
               //fprintf(logfile,"[dest: family %2d]", sap->sin_family);
+              info_flow_log_syscall_write(scp,EBX,sap->sin_family);
             }
             bzero(tempbuf, 120);
             paddr = cpu_get_phys_addr(env, msg);
             cpu_physical_memory_read(paddr, tempbuf, 30); 
             for (i=0; i<30; i++)
               if (iscntrl(tempbuf[i])) tempbuf[i]='.';
-            IFLW_PUT_STRING(tempbuf);
-            IFLW_PUT_UINT32_T(len);
             //	  fprintf(logfile," (%s)(%d)", tempbuf, len);
-	  
-	  
           }
           //	fprintf(logfile,"\n");	
         }
@@ -1066,8 +1091,8 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       case 12: // recvfrom
         {
           int fd, *ptr;
-	
-          //	fprintf(logfile,"PID %3d (%16s)[sys_recvfro 102]%d: ", pid, command, EBX);
+          //	fprintf(logfile,"PID %3d (%16s)[sys_recvfro 102]%d: ",
+          //            pid, command, EBX);
           paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
             bzero(tempbuf, 120);
@@ -1075,7 +1100,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
             ptr = (int*) tempbuf;
             fd = *ptr++; 
             //	  fprintf(logfile,"socket %d  ", fd);
-            IFLW_PUT_UINT32_T(fd);
+            info_flow_log_syscall_write(scp,EBX,fd);
           }
           //	fprintf(logfile,"\n");	
         }
@@ -1084,15 +1109,15 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
         {
           int fd, *ptr;
 	
-          //	fprintf(logfile,"PID %3d (%16s)[sys_shutdow 102]%d: ", pid, command, EBX);
+          //	fprintf(logfile,"PID %3d (%16s)[sys_shutdow 102]%d: ",
+          //            pid, command, EBX);
           paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
             ptr = (int*) tempbuf;
             fd = *ptr++; 
-            IFLW_PUT_UINT8_T((uint8_t) *ptr);
-            IFLW_PUT_UINT32_T(fd);
+            info_flow_log_syscall_write(scp,EBX,fd,*ptr);
             /*
               if (*ptr == 0 ) 
               fprintf(logfile,"socket %d (SHUT_RD)",   fd);
@@ -1109,17 +1134,17 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
         {
           int fd, level, option, *ptr;
 	
-          //	fprintf(logfile,"PID %3d (%16s)[sys_setskop 102]%d: ", pid, command, EBX);
+          //	fprintf(logfile,"PID %3d (%16s)[sys_setskop 102]%d: ",
+          //            pid, command, EBX);
           paddr = cpu_get_phys_addr(env, ECX);
           if (paddr!=-1)	{
             bzero(tempbuf, 120);
             cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
             ptr = (int*) tempbuf;
             fd = *ptr++; level=*ptr++; option=*ptr++;
-            IFLW_PUT_UINT32_T(fd);
-            IFLW_PUT_UINT32_T(level);
-            IFLW_PUT_UINT32_T(option);
-            //	  fprintf(logfile,"socket %d; level %d; option %d", fd, level, option);
+            //	  fprintf(logfile,"socket %d; level %d; option %d", 
+            //            fd, level, option);
+            info_flow_log_syscall_write(scp,EBX,fd,level,option);
           }
           //	fprintf(logfile,"\n");
         }
@@ -1139,6 +1164,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
             IFLW_PUT_UINT32_T(level);
             IFLW_PUT_UINT32_T(option);
             //	  fprintf(logfile,"socket %d; level %d; option %d", fd, level, option);
+            info_flow_log_syscall_write(scp,EBX,fd,level,option);
           }
           //	fprintf(logfile,"\n");
         }
@@ -1155,7 +1181,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
             ptr = (int*) tempbuf;
             fd = *ptr++; 
             //	  fprintf(logfile,"socket %d", fd);
-            IFLW_PUT_UINT32_T(fd);
+            info_flow_log_syscall_write(scp,EBX,fd);
           }
           //	fprintf(logfile,"\n");
         }
@@ -1172,7 +1198,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
             ptr = (int*) tempbuf;
             fd = *ptr++; 
             //	  fprintf(logfile,"socket %d", fd);
-            IFLW_PUT_UINT32_T(fd);
+            info_flow_log_syscall_write(scp,EBX,fd);
           }
           //	fprintf(logfile,"\n");
         }
@@ -1191,66 +1217,72 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
         for (i=0; i<size; i++)
           if (iscntrl(tempbuf[i])) tempbuf[i]='.';
         //      fprintf(logfile,"(%s)(%d)\n", tempbuf, EDX);
-        IFLS_SI(SYSLOG,tempbuf,EDX);
+        info_flow_log_syscall_write(scp,EBX,tempbuf,EDX);
       }
       break;
     case 104 : 
       // long sys_setitimer(int which,
       //                    struct itimerval __user *value,
       //                    struct itimerval __user *ovalue);
-      IFLS_I(SETITIMER,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 105 : 
       // long sys_getitimer(int which, struct itimerval __user *value);
-      IFLS_I(GETITIMER,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 106 :
       // long sys_stat(char __user *filename,
       //               struct __old_kernel_stat __user *statbuf);
-      IFLS_S_SIMP(STAT,EBX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1);
+      }
       break;
     case 107 :
       // long sys_lstat(char __user *filename,
       //                struct __old_kernel_stat __user *statbuf);
-      IFLS_S_SIMP(LSTAT,EBX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1);
+      }
       break;
     case 108 : 
       // long sys_fstat(unsigned int fd,
       //                struct __old_kernel_stat __user *statbuf);
-      IFLS_I(FSTAT,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 109 : 
       // sys_olduname is missing from syscalls.h
-      IFLS(OLDUNAME);
+      info_flow_log_syscall_write(scp);
       break;
     case 110 : 
       // sys_iopl is missing from syscalls.h
-      IFLS(IOPL);
+      info_flow_log_syscall_write(scp);
       break;
     case 111 : 
       //  long sys_vhangup(void);
-      IFLS(VHANGUP);
+      info_flow_log_syscall_write(scp);
       break;
     case 112 :
       // sys_idle is missing from syscalls.h
-      IFLS(IDLE);
+      info_flow_log_syscall_write(scp);
       break;
     case 113 :
       // sys_vm86old is missing from syscalls.h
-      IFLS(VM86OLD);
+      info_flow_log_syscall_write(scp);
       break;
     case 114 :
       // long sys_wait4(pid_t pid, int __user *stat_addr,
       //                int options, struct rusage __user *ru);
-      IFLS_II(WAIT4,EBX,EDX);
+      info_flow_log_syscall_write(scp,EBX,EDX);
       break;
     case 115 :
       // long sys_swapoff(const char __user *specialfile);
-      IFLS_S_SIMP(SWAPOFF,EBX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1,EDX);
+      }
       break;
     case 116 :
       // long sys_sysinfo(struct sysinfo __user *info);
-      IFLS(SYSINFO);
+      info_flow_log_syscall_write(scp);
       break;
     case 117 :
       // sys_ipc is missing from syscalls.h
@@ -1258,9 +1290,12 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
 
       // call first second third ptr fifth
       //->EBX  ECX  EDX   ESI   EDI  EBP  
+      // man 2 ipc: 
+      // int ipc(unsigned int call, int first, int second, int third,
+      //         void *ptr, long fifth);
 
       // write op and all regs. 
-      IFLS_IIIII(IPC,EBX,ECX,EDX,ESI,EDI);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
       //    fprintf(logfile,"PID %3d (%16s)[sys_ipc     117]: ", pid, command);
       /*
         switch (EBX){
@@ -1286,51 +1321,65 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       break;
     case 118 : 
       // long sys_fsync(unsigned int fd);
-      IFLS_I(FSYNC,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 119 :
       // sys_sigreturn is missing in syscalls.h
-      IFLS(SIGRETURN);
+      // man 2 sigreturn:
+      //        int sigreturn(unsigned long __unused);
+      info_flow_log_syscall_write(scp);
       break;
     case 120 : 
       // sys_clone is missing in syscalls.h
-      IFLS(CLONE);
+      // man 2 clone:
+      //       int clone(int (*fn)(void *), void *child_stack,
+      //                 int flags, void *arg, ...
+      info_flow_log_syscall_write(scp);
       break;
     case 121 : 
       //  long sys_setdomainname(char __user *name, int len);
-      IFLS_SI_SIMP(SETDOMAINNAME,EBX,ECX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1,ECX);
       break;
     case 122 :
       // sys_uname is missing in syscalls.h
-      IFLS(UNAME);
+      // man 2 uname:
+      //        int uname(struct utsname *buf);
+      info_flow_log_syscall_write(scp);
       break;
     case 123 : 
       // sys_modify_ldt is missing in syscalls.h
-      IFLS(MODIFY_LDT);
+      // man 2 modify_ldt
+      //        int modify_ldt(int func, void *ptr, unsigned long bytecount);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 124 : 
       // long sys_adjtimex(struct timex __user *txc_p);
-      IFLS(ADJTIMEX);
+      info_flow_log_syscall_write(scp);
       break;
     case 125 :
       // long sys_mprotect(unsigned long start, size_t len,
       //                   unsigned long prot);
-      IFLS_III(MPROTECT,EBX,ECX,EDX);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX);
       break;
     case 126 :
       // long sys_sigprocmask(int how, old_sigset_t __user *set,
       //                      old_sigset_t __user *oset);
-      IFLS_II(SIGPROCMASK,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 127 : 
       // sys_create_module is missing from syscalls.h
       // Xuxian seems to know what to do with it. 
-      IFLS_S_SIMP(CREATE_MODULE,EBX);
+      //      IFLS_S_SIMP(CREATE_MODULE,EBX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1);
       break;
     case 128 : 
       // long sys_init_module(void __user *umod, unsigned long len,
       //                      const char __user *uargs);
-      IFLS_SI_SIMP(INIT_MODULE,ECX,EDX);
+      if (copy_string(str1,EDX)) {
+        info_flow_log_syscall_write(scp,ECX,str1);
+      }
       // WTF? How can Xuxian be using EBX as the string ptr? 
       // shouldnt it be EDX? 
       /*
@@ -1344,84 +1393,87 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
     case 129 : 
       // long sys_delete_module(const char __user *name_user,
       //                        unsigned int flags);
-      IFLS_S_SIMP(DELETE_MODULE,EBX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1);
+      }
       break;
     case 130 : 
       // sys_get_kernel_syms is missing from syscalls.h
-      IFLS(GET_KERNEL_SYMS);
+      info_flow_log_syscall_write(scp);
       break;
     case 131 : 
       // long sys_quotactl(unsigned int cmd, const char __user *special,
       //                   qid_t id, void __user *addr);
-      IFLS_ISI_SIMP(QUOTACTL,EBX,ECX,EDX);
+      if (copy_string(str1,ECX)) {
+        info_flow_log_syscall_write(scp,EBX,str1,EDX);
+      }
       break;
     case 132 :
       // long sys_getpgid(pid_t pid);
-      IFLS_I(GETPGID,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 133 :
       // long sys_fchdir(unsigned int fd);
-      IFLS_I(FCHDIR,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 134 : 
       // long sys_bdflush(int func, long data);
-      IFLS_II(BDFLUSH,EBX,EDX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 135 : 
       // long sys_sysfs(int option,
       //                unsigned long arg1, unsigned long arg2);
-      IFLS_III(SYSFS,EBX,ECX,EDX);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX);
       break;
     case 136 : 
       // long sys_personality(u_long personality);
-      IFLS_I(PERSONALITY,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 137 :
       // sys_afs_syscall is missing from syscalls.h
-      IFLS(AFS_SYSCALL);
+      info_flow_log_syscall_write(scp);
       break;
     case 138 : 
       // long sys_setfsuid(uid_t uid);
-      IFLS_I(SETFSUID,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 139 :
       // long sys_setfsgid(gid_t gid);
-      IFLS_I(SETFSGID,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 140 :
       // sys__llseek missing from syscalls.h
-      // NOTE: Two "_" in that symbol, as per unistd_32.h
-      IFLS(_LLSEEK);
+      info_flow_log_syscall_write(scp);
       break;
     case 141 : 
       // long sys_getdents(unsigned int fd,
       //                   struct linux_dirent __user *dirent,
       //                   unsigned int count);
-      IFLS_I(GETDENTS,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 142 : 
       // sys__newselect missing from syscalls.h
-      IFLS(_NEWSELECT);
+      info_flow_log_syscall_write(scp);
       break;
     case 143 : 
       // long sys_flock(unsigned int fd, unsigned int cmd);
-      IFLS_II(FLOCK,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 144 :
       // long sys_msync(unsigned long start, size_t len, int flags);
-      IFLS_III(MSYNC,EBX,ECX,EDX);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX);
       break;
     case 145 : // sys_readv
       // ssize_t sys_readv(unsigned long fd,
       //                   const struct iovec __user *vec,
       //                   unsigned long vlen);
-      IFLS_II(READV,EBX,EDX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 146 : 
       //  ssize_t sys_writev(unsigned long fd,
       //                     const struct iovec __user *vec,
       //                     unsigned long vlen);
-      IFLS_II(WRITEV,EBX,EDX);
+      info_flow_log_syscall_write(scp,EBX,EDX);
       /*
         { int i, len; struct iovec *iovp; 
         fprintf(logfile,"PID %3d (%16s)[sys_writev  146]: fd %d;", pid, command, EBX);
@@ -1448,102 +1500,105 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       break;
     case 147 : 
       // long sys_getsid(pid_t pid);
-      IFLS_I(GETSID,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 148 : 
       // long sys_fdatasync(unsigned int fd);
-      IFLS_I(FDATASYNC,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 149:
       // sys__sysctl missing from syscalls.h
-      IFLS(_SYSCTL);
+      info_flow_log_syscall_write(scp);
     case 150 :
       // long sys_mlock(unsigned long start, size_t len);
-      IFLS_II(MLOCK,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 151 : 
       // long sys_munlock(unsigned long start, size_t len);
-      IFLS_II(MUNLOCK,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 152 : 
       // long sys_mlockall(int flags);
-      IFLS_I(MLOCKALL,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 153 : 
       // long sys_munlockall(void);
-      IFLS(MUNLOCKALL);
+      info_flow_log_syscall_write(scp);
       break;
     case 154 :
       // long sys_sched_setparam(pid_t pid,
       //                         struct sched_param __user *param);
-      IFLS_I(SCHED_SETPARAM,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 155 : // sys_sched_getparam
       // long sys_sched_getparam(pid_t pid,
       //                         struct sched_param __user *param);
-      IFLS_I(SCHED_GETPARAM,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 156 : 
       // long sys_sched_setscheduler(pid_t pid, int policy,
       //                             struct sched_param __user *param);
-      IFLS_II(SCHED_SETSCHEDULER,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 157 :
       // long sys_sched_getscheduler(pid_t pid);
-      IFLS_I(SCHED_GETSCHEDULER,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 158 : 
       // long sys_sched_yield(void);
-      IFLS(SCHED_YIELD);
+      info_flow_log_syscall_write(scp);
       break;
     case 159 :
       // long sys_sched_get_priority_max(int policy);
-      IFLS_I(SCHED_GET_PRIORITY_MAX,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 160 : 
       // long sys_sched_get_priority_min(int policy);
-      IFLS_I(SCHED_GET_PRIORITY_MIN,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 161 : 
       // long sys_sched_rr_get_interval(pid_t pid,
       //                                struct timespec __user *interval);
-      IFLS_I(SCHED_RR_GET_INTERVAL,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 162 :
       // long sys_nanosleep(struct timespec __user *rqtp, struct timespec __user *rmtp);
-      IFLS(NANOSLEEP);
+      info_flow_log_syscall_write(scp);
       break;
     case 163 : 
       // unsigned long sys_mremap(unsigned long addr,
       //                          unsigned long old_len, unsigned long new_len,
       //                          unsigned long flags, unsigned long new_addr);
-      IFLS_IIII(MREMAP,EBX,ECX,EDX,ESI);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
       break;
     case 164 :
       // long sys_setresuid(uid_t ruid, uid_t euid, uid_t suid);
-      IFLS_III(SETRESUID,EBX,ECX,EDX);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX);
       break;
     case 165 : 
       // long sys_getresuid16(old_uid_t __user *ruid,
       //                      old_uid_t __user *euid, old_uid_t __user *suid);
-      IFLS(GETRESUID);
+      info_flow_log_syscall_write(scp);
       //      fprintf(logfile,"PID %3d (%16s)[sys_getresu 165]\n", pid, command);
       break;
     case 166 : 
       // sys_vm86 is missing from syscalls.h
-      IFLS(VM86);
+      info_flow_log_syscall_write(scp);
       break;
     case 167 : 
       // sys_query_module is missing from syscalls.h    
-      IFLS_S_SIMP(QUERY_MODULE,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 168 :
       // long sys_poll(struct pollfd __user *ufds, unsigned int nfds,
       //               long timeout);
+      // again, punt.  no good way to put the list of fds into the iferret log... 
       {
         int i; struct pollfd *iovp; 
         //      fprintf(logfile,"PID %3d (%16s)[sys_poll    168]: nfd %d; timeout %d; ", 
         //	      pid, command, ECX, EDX);
+        info_flow_log_syscall_write(scp,ECX,EDX);
+        /*
         IFLS_II(POLL,ECX,EDX);
         if (ECX>0) {
           paddr = cpu_get_phys_addr(env, EBX);
@@ -1556,147 +1611,168 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
             IFLW_PUT_UINT32_T(iovp->events);
           } 
         }
-        //      fprintf(logfile,"\n");
+        */
+       //      fprintf(logfile,"\n");
       } 
       break;
     case 169 :
       // long sys_nfsservctl(int cmd,
       //                     struct nfsctl_arg __user *arg,
       //                     void __user *res);
-      IFLS_I(NFSSERVCTL,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 170 : 
       // sys_setresgid(gid_t rgid, gid_t egid, gid_t sgid);
-      IFLS_III(SETRESGID,EBX,ECX,EDX);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX);
       break;
     case 171 : 
       // long sys_getresgid(gid_t __user *rgid, gid_t __user *egid, gid_t __user *sgid);
-      IFLS(GETRESGID);
+      info_flow_log_syscall_write(scp);
       break;
     case 172 : 
       // long sys_prctl(int option, unsigned long arg2, unsigned long arg3,
       //                unsigned long arg4, unsigned long arg5);
-      IFLS_III(PRCTL,EBX,ECX,EDX);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX);
       break;
     case 173 : 
       // sys_rt_sigreturn is missing from syscalls.h
-      IFLS(RT_SIGRETURN);
+      info_flow_log_syscall_write(scp);
       break;
     case 174 :
       // sys_rt_sigaction is missing from syscalls.h
       // Xuxian seems to know how to decode it. 
-      IFLS_II(RT_SIGACTION,EBX,ECX);
+      // man 2 rt_sigaction:
+      //       int sigaction(int signum, const struct sigaction *act,
+      //                     struct sigaction *oldact);
       //    fprintf(logfile,"PID %3d (%16s)[sys_rt_siga 174]: sig %d; handler 0x%08x\n", 
       //	    pid, command, EBX, ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 175 : 
       // sys_rt_sigprocmask(int how, sigset_t __user *set,
       //                    sigset_t __user *oset, size_t sigsetsize);
-      IFLS_I(RT_SIGPROCMASK,EBX);
       // Why is Xuxian logging the set pointer?
       //    fprintf(logfile,"PID %3d (%16s)[sys_rt_mask 175]: how %d; set 0x%08x\n", 
       //	    pid, command, EBX, ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 176 : 
       // long sys_rt_sigpending(sigset_t __user *set, size_t sigsetsize);
-      IFLS(RT_SIGPENDING);
+      info_flow_log_syscall_write(scp);
       break;
     case 177 : 
       // long sys_rt_sigtimedwait(const sigset_t __user *uthese,
       //                          siginfo_t __user *uinfo,
       //                          const struct timespec __user *uts,
       //            	        size_t sigsetsize);
-      IFLS(RT_SIGTIMEDWAIT);
+      info_flow_log_syscall_write(scp);
       break;
     case 178 : 
       // long sys_rt_sigqueueinfo(int pid, int sig, siginfo_t __user *uinfo);
-      IFLS_II(RT_SIGQUEUEINFO,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 179 :
       // sys_rt_sigsuspend is missing from syscalls.h
-      IFLS(RT_SIGSUSPEND);
+      info_flow_log_syscall_write(scp);
       break;
     case 180 : 
       // ssize_t sys_pread64(unsigned int fd, char __user *buf,
       //                     size_t count, loff_t pos);
-      IFLS_III(PREAD64,EBX,EDX,ESI);
+      info_flow_log_syscall_write(scp,EBX,EDX,ESI);
       break;
     case 181 : 
       // ssize_t sys_pwrite64(unsigned int fd, const char __user *buf,
       //             	    size_t count, loff_t pos);
-      IFLS_III(PWRITE64,EBX,EDX,ESI);
+      info_flow_log_syscall_write(scp,EBX,EDX,ESI);
       break;
     case 182 : 
       // long sys_chown(const char __user *filename,
       //                uid_t user, gid_t group);
-      IFLS_SII_SIMP(CHOWN,EBX,ECX,EDX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1,ECX,EDX);
+      }
       break;
     case 183 : 
       // long sys_getcwd(char __user *buf, unsigned long size);
-      IFLS_SI_SIMP(GETCWD,EBX,ECX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1,ECX);
+      }
       break;
     case 184 : 
       // long sys_capget(cap_user_header_t header,
       //                 cap_user_data_t dataptr);
-      IFLS(CAPGET);
+      info_flow_log_syscall_write(scp);
       break;
     case 185 : 
       // long sys_capset(cap_user_header_t header,
       //                 const cap_user_data_t data);
-      IFLS(CAPSET);
+      info_flow_log_syscall_write(scp);
       break;
     case 186 : 
       // sys_sigaltstack is missing from syscalls.h
-      IFLS(SIGALTSTACK);
+      // man 2 sigaltstack
+      //       int sigaltstack(const stack_t *ss, stack_t *oss);
+      info_flow_log_syscall_write(scp);
       break;
     case 187 : 
       // ssize_t sys_sendfile(int out_fd, int in_fd,
       //                      off_t __user *offset, size_t count);
-      IFLS_III(SENDFILE,EBX,ECX,ESI);
+      info_flow_log_syscall_write(scp,EBX,ECX,ESI);
       break;
     case 188 : 
       // sys_getpmsg is missing from syscalls.h
-      IFLS(GETPMSG);
+      info_flow_log_syscall_write(scp);
       break;
     case 189 : 
       // sys_putpmsg is missing from syscalls.h
-      IFLS(PUTPMSG);
+      info_flow_log_syscall_write(scp);
       break;
     case 190 :
       // sys_vfork is missing from syscalls.h
-      IFLS(VFORK);
+      // man 2 vfork:
+      //       pid_t vfork(void);
+      info_flow_log_syscall_write(scp);
       break;
     case 191 : 
       // sys_ugetrlimit missing from sysalls.h
-      IFLS_I(UGETRLIMIT,EBX);
+      // man 2 ugetrlimit:
+      //       int getrlimit(int resource, struct rlimit *rlim);
+      info_flow_log_syscall_write(scp,EBX);
       break;
     case 192 :
       // sys_mmap2 is missing from syscalls.h
       // yet Xuxian knows how to decode it..
-      IFLS_IIIIII(MMAP2,EBX,ECX,EDX,ESI,EDI,EBP);
+
       //    fprintf(logfile,"PID %3d (%16s)[sys_mmap2   192]: addr 0x%08x, len 0x%08x, prot %d, flags %d, fd %d, offset 0x%08x\n", pid, command, EBX, ECX, EDX, ESI, EDI, EBP);
+      info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
       break;
     case 193 : 
       // long sys_truncate64(const char __user *path, loff_t length);
-      IFLS_SI_SIMP(TRUNCATE64,EBX,ECX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1,ECX);
+      }
       break;
     case 194 : 
       // long sys_ftruncate64(unsigned int fd, loff_t length);
-      IFLS_II(FTRUNCATE64,EBX,ECX);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       break;
     case 195 : 
       // long sys_stat64(char __user *filename,
       //                 struct stat64 __user *statbuf);
-      IFLS_S_SIMP(STAT64,EBX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1);
+      }
       break;
     case 196 : 
       // long sys_lstat64(char __user *filename,
       //                  struct stat64 __user *statbuf);
-      IFLS_S_SIMP(LSTAT64,EBX);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1);
+      }
       break;
     case 197 : 
       // long sys_fstat64(unsigned long fd, struct stat64 __user *statbuf);
-      IFLS_I(FSTAT64,EBX);
+      info_flow_log_syscall_write(scp,EBX);
       //fprintf(logfile,"PID %3d (%16s)[sys_fstat64 197]\n", pid, command);
       // What's up with this.  EBX should be a file descriptor, not a pointer.
       // I think this is just wrong. 
@@ -1714,7 +1790,11 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
     case 198 :
       // sys_lchown32 is missing from syscalls.h
       // Xuxian seems to know how to decode it.
-      IFLS_SII_SIMP(LCHOWN32,EBX,ECX,EDX);
+      // man 2 lchown:
+      //      int lchown(const char *path, uid_t owner, gid_t group);
+      if (copy_string(str1,EBX)) {
+        info_flow_log_syscall_write(scp,str1,ECX,EDX);
+      }
       /*
         fprintf(logfile,"PID %3d (%16s)[sys_lchow32 198]\n", pid, command);
         paddr = cpu_get_phys_addr(env, EBX);
@@ -1725,30 +1805,43 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       break;
     case 199 : 
       // sys_getuid32 is missing from syscalls.h
-      IFLS(GETUID32);
+      // man 2 getuid32
+      //       uid_t getuid(void);
+      info_flow_log_syscall_write(scp);
       break;
     case 200 : 
       // sys_getgid32 is missing from syscalls.h
-      IFLS(GETGID32);
+      // man 2 getgid32
+      //       gid_t getgid(void);
+      info_flow_log_syscall_write(scp);
       break;
     case 201 : 
       // sys_geteuid32 is missing from syscalls.h
-      IFLS(GETEUID32);
+      // man 2 geteuid
+      //       uid_t geteuid(void);
+      info_flow_log_syscall_write(scp);
       break;
     case 202 : 
       // sys_getegid32 is missing from syscalls.h
-      IFLS(GETEGID32);
+      // man 2 get edgid32:
+      //       gid_t getegid(void);
+      info_flow_log_syscall_write(scp);
       break;
     case 203 : 
       // sys_setreuid32 is missing from syscalls.h
       // Xuxian knows how to decode.
-      IFLS_II(SETREUID32,EBX,ECX);
-      //    fprintf(logfile,"PID %3d (%16s)[sys_seteu32 203]: ruid %d; euid %d\n", pid, command, EBX, ECX);
+      // man 2 setreuid32
+      //       int setreuid(uid_t ruid, uid_t euid);
+      info_flow_log_syscall_write(scp,EBX,ECX);
+      //    fprintf(logfile,"PID %3d (%16s)[sys_seteu32 203]: ruid %d; euid %d\n",
+      //             pid, command, EBX, ECX);
       break;
     case 204 : 
       // sys_setregid32 is missing from syscalls.h
       // Xuxian knows how to decode.
-      IFLS_II(SETREGID32,EBX,ECX);
+      // man 2 setregid32
+      //        int setregid(gid_t rgid, gid_t egid);
+      info_flow_log_syscall_write(scp,EBX,ECX);
       //    fprintf(logfile,"PID %3d (%16s)[sys_seteg32 204]: rgid %d; egid %d\n", pid, command, EBX, ECX);
       break;
     case 205 : 
