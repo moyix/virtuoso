@@ -270,7 +270,7 @@ void info_flow_log_syscall_write(Info_flow_syscall_t *sc, ...) {
   va_list op_args;
 
   // write the op and the sentinel
-  info_flow_log_op_only_write(sc->eax + IFLO_SYS_CALLS_START);
+  info_flow_log_op_only_write(sc->eax + IFLO_SYS_CALLS_START + 1);
   info_flow_log_sentinel();
   // write the std syscall other args.
   info_flow_log_uint8_t(sc->is_sysenter);  
