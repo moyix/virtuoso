@@ -203,6 +203,7 @@ my $numOps = scalar keys %ops;
 print "$numOps info flow ops logged\n";
 
 
+tleek@thompsontwin:~/hg/iferret-logging-new$ find -H . -name "*.[ch]" -print -exec grep "info_flow_log_op_write" '{}' \;  | less
 
 # create the big case stmt for writing syscall log items
 open F, ">iferret_syscall_switch.h";
