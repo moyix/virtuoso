@@ -87,32 +87,33 @@ extern uint8_t *phys_ram_base;
 #define RYANS_MAGIC_NUMBER_1  0xffffffffffffffffLL 
 
 
-#define IFLW_MMU_LD(access_type,virt_addr,real_addr) \
-IFLW_WRAPPER ( \
-	IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,access_type),_LD),CSUFFIX)); \
-	IFLW_PUT_ADDR(virt_addr); \
-	IFLW_PUT_ADDR((((unsigned long long) real_addr) - (unsigned long long) (unsigned long)phys_ram_base)); \
-	if (((unsigned long long) real_addr - (unsigned long long) (unsigned long) phys_ram_base) != RYANS_MAGIC_NUMBER_1) { \
-  		IFLW_PUT_BYTE((unsigned long long)real_addr); \
-   } \
-	IFLW_PUT_BYTE(ACCESS_TYPE); \
-);
+/* #define IFLW_MMU_LD(access_type,virt_addr,real_addr) \ */
+/* IFLW_WRAPPER ( \ */
+/* 	IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,access_type),_LD),CSUFFIX)); \ */
+/* 	IFLW_PUT_ADDR(virt_addr); \ */
+/* 	IFLW_PUT_ADDR((((unsigned long long) real_addr) - (unsigned long long) (unsigned long)phys_ram_base)); \ */
+/* 	if (((unsigned long long) real_addr - (unsigned long long) (unsigned long) phys_ram_base) != RYANS_MAGIC_NUMBER_1) { \ */
+/*   		IFLW_PUT_BYTE((unsigned long long)real_addr); \ */
+/*    } \ */
+/* 	IFLW_PUT_BYTE(ACCESS_TYPE); \ */
+/* ); */
 
-#define IFLW_MMU_ST(access_type,virt_addr,real_addr,val) \
-IFLW_WRAPPER ( \
-	IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,access_type),_ST),CSUFFIX)); \
-	IFLW_PUT_ADDR(virt_addr); \
-	IFLW_PUT_ADDR(((unsigned long long) real_addr) - (unsigned long long) (unsigned long) phys_ram_base); \
-	if (((unsigned long long) real_addr - (unsigned long long) (unsigned long) phys_ram_base) != RYANS_MAGIC_NUMBER_1) { \
-  		IFLW_PUT_BYTE((unsigned char)val); \
-  }\
-	IFLW_PUT_BYTE(ACCESS_TYPE); \
-);
+/* #define IFLW_MMU_ST(access_type,virt_addr,real_addr,val) \ */
+/* IFLW_WRAPPER ( \ */
+/* 	IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,access_type),_ST),CSUFFIX)); \ */
+/* 	IFLW_PUT_ADDR(virt_addr); \ */
+/* 	IFLW_PUT_ADDR(((unsigned long long) real_addr) - (unsigned long long) (unsigned long) phys_ram_base); \ */
+/* 	if (((unsigned long long) real_addr - (unsigned long long) (unsigned long) phys_ram_base) != RYANS_MAGIC_NUMBER_1) { \ */
+/*   		IFLW_PUT_BYTE((unsigned char)val); \ */
+/*   }\ */
+/* 	IFLW_PUT_BYTE(ACCESS_TYPE); \ */
+/* ); */
 
-#define IFLW_MMU_TLB_FILL() \
-IFLW_WRAPPER ( \
-	IFLW_PUT_OP(INFO_FLOW_OP_TLB_FILL); \
-);
+/* #define IFLW_MMU_TLB_FILL() \ */
+/* IFLW_WRAPPER ( \ */
+/* 	IFLW_PUT_OP(INFO_FLOW_OP_TLB_FILL); \ */
+/* ); */
+
 
 DATA_TYPE REGPARM(1) glue(glue(__ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
                                                          int mmu_idx);
@@ -286,27 +287,9 @@ static inline RES_TYPE glue(glue(ld, USUFFIX), MEMSUFFIX)(target_ulong ptr)
     } else {
         physaddr = addr + env->tlb_table[mmu_idx][index].addend;
 
-        /*
-	IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,DIRECT),_LD),CSUFFIX)); 
-        // this next line gets a "cast to pointer from integer of different size"
-	IFLW_PUT_ADDR(ptr); 
-	IFLW_PUT_ADDR((((unsigned long long) physaddr) 
-                       - (unsigned long long) (unsigned long) phys_ram_base)); 
-
-        *((MemByteAddr *)if_log_ptr) = (MemByteAddr)
-           ((unsigned long long) physaddr)           
-          - (unsigned long long) (unsigned long) phys_ram_base ;	
-
-        MOVE_LOG_PTR(sizeof(MemByteAddr));
-
-
-        // and this one gets a "cast from pointer to integer of different size"
-	if((((unsigned long long)physaddr)
-            - ((unsigned long long ) (unsigned long) phys_ram_base))!=0xffffffffffffffffLL) { 
-          IFLW_PUT_BYTE(*(unsigned char*)physaddr); 
-        }
-        */
-        	IFLW_MMU_LD(DIRECT,ptr,physaddr);
+	//	IFLW_MMU_LD(DIRECT,ptr,physaddr);
+	info_flow_log_op_write(glue(IFLO_MMU_LD_DIRECT,CSUFFIX),ptr,physaddr);
+		
         res = glue(glue(ld, USUFFIX), _raw)((uint8_t *)physaddr);
     }
     return res;
@@ -329,7 +312,8 @@ static inline int glue(glue(lds, SUFFIX), MEMSUFFIX)(target_ulong ptr)
     } else {
         physaddr = addr + env->tlb_table[mmu_idx][index].addend;
         res = glue(glue(lds, SUFFIX), _raw)((uint8_t *)physaddr);
-       IFLW_MMU_LD(DIRECT,ptr,physaddr);
+	//       IFLW_MMU_LD(DIRECT,ptr,physaddr);
+	info_flow_log_op_write(glue(IFLO_MMU_LD_DIRECT,CSUFFIX),ptr,physaddr);
     }
     return res;
 }
@@ -354,7 +338,8 @@ static inline void glue(glue(st, SUFFIX), MEMSUFFIX)(target_ulong ptr, RES_TYPE 
         glue(glue(__st, SUFFIX), MMUSUFFIX)(addr, v, mmu_idx);
     } else {
         physaddr = addr + env->tlb_table[mmu_idx][index].addend;
-        IFLW_MMU_ST(DIRECT,ptr,physaddr,v);
+	//        IFLW_MMU_ST(DIRECT,ptr,physaddr,v);
+	info_flow_log_op_write(glue(IFLO_MMU_ST_DIRECT,CSUFFIX),ptr,physaddr,v);
         glue(glue(st, SUFFIX), _raw)((uint8_t *)physaddr, v);
     }
 }
@@ -423,5 +408,5 @@ static inline void glue(stfl, MEMSUFFIX)(target_ulong ptr, float32 v)
 #undef CSUFFIX
 #undef CUSUFFIX
 #undef CMMUSUFFIX
-#undef IFLW_MMU_LD
-#undef IFLW_MMU_ST
+//#undef IFLW_MMU_LD
+//#undef IFLW_MMU_ST

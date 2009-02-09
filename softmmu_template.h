@@ -66,40 +66,40 @@ void my_print(unsigned long long);
 
 #define RYANS_MAGIC_NUMBER_2 (unsigned long long) RYANS_MAGIC_NUMBER_1 + PHYS_RAM_BASE_64
 
-#define IFLW_MMU_LD(type,virt_addr,real_addr) \
-IFLW_WRAPPER ( \
-{ \
-  uint64_t x;\
-  IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,type),_LD),CSUFFIX)); \
-  IFLW_PUT_ADDR(((uint64_t) virt_addr));  \
-  x = (uint64_t) real_addr - PHYS_RAM_BASE_64; \
-  IFLW_PUT_ADDR(x); \
-  if (x != RYANS_MAGIC_NUMBER_1) { \
-    IFLW_PUT_BYTE(*(unsigned char*)real_addr); \
-  } \
-  IFLW_PUT_UINT32_T(mmu_idx); \
-} \
-);
+/* #define IFLW_MMU_LD(type,virt_addr,real_addr) \ */
+/* IFLW_WRAPPER ( \ */
+/* { \ */
+/*   uint64_t x;\ */
+/*   IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,type),_LD),CSUFFIX)); \ */
+/*   IFLW_PUT_ADDR(((uint64_t) virt_addr));  \ */
+/*   x = (uint64_t) real_addr - PHYS_RAM_BASE_64; \ */
+/*   IFLW_PUT_ADDR(x); \ */
+/*   if (x != RYANS_MAGIC_NUMBER_1) { \ */
+/*     IFLW_PUT_BYTE(*(unsigned char*)real_addr); \ */
+/*   } \ */
+/*   IFLW_PUT_UINT32_T(mmu_idx); \ */
+/* } \ */
+/* ); */
 
-#define IFLW_MMU_ST(type,virt_addr,real_addr,val) \
-IFLW_WRAPPER ( \
-{ \
-  uint64_t x;\
-  IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,type),_ST),CSUFFIX)); \
-  IFLW_PUT_ADDR((uint64_t) virt_addr);					\
-  x = (uint64_t) real_addr - PHYS_RAM_BASE_64; \
-  IFLW_PUT_ADDR(x); \
-  if (x != RYANS_MAGIC_NUMBER_1){ \
-    IFLW_PUT_BYTE((unsigned char)val); \
-  } \
-  IFLW_PUT_UINT32_T(mmu_idx); \
- }\
-);
+/* #define IFLW_MMU_ST(type,virt_addr,real_addr,val) \ */
+/* IFLW_WRAPPER ( \ */
+/* { \ */
+/*   uint64_t x;\ */
+/*   IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,type),_ST),CSUFFIX)); \ */
+/*   IFLW_PUT_ADDR((uint64_t) virt_addr);					\ */
+/*   x = (uint64_t) real_addr - PHYS_RAM_BASE_64; \ */
+/*   IFLW_PUT_ADDR(x); \ */
+/*   if (x != RYANS_MAGIC_NUMBER_1){ \ */
+/*     IFLW_PUT_BYTE((unsigned char)val); \ */
+/*   } \ */
+/*   IFLW_PUT_UINT32_T(mmu_idx); \ */
+/*  }\ */
+/* ); */
 
-#define IFLW_MMU_TLB_FILL() \
-IFLW_WRAPPER ( \
-        IFLW_PUT_OP(INFO_FLOW_OP_TLB_FILL); \
-);
+/* #define IFLW_MMU_TLB_FILL() \ */
+/* IFLW_WRAPPER ( \ */
+/*         IFLW_PUT_OP(INFO_FLOW_OP_TLB_FILL); \ */
+/* ); */
 
 static DATA_TYPE glue(glue(slow_ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
                                                         int mmu_idx,
@@ -149,9 +149,8 @@ DATA_TYPE REGPARM(1) glue(glue(__ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
             /* IO access */
             if ((addr & (DATA_SIZE - 1)) != 0)
                 goto do_unaligned_access;
-
-	    IFLW_MMU_LD(IO_ALIGNED,addr, RYANS_MAGIC_NUMBER_2);
-
+	    //	    IFLW_MMU_LD(IO_ALIGNED,addr, RYANS_MAGIC_NUMBER_2);
+	    info_flow_log_op_write(glue(IFLO_MMU_PHYS_ADDR_LD_IO_ALIGNED,CSUFFIX), addr, RYANS_MAGIC_NUMBER_2,mmu_idx);  
             res = glue(io_read, SUFFIX)(physaddr, tlb_addr);
         } else if (((addr & ~TARGET_PAGE_MASK) + DATA_SIZE - 1) >= TARGET_PAGE_SIZE) {
             /* slow unaligned access (it spans two pages or IO) */
@@ -170,7 +169,8 @@ DATA_TYPE REGPARM(1) glue(glue(__ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
                 do_unaligned_access(addr, READ_ACCESS_TYPE, mmu_idx, retaddr);
             }
 #endif
-            IFLW_MMU_LD(UNALIGNED_SAME_PAGE,addr,physaddr);
+	    //            IFLW_MMU_LD(UNALIGNED_SAME_PAGE,addr,physaddr);
+	    info_flow_log_op_write(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_SAME_PAGE,CSUFFIX), addr, physaddr, mmu_idx);
             res = glue(glue(ld, USUFFIX), _raw)((uint8_t *)(long)physaddr);
         }
     } else {
@@ -180,7 +180,8 @@ DATA_TYPE REGPARM(1) glue(glue(__ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
         if ((addr & (DATA_SIZE - 1)) != 0)
             do_unaligned_access(addr, READ_ACCESS_TYPE, mmu_idx, retaddr);
 #endif
-        IFLW_MMU_TLB_FILL();
+	//        IFLW_MMU_TLB_FILL();
+	info_flow_log_op_write(IFLO_MMU_TLB_FILL);	
         tlb_fill(addr, READ_ACCESS_TYPE, mmu_idx, retaddr);
         goto redo;
     }
@@ -206,14 +207,16 @@ static DATA_TYPE glue(glue(slow_ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
             /* IO access */
             if ((addr & (DATA_SIZE - 1)) != 0)
                 goto do_unaligned_access;
-	    IFLW_MMU_LD(UNALIGNED_DIFFERENT_PAGE_IO_PART2,addr, RYANS_MAGIC_NUMBER_2);
+	    //	    IFLW_MMU_LD(UNALIGNED_DIFFERENT_PAGE_IO_PART2,addr,RYANS_MAGIC_NUMBER_2);
+	    info_flow_log_op_write(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_IO_PART2,CSUFFIX),addr,RYANS_MAGIC_NUMBER_2,mmu_idx);
             res = glue(io_read, SUFFIX)(physaddr, tlb_addr);
         } else if (((addr & ~TARGET_PAGE_MASK) + DATA_SIZE - 1) >= TARGET_PAGE_SIZE) {
         do_unaligned_access:
             /* slow unaligned access (it spans two pages) */
             addr1 = addr & ~(DATA_SIZE - 1);
             addr2 = addr1 + DATA_SIZE;
-	    IFLW_MMU_LD(UNALIGNED_DIFFERENT_PAGE_PART1,addr, RYANS_MAGIC_NUMBER_2);
+	    //	    IFLW_MMU_LD(UNALIGNED_DIFFERENT_PAGE_PART1,addr, RYANS_MAGIC_NUMBER_2);
+	    info_flow_log_op_write(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART1,CSUFFIX),addr,RYANS_MAGIC_NUMBER_2,mmu_idx);
             res1 = glue(glue(slow_ld, SUFFIX), MMUSUFFIX)(addr1,
                                                           mmu_idx, retaddr);
             res2 = glue(glue(slow_ld, SUFFIX), MMUSUFFIX)(addr2,
@@ -226,12 +229,14 @@ static DATA_TYPE glue(glue(slow_ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
 #endif
             res = (DATA_TYPE)res;
         } else {
-            /* unaligned/aligned access in the same page */
-	    IFLW_MMU_LD(UNALIGNED_DIFFERENT_PAGE_PART2,addr,physaddr);
+	  /* unaligned/aligned access in the same page */
+	  //	    IFLW_MMU_LD(UNALIGNED_DIFFERENT_PAGE_PART2,addr,physaddr);
+	  info_flow_log_op_write(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART2,CSUFFIX),addr,physaddr,mmu_idx);
             res = glue(glue(ld, USUFFIX), _raw)((uint8_t *)(long)physaddr);
         }
     } else {
-      IFLW_MMU_TLB_FILL();
+      //      IFLW_MMU_TLB_FILL();
+      info_flow_log_op_write(IFLO_MMU_TLB_FILL);	
         /* the page is not in the TLB : fill it */
         tlb_fill(addr, READ_ACCESS_TYPE, mmu_idx, retaddr);
         goto redo;
@@ -291,7 +296,8 @@ void REGPARM(2) glue(glue(__st, SUFFIX), MMUSUFFIX)(target_ulong addr,
             if ((addr & (DATA_SIZE - 1)) != 0)
                 goto do_unaligned_access;
             retaddr = GETPC();
-	    IFLW_MMU_ST(IO_ALIGNED,addr, RYANS_MAGIC_NUMBER_2, val);
+	    //	    IFLW_MMU_ST(IO_ALIGNED,addr, RYANS_MAGIC_NUMBER_2, val);
+	    info_flow_log_op_write(glue(IFLO_MMU_ST_IO_ALIGNED,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx);
             glue(io_write, SUFFIX)(physaddr, val, tlb_addr, retaddr);
         } else if (((addr & ~TARGET_PAGE_MASK) + DATA_SIZE - 1) >= TARGET_PAGE_SIZE) {
         do_unaligned_access:
@@ -309,8 +315,9 @@ void REGPARM(2) glue(glue(__st, SUFFIX), MMUSUFFIX)(target_ulong addr,
                 do_unaligned_access(addr, 1, mmu_idx, retaddr);
             }
 #endif
-            IFLW_MMU_ST(UNALIGNED_SAME_PAGE,addr,physaddr,val);
-            glue(glue(st, SUFFIX), _raw)((uint8_t *)(long)physaddr, val);
+	    //            IFLW_MMU_ST(UNALIGNED_SAME_PAGE,addr,physaddr,val);
+	    info_flow_log_op_write(glue(IFLO_MMU_ST_UNALIGNED_SAME_PAGE,CSUFFIX),addr, physaddr, val, mmu_idx); 
+           glue(glue(st, SUFFIX), _raw)((uint8_t *)(long)physaddr, val);
         }
     } else {
         /* the page is not in the TLB : fill it */
@@ -319,7 +326,8 @@ void REGPARM(2) glue(glue(__st, SUFFIX), MMUSUFFIX)(target_ulong addr,
         if ((addr & (DATA_SIZE - 1)) != 0)
             do_unaligned_access(addr, 1, mmu_idx, retaddr);
 #endif
-        IFLW_MMU_TLB_FILL();
+	//        IFLW_MMU_TLB_FILL();
+	info_flow_log_op_write(IFLO_MMU_TLB_FILL);	
         tlb_fill(addr, 1, mmu_idx, retaddr);
         goto redo;
     }
@@ -344,11 +352,13 @@ static void glue(glue(slow_st, SUFFIX), MMUSUFFIX)(target_ulong addr,
             /* IO access */
             if ((addr & (DATA_SIZE - 1)) != 0)
                 goto do_unaligned_access;
-	    IFLW_MMU_ST(UNALIGNED_DIFFERENT_PAGE_IO_PART2, addr, RYANS_MAGIC_NUMBER_2, val);
+	    //	    IFLW_MMU_ST(UNALIGNED_DIFFERENT_PAGE_IO_PART2, addr, RYANS_MAGIC_NUMBER_2, val);
+	    info_flow_log_op_write(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_IO_PART2,CSUFFIX),addr, RYANS_MAGIC_NUMBER2, val, mmu_idx); 
             glue(io_write, SUFFIX)(physaddr, val, tlb_addr, retaddr);
         } else if (((addr & ~TARGET_PAGE_MASK) + DATA_SIZE - 1) >= TARGET_PAGE_SIZE) {
         do_unaligned_access:
-           IFLW_MMU_ST(UNALIGNED_DIFFERENT_PAGE_PART1, addr, RYANS_MAGIC_NUMBER_2, val);
+	  //           IFLW_MMU_ST(UNALIGNED_DIFFERENT_PAGE_PART1, addr, RYANS_MAGIC_NUMBER_2, val);
+	    info_flow_log_op_write(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART1,CSUFFIX),addr, RYANS_MAGIC_NUMBER2, val, mmu_idx); 
             /* XXX: not efficient, but simple */
             /* Note: relies on the fact that tlb_fill() does not remove the
              * previous page from the TLB cache.  */
@@ -362,12 +372,14 @@ static void glue(glue(slow_st, SUFFIX), MMUSUFFIX)(target_ulong addr,
 #endif
             }
         } else {
-	    IFLW_MMU_ST(UNALIGNED_DIFFERENT_PAGE_PART2,addr,physaddr,val);
+	  //	    IFLW_MMU_ST(UNALIGNED_DIFFERENT_PAGE_PART2,addr,physaddr,val);
+	  info_flow_log_op_write(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART2,CSUFFIX),addr, physaddr, val, mmu_idx); 
             /* aligned/unaligned access in the same page */
             glue(glue(st, SUFFIX), _raw)((uint8_t *)(long)physaddr, val);
         }
     } else {
         IFLW_MMU_TLB_FILL();
+	info_flow_log_op_write(IFLO_MMU_TLB_FILL);	
         /* the page is not in the TLB : fill it */
         tlb_fill(addr, 1, mmu_idx, retaddr);
         goto redo;
@@ -385,6 +397,6 @@ static void glue(glue(slow_st, SUFFIX), MMUSUFFIX)(target_ulong addr,
 #undef CUSUFFIX
 #undef DATA_SIZE
 #undef ADDR_READ
-#undef IFLW_MMU_LD
-#undef IFLW_MMU_ST
+//#undef IFLW_MMU_LD
+//#undef IFLW_MMU_ST
 

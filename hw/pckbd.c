@@ -321,16 +321,18 @@ static uint32_t kbd_read_data(void *opaque, uint32_t addr)
 	if_keyboard_label_changed = 0;
 	//	printf ("info_flow_new_keybaord_label [%s]\n", if_keyboard_label);
 	fflush(stdout);
-	IFLW(NEW_KEYBOARD_LABEL);
-	l = strlen(if_keyboard_label);
-	if (l>=IF_MAX_KEYBOARD_LABEL_LEN)
-	  l = IF_MAX_KEYBOARD_LABEL_LEN-1;
-	IFLW_PUT_WORD(l);
-	for (i=0; i<l; i++) {
-	  IFLW_PUT_BYTE(if_keyboard_label[i]);
-	}
+	info_flow_log_op_write(IFLO_NEW_KEYBOARD_LABEL, if_keyboard_label);
+	//	IFLW(NEW_KEYBOARD_LABEL);
+/* 	l = strlen(if_keyboard_label); */
+/* 	if (l>=IF_MAX_KEYBOARD_LABEL_LEN) */
+/* 	  l = IF_MAX_KEYBOARD_LABEL_LEN-1; */
+/* 	IFLW_PUT_WORD(l); */
+/* 	for (i=0; i<l; i++) { */
+/* 	  IFLW_PUT_BYTE(if_keyboard_label[i]); */
+/* 	} */
       }
-      IFLW_KEYBOARD_INPUT(rv);
+      //      IFLW_KEYBOARD_INPUT(rv);
+      info_flow_log_op_write(IFLO_KEYBOARD_INPUT, rv);
     }
 
     return (rv);

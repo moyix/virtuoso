@@ -81,7 +81,9 @@ sub create_op_format() {
     foreach my $arg (@{$raArgs}) {
 	$arg =~ s/^\s+//g;
 	$arg =~ s/\s+$//g;
-	if ($arg =~ /^str/) {
+	if ($arg =~ /^str/
+	    || $arg =~ /label$/
+	    ) {
 	    # in order for this script to recognize an op logfile entry
 	    # arg as a string, it must be called "str..."
 	    $fmt .= "s";
@@ -117,8 +119,8 @@ sub create_op_format() {
 	    $fmt .= "8";
 	}
 	else {
-	    print "Unrecognized arg: $arg\n";
-	    $fmt .= "8";
+	    print "Unrecognized arg: $arg. Using fmt of 4\n";
+	    $fmt .= "4";
 	}
     }
 #    print "$opname ";

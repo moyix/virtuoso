@@ -57,21 +57,21 @@
 #error unhandled operand size
 #endif
 
-/*
-#ifndef IFLW_WRAPPER
-#error "Why is IFLW_WRAPPER not defined?"
-#endif
-*/
+
+/* #ifndef IFLW_WRAPPER */
+/* #error "Why is IFLW_WRAPPER not defined?" */
+/* #endif */
+
 
 extern unsigned long long ifregaddr[];
 
-/*
-#define IFLW_SHIFT(op) \
-IFLW_WRAPPER ( \
-  IFLW_PUT_OP(glue(INFO_FLOW_OP_SHIFT_,op)); \
-  IFLW_PUT_ARG(SHIFT); \
-) 
-*/
+
+/* #define IFLW_SHIFT(op) \ */
+/* IFLW_WRAPPER ( \ */
+/*   IFLW_PUT_OP(glue(INFO_FLOW_OP_SHIFT_,op)); \ */
+/*   IFLW_PUT_ARG(SHIFT); \ */
+/* )  */
+
 
 
 /* dynamic flags computation */
