@@ -1,0 +1,7 @@
+syntax: glob
+
+*.d
+*.o
+install/*
+*~
+*#
