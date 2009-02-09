@@ -71,8 +71,7 @@ while (my $line = <F>) {
 
 # examine all the files looking fo info_flow_log_op_write calls
 
-
-
+tleek@thompsontwin:~/hg/iferret-logging-new$ find -H . -name "*.[ch]" -print -exec grep "info_flow_log_op_write" '{}' \;  | less
 
 # create the big case stmt for writing syscall log items
 open F, ">iferret-syscall-switch.h";
