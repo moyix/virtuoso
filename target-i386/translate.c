@@ -6377,13 +6377,13 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
     case 0x1d0 ... 0x1fe:
         gen_sse(s, b, pc_start, rex_r);
         break;
-    case 0x1ff:
-        val = ldub_code(s->pc++);
-	printf("translating special x86 insn #%d\r\n",val);
-//	IFLW_X86_INSN(X86_marker++);
-	IFLW_X86_INSN(val);
+	//    case 0x1ff:
+	//        val = ldub_code(s->pc++);
+	//	printf("translating special x86 insn #%d\r\n",val);
+	//	IFLW_X86_INSN(X86_marker++);
+	//	IFLW_X86_INSN(val);
 	//        if_debug = IF_DEBUG_HIGH; 
-	break;
+	//	break;
     default:
         goto illegal_op;
     }

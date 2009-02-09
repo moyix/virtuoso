@@ -44,18 +44,18 @@
 
 #ifdef MEM_WRITE
 
-/*
-#define IFLW_CMPXCHG_T0_T1_EAX_CC(op) \
-IFLW_WRAPPER(\
-  IFLW_PUT_OP(op); \
-)
 
-#define IFLW_SHIFT_MEM_WRITE(op) \
-IFLW_WRAPPER ( \
-  IFLW_PUT_OP(glue(INFO_FLOW_OP_SHIFT_MEM_WRITE_,op)); \
-  IFLW_PUT_ARG((SHIFT << 2) | MEM_WRITE) ; \
-) 
-*/
+//#define IFLW_CMPXCHG_T0_T1_EAX_CC(op)		\
+//IFLW_WRAPPER(					\
+//  IFLW_PUT_OP(op);				\
+//)
+
+//#define IFLW_SHIFT_MEM_WRITE(op)		\
+//IFLW_WRAPPER (				       \
+//  IFLW_PUT_OP(glue(INFO_FLOW_OP_SHIFT_MEM_WRITE_,op));	\
+//  IFLW_PUT_ARG((SHIFT << 2) | MEM_WRITE) ;			\
+//) 
+
 
 #if MEM_WRITE == 0
 
@@ -101,18 +101,18 @@ IFLW_WRAPPER ( \
 
 #else
 
-/*
-#define IFLW_CMPXCHG_T0_T1_EAX_CC(op) \
-IFLW_WRAPPER(\
-  IFLW_PUT_OP(op); \
-)
 
-#define IFLW_SHIFT_MEM_WRITE(op) \
-IFLW_WRAPPER ( \
-  IFLW_PUT_OP(glue(INFO_FLOW_OP_SHIFT_MEM_WRITE_,op)); \
-  IFLW_PUT_ARG(SHIFT << 2); \
-) 
-*/
+//#define IFLW_CMPXCHG_T0_T1_EAX_CC(op) \
+//IFLW_WRAPPER(\
+//  IFLW_PUT_OP(op); \
+//)
+
+//#define IFLW_SHIFT_MEM_WRITE(op)		\
+//IFLW_WRAPPER (				       \
+//  IFLW_PUT_OP(glue(INFO_FLOW_OP_SHIFT_MEM_WRITE_,op));	\
+//  IFLW_PUT_ARG(SHIFT << 2);					\
+//) 
+
 
 // MEM_WRITE is undefined if we are here 
 #define MEM_SUFFIX SUFFIX
@@ -122,15 +122,15 @@ IFLW_WRAPPER ( \
 
 
 
-/*
-#if !defined(IFLW_WRAPPER)
-#error "Why is IFLW_WRAPPER not defined?"
-#endif
 
-#if !defined(IFLW_SHIFT_MEM_WRITE)
-#error "Why is IFLW_SHIFT_MEM_WRITE not defined?"
-#endif
-*/
+//#if !defined(IFLW_WRAPPER)
+//#error "Why is IFLW_WRAPPER not defined?"
+//#endif
+
+//#if !defined(IFLW_SHIFT_MEM_WRITE)
+//#error "Why is IFLW_SHIFT_MEM_WRITE not defined?"
+//#endif
+
 
 // pack SHIFT and MEMWRITE into 2nd byte
 

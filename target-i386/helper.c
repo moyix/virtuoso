@@ -45,12 +45,12 @@ extern uid_t current_uid;
 
 //#define DEBUG_PCALL
 
-/*
-#define IFLW_SAVE_RESTORE_ENV(op) \
-IFLW_WRAPPER ( \
-        IFLW_PUT_OP(glue(INFO_FLOW_OP_,op)); \
-);
-*/
+
+//#define IFLW_SAVE_RESTORE_ENV(op) \
+//IFLW_WRAPPER (			     \
+//        IFLW_PUT_OP(glue(INFO_FLOW_OP_,op));	\
+//);
+
 
 #if 0
 #define raise_exception_err(a, b)\

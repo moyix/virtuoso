@@ -422,13 +422,13 @@ void info_flow_new_keyboard_label() {
   unsigned int i,l;
   printf ("info_flow_new_keybaord_label [%s]\n", if_keyboard_label);
   fflush(stdout);
-  IFLW_PUT_OP(INFO_FLOW_OP_NEW_KEYBOARD_LABEL);
+//  IFLW_PUT_OP(INFO_FLOW_OP_NEW_KEYBOARD_LABEL);
   l = strlen(if_keyboard_label);
   if (l>=IF_MAX_KEYBOARD_LABEL_LEN)
     l = IF_MAX_KEYBOARD_LABEL_LEN-1;
-  IFLW_PUT_WORD(l);
+//  IFLW_PUT_WORD(l);
   for (i=0; i<l; i++) {
-    IFLW_PUT_BYTE(if_keyboard_label[i]);
+//    IFLW_PUT_BYTE(if_keyboard_label[i]);
   }
   if_keyboard_label_changed = FALSE;
 }

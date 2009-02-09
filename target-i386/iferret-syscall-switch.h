@@ -2,1193 +2,1195 @@
 // It's job is to generate iferret log entries for system calls.
 // It should be included in iferret-syscalls.c
 switch (EAX) {
-case 0: // 0 long sys_restart_syscall(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 1: // 1 long sys_exit(int error_code);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 2: // 2 pid_t fork(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 3: // 3 ssize_t sys_read(unsigned int fd, char __user *buf, size_t count);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX);
-}
-break; 
-case 4: // 4 ssize_t sys_write(unsigned int fd, const char __user *buf, size_t count);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX);
-}
-break; 
-case 5: // 5 long sys_open(const char __user *filename, int flags, int mode);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX,EDX);
-}
-break; 
-case 6: // 6 long sys_close(unsigned int fd);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 7: // 7 long sys_waitpid(pid_t pid, int __user *stat_addr, int options);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 8: // 8 long sys_creat(const char __user *pathname, int mode);    
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 9: // 9 long sys_link(const char __user *oldname, const char __user *newname);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-info_flow_log_syscall_write(scp,str1,str2);
-}
-}
-break; 
-case 10: // 10 long sys_unlink(const char __user *pathname);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1);
-}
-break; 
-case 11: // 11 int execve(const char *filename, char *const argv[], char *const envp[]);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 12: // 12 long sys_chdir(const char __user *filename);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1);
-}
-break; 
-case 13: // 13 long sys_time(time_t __user *tloc);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 14: // 14 long sys_mknod(const char __user *filename, int mode, unsigned dev);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX,EDX);
-}
-break; 
-case 15: // 15 long sys_chmod(const char __user *filename, mode_t mode);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 16: // 16 long sys_lchown(const char __user *filename, unsigned dev);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 17: // 17 missing sys_break
-info_flow_log_syscall_write(scp);
-break; 
-case 18: // 18 int stat(const char *path, struct stat *buf);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 19: // 19 off_t sys_lseek(unsigned int fd, off_t offset, unsigned int origin);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 20: // 20 long sys_getpid(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 21: // 21 long sys_mount(char __user *dev_name, char __user *dir_name, char __user *type, unsigned long flags, void __user *data);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-if (copy_string(str3, EDX)) { 
-info_flow_log_syscall_write(scp,str1,str2,str3,ESI,EDI);
-}
-}
-}
-break; 
-case 22: // 22 long sys_umount(char __user *name, int flags);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 23: // 23 long sys_setuid(uid_t uid);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 24: // 24 long sys_getuid(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 25: // 25 long sys_stime(time_t __user *tptr);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 26: // 26 long sys_ptrace(long request, long pid, long addr, long data);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 27: // 27 unsigned long sys_alarm(unsigned int seconds);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 28: // 28 missing sys_oldfstat 
-info_flow_log_syscall_write(scp);
-break; 
-case 29: // 29 long sys_pause(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 30: // 30 long sys_utime(char __user *filename, struct utimbuf __user *times);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 31: // 31 missing sys_stty
-info_flow_log_syscall_write(scp);
-break; 
-case 32: // 32 missing sys_gtty
-info_flow_log_syscall_write(scp);
-break; 
-case 33: // 33 long sys_access(const char __user *filename, int mode);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 34: // 34 long sys_nice(int increment);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 35: // 35 missing sys_ftime 
-info_flow_log_syscall_write(scp);
-break; 
-case 36: // 36 long sys_sync(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 37: // 37 long sys_kill(int pid, int sig);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 38: // 38 long sys_rename(const char __user *oldname, const char __user *newname);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-info_flow_log_syscall_write(scp,str1,str2);
-}
-}
-break; 
-case 39: // 39 long sys_mkdir(const char __user *pathname, int mode);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 40: // 40 long sys_rmdir(const char __user *pathname);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1);
-}
-break; 
-case 41: // 41 long sys_dup(unsigned int fildes);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 42: // 42 int pipe(int pipefd[2]);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 43: // 43 long sys_times(struct tms __user *tbuf);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 44: // 44 missing sys_prof
-info_flow_log_syscall_write(scp);
-break; 
-case 45: // 45 unsigned long sys_brk(unsigned long brk);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 46: // 46 long sys_setgid(gid_t gid);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 47: // 47 long sys_getgid(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 48: // 48 unsigned long sys_signal(int sig, __sighandler_t handler);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 49: // 49 long sys_geteuid(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 50: // 50 long sys_getegid(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 51: // 51 long sys_acct(const char __user *name);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1);
-}
-break; 
-case 52: // 52 int umount2(const char *target, int flags);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 53: // 53 missing sys_lock
-info_flow_log_syscall_write(scp);
-break; 
-case 54: // 54 long sys_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 55: // 55 long sys_fcntl(unsigned int fd, unsigned int cmd, unsigned long arg);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 56: // 56 missing sys_mpx 
-info_flow_log_syscall_write(scp);
-break; 
-case 57: // 57 long sys_setpgid(pid_t pid, pid_t pgid);    
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 58: // 58 missing sys_ulimit
-info_flow_log_syscall_write(scp);
-break; 
-case 59: // 59 missing sys_oldolduname 
-info_flow_log_syscall_write(scp);
-break; 
-case 60: // 60 long sys_umask(int mask);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 61: // 61 long sys_chroot(const char __user *filename);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1);
-}
-break; 
-case 62: // 62 long sys_ustat(unsigned dev, struct ustat __user *ubuf);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 63: // 63 long sys_dup2(unsigned int oldfd, unsigned int newfd);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 64: // 64 long sys_getppid(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 65: // 65 long sys_getpgrp(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 66: // 66 long sys_setsid(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 67: // 67 missing sys_sigaction
-info_flow_log_syscall_write(scp);
-break; 
-case 68: // 68 long sys_sgetmask(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 69: // 69 long sys_ssetmask(int newmask);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 70: // 70 long sys_setreuid(uid_t ruid, uid_t euid);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 71: // 71 long sys_setregid(gid_t rgid, gid_t egid);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 72: // 72 missing sys_sigsuspend
-info_flow_log_syscall_write(scp);
-break; 
-case 73: // 73 long sys_sigpending(old_sigset_t __user *set);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 74: // 74 long sys_sethostname(char __user *name, int len);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 75: // 75 long sys_setrlimit(unsigned int resource, struct rlimit __user *rlim);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 76: // 76 long sys_getrlimit(unsigned int resource, struct rlimit __user *rlim);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 77: // 77 long sys_getrusage(int who, struct rusage __user *ru);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 78: // 78 long sys_gettimeofday(struct timeval __user *tv, struct timezone __user *tz);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 79: // 79 long sys_settimeofday(struct timeval __user *tv, struct timezone __user *tz);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 80: // 80 long sys_getgroups(int gidsetsize, gid_t __user *grouplist);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 81: // 81 long sys_setgroups(int gidsetsize, gid_t __user *grouplist);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 82: // 82 long sys_select(int n, fd_set __user *inp, fd_set __user *outp, fd_set __user *exp, struct timeval __user *tvp);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
-break; 
-case 83: // 83 long sys_symlink(const char __user *old, const char __user *new);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-info_flow_log_syscall_write(scp,str1,str2);
-}
-}
-break; 
-case 84: // 84 int stat(const char *path, struct stat *buf);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 85: // 85 long sys_readlink(const char __user *path, char __user *buf, int bufsiz);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-info_flow_log_syscall_write(scp,str1,str2,EDX);
-}
-}
-break; 
-case 86: // 86 long sys_uselib(const char __user *library);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1);
-}
-break; 
-case 87: // 87 long sys_swapon(const char __user *specialfile, int swap_flags);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 88: // 88 long sys_reboot(int magic1, int magic2, unsigned int cmd, void __user *arg);    
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 89: // 89 int readdir(unsigned int fd, struct dirent *dirp, unsigned int count);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 90: // 90 void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
-break; 
-case 91: // 91 long sys_munmap(unsigned long addr, size_t len);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 92: // 92 long sys_truncate(const char __user *path, unsigned long length);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 93: // 93 long sys_ftruncate(unsigned int fd, unsigned long length);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 94: // 94 long sys_fchmod(unsigned int fd, mode_t mode);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 95: // 95 long sys_fchown(unsigned int fd, uid_t user, gid_t group);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 96: // 96 long sys_getpriority(int which, int who);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 97: // 97 long sys_setpriority(int which, int who, int niceval);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 98: // 98 missing sys_profil
-info_flow_log_syscall_write(scp);
-break; 
-case 99: // 99 long sys_statfs(const char __user * path, struct statfs __user *buf);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 100: // 100 long sys_fstatfs(unsigned int fd, struct statfs __user *buf);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 101: // 101 long sys_ioperm(unsigned long from, unsigned long num, int on);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 102: // 102 long sys_socketcall(int call, unsigned long __user *args);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 103: // 103 long sys_syslog(int type, char __user *buf, int len);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX);
-}
-break; 
-case 104: // 104 long sys_setitimer(int which,  struct itimerval __user *value, struct itimerval __user *ovalue);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 105: // 105 long sys_getitimer(int which, struct itimerval __user *value);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 106: // 106 long sys_stat(char __user *filename, struct __old_kernel_stat __user *statbuf);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 107: // 107 long sys_lstat(char __user *filename, struct __old_kernel_stat __user *statbuf);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 108: // 108 long sys_fstat(unsigned int fd, struct __old_kernel_stat __user *statbuf);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 109: // 109 int uname(struct utsname *buf);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 110: // 110 int iopl(int level);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 111: // 111 long sys_vhangup(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 112: // 112 int idle(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 113: // 113 int vm86old(struct vm86_struct *info);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 114: // 114 long sys_wait4(pid_t pid, int __user *stat_addr, int options, struct rusage __user *ru);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 115: // 115 long sys_swapoff(const char __user *specialfile);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1);
-}
-break; 
-case 116: // 116 long sys_sysinfo(struct sysinfo __user *info);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 117: // 117 int ipc(unsigned int call, int first, int second, int third, void *ptr, long fifth);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
-break; 
-case 118: // 118 long sys_fsync(unsigned int fd);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 119: // 119 int sigreturn(unsigned long __unused);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 120: // 120 int clone(int (*fn)(void *), void *child_stack, int flags, void *arg, ...)
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
-break; 
-case 121: // 121 long sys_setdomainname(char __user *name, int len);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 122: // 122 int uname(struct utsname *buf);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 123: // 123 int modify_ldt(int func, void *ptr, unsigned long bytecount);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 124: // 124 long sys_adjtimex(struct timex __user *txc_p);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 125: // 125 long sys_mprotect(unsigned long start, size_t len, unsigned long prot);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 126: // 126 long sys_sigprocmask(int how, old_sigset_t __user *set, old_sigset_t __user *oset);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 127: // 127 missing sys_create_module 
-info_flow_log_syscall_write(scp);
-break; 
-case 128: // 128 long sys_init_module(void __user *umod, unsigned long len, const char __user *uargs);
-if (copy_string(str1, EDX)) { 
-info_flow_log_syscall_write(scp,EBX,ECX,str1);
-}
-break; 
-case 129: // 129 long sys_delete_module(const char __user *name_user, unsigned int flags);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 130: // 130 missing sys_get_kernel_syms
-info_flow_log_syscall_write(scp);
-break; 
-case 131: // 131 long sys_quotactl(unsigned int cmd, const char __user *special, qid_t id, void __user *addr);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
-}
-break; 
-case 132: // 132 long sys_getpgid(pid_t pid);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 133: // 133 long sys_fchdir(unsigned int fd);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 134: // 134 long sys_bdflush(int func, long data);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 135: // 135 long sys_sysfs(int option, unsigned long arg1, unsigned long arg2);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 136: // 136 long sys_personality(u_long personality);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 137: // 137 missing sys_afs_syscall 
-info_flow_log_syscall_write(scp);
-break; 
-case 138: // 138 long sys_setfsuid(uid_t uid);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 139: // 139 long sys_setfsgid(gid_t gid);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 140: // 140 missing sys__llseek
-info_flow_log_syscall_write(scp);
-break; 
-case 141: // 141 long sys_getdents(unsigned int fd, struct linux_dirent __user *dirent, unsigned int count);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 142: // 142 missing sys__newselect 
-info_flow_log_syscall_write(scp);
-break; 
-case 143: // 143 long sys_flock(unsigned int fd, unsigned int cmd);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 144: // 144 long sys_msync(unsigned long start, size_t len, int flags);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 145: // 145 ssize_t sys_readv(unsigned long fd, const struct iovec __user *vec, unsigned long vlen);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 146: // 146 ssize_t sys_writev(unsigned long fd, const struct iovec __user *vec, unsigned long vlen);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 147: // 147 long sys_getsid(pid_t pid);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 148: // 148 long sys_fdatasync(unsigned int fd);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 149: // 149 missing sys__sysctl
-info_flow_log_syscall_write(scp);
-break; 
-case 150: // 150 long sys_mlock(unsigned long start, size_t len);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 151: // 151 long sys_munlock(unsigned long start, size_t len);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 152: // 152 long sys_mlockall(int flags);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 153: // 153 long sys_munlockall(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 154: // 154 long sys_sched_setparam(pid_t pid, struct sched_param __user *param);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 155: // 155 long sys_sched_getparam(pid_t pid, struct sched_param __user *param);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 156: // 156 long sys_sched_setscheduler(pid_t pid, int policy, struct sched_param __user *param);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 157: // 157 long sys_sched_getscheduler(pid_t pid);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 158: // 158 long sys_sched_yield(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 159: // 159 long sys_sched_get_priority_max(int policy);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 160: // 160 long sys_sched_get_priority_min(int policy);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 161: // 161 long sys_sched_rr_get_interval(pid_t pid, struct timespec __user *interval);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 162: // 162 long sys_nanosleep(struct timespec __user *rqtp, struct timespec __user *rmtp);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 163: // 163 unsigned long sys_mremap(unsigned long addr, unsigned long old_len, unsigned long new_len, unsigned long flags, unsigned long new_addr);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
-break; 
-case 164: // 164 long sys_setresuid(uid_t ruid, uid_t euid, uid_t suid);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 165: // 165 long sys_getresuid16(old_uid_t __user *ruid, old_uid_t __user *euid, old_uid_t __user *suid);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 166: // 166 missing sys_vm86 
-info_flow_log_syscall_write(scp);
-break; 
-case 167: // 167 missing sys_query_module 
-info_flow_log_syscall_write(scp);
-break; 
-case 168: // 168 long sys_poll(struct pollfd __user *ufds, unsigned int nfds, long timeout);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 169: // 169 long sys_nfsservctl(int cmd, struct nfsctl_arg __user *arg, void __user *res);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 170: // 170 int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 171: // 171 long sys_getresgid(gid_t __user *rgid, gid_t __user *egid, gid_t __user *sgid);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 172: // 172 long sys_prctl(int option, unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
-break; 
-case 173: // 173 int sigreturn(unsigned long __unused);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 174: // 174 int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 175: // 175 int sys_rt_sigprocmask(int how, sigset_t __user *set, sigset_t __user *oset, size_t sigsetsize);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 176: // 176 long sys_rt_sigpending(sigset_t __user *set, size_t sigsetsize);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 177: // 177 long sys_rt_sigtimedwait(const sigset_t __user *uthese, siginfo_t __user *uinfo, const struct timespec __user *uts, size_t sigsetsize);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 178: // 178 long sys_rt_sigqueueinfo(int pid, int sig, siginfo_t __user *uinfo);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 179: // 179 int sigsuspend(const sigset_t *mask);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 180: // 180 ssize_t sys_pread64(unsigned int fd, char __user *buf, size_t count, loff_t pos);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
-}
-break; 
-case 181: // 181 ssize_t sys_pwrite64(unsigned int fd, const char __user *buf, size_t count, loff_t pos);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
-}
-break; 
-case 182: // 182 long sys_chown(const char __user *filename, uid_t user, gid_t group);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX,EDX);
-}
-break; 
-case 183: // 183 long sys_getcwd(char __user *buf, unsigned long size);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 184: // 184 long sys_capget(cap_user_header_t header, cap_user_data_t dataptr);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 185: // 185 long sys_capset(cap_user_header_t header, const cap_user_data_t data);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 186: // 186 int sigaltstack(const stack_t *ss, stack_t *oss);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 187: // 187 ssize_t sys_sendfile(int out_fd, int in_fd, off_t __user *offset, size_t count);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 188: // 188 missing sys_getpmsg 
-info_flow_log_syscall_write(scp);
-break; 
-case 189: // 189 missing sys_putpmsg 
-info_flow_log_syscall_write(scp);
-break; 
-case 190: // 190 pid_t vfork(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 191: // 191 int getrlimit(int resource, struct rlimit *rlim);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 192: // 192 void *mmap2(void *addr, size_t length, int prot, int flags, int fd, off_t pgoffset);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
-break; 
-case 193: // 193 long sys_truncate64(const char __user *path, loff_t length);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 194: // 194 long sys_ftruncate64(unsigned int fd, loff_t length);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 195: // 195 long sys_stat64(char __user *filename, struct stat64 __user *statbuf);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 196: // 196 long sys_lstat64(char __user *filename, struct stat64 __user *statbuf);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 197: // 197 long sys_fstat64(unsigned long fd, struct stat64 __user *statbuf);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 198: // 198 int lchown(const char *path, uid_t owner, gid_t group);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 199: // 199 uid_t getuid(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 200: // 200 gid_t getgid(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 201: // 201 uid_t geteuid(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 202: // 202 gid_t getegid(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 203: // 203 int setreuid(uid_t ruid, uid_t euid);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 204: // 204 int setregid(gid_t rgid, gid_t egid);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 205: // 205 int getgroups(int size, gid_t list[]);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 206: // 206 int setgroups(size_t size, const gid_t *list);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 207: // 207 int fchown(int fd, uid_t owner, gid_t group);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 208: // 208 int setresuid(uid_t ruid, uid_t euid, uid_t suid);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 209: // 209 int getresuid(uid_t *ruid, uid_t *euid, uid_t *suid);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 210: // 210 int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 211: // 211 int getresgid(gid_t *rgid, gid_t *egid, gid_t *sgid);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 212: // 212 int chown(const char *path, uid_t owner, gid_t group);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 213: // 213 int setuid(uid_t uid);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 214: // 214 int setgid(gid_t gid);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 215: // 215 int setfsuid(uid_t fsuid);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 216: // 216 int setfsgid(uid_t fsgid);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 217: // 217 long sys_pivot_root(const char __user *new_root, const char __user *put_old);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-info_flow_log_syscall_write(scp,str1,str2);
-}
-}
-break; 
-case 218: // 218 long sys_mincore(unsigned long start, size_t len, unsigned char __user * vec);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 219: // 219 long sys_madvise(unsigned long start, size_t len, int behavior);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 220: // 220 long sys_getdents64(4(unsigned int fd, struct linux_dirent64 __user *dirent, unsigned int count);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 221: // 221 long sys_fcntl64(unsigned int fd, unsigned int cmd, unsigned long arg);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 224: // 224 long sys_gettid(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 225: // 225 ssize_t sys_readahead(int fd, loff_t offset, size_t count);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 226: // 226 long sys_setxattr(const char __user *path, const char __user *name, const void __user *value, size_t size, int flags);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-info_flow_log_syscall_write(scp,str1,str2,EDX,ESI,EDI);
-}
-}
-break; 
-case 227: // 227 long sys_lsetxattr(const char __user *path, const char __user *name, const void __user *value, size_t size, int flags);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-info_flow_log_syscall_write(scp,str1,str2,EDX,ESI,EDI);
-}
-}
-break; 
-case 228: // 228 long sys_fsetxattr(int fd, const char __user *name, const void __user *value, size_t size, int flags);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI,EDI);
-}
-break; 
-case 229: // 229 ssize_t sys_getxattr(const char __user *path, const char __user *name, void __user *value, size_t size);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-info_flow_log_syscall_write(scp,str1,str2,EDX,ESI);
-}
-}
-break; 
-case 230: // 230 ssize_t sys_lgetxattr(const char __user *path, const char __user *name, void __user *value, size_t size);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-info_flow_log_syscall_write(scp,str1,str2,EDX,ESI);
-}
-}
-break; 
-case 231: // 231 ssize_t sys_fgetxattr(int fd, const char __user *name, void __user *value, size_t size);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
-}
-break; 
-case 232: // 232 ssize_t sys_listxattr(const char __user *path, char __user *list, size_t size);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-info_flow_log_syscall_write(scp,str1,str2,EDX);
-}
-}
-break; 
-case 233: // 233 ssize_t sys_llistxattr(const char __user *path, char __user *list, size_t size);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-info_flow_log_syscall_write(scp,str1,str2,EDX);
-}
-}
-break; 
-case 234: // 234 ssize_t sys_flistxattr(int fd, char __user *list, size_t size);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX);
-}
-break; 
-case 235: // 235 long sys_removexattr(const char __user *path, const char __user *name);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-info_flow_log_syscall_write(scp,str1,str2);
-}
-}
-break; 
-case 236: // 236 long sys_lremovexattr(const char __user *path, const char __user *name);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-info_flow_log_syscall_write(scp,str1,str2);
-}
-}
-break; 
-case 237: // 237 long sys_fremovexattr(int fd, const char __user *name);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1);
-}
-break; 
-case 238: // 238 long sys_tkill(int pid, int sig);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 239: // 239 ssize_t sys_sendfile64(int out_fd, int in_fd, loff_t __user *offset, size_t count);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 240: // 240 long sys_futex(u32 __user *uaddr, int op, u32 val, struct timespec __user *utime, u32 __user *uaddr2, u32 val3);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
-break; 
-case 241: // 241 long sys_sched_setaffinity(pid_t pid, unsigned int len, unsigned long __user *user_mask_ptr);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 242: // 242 long sys_sched_getaffinity(pid_t pid, unsigned int len, unsigned long __user *user_mask_ptr);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 243: // 243 int set_thread_area(struct user_desc *u_info);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 244: // 244 int get_thread_area(struct user_desc *u_info);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 245: // 245 int sys_io_setup(unsigned nr_reqs, aio_context_t __user *ctx);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 246: // 246 long sys_io_destroy(aio_context_t ctx);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 247: // 247 long sys_io_getevents(aio_context_t ctx_id, long min_nr,long nr, struct io_event __user *events, struct timespec __user *timeout);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
-break; 
-case 248: // 248 long sys_io_submit(aio_context_t, long, struct iocb __user * __user *);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 249: // 249 long sys_io_cancel(aio_context_t ctx_id, struct iocb __user *iocb, struct io_event __user *result);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 250: // 250 int sys_fadvise64(int fd, loff_t offset, size_t len, int advice); 
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 252: // 252 void sys_exit_group(int error_code);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 253: // 253 long sys_lookup_dcookie(u64 cookie64, char __user *buf, size_t len);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX);
-}
-break; 
-case 254: // 254 long sys_epoll_create(int size);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 255: // 255 long sys_epoll_ctl(int epfd, int op, int fd, struct epoll_event __user *event);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 256: // 256 long sys_epoll_wait(int epfd, struct epoll_event __user *events, int maxevents, int timeout);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 257: // 257 long sys_remap_file_pages(unsigned long start, unsigned long size, unsigned long prot, unsigned long pgoff, unsigned long flags);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
-break; 
-case 258: // 258 long sys_set_tid_address(int __user *tidptr);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 259: // 259 long sys_timer_create(clockid_t which_clock, struct sigevent __user *timer_event_spec, timer_t __user * created_timer_id);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 260: // 260 long sys_timer_settime(timer_t timer_id, int flags, const struct itimerspec __user *new_setting, struct itimerspec __user *old_setting);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 261: // 261 long sys_timer_gettime(timer_t timer_id, struct itimerspec __user *setting);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 262: // 262 missing sys_timer_getoverrun
-info_flow_log_syscall_write(scp);
-break; 
-case 263: // 263 long sys_timer_delete(timer_t timer_id);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 264: // 264 long sys_clock_settime(clockid_t which_clock, const struct timespec __user *tp);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 265: // 265 long sys_clock_gettime(clockid_t which_clock, struct timespec __user *tp);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 266: // 266 long sys_clock_getres(clockid_t which_clock, struct timespec __user *tp);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 267: // 267 long sys_clock_nanosleep(clockid_t which_clock, int flags, const struct timespec __user *rqtp, struct timespec __user *rmtp);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 268: // 268 long sys_statfs64(const char __user *path, size_t sz, struct statfs64 __user *buf);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX,EDX);
-}
-break; 
-case 269: // 269 long sys_fstatfs64(unsigned int fd, size_t sz, struct statfs64 __user *buf);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 270: // 270 long sys_tgkill(int tgid, int pid, int sig);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 271: // 271 long sys_utimes(char __user *filename, struct timeval __user *utimes);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX);
-}
-break; 
-case 272: // 272 long sys_fadvise64_64(int fd, loff_t offset, loff_t len, int advice);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 273: // 273 missing sys_vserver 
-info_flow_log_syscall_write(scp);
-break; 
-case 274: // 274 long sys_mbind(unsigned long start, unsigned long len, unsigned long mode, unsigned long __user *nmask, unsigned long maxnode, unsigned flags);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
-break; 
-case 275: // 275 long sys_get_mempolicy(int __user *policy, unsigned long __user *nmask, unsigned long maxnode, unsigned long addr, unsigned long flags);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
-break; 
-case 276: // 276 long sys_set_mempolicy(int mode, unsigned long __user *nmask, unsigned long maxnode);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 277: // 277 long sys_mq_open(const char __user *name, int oflag, mode_t mode,  struct mq_attr __user *attr);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1,ECX,EDX,ESI);
-}
-break; 
-case 278: // 278 long sys_mq_unlink(const char __user *name);
-if (copy_string(str1, EBX)) { 
-info_flow_log_syscall_write(scp,str1);
-}
-break; 
-case 279: // 279 long sys_mq_timedsend(mqd_t mqdes, const char __user *msg_ptr, size_t msg_len, unsigned int msg_prio, const struct timespec __user *abs_timeout);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI,EDI);
-}
-break; 
-case 280: // 280 ssize_t sys_mq_timedreceive(mqd_t mqdes, char __user *msg_ptr,  size_t msg_len, unsigned int __user *msg_prio, const struct timespec __user *abs_timeout);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI,EDI);
-}
-break; 
-case 281: // 281 long sys_mq_notify(mqd_t mqdes, const struct sigevent __user *notification);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 282: // 282 long sys_mq_getsetattr(mqd_t mqdes, const struct mq_attr __user *mqstat, struct mq_attr __user *omqstat);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 283: // 283 long sys_kexec_load(unsigned long entry, unsigned long nr_segments, struct kexec_segment __user *segments, unsigned long flags);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 284: // 284 long sys_waitid(int which, pid_t pid, struct siginfo __user *infop, int options, struct rusage __user *ru);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
-break; 
-case 285: // 285 missing sys_setaltroot 
-info_flow_log_syscall_write(scp);
-break; 
-case 286: // 286 long sys_add_key(const char __user *_type, const char __user *_description, const void __user *_payload, size_t plen, key_serial_t destringid);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-info_flow_log_syscall_write(scp,str1,str2,EDX,ESI,EDI);
-}
-}
-break; 
-case 287: // 287 long sys_request_key(const char __user *_type, const char __user *_description, const char __user *_callout_info, key_serial_t destringid);
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, ECX)) { 
-if (copy_string(str3, EDX)) { 
-info_flow_log_syscall_write(scp,str1,str2,str3,ESI);
-}
-}
-}
-break; 
-case 288: // 288 long sys_keyctl(int cmd, unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
-break; 
-case 289: // 289 long sys_ioprio_set(int which, int who, int ioprio);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 290: // 290 long sys_ioprio_get(int which, int who);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 291: // 291 long sys_inotify_init(void);
-info_flow_log_syscall_write(scp);
-break; 
-case 292: // 292 long sys_inotify_add_watch(int fd, const char __user *path, u32 mask);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX);
-}
-break; 
-case 293: // 293 long sys_inotify_rm_watch(int fd, u32 wd);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 294: // 294 long sys_migrate_pages(pid_t pid, unsigned long maxnode, const unsigned long __user *from, const unsigned long __user *to); 
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 295: // 295 long sys_openat(int dfd, const char __user *filename, int flags, int mode);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
-}
-break; 
-case 296: // 296 long sys_mkdirat(int dfd, const char __user * pathname, int mode);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX);
-}
-break; 
-case 297: // 297 long sys_mknodat(int dfd, const char __user * filename, int mode, unsigned dev);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
-}
-break; 
-case 298: // 298 long sys_fchownat(int dfd, const char __user *filename, uid_t user, gid_t group, int flag);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI,EDI);
-}
-break; 
-case 299: // 299 long sys_futimesat(int dfd, char __user *filename, struct timeval __user *utimes);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX);
-}
-break; 
-case 300: // 300 long sys_fstatat64(int dfd, char __user *filename, struct stat64 __user *statbuf, int flag);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
-}
-break; 
-case 301: // 301 long sys_unlinkat(int dfd, const char __user * pathname, int flag);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX);
-}
-break; 
-case 302: // 302 long sys_renameat(int olddfd, const char __user * oldname, int newdfd, const char __user * newname);
-if (copy_string(str1, ECX)) { 
-if (copy_string(str2, ESI)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX,str2);
-}
-}
-break; 
-case 303: // 303 long sys_linkat(int olddfd, const char __user *oldname, int newdfd, const char __user *newname, int flags);
-if (copy_string(str1, ECX)) { 
-if (copy_string(str2, ESI)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX,str2,EDI);
-}
-}
-break; 
-case 304: // 304 long sys_symlinkat(const char __user * oldname, int newdfd, const char __user * newname)
-if (copy_string(str1, EBX)) { 
-if (copy_string(str2, EDX)) { 
-info_flow_log_syscall_write(scp,str1,ECX,str2);
-}
-}
-break; 
-case 305: // 305 long sys_readlinkat(int dfd, const char __user *path, char __user *buf, int bufsiz);
-if (copy_string(str1, ECX)) { 
-if (copy_string(str2, EDX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,str2,ESI);
-}
-}
-break; 
-case 306: // 306 long sys_fchmodat(int dfd, const char __user * filename, mode_t mode);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX);
-}
-break; 
-case 307: // 307 long sys_faccessat(int dfd, const char __user *filename, int mode);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX);
-}
-break; 
-case 308: // 308 int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, const struct timespec *timeout, const sigset_t *sigmask);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
-break; 
-case 309: // 309 int ppoll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, const sigset_t *sigmask);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 310: // 310 long sys_unshare(unsigned long unshare_flags);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 311: // 311 long sys_set_robust_list(struct robust_list_head __user *head, size_t len);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 312: // 312 long sys_get_robust_list(int pid, struct robust_list_head __user * __user *head_ptr, size_t __user *len_ptr);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 313: // 313 long sys_splice(int fd_in, loff_t __user *off_in, int fd_out, loff_t __user *off_out, size_t len, unsigned int flags);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
-break; 
-case 314: // 314 long sys_sync_file_range(int fd, loff_t offset, loff_t nbytes, unsigned int flags);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 315: // 315 long sys_tee(int fdin, int fdout, size_t len, unsigned int flags);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 316: // 316 long sys_vmsplice(int fd, const struct iovec __user *iov, unsigned long nr_segs, unsigned int flags);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 317: // 317 long sys_move_pages(pid_t pid, unsigned long nr_pages, const void __user * __user *pages, const int __user *nodes, int __user *status, int flags);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
-break; 
-case 318: // 318 long sys_getcpu(unsigned __user *cpu, unsigned __user *node,  struct getcpu_cache __user *cache);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 319: // 319 long sys_epoll_wait(int epfd, struct epoll_event __user *events, int maxevents, int timeout);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 320: // 320 long sys_utimensat(int dfd, char __user *filename, struct timespec __user *utimes, int flags);
-if (copy_string(str1, ECX)) { 
-info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
-}
-break; 
-case 321: // 321 long sys_signalfd(int ufd, sigset_t __user *user_mask, size_t sizemask);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 322: // 322 long sys_timerfd_create(int clockid, int flags);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 323: // 323 long sys_eventfd(unsigned int count);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 324: // 324 long sys_fallocate(int fd, int mode, loff_t offset, loff_t len);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 325: // 325 long sys_timerfd_settime(int ufd, int flags, const struct itimerspec __user *utmr, struct itimerspec __user *otmr);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 326: // 326 long sys_timerfd_gettime(int ufd, struct itimerspec __user *otmr); 
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 327: // 327 long sys_signalfd4(int ufd, sigset_t __user *user_mask, size_t sizemask, int flags);
-info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
-break; 
-case 328: // 328 long sys_eventfd2(unsigned int count, int flags);
-info_flow_log_syscall_write(scp,EBX,ECX);
-break; 
-case 329: // 329 long sys_epoll_create1(int flags);
-info_flow_log_syscall_write(scp,EBX);
-break; 
-case 330: // 330 long sys_dup3(unsigned int oldfd, unsigned int newfd, int flags); 
-info_flow_log_syscall_write(scp,EBX,ECX,EDX);
-break; 
-case 331: // 331 missing sys_pipe2 
-info_flow_log_syscall_write(scp);
-break; 
-case 332: // 332 long sys_inotify_init1(int flags);
-info_flow_log_syscall_write(scp,EBX);
-break; 
+
+ case 0: // 0 long sys_restart_syscall(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 1: // 1 long sys_exit(int error_code);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 2: // 2 pid_t fork(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 3: // 3 ssize_t sys_read(unsigned int fd, char __user *buf, size_t count);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX);
+   }
+   break; 
+ case 4: // 4 ssize_t sys_write(unsigned int fd, const char __user *buf, size_t count);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX);
+   }
+   break; 
+ case 5: // 5 long sys_open(const char __user *filename, int flags, int mode);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX,EDX);
+   }
+   break; 
+ case 6: // 6 long sys_close(unsigned int fd);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 7: // 7 long sys_waitpid(pid_t pid, int __user *stat_addr, int options);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 8: // 8 long sys_creat(const char __user *pathname, int mode);    
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 9: // 9 long sys_link(const char __user *oldname, const char __user *newname);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       info_flow_log_syscall_write(scp,str1,str2);
+     }
+   }
+   break; 
+ case 10: // 10 long sys_unlink(const char __user *pathname);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1);
+   }
+   break; 
+ case 11: // 11 int execve(const char *filename, char *const argv[], char *const envp[]);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 12: // 12 long sys_chdir(const char __user *filename);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1);
+   }
+   break; 
+ case 13: // 13 long sys_time(time_t __user *tloc);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 14: // 14 long sys_mknod(const char __user *filename, int mode, unsigned dev);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX,EDX);
+   }
+   break; 
+ case 15: // 15 long sys_chmod(const char __user *filename, mode_t mode);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 16: // 16 long sys_lchown(const char __user *filename, unsigned dev);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 17: // 17 missing sys_break
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 18: // 18 int stat(const char *path, struct stat *buf);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 19: // 19 off_t sys_lseek(unsigned int fd, off_t offset, unsigned int origin);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 20: // 20 long sys_getpid(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 21: // 21 long sys_mount(char __user *dev_name, char __user *dir_name, char __user *type, unsigned long flags, void __user *data);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       if (copy_string(str3, EDX)) { 
+	 info_flow_log_syscall_write(scp,str1,str2,str3,ESI,EDI);
+       }
+     }
+   }
+   break; 
+ case 22: // 22 long sys_umount(char __user *name, int flags);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 23: // 23 long sys_setuid(uid_t uid);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 24: // 24 long sys_getuid(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 25: // 25 long sys_stime(time_t __user *tptr);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 26: // 26 long sys_ptrace(long request, long pid, long addr, long data);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 27: // 27 unsigned long sys_alarm(unsigned int seconds);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 28: // 28 missing sys_oldfstat 
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 29: // 29 long sys_pause(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 30: // 30 long sys_utime(char __user *filename, struct utimbuf __user *times);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 31: // 31 missing sys_stty
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 32: // 32 missing sys_gtty
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 33: // 33 long sys_access(const char __user *filename, int mode);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 34: // 34 long sys_nice(int increment);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 35: // 35 missing sys_ftime 
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 36: // 36 long sys_sync(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 37: // 37 long sys_kill(int pid, int sig);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 38: // 38 long sys_rename(const char __user *oldname, const char __user *newname);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       info_flow_log_syscall_write(scp,str1,str2);
+     }
+   }
+   break; 
+ case 39: // 39 long sys_mkdir(const char __user *pathname, int mode);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 40: // 40 long sys_rmdir(const char __user *pathname);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1);
+   }
+   break; 
+ case 41: // 41 long sys_dup(unsigned int fildes);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 42: // 42 int pipe(int pipefd[2]);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 43: // 43 long sys_times(struct tms __user *tbuf);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 44: // 44 missing sys_prof
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 45: // 45 unsigned long sys_brk(unsigned long brk);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 46: // 46 long sys_setgid(gid_t gid);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 47: // 47 long sys_getgid(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 48: // 48 unsigned long sys_signal(int sig, __sighandler_t handler);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 49: // 49 long sys_geteuid(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 50: // 50 long sys_getegid(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 51: // 51 long sys_acct(const char __user *name);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1);
+   }
+   break; 
+ case 52: // 52 int umount2(const char *target, int flags);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 53: // 53 missing sys_lock
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 54: // 54 long sys_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 55: // 55 long sys_fcntl(unsigned int fd, unsigned int cmd, unsigned long arg);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 56: // 56 missing sys_mpx 
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 57: // 57 long sys_setpgid(pid_t pid, pid_t pgid);    
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 58: // 58 missing sys_ulimit
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 59: // 59 missing sys_oldolduname 
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 60: // 60 long sys_umask(int mask);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 61: // 61 long sys_chroot(const char __user *filename);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1);
+   }
+   break; 
+ case 62: // 62 long sys_ustat(unsigned dev, struct ustat __user *ubuf);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 63: // 63 long sys_dup2(unsigned int oldfd, unsigned int newfd);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 64: // 64 long sys_getppid(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 65: // 65 long sys_getpgrp(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 66: // 66 long sys_setsid(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 67: // 67 missing sys_sigaction
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 68: // 68 long sys_sgetmask(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 69: // 69 long sys_ssetmask(int newmask);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 70: // 70 long sys_setreuid(uid_t ruid, uid_t euid);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 71: // 71 long sys_setregid(gid_t rgid, gid_t egid);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 72: // 72 missing sys_sigsuspend
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 73: // 73 long sys_sigpending(old_sigset_t __user *set);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 74: // 74 long sys_sethostname(char __user *name, int len);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 75: // 75 long sys_setrlimit(unsigned int resource, struct rlimit __user *rlim);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 76: // 76 long sys_getrlimit(unsigned int resource, struct rlimit __user *rlim);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 77: // 77 long sys_getrusage(int who, struct rusage __user *ru);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 78: // 78 long sys_gettimeofday(struct timeval __user *tv, struct timezone __user *tz);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 79: // 79 long sys_settimeofday(struct timeval __user *tv, struct timezone __user *tz);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 80: // 80 long sys_getgroups(int gidsetsize, gid_t __user *grouplist);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 81: // 81 long sys_setgroups(int gidsetsize, gid_t __user *grouplist);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 82: // 82 long sys_select(int n, fd_set __user *inp, fd_set __user *outp, fd_set __user *exp, struct timeval __user *tvp);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
+   break; 
+ case 83: // 83 long sys_symlink(const char __user *old, const char __user *new);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       info_flow_log_syscall_write(scp,str1,str2);
+     }
+   }
+   break; 
+ case 84: // 84 int stat(const char *path, struct stat *buf);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 85: // 85 long sys_readlink(const char __user *path, char __user *buf, int bufsiz);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       info_flow_log_syscall_write(scp,str1,str2,EDX);
+     }
+   }
+   break; 
+ case 86: // 86 long sys_uselib(const char __user *library);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1);
+   }
+   break; 
+ case 87: // 87 long sys_swapon(const char __user *specialfile, int swap_flags);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 88: // 88 long sys_reboot(int magic1, int magic2, unsigned int cmd, void __user *arg);    
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 89: // 89 int readdir(unsigned int fd, struct dirent *dirp, unsigned int count);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 90: // 90 void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+   break; 
+ case 91: // 91 long sys_munmap(unsigned long addr, size_t len);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 92: // 92 long sys_truncate(const char __user *path, unsigned long length);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 93: // 93 long sys_ftruncate(unsigned int fd, unsigned long length);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 94: // 94 long sys_fchmod(unsigned int fd, mode_t mode);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 95: // 95 long sys_fchown(unsigned int fd, uid_t user, gid_t group);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 96: // 96 long sys_getpriority(int which, int who);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 97: // 97 long sys_setpriority(int which, int who, int niceval);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 98: // 98 missing sys_profil
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 99: // 99 long sys_statfs(const char __user * path, struct statfs __user *buf);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 100: // 100 long sys_fstatfs(unsigned int fd, struct statfs __user *buf);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 101: // 101 long sys_ioperm(unsigned long from, unsigned long num, int on);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 102: // 102 long sys_socketcall(int call, unsigned long __user *args);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 103: // 103 long sys_syslog(int type, char __user *buf, int len);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX);
+   }
+   break; 
+ case 104: // 104 long sys_setitimer(int which,  struct itimerval __user *value, struct itimerval __user *ovalue);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 105: // 105 long sys_getitimer(int which, struct itimerval __user *value);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 106: // 106 long sys_stat(char __user *filename, struct __old_kernel_stat __user *statbuf);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 107: // 107 long sys_lstat(char __user *filename, struct __old_kernel_stat __user *statbuf);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 108: // 108 long sys_fstat(unsigned int fd, struct __old_kernel_stat __user *statbuf);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 109: // 109 int uname(struct utsname *buf);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 110: // 110 int iopl(int level);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 111: // 111 long sys_vhangup(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 112: // 112 int idle(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 113: // 113 int vm86old(struct vm86_struct *info);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 114: // 114 long sys_wait4(pid_t pid, int __user *stat_addr, int options, struct rusage __user *ru);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 115: // 115 long sys_swapoff(const char __user *specialfile);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1);
+   }
+   break; 
+ case 116: // 116 long sys_sysinfo(struct sysinfo __user *info);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 117: // 117 int ipc(unsigned int call, int first, int second, int third, void *ptr, long fifth);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+   break; 
+ case 118: // 118 long sys_fsync(unsigned int fd);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 119: // 119 int sigreturn(unsigned long __unused);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 120: // 120 int clone(int (*fn)(void *), void *child_stack, int flags, void *arg, ...)
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
+   break; 
+ case 121: // 121 long sys_setdomainname(char __user *name, int len);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 122: // 122 int uname(struct utsname *buf);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 123: // 123 int modify_ldt(int func, void *ptr, unsigned long bytecount);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 124: // 124 long sys_adjtimex(struct timex __user *txc_p);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 125: // 125 long sys_mprotect(unsigned long start, size_t len, unsigned long prot);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 126: // 126 long sys_sigprocmask(int how, old_sigset_t __user *set, old_sigset_t __user *oset);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 127: // 127 missing sys_create_module 
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 128: // 128 long sys_init_module(void __user *umod, unsigned long len, const char __user *uargs);
+   if (copy_string(str1, EDX)) { 
+     info_flow_log_syscall_write(scp,EBX,ECX,str1);
+   }
+   break; 
+ case 129: // 129 long sys_delete_module(const char __user *name_user, unsigned int flags);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 130: // 130 missing sys_get_kernel_syms
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 131: // 131 long sys_quotactl(unsigned int cmd, const char __user *special, qid_t id, void __user *addr);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
+   }
+   break; 
+ case 132: // 132 long sys_getpgid(pid_t pid);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 133: // 133 long sys_fchdir(unsigned int fd);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 134: // 134 long sys_bdflush(int func, long data);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 135: // 135 long sys_sysfs(int option, unsigned long arg1, unsigned long arg2);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 136: // 136 long sys_personality(u_long personality);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 137: // 137 missing sys_afs_syscall 
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 138: // 138 long sys_setfsuid(uid_t uid);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 139: // 139 long sys_setfsgid(gid_t gid);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 140: // 140 missing sys__llseek
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 141: // 141 long sys_getdents(unsigned int fd, struct linux_dirent __user *dirent, unsigned int count);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 142: // 142 missing sys__newselect 
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 143: // 143 long sys_flock(unsigned int fd, unsigned int cmd);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 144: // 144 long sys_msync(unsigned long start, size_t len, int flags);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 145: // 145 ssize_t sys_readv(unsigned long fd, const struct iovec __user *vec, unsigned long vlen);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 146: // 146 ssize_t sys_writev(unsigned long fd, const struct iovec __user *vec, unsigned long vlen);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 147: // 147 long sys_getsid(pid_t pid);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 148: // 148 long sys_fdatasync(unsigned int fd);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 149: // 149 missing sys__sysctl
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 150: // 150 long sys_mlock(unsigned long start, size_t len);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 151: // 151 long sys_munlock(unsigned long start, size_t len);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 152: // 152 long sys_mlockall(int flags);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 153: // 153 long sys_munlockall(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 154: // 154 long sys_sched_setparam(pid_t pid, struct sched_param __user *param);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 155: // 155 long sys_sched_getparam(pid_t pid, struct sched_param __user *param);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 156: // 156 long sys_sched_setscheduler(pid_t pid, int policy, struct sched_param __user *param);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 157: // 157 long sys_sched_getscheduler(pid_t pid);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 158: // 158 long sys_sched_yield(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 159: // 159 long sys_sched_get_priority_max(int policy);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 160: // 160 long sys_sched_get_priority_min(int policy);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 161: // 161 long sys_sched_rr_get_interval(pid_t pid, struct timespec __user *interval);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 162: // 162 long sys_nanosleep(struct timespec __user *rqtp, struct timespec __user *rmtp);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 163: // 163 unsigned long sys_mremap(unsigned long addr, unsigned long old_len, unsigned long new_len, unsigned long flags, unsigned long new_addr);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
+   break; 
+ case 164: // 164 long sys_setresuid(uid_t ruid, uid_t euid, uid_t suid);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 165: // 165 long sys_getresuid16(old_uid_t __user *ruid, old_uid_t __user *euid, old_uid_t __user *suid);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 166: // 166 missing sys_vm86 
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 167: // 167 missing sys_query_module 
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 168: // 168 long sys_poll(struct pollfd __user *ufds, unsigned int nfds, long timeout);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 169: // 169 long sys_nfsservctl(int cmd, struct nfsctl_arg __user *arg, void __user *res);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 170: // 170 int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 171: // 171 long sys_getresgid(gid_t __user *rgid, gid_t __user *egid, gid_t __user *sgid);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 172: // 172 long sys_prctl(int option, unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
+   break; 
+ case 173: // 173 int sigreturn(unsigned long __unused);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 174: // 174 int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 175: // 175 int sys_rt_sigprocmask(int how, sigset_t __user *set, sigset_t __user *oset, size_t sigsetsize);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 176: // 176 long sys_rt_sigpending(sigset_t __user *set, size_t sigsetsize);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 177: // 177 long sys_rt_sigtimedwait(const sigset_t __user *uthese, siginfo_t __user *uinfo, const struct timespec __user *uts, size_t sigsetsize);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 178: // 178 long sys_rt_sigqueueinfo(int pid, int sig, siginfo_t __user *uinfo);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 179: // 179 int sigsuspend(const sigset_t *mask);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 180: // 180 ssize_t sys_pread64(unsigned int fd, char __user *buf, size_t count, loff_t pos);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
+   }
+   break; 
+ case 181: // 181 ssize_t sys_pwrite64(unsigned int fd, const char __user *buf, size_t count, loff_t pos);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
+   }
+   break; 
+ case 182: // 182 long sys_chown(const char __user *filename, uid_t user, gid_t group);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX,EDX);
+   }
+   break; 
+ case 183: // 183 long sys_getcwd(char __user *buf, unsigned long size);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 184: // 184 long sys_capget(cap_user_header_t header, cap_user_data_t dataptr);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 185: // 185 long sys_capset(cap_user_header_t header, const cap_user_data_t data);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 186: // 186 int sigaltstack(const stack_t *ss, stack_t *oss);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 187: // 187 ssize_t sys_sendfile(int out_fd, int in_fd, off_t __user *offset, size_t count);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 188: // 188 missing sys_getpmsg 
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 189: // 189 missing sys_putpmsg 
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 190: // 190 pid_t vfork(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+  case 191: // 191 int getrlimit(int resource, struct rlimit *rlim);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 192: // 192 void *mmap2(void *addr, size_t length, int prot, int flags, int fd, off_t pgoffset);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+   break; 
+ case 193: // 193 long sys_truncate64(const char __user *path, loff_t length);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 194: // 194 long sys_ftruncate64(unsigned int fd, loff_t length);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 195: // 195 long sys_stat64(char __user *filename, struct stat64 __user *statbuf);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 196: // 196 long sys_lstat64(char __user *filename, struct stat64 __user *statbuf);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 197: // 197 long sys_fstat64(unsigned long fd, struct stat64 __user *statbuf);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 198: // 198 int lchown(const char *path, uid_t owner, gid_t group);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 199: // 199 uid_t getuid(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 200: // 200 gid_t getgid(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 201: // 201 uid_t geteuid(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 202: // 202 gid_t getegid(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 203: // 203 int setreuid(uid_t ruid, uid_t euid);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 204: // 204 int setregid(gid_t rgid, gid_t egid);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 205: // 205 int getgroups(int size, gid_t list[]);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 206: // 206 int setgroups(size_t size, const gid_t *list);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 207: // 207 int fchown(int fd, uid_t owner, gid_t group);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 208: // 208 int setresuid(uid_t ruid, uid_t euid, uid_t suid);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 209: // 209 int getresuid(uid_t *ruid, uid_t *euid, uid_t *suid);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 210: // 210 int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 211: // 211 int getresgid(gid_t *rgid, gid_t *egid, gid_t *sgid);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 212: // 212 int chown(const char *path, uid_t owner, gid_t group);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 213: // 213 int setuid(uid_t uid);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 214: // 214 int setgid(gid_t gid);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 215: // 215 int setfsuid(uid_t fsuid);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 216: // 216 int setfsgid(uid_t fsgid);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 217: // 217 long sys_pivot_root(const char __user *new_root, const char __user *put_old);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       info_flow_log_syscall_write(scp,str1,str2);
+     }
+   }
+   break; 
+ case 218: // 218 long sys_mincore(unsigned long start, size_t len, unsigned char __user * vec);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 219: // 219 long sys_madvise(unsigned long start, size_t len, int behavior);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 220: // 220 long sys_getdents64(4(unsigned int fd, struct linux_dirent64 __user *dirent, unsigned int count);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 221: // 221 long sys_fcntl64(unsigned int fd, unsigned int cmd, unsigned long arg);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 224: // 224 long sys_gettid(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 225: // 225 ssize_t sys_readahead(int fd, loff_t offset, size_t count);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 226: // 226 long sys_setxattr(const char __user *path, const char __user *name, const void __user *value, size_t size, int flags);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       info_flow_log_syscall_write(scp,str1,str2,EDX,ESI,EDI);
+     }
+   }
+   break; 
+ case 227: // 227 long sys_lsetxattr(const char __user *path, const char __user *name, const void __user *value, size_t size, int flags);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       info_flow_log_syscall_write(scp,str1,str2,EDX,ESI,EDI);
+     }
+   }
+   break; 
+ case 228: // 228 long sys_fsetxattr(int fd, const char __user *name, const void __user *value, size_t size, int flags);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI,EDI);
+   }
+   break; 
+ case 229: // 229 ssize_t sys_getxattr(const char __user *path, const char __user *name, void __user *value, size_t size);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       info_flow_log_syscall_write(scp,str1,str2,EDX,ESI);
+     }
+   }
+   break; 
+ case 230: // 230 ssize_t sys_lgetxattr(const char __user *path, const char __user *name, void __user *value, size_t size);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       info_flow_log_syscall_write(scp,str1,str2,EDX,ESI);
+     }
+   }
+   break; 
+ case 231: // 231 ssize_t sys_fgetxattr(int fd, const char __user *name, void __user *value, size_t size);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
+   }
+   break; 
+ case 232: // 232 ssize_t sys_listxattr(const char __user *path, char __user *list, size_t size);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       info_flow_log_syscall_write(scp,str1,str2,EDX);
+     }
+   }
+   break; 
+ case 233: // 233 ssize_t sys_llistxattr(const char __user *path, char __user *list, size_t size);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       info_flow_log_syscall_write(scp,str1,str2,EDX);
+     }
+   }
+   break; 
+ case 234: // 234 ssize_t sys_flistxattr(int fd, char __user *list, size_t size);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX);
+   }
+   break; 
+ case 235: // 235 long sys_removexattr(const char __user *path, const char __user *name);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       info_flow_log_syscall_write(scp,str1,str2);
+     }
+   }
+   break; 
+ case 236: // 236 long sys_lremovexattr(const char __user *path, const char __user *name);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       info_flow_log_syscall_write(scp,str1,str2);
+     }
+   }
+   break; 
+ case 237: // 237 long sys_fremovexattr(int fd, const char __user *name);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1);
+   }
+   break; 
+ case 238: // 238 long sys_tkill(int pid, int sig);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 239: // 239 ssize_t sys_sendfile64(int out_fd, int in_fd, loff_t __user *offset, size_t count);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 240: // 240 long sys_futex(u32 __user *uaddr, int op, u32 val, struct timespec __user *utime, u32 __user *uaddr2, u32 val3);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+   break; 
+ case 241: // 241 long sys_sched_setaffinity(pid_t pid, unsigned int len, unsigned long __user *user_mask_ptr);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 242: // 242 long sys_sched_getaffinity(pid_t pid, unsigned int len, unsigned long __user *user_mask_ptr);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 243: // 243 int set_thread_area(struct user_desc *u_info);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 244: // 244 int get_thread_area(struct user_desc *u_info);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 245: // 245 int sys_io_setup(unsigned nr_reqs, aio_context_t __user *ctx);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 246: // 246 long sys_io_destroy(aio_context_t ctx);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 247: // 247 long sys_io_getevents(aio_context_t ctx_id, long min_nr,long nr, struct io_event __user *events, struct timespec __user *timeout);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
+   break; 
+ case 248: // 248 long sys_io_submit(aio_context_t, long, struct iocb __user * __user *);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 249: // 249 long sys_io_cancel(aio_context_t ctx_id, struct iocb __user *iocb, struct io_event __user *result);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 250: // 250 int sys_fadvise64(int fd, loff_t offset, size_t len, int advice); 
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 252: // 252 void sys_exit_group(int error_code);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 253: // 253 long sys_lookup_dcookie(u64 cookie64, char __user *buf, size_t len);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX);
+   }
+   break; 
+ case 254: // 254 long sys_epoll_create(int size);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 255: // 255 long sys_epoll_ctl(int epfd, int op, int fd, struct epoll_event __user *event);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 256: // 256 long sys_epoll_wait(int epfd, struct epoll_event __user *events, int maxevents, int timeout);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 257: // 257 long sys_remap_file_pages(unsigned long start, unsigned long size, unsigned long prot, unsigned long pgoff, unsigned long flags);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
+   break; 
+ case 258: // 258 long sys_set_tid_address(int __user *tidptr);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 259: // 259 long sys_timer_create(clockid_t which_clock, struct sigevent __user *timer_event_spec, timer_t __user * created_timer_id);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 260: // 260 long sys_timer_settime(timer_t timer_id, int flags, const struct itimerspec __user *new_setting, struct itimerspec __user *old_setting);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 261: // 261 long sys_timer_gettime(timer_t timer_id, struct itimerspec __user *setting);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 262: // 262 missing sys_timer_getoverrun
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 263: // 263 long sys_timer_delete(timer_t timer_id);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 264: // 264 long sys_clock_settime(clockid_t which_clock, const struct timespec __user *tp);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 265: // 265 long sys_clock_gettime(clockid_t which_clock, struct timespec __user *tp);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 266: // 266 long sys_clock_getres(clockid_t which_clock, struct timespec __user *tp);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 267: // 267 long sys_clock_nanosleep(clockid_t which_clock, int flags, const struct timespec __user *rqtp, struct timespec __user *rmtp);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 268: // 268 long sys_statfs64(const char __user *path, size_t sz, struct statfs64 __user *buf);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX,EDX);
+   }
+   break; 
+ case 269: // 269 long sys_fstatfs64(unsigned int fd, size_t sz, struct statfs64 __user *buf);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 270: // 270 long sys_tgkill(int tgid, int pid, int sig);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 271: // 271 long sys_utimes(char __user *filename, struct timeval __user *utimes);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX);
+   }
+   break; 
+ case 272: // 272 long sys_fadvise64_64(int fd, loff_t offset, loff_t len, int advice);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 273: // 273 missing sys_vserver 
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 274: // 274 long sys_mbind(unsigned long start, unsigned long len, unsigned long mode, unsigned long __user *nmask, unsigned long maxnode, unsigned flags);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+   break; 
+ case 275: // 275 long sys_get_mempolicy(int __user *policy, unsigned long __user *nmask, unsigned long maxnode, unsigned long addr, unsigned long flags);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
+   break; 
+ case 276: // 276 long sys_set_mempolicy(int mode, unsigned long __user *nmask, unsigned long maxnode);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 277: // 277 long sys_mq_open(const char __user *name, int oflag, mode_t mode,  struct mq_attr __user *attr);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1,ECX,EDX,ESI);
+   }
+   break; 
+ case 278: // 278 long sys_mq_unlink(const char __user *name);
+   if (copy_string(str1, EBX)) { 
+     info_flow_log_syscall_write(scp,str1);
+   }
+   break; 
+ case 279: // 279 long sys_mq_timedsend(mqd_t mqdes, const char __user *msg_ptr, size_t msg_len, unsigned int msg_prio, const struct timespec __user *abs_timeout);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI,EDI);
+   }
+   break; 
+ case 280: // 280 ssize_t sys_mq_timedreceive(mqd_t mqdes, char __user *msg_ptr,  size_t msg_len, unsigned int __user *msg_prio, const struct timespec __user *abs_timeout);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI,EDI);
+   }
+   break; 
+ case 281: // 281 long sys_mq_notify(mqd_t mqdes, const struct sigevent __user *notification);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 282: // 282 long sys_mq_getsetattr(mqd_t mqdes, const struct mq_attr __user *mqstat, struct mq_attr __user *omqstat);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 283: // 283 long sys_kexec_load(unsigned long entry, unsigned long nr_segments, struct kexec_segment __user *segments, unsigned long flags);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 284: // 284 long sys_waitid(int which, pid_t pid, struct siginfo __user *infop, int options, struct rusage __user *ru);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
+   break; 
+ case 285: // 285 missing sys_setaltroot 
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 286: // 286 long sys_add_key(const char __user *_type, const char __user *_description, const void __user *_payload, size_t plen, key_serial_t destringid);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       info_flow_log_syscall_write(scp,str1,str2,EDX,ESI,EDI);
+     }
+   }
+   break; 
+ case 287: // 287 long sys_request_key(const char __user *_type, const char __user *_description, const char __user *_callout_info, key_serial_t destringid);
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, ECX)) { 
+       if (copy_string(str3, EDX)) { 
+	 info_flow_log_syscall_write(scp,str1,str2,str3,ESI);
+       }
+     }
+   }
+   break; 
+ case 288: // 288 long sys_keyctl(int cmd, unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI);
+   break; 
+ case 289: // 289 long sys_ioprio_set(int which, int who, int ioprio);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 290: // 290 long sys_ioprio_get(int which, int who);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 291: // 291 long sys_inotify_init(void);
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 292: // 292 long sys_inotify_add_watch(int fd, const char __user *path, u32 mask);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX);
+   }
+   break; 
+ case 293: // 293 long sys_inotify_rm_watch(int fd, u32 wd);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 294: // 294 long sys_migrate_pages(pid_t pid, unsigned long maxnode, const unsigned long __user *from, const unsigned long __user *to); 
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 295: // 295 long sys_openat(int dfd, const char __user *filename, int flags, int mode);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
+   }
+   break; 
+ case 296: // 296 long sys_mkdirat(int dfd, const char __user * pathname, int mode);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX);
+   }
+   break; 
+ case 297: // 297 long sys_mknodat(int dfd, const char __user * filename, int mode, unsigned dev);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
+   }
+   break; 
+ case 298: // 298 long sys_fchownat(int dfd, const char __user *filename, uid_t user, gid_t group, int flag);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI,EDI);
+   }
+   break; 
+ case 299: // 299 long sys_futimesat(int dfd, char __user *filename, struct timeval __user *utimes);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX);
+   }
+   break; 
+ case 300: // 300 long sys_fstatat64(int dfd, char __user *filename, struct stat64 __user *statbuf, int flag);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
+   }
+   break; 
+ case 301: // 301 long sys_unlinkat(int dfd, const char __user * pathname, int flag);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX);
+   }
+   break; 
+ case 302: // 302 long sys_renameat(int olddfd, const char __user * oldname, int newdfd, const char __user * newname);
+   if (copy_string(str1, ECX)) { 
+     if (copy_string(str2, ESI)) { 
+       info_flow_log_syscall_write(scp,EBX,str1,EDX,str2);
+     }
+   }
+   break; 
+ case 303: // 303 long sys_linkat(int olddfd, const char __user *oldname, int newdfd, const char __user *newname, int flags);
+   if (copy_string(str1, ECX)) { 
+     if (copy_string(str2, ESI)) { 
+       info_flow_log_syscall_write(scp,EBX,str1,EDX,str2,EDI);
+     }
+   }
+   break; 
+ case 304: // 304 long sys_symlinkat(const char __user * oldname, int newdfd, const char __user * newname)
+   if (copy_string(str1, EBX)) { 
+     if (copy_string(str2, EDX)) { 
+       info_flow_log_syscall_write(scp,str1,ECX,str2);
+     }
+   }
+   break; 
+ case 305: // 305 long sys_readlinkat(int dfd, const char __user *path, char __user *buf, int bufsiz);
+   if (copy_string(str1, ECX)) { 
+     if (copy_string(str2, EDX)) { 
+       info_flow_log_syscall_write(scp,EBX,str1,str2,ESI);
+     }
+   }
+   break; 
+ case 306: // 306 long sys_fchmodat(int dfd, const char __user * filename, mode_t mode);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX);
+   }
+   break; 
+ case 307: // 307 long sys_faccessat(int dfd, const char __user *filename, int mode);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX);
+   }
+   break; 
+ case 308: // 308 int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, const struct timespec *timeout, const sigset_t *sigmask);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+   break; 
+ case 309: // 309 int ppoll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, const sigset_t *sigmask);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 310: // 310 long sys_unshare(unsigned long unshare_flags);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 311: // 311 long sys_set_robust_list(struct robust_list_head __user *head, size_t len);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 312: // 312 long sys_get_robust_list(int pid, struct robust_list_head __user * __user *head_ptr, size_t __user *len_ptr);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 313: // 313 long sys_splice(int fd_in, loff_t __user *off_in, int fd_out, loff_t __user *off_out, size_t len, unsigned int flags);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+   break; 
+ case 314: // 314 long sys_sync_file_range(int fd, loff_t offset, loff_t nbytes, unsigned int flags);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 315: // 315 long sys_tee(int fdin, int fdout, size_t len, unsigned int flags);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 316: // 316 long sys_vmsplice(int fd, const struct iovec __user *iov, unsigned long nr_segs, unsigned int flags);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 317: // 317 long sys_move_pages(pid_t pid, unsigned long nr_pages, const void __user * __user *pages, const int __user *nodes, int __user *status, int flags);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+   break; 
+ case 318: // 318 long sys_getcpu(unsigned __user *cpu, unsigned __user *node,  struct getcpu_cache __user *cache);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 319: // 319 long sys_epoll_wait(int epfd, struct epoll_event __user *events, int maxevents, int timeout);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 320: // 320 long sys_utimensat(int dfd, char __user *filename, struct timespec __user *utimes, int flags);
+   if (copy_string(str1, ECX)) { 
+     info_flow_log_syscall_write(scp,EBX,str1,EDX,ESI);
+   }
+   break; 
+ case 321: // 321 long sys_signalfd(int ufd, sigset_t __user *user_mask, size_t sizemask);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 322: // 322 long sys_timerfd_create(int clockid, int flags);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 323: // 323 long sys_eventfd(unsigned int count);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 324: // 324 long sys_fallocate(int fd, int mode, loff_t offset, loff_t len);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 325: // 325 long sys_timerfd_settime(int ufd, int flags, const struct itimerspec __user *utmr, struct itimerspec __user *otmr);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 326: // 326 long sys_timerfd_gettime(int ufd, struct itimerspec __user *otmr); 
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 327: // 327 long sys_signalfd4(int ufd, sigset_t __user *user_mask, size_t sizemask, int flags);
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX,ESI);
+   break; 
+ case 328: // 328 long sys_eventfd2(unsigned int count, int flags);
+   info_flow_log_syscall_write(scp,EBX,ECX);
+   break; 
+ case 329: // 329 long sys_epoll_create1(int flags);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ case 330: // 330 long sys_dup3(unsigned int oldfd, unsigned int newfd, int flags); 
+   info_flow_log_syscall_write(scp,EBX,ECX,EDX);
+   break; 
+ case 331: // 331 missing sys_pipe2 
+   info_flow_log_syscall_write(scp);
+   break; 
+ case 332: // 332 long sys_inotify_init1(int flags);
+   info_flow_log_syscall_write(scp,EBX);
+   break; 
+ 
