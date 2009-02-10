@@ -288,7 +288,7 @@ static inline RES_TYPE glue(glue(ld, USUFFIX), MEMSUFFIX)(target_ulong ptr)
         physaddr = addr + env->tlb_table[mmu_idx][index].addend;
 
 	//	IFLW_MMU_LD(DIRECT,ptr,physaddr);
-	info_flow_log_op_write(glue(IFLO_MMU_LD_DIRECT,CSUFFIX),ptr,physaddr);
+	info_flow_log_op_write(glue(IFLO_MMU_LD_DIRECT_,CSUFFIX),ptr,physaddr);
 		
         res = glue(glue(ld, USUFFIX), _raw)((uint8_t *)physaddr);
     }
@@ -313,7 +313,7 @@ static inline int glue(glue(lds, SUFFIX), MEMSUFFIX)(target_ulong ptr)
         physaddr = addr + env->tlb_table[mmu_idx][index].addend;
         res = glue(glue(lds, SUFFIX), _raw)((uint8_t *)physaddr);
 	//       IFLW_MMU_LD(DIRECT,ptr,physaddr);
-	info_flow_log_op_write(glue(IFLO_MMU_LD_DIRECT,CSUFFIX),ptr,physaddr);
+	info_flow_log_op_write(glue(IFLO_MMU_LD_DIRECT_,CSUFFIX),ptr,physaddr);
     }
     return res;
 }
@@ -339,7 +339,7 @@ static inline void glue(glue(st, SUFFIX), MEMSUFFIX)(target_ulong ptr, RES_TYPE 
     } else {
         physaddr = addr + env->tlb_table[mmu_idx][index].addend;
 	//        IFLW_MMU_ST(DIRECT,ptr,physaddr,v);
-	info_flow_log_op_write(glue(IFLO_MMU_ST_DIRECT,CSUFFIX),ptr,physaddr,v);
+	info_flow_log_op_write(glue(IFLO_MMU_ST_DIRECT_,CSUFFIX),ptr,physaddr,v);
         glue(glue(st, SUFFIX), _raw)((uint8_t *)physaddr, v);
     }
 }

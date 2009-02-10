@@ -4749,4 +4749,9 @@ void vmexit(uint64_t exit_code, uint64_t exit_info_1)
     cpu_loop_exit();
 }
 
+
+void helper_log_eip(void) {
+  info_flow_log_op_write(IFLO_TB_HEAD_EIP, EIP);
+}
+
 #endif

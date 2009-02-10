@@ -6843,6 +6843,9 @@ static inline int gen_intermediate_code_internal(CPUState *env,
     // Look at op.c/op_info_flow_prologue() to know what this contains.
     gen_op_info_flow_prologue();
     
+    // this one writes the current EIP to the iferret log
+    gen_op_log_eip();
+
     for(;;) {
         if (env->nb_breakpoints > 0) {
             for(j = 0; j < env->nb_breakpoints; j++) {

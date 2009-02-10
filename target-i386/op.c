@@ -3029,3 +3029,10 @@ void OPPROTO op_info_flow_prologue(void)
   last_pid = current_pid;
   last_uid = current_uid;
 }
+
+
+
+// writes 
+void OPPROTO op_log_eip(void) {
+  info_flow_log_op_write(IFLO_TB_HEAD_EIP, EIP);
+}
