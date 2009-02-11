@@ -321,7 +321,7 @@ static uint32_t kbd_read_data(void *opaque, uint32_t addr)
 	if_keyboard_label_changed = 0;
 	//	printf ("info_flow_new_keybaord_label [%s]\n", if_keyboard_label);
 	fflush(stdout);
-	info_flow_log_op_write(IFLO_NEW_KEYBOARD_LABEL, if_keyboard_label);
+	info_flow_log_op_write_s(IFLO_NEW_KEYBOARD_LABEL, if_keyboard_label);
 	//	IFLW(NEW_KEYBOARD_LABEL);
 /* 	l = strlen(if_keyboard_label); */
 /* 	if (l>=IF_MAX_KEYBOARD_LABEL_LEN) */
@@ -332,7 +332,7 @@ static uint32_t kbd_read_data(void *opaque, uint32_t addr)
 /* 	} */
       }
       //      IFLW_KEYBOARD_INPUT(rv);
-      info_flow_log_op_write(IFLO_KEYBOARD_INPUT, rv);
+      info_flow_log_op_write_4(IFLO_KEYBOARD_INPUT, rv);
     }
 
     return (rv);

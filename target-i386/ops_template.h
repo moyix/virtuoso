@@ -518,7 +518,7 @@ void OPPROTO glue(glue(op_bts, SUFFIX), _T0_T1_cc)(void)
     count = T1 & SHIFT_MASK;
 
     //    IFLW_SHIFT(BTS_T0_T1_CC);
-    info_flow_log_op_write_1(IFLO_BTS_T0_T1_CC,1,SHIFT);
+    info_flow_log_op_write_1(IFLO_BTS_T0_T1_CC,SHIFT);
     
     T1 = T0 >> count;
     T0 |= (((target_long)1) << count);
@@ -707,14 +707,14 @@ void OPPROTO glue(glue(op_in, SUFFIX), _DX_T0)(void)
   if((EDX & 0xffff) == 0x01f0){
 #if SUFFIX_QUOTED == 'w'
     //	IFLW_HD_TRANSFER_PART2(IFRBA(IFRN_T0),2);	
-    info_flow_log_op_write_1(IFLO_HD_TRANSFER_PART2,IFRBA(IFRN_T0),2);
+    info_flow_log_op_write_81(IFLO_HD_TRANSFER_PART2,IFRBA(IFRN_T0),2);
     /*
     my_debug_print (IFRN_T0);
     my_debug_print (IFRBA(IFRN_T0));
     */
 #elif SUFFIX_QUOTED == 'l'
     //  IFLW_HD_TRANSFER_PART2(IFRBA(IFRN_T0),4);	
-    info_flow_log_op_write_1(IFLO_HD_TRANSFER_PART2,IFRBA(IFRN_T0),4);    
+    info_flow_log_op_write_81(IFLO_HD_TRANSFER_PART2,IFRBA(IFRN_T0),4);    
     /*
     my_debug_print (IFRN_T0);
     my_debug_print (IFRBA(IFRN_T0));

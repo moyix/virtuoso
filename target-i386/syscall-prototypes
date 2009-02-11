@@ -100,31 +100,6 @@
 99 long sys_statfs(const char __user * path, struct statfs __user *buf);
 100 long sys_fstatfs(unsigned int fd, struct statfs __user *buf);
 101 long sys_ioperm(unsigned long from, unsigned long num, int on);
-102 1 socket 444
-102 2 bind_pf_local 444444444s
-102 2 bind_pf_inet 444444444s
-102 2 bind_pf_netlink 444444444s
-102 2 bind_pf_packet 44444444444444444444
-102 2 bind_pf_else 4444444444
-102 3 connect_pf_local 444444444s
-102 3 connect_pf_inet 444444444s
-102 3 connect_pf_else 4444444444s
-102 4 listen 4
-102 5 accept 4
-102 6 getsockname 4
-102 7 getpeername 4
-102 8 socketpair 4444
-102 9 send 4s
-102 10 recv 444
-102 11 sentdto_pf_local 444444444s
-102 11 sentdto_pf_inet 444444444s
-102 11 sentdto_pf_else 4444444444s
-102 12 recvfrom 4
-102 13 shutdown 44
-102 14 setsockopt 444
-102 15 getsockopt 444
-102 16 sendmsg 4
-102 17 recvmsg 4
 103 long sys_syslog(int type, char __user *buf, int len);
 104 long sys_setitimer(int which,  struct itimerval __user *value, struct itimerval __user *ovalue);
 105 long sys_getitimer(int which, struct itimerval __user *value);

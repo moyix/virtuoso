@@ -194,6 +194,9 @@ static inline void info_flow_log_op_write_prologue(info_flow_op_enum_t op_num) {
   info_flow_log_sentinel();
 }
 
+
+// is this used? 
+#ifdef 0
 // write an info-flow op and all its args to the log
 // op is the op number
 // op_fmt is a string telling us how to interpret the elements in op_args
@@ -208,6 +211,7 @@ void info_flow_log_op_write(info_flow_op_enum_t op_num, ...) {
   va_start(op_args, op_num);
   info_flow_log_args_write(op_num, op_args);
 }
+#endif
 
 static inline void info_flow_log_op_write_0(info_flow_op_enum_t op_num) {
   info_flow_log_op_write_prologue(op_num);
@@ -247,7 +251,31 @@ static inline void info_flow_log_op_write_81(info_flow_op_enum_t op_num, uint64_
   info_flow_log_write_uint8_t(x);
 }
 
+static inline void info_flow_log_op_write_s(info_flow_op_enum_t op_num, char *s) {
+  info_flow_log_op_write_prologue(op_num);
+  info_flow_log_write_string(s);
+}
 
+static inline void info_flow_log_op_write_84(info_flow_op_enum_t op_num, uint64_t x, uint32_t y) {
+  info_flow_log_op_write_prologue(op_num);
+  info_flow_log_write_uint64_t(x);
+  info_flow_log_write_uint32_t(y);
+}
+
+static inline void info_flow_log_op_write_84(info_flow_op_enum_t op_num, uint64_t x, uint64_t y, uint32_t z) {
+  info_flow_log_op_write_prologue(op_num);
+  info_flow_log_write_uint64_t(x);
+  info_flow_log_write_uint64_t(y);
+  info_flow_log_write_uint32_t(z);
+}
+
+static inline void info_flow_log_op_write_84(info_flow_op_enum_t op_num, uint64_t x, uint64_t y, uint64_t z, uint32_t q) {
+  info_flow_log_op_write_prologue(op_num);
+  info_flow_log_write_uint64_t(x);
+  info_flow_log_write_uint64_t(y);
+  info_flow_log_write_uint64_t(z);
+  info_flow_log_write_uint32_t(q);
+}
 
 
 typedef struct Info_flow_syscall_struct_t {
@@ -259,25 +287,37 @@ typedef struct Info_flow_syscall_struct_t {
 } Info_flow_syscall_t;
   
 
-
-// is this used? 
-#ifdef 0
-void info_flow_log_syscall_write_va(Info_flow_syscall_t *sc, ...) {
-  va_list op_args;
-
-  // write the op and the sentinel
-  info_flow_log_op_write_prologue(sc->eax + IFLO_SYS_CALLS_START + 1);
-
+void info_flow_log_syscall_postlogue_va(Info_flow_syscall_t *sc, va_list op_args) {
   // write the std syscall other args.
   info_flow_log_uint8_t(sc->is_sysenter);  
   info_flow_log_uint32_t(sc->pid);
   info_flow_log_uint32_t(sc->callsite_eip);
   info_flow_log_string(sc->command);
   // write the args specific to this call
-  va_start(op_args, sc);
   info_flow_log_args_write(sc->op_num, op_args);
 }  
-#endif
+
+
+void info_flow_log_syscall_write_va(Info_flow_syscall_t *sc, ...) {
+  va_list op_args;
+
+  // write the op and the sentinel
+  info_flow_log_op_write_prologue(sc->eax + IFLO_SYS_CALLS_START + 1);
+
+  va_start(op_args, sc);
+  info_flow_log_syscall_postlogue_va(sc,op_args);
+
+}  
+
+void info_flow_log_socketcall_write_va(Info_flow_syscall_t *sc, info_flow_op_enum_t op_num, ...) {
+  va_list op_args;
+
+  // write the op and the sentinel
+  info_flow_log_op_write_prologue(op_num);
+
+  va_start(op_args, sc);
+  info_flow_log_syscall_postlogue_va(sc,op_args);
+}  
 
 
 // read an info-flow op and all its args from the log
