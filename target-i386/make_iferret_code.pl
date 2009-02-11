@@ -103,8 +103,14 @@ my $filename;
 foreach my $line (@lines) {
     chomp $line;
     if ($line =~ /info_flow_log_op_write/) {	
-	if ($line =~ /info_flow_log_op_write\((.*)\)\;/) {
-	    my $inside = $1;
+	if ($line =~ /info_flow_log_op_write_([0-9a-z]+)\((.*)\)\;/) {
+	    # format is specified by the write function name. 
+	    my $fmt = $1;
+	    my ($opname,@junk) = split ',', $2;
+	    $ops{$opname}{format} = $fmt;
+	}
+	elsif ($line =~ /info_flow_log_op_write_va\((.*)\)\;/) { 
+	    my $inside = $1;	
 	    if ($inside =~ /^glue\((.*),CSUFFIX\),(.*)$/) {
 		# yuck.  hate that glue shit.  
 		# produce all permutations of this. CSUFFIX={Q,L,W,B} 

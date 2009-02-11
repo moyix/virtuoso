@@ -405,14 +405,14 @@ static void switch_tss(int tss_selector,
 /*         IFLW_SAVE_REG(IFRN_EDI); */
 
 
-	info_flow_log_op_write(IFLO_SAVE_REG,EAX);
-	info_flow_log_op_write(IFLO_SAVE_REG,ECX);
-	info_flow_log_op_write(IFLO_SAVE_REG,EDX);
-	info_flow_log_op_write(IFLO_SAVE_REG,EBX);
-	info_flow_log_op_write(IFLO_SAVE_REG,ESP);
-	info_flow_log_op_write(IFLO_SAVE_REG,EBP);
-	info_flow_log_op_write(IFLO_SAVE_REG,ESI);
-	info_flow_log_op_write(IFLO_SAVE_REG,EDI);
+	info_flow_log_op_write_4(IFLO_SAVE_REG,EAX);
+	info_flow_log_op_write_4(IFLO_SAVE_REG,ECX);
+	info_flow_log_op_write_4(IFLO_SAVE_REG,EDX);
+	info_flow_log_op_write_4(IFLO_SAVE_REG,EBX);
+	info_flow_log_op_write_4(IFLO_SAVE_REG,ESP);
+	info_flow_log_op_write_4(IFLO_SAVE_REG,EBP);
+	info_flow_log_op_write_4(IFLO_SAVE_REG,ESI);
+	info_flow_log_op_write_4(IFLO_SAVE_REG,EDI);
 
         for(i = 0; i < 6; i++)
             stw_kernel(env->tr.base + (0x48 + i * 4), env->segs[i].selector);
@@ -641,13 +641,13 @@ do {\
 void write_current_pid_to_info_flow_log() {
   /*     IFLW_PUT_OP(INFO_FLOW_OP_PID_CHANGE); */
   /*     IFLW_PUT_UINT32_T(current_pid); */
-  info_flow_log_op_write(IFLO_PID_CHANGE,current_pid);
+  info_flow_log_op_write_4(IFLO_PID_CHANGE,current_pid);
 }
 
 void write_current_uid_to_info_flow_log() {
   /*     IFLW_PUT_OP(INFO_FLOW_OP_UID_CHANGE); */
   /*     IFLW_PUT_UINT32_T(current_uid); */
-  info_flow_log_op_write(IFLO_UID_CHANGE,current_uid);
+  info_flow_log_op_write_4(IFLO_UID_CHANGE,current_uid);
 }
 
 
@@ -1730,7 +1730,7 @@ void helper_divl_EAX_T0(void)
         raise_exception(EXCP00_DIVZ);
 
     //  IFLW(DIVL_EAX_T0);
-    info_flow_log_op_write(IFLO_DIVL_EAX_T0);
+    info_flow_log_op_write_0(IFLO_DIVL_EAX_T0);
 
     EAX = (uint32_t)q;
     EDX = (uint32_t)r;
@@ -1756,7 +1756,7 @@ void helper_idivl_EAX_T0(void)
         raise_exception(EXCP00_DIVZ);
 
     //  IFLW(IDIVL_EAX_T0);
-    info_flow_log_op_write(IFLO_IDIVL_EAX_T0);
+    info_flow_log_op_write_0(IFLO_IDIVL_EAX_T0);
     
     EAX = (uint32_t)q;
     EDX = (uint32_t)r;
@@ -1772,7 +1772,7 @@ void helper_cmpxchg8b(void)
     if (d == (((uint64_t)EDX << 32) | EAX)) {
 
       //      IFLW(CMPXCHG8B_PART1);
-      info_flow_log_op_write(IFLO_CMPXCHG8B_PART1);
+      info_flow_log_op_write_0(IFLO_CMPXCHG8B_PART1);
 
         stq(A0, ((uint64_t)ECX << 32) | EBX);
 	// NB: we'll expect this stq to resolve to some cpu-all.h stX_p thingey.
@@ -1784,7 +1784,7 @@ void helper_cmpxchg8b(void)
         EAX = d;
 
 	//	IFLW(CMPXCHG8B_PART2);	
-	info_flow_log_op_write(IFLO_CMPXCHG8B_PART2);
+	info_flow_log_op_write_0(IFLO_CMPXCHG8B_PART2);
 
 	// no addr necessary here -- we are just setting EDX/EAX to the 64bits that 
 	// we loaded from addr A0.  Right?
@@ -4258,7 +4258,7 @@ void tlb_fill(target_ulong addr, int is_write, int mmu_idx, void *retaddr)
     env = saved_env;
 
     //    IFLW_SAVE_RESTORE_ENV(RESTORE_ENV);
-    info_flow_log_op_write(IFLO_RESTORE_ENV);
+    info_flow_log_op_write_0(IFLO_RESTORE_ENV);
 
 }
 
@@ -4751,7 +4751,7 @@ void vmexit(uint64_t exit_code, uint64_t exit_info_1)
 
 
 void helper_log_eip(void) {
-  info_flow_log_op_write(IFLO_TB_HEAD_EIP, EIP);
+  info_flow_log_op_write_4(IFLO_TB_HEAD_EIP, EIP);
 }
 
 #endif
