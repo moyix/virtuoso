@@ -3,6 +3,7 @@
 #define __IFERRET_LOG_H_ 
 
 #include <string.h>
+#include <stdint.h>
 #include <stdarg.h>
 #include <assert.h>
 #include "target-i386/iferret_ops.h"
@@ -346,6 +347,7 @@ static inline void iferret_log_op_write_8884(iferret_log_op_enum_t op_num, uint6
 
 
 void iferret_log_socketcall_write_va(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, ...);
+void iferret_log_syscall_write_va(iferret_syscall_t *sc, ...);
 
 void if_log_create(void);
 

@@ -1,6 +1,13 @@
+#include <sys/types.h>
+#include <unistd.h>
 
+#include "exec.h"
+//#include "lookup_table.h"
+#include "host-utils.h"
 #include "iferret_log.h"
 #include "iferret_syscall.h"
+
+target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 
 
 void iferret_log_socketcall(iferret_syscall_t *scp) {
