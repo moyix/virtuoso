@@ -36,7 +36,7 @@
 #include "disas.h"
 #include <dirent.h>
 
-#include "info_flow.h"
+#include "iferret_log.h"
 
 #ifdef CONFIG_PROFILER
 #include "qemu-timer.h" /* for ticks_per_sec */

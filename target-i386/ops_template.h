@@ -18,7 +18,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include "info_flow.h"
 
 #define DATA_BITS (1 << (3 + SHIFT))
 #define SHIFT_MASK (DATA_BITS - 1)
@@ -66,10 +65,10 @@
 extern unsigned long long ifregaddr[];
 
 
-/* #define IFLW_SHIFT(op) \ */
-/* IFLW_WRAPPER ( \ */
-/*   IFLW_PUT_OP(glue(INFO_FLOW_OP_SHIFT_,op)); \ */
-/*   IFLW_PUT_ARG(SHIFT); \ */
+/* #define IFLW_SHIFT(op)  */
+/* IFLW_WRAPPER (  */
+/*   IFLW_PUT_OP(glue(INFO_FLOW_OP_SHIFT_,op));  */
+/*   IFLW_PUT_ARG(SHIFT);  */
 /* )  */
 
 
@@ -399,14 +398,14 @@ void OPPROTO glue(op_setb_T0_sub, SUFFIX)(void)
     src2 = CC_SRC;
 
     //  IFLW_SHIFT(SETB_T0_SUB);
-    info_flow_log_op_write_1(IFLO_SETB_T0_SUB,SHIFT);
+    iferret_log_op_write_1(IFLO_SETB_T0_SUB,SHIFT);
     T0 = ((DATA_TYPE)src1 < (DATA_TYPE)src2);
 }
 
 void OPPROTO glue(op_setz_T0_sub, SUFFIX)(void)
 {
   //  IFLW_SHIFT(SETZ_T0_SUB);
-  info_flow_log_op_write_1(IFLO_SETZ_T0_SUB,SHIFT);
+  iferret_log_op_write_1(IFLO_SETZ_T0_SUB,SHIFT);
     T0 = ((DATA_TYPE)CC_DST == 0);
 }
 
@@ -417,14 +416,14 @@ void OPPROTO glue(op_setbe_T0_sub, SUFFIX)(void)
     src2 = CC_SRC;
 
     //  IFLW_SHIFT(SETBE_T0_SUB);
-    info_flow_log_op_write_1(IFLO_SETBE_T0_SUB,SHIFT);
+    iferret_log_op_write_1(IFLO_SETBE_T0_SUB,SHIFT);
     T0 = ((DATA_TYPE)src1 <= (DATA_TYPE)src2);
 }
 
 void OPPROTO glue(op_sets_T0_sub, SUFFIX)(void)
 {
   //  IFLW_SHIFT(SETS_T0_SUB);
-  info_flow_log_op_write_1(IFLO_SETS_T0_SUB,SHIFT);
+  iferret_log_op_write_1(IFLO_SETS_T0_SUB,SHIFT);
     T0 = lshift(CC_DST, -(DATA_BITS - 1)) & 1;
 }
 
@@ -435,7 +434,7 @@ void OPPROTO glue(op_setl_T0_sub, SUFFIX)(void)
     src2 = CC_SRC;
     
     //  IFLW_SHIFT(SETL_T0_SUB);
-    info_flow_log_op_write_1(IFLO_SETL_T0_SUB,SHIFT);
+    iferret_log_op_write_1(IFLO_SETL_T0_SUB,SHIFT);
     T0 = ((DATA_STYPE)src1 < (DATA_STYPE)src2);
 }
 
@@ -446,7 +445,7 @@ void OPPROTO glue(op_setle_T0_sub, SUFFIX)(void)
     src2 = CC_SRC;
 
     //  IFLW_SHIFT(SETLE_T0_SUB);
-    info_flow_log_op_write_1(IFLO_SETLE_T0_SUB,SHIFT);
+    iferret_log_op_write_1(IFLO_SETLE_T0_SUB,SHIFT);
     T0 = ((DATA_STYPE)src1 <= (DATA_STYPE)src2);
 }
 
@@ -457,7 +456,7 @@ void OPPROTO glue(glue(op_shl, SUFFIX), _T0_T1)(void)
     int count;
 
     //  IFLW_SHIFT(SHL_T0_T1);
-    info_flow_log_op_write_1(IFLO_SHL_T0_T1,SHIFT);
+    iferret_log_op_write_1(IFLO_SHL_T0_T1,SHIFT);
     count = T1 & SHIFT1_MASK;
     T0 = T0 << count;
     FORCE_RET();
@@ -468,7 +467,7 @@ void OPPROTO glue(glue(op_shr, SUFFIX), _T0_T1)(void)
     int count;
 
     //  IFLW_SHIFT(SHR_T0_T1);
-    info_flow_log_op_write_1(IFLO_SHR_T0_T1,SHIFT);
+    iferret_log_op_write_1(IFLO_SHR_T0_T1,SHIFT);
     count = T1 & SHIFT1_MASK;
     T0 &= DATA_MASK;
     T0 = T0 >> count;
@@ -481,7 +480,7 @@ void OPPROTO glue(glue(op_sar, SUFFIX), _T0_T1)(void)
     target_long src;
 
     //  IFLW_SHIFT(SAR_T0_T1);
-    info_flow_log_op_write_1(IFLO_SAR_T0_T1,SHIFT);
+    iferret_log_op_write_1(IFLO_SAR_T0_T1,SHIFT);
     count = T1 & SHIFT1_MASK;
     src = (DATA_STYPE)T0;
     T0 = src >> count;
@@ -518,7 +517,7 @@ void OPPROTO glue(glue(op_bts, SUFFIX), _T0_T1_cc)(void)
     count = T1 & SHIFT_MASK;
 
     //    IFLW_SHIFT(BTS_T0_T1_CC);
-    info_flow_log_op_write_1(IFLO_BTS_T0_T1_CC,SHIFT);
+    iferret_log_op_write_1(IFLO_BTS_T0_T1_CC,SHIFT);
     
     T1 = T0 >> count;
     T0 |= (((target_long)1) << count);
@@ -530,7 +529,7 @@ void OPPROTO glue(glue(op_btr, SUFFIX), _T0_T1_cc)(void)
     count = T1 & SHIFT_MASK;
 
     //    IFLW_SHIFT(BTR_T0_T1_CC);
-    info_flow_log_op_write_1(IFLO_BTR_T0_T1_CC,SHIFT);
+    iferret_log_op_write_1(IFLO_BTR_T0_T1_CC,SHIFT);
 
     T1 = T0 >> count;
     T0 &= ~(((target_long)1) << count);
@@ -542,7 +541,7 @@ void OPPROTO glue(glue(op_btc, SUFFIX), _T0_T1_cc)(void)
     count = T1 & SHIFT_MASK;
 
     //    IFLW_SHIFT(BTC_T0_T1_CC);
-    info_flow_log_op_write_1(IFLO_BTC_T0_T1_CC,SHIFT);
+    iferret_log_op_write_1(IFLO_BTC_T0_T1_CC,SHIFT);
 
     T1 = T0 >> count;
     T0 ^= (((target_long)1) << count);
@@ -552,7 +551,7 @@ void OPPROTO glue(glue(op_add_bit, SUFFIX), _A0_T1)(void)
 {
 
   //  IFLW_SHIFT(ADD_BIT_A0_T1);
-  info_flow_log_op_write_1(IFLO_ADD_BIT_A0_T1,SHIFT);
+  iferret_log_op_write_1(IFLO_ADD_BIT_A0_T1,SHIFT);
 
     A0 += ((DATA_STYPE)T1 >> (3 + SHIFT)) << SHIFT;
 }
@@ -571,7 +570,7 @@ void OPPROTO glue(glue(op_bsf, SUFFIX), _T0_cc)(void)
         }
 
 	//	IFLW_SHIFT(BSF_T0_CC);
-	info_flow_log_op_write_1(IFLO_BSF_T0_CC,SHIFT);
+	iferret_log_op_write_1(IFLO_BSF_T0_CC,SHIFT);
 
         T1 = count;
         CC_DST = 1; /* ZF = 0 */
@@ -595,7 +594,7 @@ void OPPROTO glue(glue(op_bsr, SUFFIX), _T0_cc)(void)
         }
 
 	//	IFLW_SHIFT(BSR_T0_CC);
-	info_flow_log_op_write_1(IFLO_BSR_T0_CC,SHIFT);
+	iferret_log_op_write_1(IFLO_BSR_T0_CC,SHIFT);
 
         T1 = count;
         CC_DST = 1; /* ZF = 0 */
@@ -620,7 +619,7 @@ void OPPROTO glue(op_movl_T0_Dshift, SUFFIX)(void)
 {
 
   //  IFLW_SHIFT(MOVL_T0_DSHIFT);
-  info_flow_log_op_write_1(IFLO_MOVL_T0_DSHIFT,SHIFT);
+  iferret_log_op_write_1(IFLO_MOVL_T0_DSHIFT,SHIFT);
 
     T0 = DF << SHIFT;
 }
@@ -634,7 +633,7 @@ void OPPROTO glue(glue(op_out, SUFFIX), _T0_T1)(void)
 {
   if(T0 == 0x01f0){
     //	IFLW_HD_TRANSFER_PART1(IFRBA(IFRN_T1));	
-    info_flow_log_op_write_8(IFLO_HD_TRANSFER_PART1,IFRBA(IFRN_T1));
+    iferret_log_op_write_8(IFLO_HD_TRANSFER_PART1,IFRBA(IFRN_T1));
   }
       
     glue(cpu_out, SUFFIX)(env, T0, T1 & DATA_MASK);
@@ -642,13 +641,13 @@ void OPPROTO glue(glue(op_out, SUFFIX), _T0_T1)(void)
   if(T0 == 0xc110){
 #if SUFFIX_QUOTED == 'b'
     //	IFLW_NETWORK_OUTPUT_BYTE_T1();	
-    info_flow_log_op_write_1(IFLO_NETWORK_OUTPUT_BYTE_T1); 
+    iferret_log_op_write_0(IFLO_NETWORK_OUTPUT_BYTE_T1); 
 #elif SUFFIX_QUOTED == 'w'
     //	IFLW_NETWORK_OUTPUT_WORD_T1();	
-    info_flow_log_op_write_2(IFLO_NETWORK_OUTPUT_WORD_T1); 
+    iferret_log_op_write_0(IFLO_NETWORK_OUTPUT_WORD_T1); 
 #elif SUFFIX_QUOTED == 'l'
     //	IFLW_NETWORK_OUTPUT_LONG_T1();	
-    info_flow_log_op_write_4(IFLO_NETWORK_OUTPUT_LONG_T1); 
+    iferret_log_op_write_0(IFLO_NETWORK_OUTPUT_LONG_T1); 
 #endif	 
   }
   
@@ -658,29 +657,29 @@ void OPPROTO glue(glue(op_in, SUFFIX), _T0_T1)(void)
 {
   
   //  IFLW_SHIFT(IN_T0_T1);
-  info_flow_log_op_write_1(IFLO_IN_T0_T1,SHIFT);
+  iferret_log_op_write_1(IFLO_IN_T0_T1,SHIFT);
 
     T1 = glue(cpu_in, SUFFIX)(env, T0);
 
   if(T0 == 0xc110){
 #if SUFFIX_QUOTED == 'b'
     //	IFLW_NETWORK_INPUT_BYTE_T1(T1);	
-    info_flow_log_op_write_4(IFLO_NETWORK_INPUT_BYTE_T1,T1);
+    iferret_log_op_write_4(IFLO_NETWORK_INPUT_BYTE_T1,T1);
 #elif SUFFIX_QUOTED == 'w'
     //	IFLW_NETWORK_INPUT_WORD_T1(T1);	
-    info_flow_log_op_write_4(IFLO_NETWORK_INPUT_WORD_T1,T1);
+    iferret_log_op_write_4(IFLO_NETWORK_INPUT_WORD_T1,T1);
 #elif SUFFIX_QUOTED == 'l'
     //	IFLW_NETWORK_INPUT_LONG_T1(T1);	
-    info_flow_log_op_write_4(IFLO_NETWORK_INPUT_LONG_T1,T1);
+    iferret_log_op_write_4(IFLO_NETWORK_INPUT_LONG_T1,T1);
 #endif	 
   }
   if(T0 == 0x01f0){
 #if SUFFIX_QUOTED == 'w'
     //	IFLW_HD_TRANSFER_PART2(IFRBA(IFRN_T1),2);	
-    info_flow_log_op_write_81(IFLO_HD_TRANSFER_PART2,IFRBA(IFRN_T1),2);
+    iferret_log_op_write_81(IFLO_HD_TRANSFER_PART2,IFRBA(IFRN_T1),2);
 #elif SUFFIX_QUOTED == 'l'
     //	IFLW_HD_TRANSFER_PART2(IFRBA(IFRN_T1),4);	
-    info_flow_log_op_write_81(IFLO_HD_TRANSFER_PART2,IFRBA(IFRN_T1),4);
+    iferret_log_op_write_81(IFLO_HD_TRANSFER_PART2,IFRBA(IFRN_T1),4);
 #endif	 
   }
  
@@ -689,32 +688,32 @@ void OPPROTO glue(glue(op_in, SUFFIX), _T0_T1)(void)
 void OPPROTO glue(glue(op_in, SUFFIX), _DX_T0)(void)
 {
   //  IFLW_SHIFT(IN_DX_T0);
-  info_flow_log_op_write_1(IFLO_IN_DX_T0,SHIFT);
+  iferret_log_op_write_1(IFLO_IN_DX_T0,SHIFT);
 
     T0 = glue(cpu_in, SUFFIX)(env, EDX & 0xffff);
   if((EDX & 0xffff) == 0xc110){
 #if SUFFIX_QUOTED == 'b'
     //	IFLW_NETWORK_INPUT_BYTE_T0(T0);	
-    info_flow_log_op_write_4(IFLO_NETWORK_INPUT_BYTE_T0,T0);	
+    iferret_log_op_write_4(IFLO_NETWORK_INPUT_BYTE_T0,T0);	
 #elif SUFFIX_QUOTED == 'w'
     //	IFLW_NETWORK_INPUT_WORD_T0(T0);	
-    info_flow_log_op_write_4(IFLO_NETWORK_INPUT_WORD_T0,T0);	
+    iferret_log_op_write_4(IFLO_NETWORK_INPUT_WORD_T0,T0);	
 #elif SUFFIX_QUOTED == 'l'
     //	IFLW_NETWORK_INPUT_LONG_T0(T0);	
-    info_flow_log_op_write_4(IFLO_NETWORK_INPUT_LONG_T0,T0);	
+    iferret_log_op_write_4(IFLO_NETWORK_INPUT_LONG_T0,T0);	
 #endif	 
   } 
   if((EDX & 0xffff) == 0x01f0){
 #if SUFFIX_QUOTED == 'w'
     //	IFLW_HD_TRANSFER_PART2(IFRBA(IFRN_T0),2);	
-    info_flow_log_op_write_81(IFLO_HD_TRANSFER_PART2,IFRBA(IFRN_T0),2);
+    iferret_log_op_write_81(IFLO_HD_TRANSFER_PART2,IFRBA(IFRN_T0),2);
     /*
     my_debug_print (IFRN_T0);
     my_debug_print (IFRBA(IFRN_T0));
     */
 #elif SUFFIX_QUOTED == 'l'
     //  IFLW_HD_TRANSFER_PART2(IFRBA(IFRN_T0),4);	
-    info_flow_log_op_write_81(IFLO_HD_TRANSFER_PART2,IFRBA(IFRN_T0),4);    
+    iferret_log_op_write_81(IFLO_HD_TRANSFER_PART2,IFRBA(IFRN_T0),4);    
     /*
     my_debug_print (IFRN_T0);
     my_debug_print (IFRBA(IFRN_T0));
@@ -727,7 +726,7 @@ void OPPROTO glue(glue(op_out, SUFFIX), _DX_T0)(void)
 {
   if((EDX & 0xffff) == 0x01f0){
     //	IFLW_HD_TRANSFER_PART1(IFRBA(IFRN_T0));	
-    info_flow_log_op_write_8(IFLO_HD_TRANSFER_PART1,IFRBA(IFRN_T0));    
+    iferret_log_op_write_8(IFLO_HD_TRANSFER_PART1,IFRBA(IFRN_T0));    
   }  
   
     glue(cpu_out, SUFFIX)(env, EDX & 0xffff, T0);
@@ -735,13 +734,13 @@ void OPPROTO glue(glue(op_out, SUFFIX), _DX_T0)(void)
   if((EDX & 0xffff) == 0xc110){
 #if SUFFIX_QUOTED == 'b'
     //        IFLW_NETWORK_OUTPUT_BYTE_T0();
-    info_flow_log_op_write_0(IFLO_NETWORK_OUTPUT_BYTE_T0);     
+    iferret_log_op_write_0(IFLO_NETWORK_OUTPUT_BYTE_T0);     
 #elif SUFFIX_QUOTED == 'w'
     //        IFLW_NETWORK_OUTPUT_WORD_T0();
-    info_flow_log_op_write_0(IFLO_NETWORK_OUTPUT_WORD_T0);     
+    iferret_log_op_write_0(IFLO_NETWORK_OUTPUT_WORD_T0);     
 #elif SUFFIX_QUOTED == 'l'
     //        IFLW_NETWORK_OUTPUT_LONG_T0();
-    info_flow_log_op_write_0(IFLO_NETWORK_OUTPUT_LONG_T0);     
+    iferret_log_op_write_0(IFLO_NETWORK_OUTPUT_LONG_T0);     
 #endif
   }
 }

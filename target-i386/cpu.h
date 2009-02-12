@@ -21,7 +21,7 @@
 #define CPU_I386_H
 
 #include "config.h"
-#include "info_flow.h"
+#include "iferret_log.h"
 
 #ifdef TARGET_X86_64
 #define TARGET_LONG_BITS 64
@@ -663,7 +663,7 @@ static inline void cpu_x86_set_cpl(CPUX86State *s, int cpl)
 #if HF_CPL_MASK == 3
     s->hflags = (s->hflags & ~HF_CPL_MASK) | cpl;
     //    IFLW_SET_CPL(cpl);
-    info_flow_log_op_write_1(IFLO_SET_CPL,cpl);
+    iferret_log_op_write_1(IFLO_SET_CPL,cpl);
 #else
 #error HF_CPL_MASK is hardcoded
 #endif

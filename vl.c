@@ -49,7 +49,7 @@
 
 // TRL 071003 Info flow stuff
 #include <assert.h>
-#include "info_flow.h"
+#include "iferret_log.h"
 
 #ifndef _WIN32
 #include <sys/times.h>

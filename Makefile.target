@@ -311,7 +311,7 @@ endif
 CPPFLAGS+=-I$(SRC_PATH)/fpu
 
 ifeq ($(TARGET_ARCH), i386)
-LIBOBJS+=helper.o helper2.o iferret-syscall.o lookup_table.o
+LIBOBJS+=helper.o helper2.o iferret_syscall.o iferret_socketcall.o iferret_op_str.o lookup_table.o
 endif
 
 ifeq ($(TARGET_ARCH), x86_64)
@@ -406,7 +406,7 @@ ifeq ($(ARCH),alpha)
 endif
 
 # must use static linking to avoid leaving stuff in virtual address space
-VL_OBJS=vl.o osdep.o monitor.o pci.o loader.o isa_mmio.o info_flow_log.o
+VL_OBJS=vl.o osdep.o monitor.o pci.o loader.o isa_mmio.o iferret_log.o
 # XXX: suppress QEMU_TOOL tests
 ifdef CONFIG_WIN32
 VL_OBJS+=block-raw-win32.o

@@ -112,67 +112,85 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 
 
     
-# examine all the source files looking for info_flow_log_op_write calls
-    my @lines = `cd $iferretDir; find -H /home/tleek/hg/iferret-logging-new -name \"*.[ch]\" -print -exec grep \"info_flow_log_op_write\" \'{}\' \\;`;
-    
-    my $skip = 0;
+# examine all the source files looking for iferret_log_op_write calls
     my %ops;
-    my $filename = "none";
-    foreach my $line (@lines) {
-
-	chomp $line;
-	if ($line =~ /IFLO_HD_TRANSFER/) {
-	    print "foo\n";
+    
+    my @files = `cd $iferretDir; find . -name \"*.[ch]\"`;
+    foreach my $filename (@files) {
+	if ($filename =~    /iferret_log_arg_fmt.h/
+	    || $filename =~ /iferret_ops.h/
+	    || $filename =~ /iferret_op_str.c/
+	    || $filename =~ /iferret_syscall_switch.h/
+	    ) {
+	    next;
 	}
-	if ($line =~ /info_flow_log_op_write/) {	
-	    if ($skip == 1) {
-		next;
+
+	print "examining file $filename\n";
+
+	my @lines = `cd $iferretDir; grep \"iferret_log_op_write\" $filename`;
+#find -H /home/tleek/hg/iferret-logging-new -name \"*.[ch]\" -print -exec grep \"iferret_log_op_write\" \'{}\' \\;`;
+
+
+
+	my $filename = "none";
+	foreach my $line (@lines) {
+	    
+	    chomp $line;
+	    if ($line =~ /IFLO_HD_TRANSFER/) {
+		print "foo\n";
 	    }
-	    if ($line =~ /info_flow_log_op_write_([01248s]+)\((.*)\)\;/) {
-		# format is specified by the suffix of the write function name. 
-		my $fmt = $1;
-		my $inside = $2;
-		if ($inside =~ /^glue\((.*),CSUFFIX\),(.*)$/) {
-		    # yuck.  hate that glue shit.  
-		    # produce all permutations of this. CSUFFIX={Q,L,W,B} 
-		    my $name_prefix = $1;
-		    my $args = $2;
-		    &add_op(\%ops, "$name_prefix"."Q", $args, $filename, $line, $fmt);
-		    &add_op(\%ops, "$name_prefix"."L", $args, $filename, $line, $fmt);
-		    &add_op(\%ops, "$name_prefix"."W", $args, $filename, $line, $fmt);
-		    &add_op(\%ops, "$name_prefix"."B", $args, $filename, $line, $fmt);
+	    if ($line =~ /iferret_log_op_write/) {	
+#		if ($skip == 1) {
+#		    next;
+#		}
+		if ($line =~ /iferret_log_op_write_([01248s]+)\((.*)\)\;/) {
+		    # format is specified by the suffix of the write function name. 
+		    my $fmt = $1;
+		    my $inside = $2;
+		    if ($inside =~ /^glue\((.*),CSUFFIX\),(.*)$/) {
+			# yuck.  hate that glue shit.  
+			# produce all permutations of this. CSUFFIX={Q,L,W,B} 
+			my $name_prefix = $1;
+			my $args = $2;
+			&add_op(\%ops, "$name_prefix"."Q", $args, $filename, $line, $fmt);
+			&add_op(\%ops, "$name_prefix"."L", $args, $filename, $line, $fmt);
+			&add_op(\%ops, "$name_prefix"."W", $args, $filename, $line, $fmt);
+			&add_op(\%ops, "$name_prefix"."B", $args, $filename, $line, $fmt);
+		    }
+		    else {
+			my ($opname, @rest) = split ',', $inside;
+			my $args = join ',', @rest;
+			print "$opname, $args\n";
+			&add_op(\%ops, $opname, $args, $filename, $line, $fmt);
+		    }
 		}
 		else {
-		    my ($opname, @rest) = split ',', $inside;
-		    my $args = join ',', @rest;
-		    print "$opname, $args\n";
-		    &add_op(\%ops, $opname, $args, $filename, $line, $fmt);
+		    unless ($line =~ /\)(\s*)\{/ 
+			    || $line =~ /iferret_log_op_write_prologue/) {
+			die "can't parse $line\n";
+		    }
 		}
 	    }
-	    else {
-		unless ($line =~ /\)(\s*)\{/ 
-			|| $line =~ /info_flow_log_op_write_prologue/) {
-		    die "can't parse $line\n";
-		}
-	    }
-	}
-	else {
-	    $filename = $line;
-	    if ($filename eq "/home/tleek/hg/iferret-logging-new/target-i386/iferret_log_arg_fmt.h"
-		|| $filename eq "/home/tleek/hg/iferret-logging-new/target-i386/iferret_ops.h") {
-		$skip = 1;
-	    }
-	    else {
-		$skip = 0;
-	    }
+#	    else {
+#	    $filename = $line;
+#	    if ($filename eq "/home/tleek/hg/iferret-logging-new/target-i386/iferret_log_arg_fmt.h"
+#		|| $filename eq "/home/tleek/hg/iferret-logging-new/target-i386/iferret_ops.h"
+#		|| $filename eq "/home/tleek/hg/iferret-logging-new/target-i386/iferret_op_str.c"
+#		
+#		) {
+#		$skip = 1;
+#	    }
+#	    else {
+#		$skip = 0;
+#	    }
 	}
     }
     my $numOps = scalar keys %ops;
     print "$numOps unique info flow ops\n";
     
 
-# examine iferret-socketcall.c to find out how to parse socket syscalls. 
-    open F, "/home/tleek/hg/iferret-logging-new/target-i386/iferret-socketcall.c";
+# examine iferret_socketcall.c to find out how to parse socket syscalls. 
+    open F, "/home/tleek/hg/iferret-logging-new/target-i386/iferret_socketcall.c";
     my ($ebx,$name);
     my %socketcalls;
     while (my $line = <F>) {
@@ -183,8 +201,8 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	if ($line =~ /^\s+\/\//) {
 	    next;
 	}
-	if ($line =~ /info_flow_log_socketcall_write/) {
-	    if ($line =~ /info_flow_log_socketcall_write\s*\(scp,([^,]+),(.*)\)\;/) {
+	if ($line =~ /iferret_log_socketcall_write_va/) {
+	    if ($line =~ /iferret_log_socketcall_write_va\s*\(scp,([^,]+),(.*)\)\;/) {
 		my $name = $1;
 		my $args = $2;
 		&add_socketcall(\%socketcalls, $name, $args, $line);	    
@@ -206,7 +224,7 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
     open SW, ">iferret_syscall_switch.h";
     print SW "// NB: This code is auto-generated by make_iferret_code.pl. \n";
     print SW "// It's job is to generate iferret log entries for system calls.\n";
-    print SW "// It should be included in iferret-syscalls.c\n";
+    print SW "// It should be included in iferret_syscalls.c\n";
     print SW "switch (EAX) {\n";
     for (my $i=0; $i<=$maxSyscallNum; $i++) {
 	if (exists $syscall[$i]) {
@@ -232,8 +250,8 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 		    }
 		}
 	    }
-	    print "info_flow_log_syscall_write(scp";
-	    print SW "info_flow_log_syscall_write(scp";
+	    print "iferret_log_syscall_write_va(scp";
+	    print SW "iferret_log_syscall_write_va(scp";
 	    unless (exists $syscall[$i]{noargs}) {
 		my $n = scalar @{$syscall[$i]{args}};
 		my $numStrings = 1;
@@ -265,6 +283,7 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 
 
 
+
     my @enum;
 
     my $ii=0;
@@ -285,6 +304,11 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	$enum[$ii]{format} = $ops{$opname}{format};
 	$ii++;
     }
+    
+    $enum[$ii]{opname} = "IFLO_SYS_CALLS_START";
+    $enum[$ii]{comment} = "//This is just a separator\n";
+    $enum[$ii]{format} = "0";
+    $ii++;
 
 # second, all the syscalls (except socketcall)
     for (my $i=0; $i<=$maxSyscallNum; $i++) {
@@ -297,8 +321,8 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	$opname = "IFLO_SYS_" . $opname;
 	print "enum $ii syscall $opname\n";
 	$enum[$ii]{opname} = $opname;
-	my $comment = "// $ii \n";
-	$comment .= "// syscall # $syscall[$i]{call_num}\n";
+#	my $comment = "// $ii \n";
+	my $comment .= "// syscall # $syscall[$i]{call_num}\n";
 	$comment .= "// $syscall[$i]{proto}\n";
 	$enum[$ii]{comment} = $comment;
 	my $format = "";
@@ -321,6 +345,11 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	$ii++;
     }
 
+    $enum[$ii]{opname} = "IFLO_SYS_SOCKETCALLS_START,";
+    $enum[$ii]{comment} = "//This is just a separator";
+    $enum[$ii]{format} = "0";
+    $ii++;
+
 # third, all the socketcalls 
     foreach my $opname (sort keys %socketcalls) {
 	$enum[$ii]{opname} = $opname;
@@ -338,7 +367,7 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
     open OPS, ">iferret_ops.h";
     print OPS "// NB: This code is auto-generated by make_iferret_code.pl. \n";
     print OPS "// It contains the big enum type of all info-flow ops.\n";
-    print OPS "\ntypedef enum iferret_log_op_enum_t {\n";
+    print OPS "\ntypedef enum iferret_log_op_enum {\n";
     for (my $i=0; $i<scalar @enum; $i++) {
 	my $opname = $enum[$i]{opname};
 	print "$i $opname\n";
@@ -350,7 +379,7 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	}
 	print OPS "\n";
     }
-    print OPS "}\n";
+    print OPS "} iferret_log_op_enum_t;\n";
     close OPS;
 
 # create the big array of strings specifying log item formats
@@ -371,7 +400,7 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	}
 	print FMT "\n";
     }
-    print FMT "}\n";
+    print FMT "};\n";
     close FMT;
 
 
@@ -419,6 +448,7 @@ sub create_op_format() {
 	if ($arg =~ /^str[0-5]$/
 	    || $arg eq "label"
 	    || $arg eq "if_keyboard_label"
+	    || $arg eq "if_network_label"
 	    || $arg eq "tempbuf"
 	    ) {
 	    # in order for this script to recognize an op logfile entry

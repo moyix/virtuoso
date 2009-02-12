@@ -82,7 +82,7 @@
 81 long sys_setgroups(int gidsetsize, gid_t __user *grouplist);
 82 long sys_select(int n, fd_set __user *inp, fd_set __user *outp, fd_set __user *exp, struct timeval __user *tvp);
 83 long sys_symlink(const char __user *old, const char __user *new);
-84 int stat(const char *path, struct stat *buf);
+84 int oldlstat(const char *path, struct stat *buf);
 85 long sys_readlink(const char __user *path, char __user *buf, int bufsiz);
 86 long sys_uselib(const char __user *library);
 87 long sys_swapon(const char __user *specialfile, int swap_flags);
@@ -106,7 +106,7 @@
 106 long sys_stat(char __user *filename, struct __old_kernel_stat __user *statbuf);
 107 long sys_lstat(char __user *filename, struct __old_kernel_stat __user *statbuf);
 108 long sys_fstat(unsigned int fd, struct __old_kernel_stat __user *statbuf);
-109 int uname(struct utsname *buf);
+109 int old_uname(struct utsname *buf);
 110 int iopl(int level);
 111 long sys_vhangup(void);
 112 int idle(void);
@@ -170,7 +170,7 @@
 170 int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 171 long sys_getresgid(gid_t __user *rgid, gid_t __user *egid, gid_t __user *sgid);
 172 long sys_prctl(int option, unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5);
-173 int sigreturn(unsigned long __unused);
+173 int rt_sigreturn(unsigned long __unused);
 174 int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);
 175 int sys_rt_sigprocmask(int how, sigset_t __user *set, sigset_t __user *oset, size_t sigsetsize);
 176 long sys_rt_sigpending(sigset_t __user *set, size_t sigsetsize);
@@ -207,7 +207,7 @@
 207 int fchown(int fd, uid_t owner, gid_t group);
 208 int setresuid(uid_t ruid, uid_t euid, uid_t suid);
 209 int getresuid(uid_t *ruid, uid_t *euid, uid_t *suid);
-210 int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
+210 int setresgid32(gid_t rgid, gid_t egid, gid_t sgid);
 211 int getresgid(gid_t *rgid, gid_t *egid, gid_t *sgid);
 212 int chown(const char *path, uid_t owner, gid_t group);
 213 int setuid(uid_t uid);
@@ -313,7 +313,7 @@
 316 long sys_vmsplice(int fd, const struct iovec __user *iov, unsigned long nr_segs, unsigned int flags);
 317 long sys_move_pages(pid_t pid, unsigned long nr_pages, const void __user * __user *pages, const int __user *nodes, int __user *status, int flags);
 318 long sys_getcpu(unsigned __user *cpu, unsigned __user *node,  struct getcpu_cache __user *cache);
-319 long sys_epoll_wait(int epfd, struct epoll_event __user *events, int maxevents, int timeout);
+319 long sys_epoll_wait_another(int epfd, struct epoll_event __user *events, int maxevents, int timeout);
 320 long sys_utimensat(int dfd, char __user *filename, struct timespec __user *utimes, int flags);
 321 long sys_signalfd(int ufd, sigset_t __user *user_mask, size_t sizemask);
 322 long sys_timerfd_create(int clockid, int flags);

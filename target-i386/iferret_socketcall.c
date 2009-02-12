@@ -1,6 +1,9 @@
 
+#include "iferret_log.h"
+#include "iferret_syscall.h"
 
-void iferret_log_socketcall(Info_flow_syscall_t*scp) {
+
+void iferret_log_socketcall(iferret_syscall_t *scp) {
   target_phys_addr_t paddr;
   switch (EBX) {
   case 1: // socket
@@ -13,7 +16,7 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 	ptr = (int*) tempbuf;
 	family = *ptr++; type =*ptr++; protocol = *ptr++;
-	info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_SOCKET,family,type,protocol);
+	iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_SOCKET,family,type,protocol);
       }
     }
     break;
@@ -43,19 +46,19 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	sap = (struct sockaddr_in*) tempbuf;
 	ptr = (int*) tempbuf; ptr++; pid =*ptr++;  group = *ptr++;
 	if (sap->sin_family == 1 ) { // PF_LOCAL
-	  info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_BIND_PF_LOCAL,fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
+	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_BIND_PF_LOCAL,fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
 	  //           fprintf(logfile,"family  1; fd %d; file %s", fd, bptr);
 	}
 	else if (sap->sin_family == 2 ) { // PF_INET
 	  //	  char str[1024];
 	  //	  sprintf(str,"%d.%d.%d.%d:%d",b4,b5,b6,b7,b2*256+b3);
-	  info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_BIND_PF_INET,fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
+	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_BIND_PF_INET,fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
 
 	  //           fprintf(logfile,"family  2; fd %d; %d.%d.%d.%d:%d", 
 	  //                   fd, b4, b5, b6, b7, b2*256+b3);
 	}
 	else if (sap->sin_family == 16 ) {// PF_NETLINK
-	  info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_BIND_PF_NETLINK,fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);                  
+	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_BIND_PF_NETLINK,fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);                  
 	  //           fprintf(logfile,"family 16; fd %d; pid %d; group %d", 
 	  //                   fd, pid, group);
 	}
@@ -72,8 +75,8 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	  //	  sprintf(str,"%02x-%02x-%02x-%02x-%02x-%02x-%02x-%02x", 
 	  //		  tempbuf[12], tempbuf[13], tempbuf[14], tempbuf[15],
 	  //		  tempbuf[16], tempbuf[17], tempbuf[18], tempbuf[19]);
-	  //	  info_flow_log_syscall_write(scp,EBX,sap->sin_family,fd,*sptr,pktype,halen,addr);
-	  info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_BIND_PF_PACKET,fd,b0,b1,b2,b3,b4,b5,b6,b7,*sptr,pktype,halen,tempbuf[12], tempbuf[13], tempbuf[14], tempbuf[15],tempbuf[16], tempbuf[17], tempbuf[18], tempbuf[19]);
+	  //	  iferret_log_syscall_write(scp,EBX,sap->sin_family,fd,*sptr,pktype,halen,addr);
+	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_BIND_PF_PACKET,fd,b0,b1,b2,b3,b4,b5,b6,b7,*sptr,pktype,halen,tempbuf[12], tempbuf[13], tempbuf[14], tempbuf[15],tempbuf[16], tempbuf[17], tempbuf[18], tempbuf[19]);
 	} else {
 	  //	  char str[1024];
 	  // fprintf(logfile,"family %2d; fd %d; %d.%d.%d.%d-%d.%d.%d.%d(%c%c%c%c%c%c%c%c); len %d", 
@@ -82,8 +85,8 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	  //	  sprintf(str,"%d.%d.%d.%d-%d.%d.%d.%d(%c%c%c%c%c%c%c%c", 
 	  //		  b0, b1, b2, b3,b4, b5, b6, 
 	  //		  b7, b0, b1, b2, b3,b4, b5, b6, b7);
-	  //	  info_flow_log_syscall_write(scp,EBX,sap->sin_family,fd,godknowswhast);
-	  info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_BIND_ELSE,sap->sin_family, fd,b0,b1,b2,b3,b4,b5,b6,b7);
+	  //	  iferret_log_syscall_write(scp,EBX,sap->sin_family,fd,godknowswhast);
+	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_BIND_ELSE,sap->sin_family, fd,b0,b1,b2,b3,b4,b5,b6,b7);
 	}
       }
     }
@@ -113,7 +116,7 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	if (sap->sin_family == 1) {// PF_LOCAL
 	  //           fprintf(logfile,"socket %d; family  1; file %s", fd, bptr);
 	  //	  str = bptr;
-	  info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_CONNECT_PF_LOCAL, fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
+	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_CONNECT_PF_LOCAL, fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
 
 	}
 	else if (sap->sin_family == 2) { // PF_INET
@@ -121,12 +124,12 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	  //           fprintf(logfile,"socket %d; family  2; %d.%d.%d.%d:%d", 
 	  //                   fd, b4, b5, b6, b7, b2*256+b3);
 	  //	  sprintf(str,"%d.%d.%d.%d:%d", b4, b5, b6, b7, b2*256+b3);              
-	  info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_CONNECT_PF_INET, fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
+	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_CONNECT_PF_INET, fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
 	}
 	else {
 	  //           fprintf(logfile,"socket %d; family %2d;",
 	  //                   fd, sap->sin_family);
-	  info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_CONNECT_PF_ELSE, sap->sin_family, fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
+	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_CONNECT_PF_ELSE, sap->sin_family, fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
 	}
       }
       //   fprintf(logfile,"\n");
@@ -139,7 +142,7 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
       bzero(tempbuf, 120);
       cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
       //   fprintf(logfile,"socket %d", *(int*) tempbuf);
-      info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_LISTEN,*((int*) tempbuf));
+      iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_LISTEN,*((int*) tempbuf));
     }
     //      fprintf(logfile,"\n");
     break;
@@ -150,7 +153,7 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
       bzero(tempbuf, 120);
       cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
       //   fprintf(logfile,"socket %d", *(int*) tempbuf);
-      info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_ACCEPT,*(int*) tempbuf); 
+      iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_ACCEPT,*(int*) tempbuf); 
     }
     //      fprintf(logfile,"\n");      
     break;
@@ -161,7 +164,7 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
       bzero(tempbuf, 120);
       cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
       //   fprintf(logfile,"socket %d", *(int*) tempbuf);
-      info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_GETSOCKNAME,*(int*) tempbuf); 
+      iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_GETSOCKNAME,*(int*) tempbuf); 
     }
     //      fprintf(logfile,"\n");      
     break;
@@ -172,7 +175,7 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
       bzero(tempbuf, 120);
       cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
       //   fprintf(logfile,"socket %d", *(int*) tempbuf);
-      info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_GETPEERNAME,*(int*) tempbuf); 
+      iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_GETPEERNAME,*(int*) tempbuf); 
     }
     //      fprintf(logfile,"\n");     
     break;
@@ -194,7 +197,7 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	//	IFLW_PUT_UINT32_T(domain);
 	//	IFLW_PUT_UINT32_T(type);
 	//	IFLW_PUT_UINT32_T(protocol);
-	info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_SOCKETPAIR,domain,type,protocol,*(int*)tempbuf); 
+	iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_SOCKETPAIR,domain,type,protocol,*(int*)tempbuf); 
       }
     }          
     break;    
@@ -215,7 +218,7 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	for (i=0; i<30; i++)
 	  if (iscntrl(tempbuf[i])) tempbuf[i]='.';
 	//   fprintf(logfile,"(%s)(%d)", tempbuf, len);
-	info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_SEND,fd,tempbuf);
+	iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_SEND,fd,tempbuf);
       }
       //   fprintf(logfile,"\n");  
     }
@@ -233,7 +236,7 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	ptr = (int*) tempbuf;
 	fd = *ptr++; msg=*ptr++; len= *ptr;
 	//   fprintf(logfile,"socket %d, msg 0x%08x\n", fd, msg);
-	info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_RECV,fd,msg,len);
+	iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_RECV,fd,msg,len);
       }
     }
     break;
@@ -266,18 +269,18 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	if (sap->sin_family == 1 ) {// PF_LOCAL
 	  //              IFLW_PUT_STRING(bptr);
 	  //           fprintf(logfile,"[dest: family  1; file %s]", bptr); 
-	  info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_SENDTO_PF_LOCAL, fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
+	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_SENDTO_PF_LOCAL, fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
 	}
 	else if (sap->sin_family == 2 ) {// PF_INET
 	  char str[1024];
 	  //           fprintf(logfile,"[dest: family  2; %d.%d.%d.%d:%d]", 
 	  //                   b4, b5, b6, b7, b2*256+b3);
 	  sprintf(str,"%d.%d.%d.%d:%d", b4, b5, b6, b7, b2*256+b3);
-	  info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_SENDTO_PF_INET, fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
+	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_SENDTO_PF_INET, fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
 	}
 	else {
 	  //fprintf(logfile,"[dest: family %2d]", sap->sin_family);
-	  info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_SENDTO_PF_ELSE, sap->sin_family,fd, b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
+	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_SENDTO_PF_ELSE, sap->sin_family,fd, b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
 	}
 	/*
 	bzero(tempbuf, 120);
@@ -303,7 +306,7 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	ptr = (int*) tempbuf;
 	fd = *ptr++; 
 	//   fprintf(logfile,"socket %d  ", fd);
-	info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_RECVFROM,fd);
+	iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_RECVFROM,fd);
       }
       //   fprintf(logfile,"\n");  
     }
@@ -320,7 +323,7 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 	ptr = (int*) tempbuf;
 	fd = *ptr++; 
-	info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_SHUTDOWN,fd,*ptr);
+	iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_SHUTDOWN,fd,*ptr);
 	/*
 	  if (*ptr == 0 ) 
 	  fprintf(logfile,"socket %d (SHUT_RD)",   fd);
@@ -347,7 +350,7 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	fd = *ptr++; level=*ptr++; option=*ptr++;
 	//   fprintf(logfile,"socket %d; level %d; option %d", 
 	//            fd, level, option);
-	info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_SETSOCKOPT,fd,level,option);
+	iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_SETSOCKOPT,fd,level,option);
       }
       //   fprintf(logfile,"\n");
     }
@@ -364,7 +367,7 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	ptr = (int*) tempbuf;
 	fd = *ptr++; level=*ptr++; option=*ptr++;
 	//   fprintf(logfile,"socket %d; level %d; option %d", fd, level, option);
-	info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_GETSOCKOPT,fd,level,option);
+	iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_GETSOCKOPT,fd,level,option);
       }
       //   fprintf(logfile,"\n");
     }
@@ -381,7 +384,7 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	ptr = (int*) tempbuf;
 	fd = *ptr++; 
 	//   fprintf(logfile,"socket %d", fd);
-	info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_SENDMSG,fd);
+	iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_SENDMSG,fd);
       }
       //   fprintf(logfile,"\n");
     }
@@ -398,7 +401,7 @@ void iferret_log_socketcall(Info_flow_syscall_t*scp) {
 	ptr = (int*) tempbuf;
 	fd = *ptr++; 
 	//   fprintf(logfile,"socket %d", fd);
-	info_flow_log_socketcall_write(scp,IFLO_SYS_SOCKETCALL_RECVMSG,fd);
+	iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_RECVMSG,fd);
       }
       //   fprintf(logfile,"\n");
     }

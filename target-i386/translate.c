@@ -29,7 +29,7 @@
 #include "exec-all.h"
 #include "disas.h"
 
-#include "../info_flow.h"
+#include "iferret_log.h"
 
 #define DEBUG_DISAS 1
 

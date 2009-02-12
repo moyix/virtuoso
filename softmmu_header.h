@@ -79,7 +79,7 @@
 #endif
 
 
-#include "info_flow.h"
+#include "iferret_log.h"
 
 // TRL 0806 had to move this up here 
 extern uint8_t *phys_ram_base;
@@ -87,31 +87,31 @@ extern uint8_t *phys_ram_base;
 #define RYANS_MAGIC_NUMBER_1  0xffffffffffffffffLL 
 
 
-/* #define IFLW_MMU_LD(access_type,virt_addr,real_addr) \ */
-/* IFLW_WRAPPER ( \ */
-/* 	IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,access_type),_LD),CSUFFIX)); \ */
-/* 	IFLW_PUT_ADDR(virt_addr); \ */
-/* 	IFLW_PUT_ADDR((((unsigned long long) real_addr) - (unsigned long long) (unsigned long)phys_ram_base)); \ */
-/* 	if (((unsigned long long) real_addr - (unsigned long long) (unsigned long) phys_ram_base) != RYANS_MAGIC_NUMBER_1) { \ */
-/*   		IFLW_PUT_BYTE((unsigned long long)real_addr); \ */
-/*    } \ */
-/* 	IFLW_PUT_BYTE(ACCESS_TYPE); \ */
+/* #define IFLW_MMU_LD(access_type,virt_addr,real_addr)  */
+/* IFLW_WRAPPER (  */
+/* 	IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,access_type),_LD),CSUFFIX));  */
+/* 	IFLW_PUT_ADDR(virt_addr);  */
+/* 	IFLW_PUT_ADDR((((unsigned long long) real_addr) - (unsigned long long) (unsigned long)phys_ram_base));  */
+/* 	if (((unsigned long long) real_addr - (unsigned long long) (unsigned long) phys_ram_base) != RYANS_MAGIC_NUMBER_1) {  */
+/*   		IFLW_PUT_BYTE((unsigned long long)real_addr);  */
+/*    }  */
+/* 	IFLW_PUT_BYTE(ACCESS_TYPE);  */
 /* ); */
 
-/* #define IFLW_MMU_ST(access_type,virt_addr,real_addr,val) \ */
-/* IFLW_WRAPPER ( \ */
-/* 	IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,access_type),_ST),CSUFFIX)); \ */
-/* 	IFLW_PUT_ADDR(virt_addr); \ */
-/* 	IFLW_PUT_ADDR(((unsigned long long) real_addr) - (unsigned long long) (unsigned long) phys_ram_base); \ */
-/* 	if (((unsigned long long) real_addr - (unsigned long long) (unsigned long) phys_ram_base) != RYANS_MAGIC_NUMBER_1) { \ */
-/*   		IFLW_PUT_BYTE((unsigned char)val); \ */
-/*   }\ */
-/* 	IFLW_PUT_BYTE(ACCESS_TYPE); \ */
+/* #define IFLW_MMU_ST(access_type,virt_addr,real_addr,val)  */
+/* IFLW_WRAPPER (  */
+/* 	IFLW_PUT_OP(glue(glue(glue(INFO_FLOW_OP_MMU_PHYS_ADDR_,access_type),_ST),CSUFFIX));  */
+/* 	IFLW_PUT_ADDR(virt_addr);  */
+/* 	IFLW_PUT_ADDR(((unsigned long long) real_addr) - (unsigned long long) (unsigned long) phys_ram_base);  */
+/* 	if (((unsigned long long) real_addr - (unsigned long long) (unsigned long) phys_ram_base) != RYANS_MAGIC_NUMBER_1) {  */
+/*   		IFLW_PUT_BYTE((unsigned char)val);  */
+/*   } */
+/* 	IFLW_PUT_BYTE(ACCESS_TYPE);  */
 /* ); */
 
-/* #define IFLW_MMU_TLB_FILL() \ */
-/* IFLW_WRAPPER ( \ */
-/* 	IFLW_PUT_OP(INFO_FLOW_OP_TLB_FILL); \ */
+/* #define IFLW_MMU_TLB_FILL()  */
+/* IFLW_WRAPPER (  */
+/* 	IFLW_PUT_OP(INFO_FLOW_OP_TLB_FILL);  */
 /* ); */
 
 
@@ -288,7 +288,7 @@ static inline RES_TYPE glue(glue(ld, USUFFIX), MEMSUFFIX)(target_ulong ptr)
         physaddr = addr + env->tlb_table[mmu_idx][index].addend;
 
 	//	IFLW_MMU_LD(DIRECT,ptr,physaddr);
-	info_flow_log_op_write_88(glue(IFLO_MMU_LD_DIRECT_,CSUFFIX),ptr,physaddr);
+	iferret_log_op_write_88(glue(IFLO_MMU_LD_DIRECT_,CSUFFIX),ptr,physaddr);
 		
         res = glue(glue(ld, USUFFIX), _raw)((uint8_t *)physaddr);
     }
@@ -313,7 +313,7 @@ static inline int glue(glue(lds, SUFFIX), MEMSUFFIX)(target_ulong ptr)
         physaddr = addr + env->tlb_table[mmu_idx][index].addend;
         res = glue(glue(lds, SUFFIX), _raw)((uint8_t *)physaddr);
 	//       IFLW_MMU_LD(DIRECT,ptr,physaddr);
-	info_flow_log_op_write_88(glue(IFLO_MMU_LD_DIRECT_,CSUFFIX),ptr,physaddr);
+	iferret_log_op_write_88(glue(IFLO_MMU_LD_DIRECT_,CSUFFIX),ptr,physaddr);
     }
     return res;
 }
@@ -339,7 +339,7 @@ static inline void glue(glue(st, SUFFIX), MEMSUFFIX)(target_ulong ptr, RES_TYPE 
     } else {
         physaddr = addr + env->tlb_table[mmu_idx][index].addend;
 	//        IFLW_MMU_ST(DIRECT,ptr,physaddr,v);
-	info_flow_log_op_write_888(glue(IFLO_MMU_ST_DIRECT_,CSUFFIX),ptr,physaddr,v);
+	iferret_log_op_write_888(glue(IFLO_MMU_ST_DIRECT_,CSUFFIX),ptr,physaddr,v);
         glue(glue(st, SUFFIX), _raw)((uint8_t *)physaddr, v);
     }
 }
