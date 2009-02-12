@@ -277,14 +277,6 @@ static inline void info_flow_log_op_write_84(info_flow_op_enum_t op_num, uint64_
   info_flow_log_write_uint32_t(q);
 }
 
-
-typedef struct Info_flow_syscall_struct_t {
-  uint32_t eax;
-  uint8_t is_sysenter;
-  uint32_t pid;
-  uint32_t callsite_eip;
-  char *command;
-} Info_flow_syscall_t;
   
 
 void info_flow_log_syscall_postlogue_va(Info_flow_syscall_t *sc, va_list op_args) {

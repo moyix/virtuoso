@@ -620,7 +620,11 @@ ifeq ($(TARGET_BASE_ARCH), i386)
 # XXX: rename helper.c to op_helper.c
 helper.o: helper.c
 	$(CC) $(HELPER_CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) -c -o $@ $<
-iferret-syscall.o: iferret-syscall.c
+iferret_syscall.o: iferret_syscall.c
+	$(CC) $(HELPER_CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) -c -o $@ $<
+iferret_socketcall.o: iferret_socketcall.c
+	$(CC) $(HELPER_CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) -c -o $@ $<
+iferret_op_str.o: iferret_op_str.c
 	$(CC) $(HELPER_CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) -c -o $@ $<
 lookup_table.o: lookup_table.c
 	$(CC) $(HELPER_CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) -c -o $@ $<
