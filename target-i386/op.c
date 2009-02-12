@@ -1601,7 +1601,7 @@ void OPPROTO op_ltr_T0(void)
 void OPPROTO op_movl_crN_T0(void)
 {
   //  IFLW(MOVL_CRN_T0);
-  info_flow_log_op_write_0(ILO_MOVL_CRN_T0);
+  info_flow_log_op_write_0(IFLO_MOVL_CRN_T0);
 
     helper_movl_crN_T0(PARAM1);
 }

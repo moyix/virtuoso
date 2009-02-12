@@ -105,16 +105,21 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 # examine all the source files looking for info_flow_log_op_write calls
     my @lines = `cd $iferretDir; find -H /home/tleek/hg/iferret-logging-new -name \"*.[ch]\" -print -exec grep \"info_flow_log_op_write\" \'{}\' \\;`;
     
+    my $skip = 0;
     my %ops;
-    my $filename;
+    my $filename = "none";
     foreach my $line (@lines) {
+
 	chomp $line;
 	if ($line =~ /IFLO_HD_TRANSFER/) {
 	    print "foo\n";
 	}
 	if ($line =~ /info_flow_log_op_write/) {	
+	    if ($skip == 1) {
+		next;
+	    }
 	    if ($line =~ /info_flow_log_op_write_([01248s]+)\((.*)\)\;/) {
-		# format is specified by the write function name. 
+		# format is specified by the suffix of the write function name. 
 		my $fmt = $1;
 		my $inside = $2;
 		if ($inside =~ /^glue\((.*),CSUFFIX\),(.*)$/) {
@@ -143,6 +148,13 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	}
 	else {
 	    $filename = $line;
+	    if ($filename eq "/home/tleek/hg/iferret-logging-new/target-i386/iferret_log_arg_fmt.h"
+		|| $filename eq "/home/tleek/hg/iferret-logging-new/target-i386/iferret_ops.h") {
+		$skip = 1;
+	    }
+	    else {
+		$skip = 0;
+	    }
 	}
     }
     my $numOps = scalar keys %ops;
@@ -235,15 +247,16 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
     my @enum;
 
     my $ii=0;
-
+    print "Accumulating enum type for info flow ops.\n";
 # first, all the ops
     foreach my $opname (sort keys %ops) {
+	print "enum $ii op $opname\n";
 	$enum[$ii] = {};
 	$enum[$ii]{opname} = $opname;
 	my $comment = "";
 	foreach my $filename (sort keys %{$ops{$opname}{files}}) {
 	    $comment .= "// $filename\n";
-	    foreach my $line (sort keys %{$ops{$opname}{files}{$filename}}) {
+	    foreach my $line (sort @{$ops{$opname}{files}{$filename}}) {
 		$comment .= "// --> $line\n";
 	    }
 	}
@@ -257,10 +270,14 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	if (! (exists $syscall[$i])) {
 	    next;
 	}
-	$enum[$ii]{opname} = $syscall[$i]{opname};
+	my $name = $syscall[$i]{name};
+	my $opname = $name;
+	$opname =~ tr/a-z/A-Z/;
+	$opname = "IFLO_SYS_" . $opname;
+	print "enum $ii syscall $opname\n";
+	$enum[$ii]{opname} = $opname;
 	my $comment = "// $ii \n";
 	$comment .= "// syscall # $syscall[$i]{call_num}\n";
-	$comment .= "// $syscall[$i]{name} \n";
 	$comment .= "// $syscall[$i]{proto}";
 	$enum[$ii]{comment} = $comment;
 	my $format = "";
@@ -286,6 +303,7 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 # third, all the socketcalls 
     foreach my $opname (sort keys %socketcalls) {
 	$enum[$ii]{opname} = $opname;
+	print "enum=$ii socketcall $opname\n";
 	$enum[$ii]{comment} = $socketcalls{$opname}{comment};
 	$enum[$ii]{format} = $socketcalls{$opname}{format};
 	$ii++;
@@ -350,7 +368,7 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 sub create_op_format() {
     my ($opname, $raArgs) = @_;
     my $fmt = "";
-    print "createing op format\n";
+    print "$opname -- creating op format\n";
     foreach my $arg (@{$raArgs}) {
 	$arg =~ s/^\s+//g;
 	$arg =~ s/\s+$//g;

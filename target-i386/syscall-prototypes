@@ -1,5 +1,5 @@
 0 long sys_restart_syscall(void);
-1 long sys_exit(int error_code);
+  1 long sys_exit(int error_code);
 2 pid_t fork(void);
 3 ssize_t sys_read(unsigned int fd, char __user *buf, size_t count);
 4 ssize_t sys_write(unsigned int fd, const char __user *buf, size_t count);
