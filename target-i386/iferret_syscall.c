@@ -159,7 +159,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
 
   {
     iferret_syscall_t sc, *scp;
-
+    
     scp = &sc;
     scp->op_num = EAX + IFLO_SYS_CALLS_START + 1;
     if (EAX==102) {

@@ -35,12 +35,19 @@ extern unsigned int phys_ram_size;
 
 
 
-void iferret_log_syscall_common(iferret_syscall_t *sc, va_list op_args) {
+void iferret_log_syscall_commoner(iferret_syscall_t *sc) {
   // write the std syscall other args.
   iferret_log_uint8_t_write(sc->is_sysenter);  
   iferret_log_uint32_t_write(sc->pid);
   iferret_log_uint32_t_write(sc->callsite_eip);
   iferret_log_string_write(sc->command);
+
+}  
+
+
+void iferret_log_syscall_common(iferret_syscall_t *sc, va_list op_args) {
+  // write the std syscall other args.
+  iferret_log_syscall_commoner(sc);
   // write the args specific to this call
   iferret_log_op_args_write(sc->op_num, op_args);
 }  
@@ -57,6 +64,7 @@ void iferret_log_syscall_write_va(iferret_syscall_t *sc, ...) {
 
 }  
 
+
 void iferret_log_socketcall_write_va(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, ...) {
   va_list op_args;
 
@@ -67,6 +75,131 @@ void iferret_log_socketcall_write_va(iferret_syscall_t *sc, iferret_log_op_enum_
   iferret_log_syscall_common(sc,op_args);
 }  
 
+
+void iferret_log_socketcall_write_4(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
+				    uint32_t x0) {
+  // write the op and the sentinel
+  iferret_log_op_write_prologue(op_num);
+  // write the std syscall stuff
+  iferret_log_syscall_commoner(sc);
+  iferret_log_uint32_t_write(x0);
+}
+
+void iferret_log_socketcall_write_44(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
+				      uint32_t x0, uint32_t x1) {
+  // write the op and the sentinel
+  iferret_log_op_write_prologue(op_num);
+  // write the std syscall stuff
+  iferret_log_syscall_commoner(sc);
+  iferret_log_uint32_t_write(x0);
+  iferret_log_uint32_t_write(x1);
+}
+
+void iferret_log_socketcall_write_444(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
+				      uint32_t x0, uint32_t x1, uint32_t x2) {
+  // write the op and the sentinel
+  iferret_log_op_write_prologue(op_num);
+  // write the std syscall stuff
+  iferret_log_syscall_commoner(sc);
+  iferret_log_uint32_t_write(x0);
+  iferret_log_uint32_t_write(x1);
+  iferret_log_uint32_t_write(x2);
+}
+
+
+void iferret_log_socketcall_write_4444(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
+				       uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3) {
+  // write the op and the sentinel
+  iferret_log_op_write_prologue(op_num);
+  // write the std syscall stuff
+  iferret_log_syscall_commoner(sc);
+  iferret_log_uint32_t_write(x0);
+  iferret_log_uint32_t_write(x1);
+  iferret_log_uint32_t_write(x2);
+  iferret_log_uint32_t_write(x3);
+}
+
+void iferret_log_socketcall_write_444444444(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
+					    uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
+					    uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7,
+					    uint32_t x8) {
+  // write the op and the sentinel
+  iferret_log_op_write_prologue(op_num);
+  // write the std syscall stuff
+  iferret_log_syscall_commoner(sc);
+  iferret_log_uint32_t_write(x0);
+  iferret_log_uint32_t_write(x1);
+  iferret_log_uint32_t_write(x2);
+  iferret_log_uint32_t_write(x3);
+  iferret_log_uint32_t_write(x4);
+  iferret_log_uint32_t_write(x5);
+  iferret_log_uint32_t_write(x6);
+  iferret_log_uint32_t_write(x7);
+  iferret_log_uint32_t_write(x8);
+}
+
+
+void iferret_log_socketcall_write_4444444444(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
+					     uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
+					     uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7,
+					     uint32_t x8, uint32_t x9) {
+  // write the op and the sentinel
+  iferret_log_op_write_prologue(op_num);
+  // write the std syscall stuff
+  iferret_log_syscall_commoner(sc);
+  iferret_log_uint32_t_write(x0);
+  iferret_log_uint32_t_write(x1);
+  iferret_log_uint32_t_write(x2);
+  iferret_log_uint32_t_write(x3);
+  iferret_log_uint32_t_write(x4);
+  iferret_log_uint32_t_write(x5);
+  iferret_log_uint32_t_write(x6);
+  iferret_log_uint32_t_write(x7);
+  iferret_log_uint32_t_write(x8);
+  iferret_log_uint32_t_write(x9);
+}
+
+
+void iferret_log_socketcall_write_4444444444444444444
+(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
+ uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
+ uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7,
+ uint32_t x8, uint32_t x9, uint32_t x10, uint32_t x11,
+ uint32_t x12, uint32_t x13, uint32_t x14, uint32_t x15,
+ uint32_t x16, uint32_t x17, uint32_t x18, uint32_t x19
+ ) {
+  // write the op and the sentinel
+  iferret_log_op_write_prologue(op_num);
+  // write the std syscall stuff
+  iferret_log_syscall_commoner(sc);
+  iferret_log_uint32_t_write(x0);
+  iferret_log_uint32_t_write(x1);
+  iferret_log_uint32_t_write(x2);
+  iferret_log_uint32_t_write(x3);
+  iferret_log_uint32_t_write(x4);
+  iferret_log_uint32_t_write(x5);
+  iferret_log_uint32_t_write(x6);
+  iferret_log_uint32_t_write(x7);
+  iferret_log_uint32_t_write(x8);
+  iferret_log_uint32_t_write(x9);
+  iferret_log_uint32_t_write(x10);
+  iferret_log_uint32_t_write(x11);
+  iferret_log_uint32_t_write(x12);
+  iferret_log_uint32_t_write(x13);
+  iferret_log_uint32_t_write(x14);
+  iferret_log_uint32_t_write(x15);
+  iferret_log_uint32_t_write(x16);
+  iferret_log_uint32_t_write(x17);
+  iferret_log_uint32_t_write(x18);
+  iferret_log_uint32_t_write(x19);
+}
+
+
+
+
+/*
+ iferret_log_socketcall_write_4444444444444444444
+*/
 
 void iferret_log_op_args_write(iferret_log_op_enum_t op_num, va_list op_args) {
   char *op_fmt, *p;
@@ -124,40 +257,54 @@ void iferret_log_op_args_read(iferret_op_t *op) {
   int i;
 
   // NB: we've already read the op and checked the sentinel...
+
+  if (op->num >= IFLO_SYS_CALLS_START) {
+    // its a syscall.  read in the other stuff.
+    op->syscall->is_sysenter = iferret_log_uint8_t_read();
+    op->syscall->pid = iferret_log_uint32_t_read();
+    op->syscall->callsite_eip = iferret_log_uint32_t_read();
+    iferret_log_string_read(op->syscall->command);
+  }
+
   // now we iterate through the fmt string for this op
   // and read each type of thing from the log and into
   // the right place in op.  
 
   i=0;
+  op->num_args = 0;
   for (p=iferret_log_arg_format[op->num]; *p!='\0'; p++) {
     switch (*p) {
     case '1':      // a 1-byte unsigned int
       op->arg[i].type = IFLAT_UI8;
       op->arg[i].val.u8 = iferret_log_uint8_t_read();
+      op->num_args++;
       break;
     case '2':     // a 2-byte unsigned int
       op->arg[i].type = IFLAT_UI16;
       op->arg[i].val.u16 = iferret_log_uint16_t_read();
+      op->num_args++;
       break;
     case '4':     // a 4-byte unsigned int
       op->arg[i].type = IFLAT_UI32;
       op->arg[i].val.u32 = iferret_log_uint32_t_read();
+      op->num_args++;
       break;
     case '8':     // an 8-byte unsigned int
       op->arg[i].type = IFLAT_UI64;
       op->arg[i].val.u64 = iferret_log_uint64_t_read();
+      op->num_args++;
       break;
     case 's':      // a string
       op->arg[i].type = IFLAT_STR;
       iferret_log_string_read(buf);
       op->arg[i].val.str = strdup(buf);
+      op->num_args++;
       break;
     default: 
-      exit (1);  // shouldn't be here. 
+      break;
     }
     i ++;
   }
-  op->num_args = i;
 
 }
 
@@ -165,29 +312,26 @@ void iferret_log_op_args_read(iferret_op_t *op) {
 
 void iferret_spit_op(iferret_op_t *op) {
   int i;
-  printf ("(%s,", iferret_op_num_to_str(op->num));
+  printf ("(%s", iferret_op_num_to_str(op->num));
   for (i=0; i<op->num_args; i++) {
     switch (op->arg[i].type) {
     case IFLAT_NONE:
       exit(1);
     case IFLAT_UI8:
-      printf ("(ui8,%x)", op->arg[i].val.u8);
+      printf (",(ui8,%x)", op->arg[i].val.u8);
       break;
     case IFLAT_UI16:
-      printf ("(ui16,%x)", op->arg[i].val.u16);
+      printf (",(ui16,%x)", op->arg[i].val.u16);
       break;      
     case IFLAT_UI32: 
-      printf ("(ui32,%lux)", (long unsigned int) op->arg[i].val.u32);
+      printf (",(ui32,%lx)", (long unsigned int) op->arg[i].val.u32);
       break;
     case IFLAT_UI64:
-      printf ("(ui64,%llux)", (long long unsigned int) op->arg[i].val.u64);
+      printf (",(ui64,%llx)", (long long unsigned int) op->arg[i].val.u64);
       break;
     case IFLAT_STR:
-      printf ("(str,%s)", op->arg[i].val.str);
+      printf (",(str,%s)", op->arg[i].val.str);
       break;
-    }
-    if (i < op->num_args) {
-      printf (",");
     }
   }
   printf (")\n");
@@ -236,15 +380,6 @@ void if_log_create() {
 
 
 
-// if flag has been set, write new network label in the log
-void new_network_label_check(){
-  if (if_network_label_changed) { 
-    if_network_label_changed = 0; 
-    printf ("iferret_new_network_label [%s]\r\n", if_network_label); 
-    iferret_log_op_write_s(IFLO_NEW_NETWORK_LABEL, if_network_label);
- }
-}
-
 
 // save current if log to a file for some reason    
 void if_log_write_to_file() {
@@ -271,25 +406,54 @@ void if_log_write_to_file() {
 }
 
 
-void if_log_read_from_file(char *filename) {
+void if_log_spit(char *filename) {
   struct stat fs;
   FILE *fp;
-  uint32_t if_log_size;
-  
+  uint32_t if_log_size, n, i, num_syscalls;
+  iferret_op_t  *op1, *op2, *op, *op_last, *opt;
+  char command1[1024], command2[1024];
+
+  op1 = (iferret_op_t *) malloc (sizeof (iferret_op_t));
+  op2 = (iferret_op_t *) malloc (sizeof (iferret_op_t));
+  op1->syscall = (iferret_syscall_t *) malloc (sizeof (iferret_syscall_t));
+  op2->syscall = (iferret_syscall_t *) malloc (sizeof (iferret_syscall_t));
+  op1->syscall->command = command1;
+  op2->syscall->command = command2;
+
   // pull the entire log into memory
   stat(filename, &fs);
   if_log_size = fs.st_size;
   fp = fopen(filename, "r");
-  fread(if_log_base, 1, if_log_size, fp);
+  n =  fread(if_log_base, 1, if_log_size, fp);
+  //  printf ("n=%d\n", n);
   fclose(fp);
   if_log_ptr = if_log_base;
   // and then parse the bugger.  
+  i=0;
+  num_syscalls = 0;
+  op_last = NULL;
+  op = op1; op_last = op2;
   while (if_log_ptr < if_log_base + if_log_size) {
-    iferret_op_t op;
-    op.num = iferret_log_op_only_read();
-    iferret_log_sentinel_check();
-    iferret_log_op_args_read(&op);
-    iferret_spit_op(&op);    
+    op->num = iferret_log_op_only_read();
+    if (op->num >= IFLO_SYS_CALLS_START) {
+      num_syscalls ++;
+    }
+    if ((iferret_log_sentinel_check()) == 0) {
+      printf ("sentinel failed at op %d\n", i);
+      printf ("%d: ", i-1);
+      iferret_spit_op(op_last);
+      printf ("%d: ", i);
+      iferret_spit_op(op);
+      printf ("%d syscalls encountered\n", num_syscalls);
+      exit(1);
+    }
+    iferret_log_op_args_read(op);
+    //      iferret_spit_op(&op);    
+    opt = op; 
+    op = op_last;
+    op_last = opt;
+
+    i++;
   }
 }
       

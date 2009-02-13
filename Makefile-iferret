@@ -1,0 +1,22 @@
+
+TD=target-i386
+ 
+CFLAGS= -g
+
+iferret: iferret.o iferret_log.o iferret_op_str.o
+	$(CC) $(CFLAGS) -o iferret iferret.o iferret_log.o iferret_op_str.o
+
+
+iferret.o: iferret.c
+	$(CC) $(CFLAGS) -c iferret.c 
+
+iferret_log.o: iferret_log.c
+	$(CC) $(CFLAGS) -c iferret_log.c 
+
+iferret_op_str.o: $(TD)/iferret_op_str.c
+	$(CC) $(CFLAGS) -c $(TD)/iferret_op_str.c 
+
+
+clean:
+	rm -f iferret.o iferret_log.o  $(TD)/iferret_op_str.o
+

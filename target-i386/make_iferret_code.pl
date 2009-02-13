@@ -44,6 +44,7 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	    my $name = shift @rest;
 	    $syscall[$num]{name} = $name;
 	    $syscall[$num]{noargs} = 1;
+	    $syscall[$num]{format} = "0";
 	    print "syscall $num is missing\n";
 	}
 	elsif ($rest =~ /([^\(\) ]+)\s*\((.+)\);/) {
@@ -60,6 +61,7 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	    if ($inside eq "void") {
 		$syscall[$num]{noargs} = 1;
 		print "syscall $num has no args\n";
+		$syscall[$num]{format} = "0";
 	    }
 	    else {
 		$syscall[$num]{args} = ();
@@ -68,6 +70,10 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 		my $n = scalar @args;
 		if ($n > 6) {
 		    $n = 6;
+		}
+		my $format = "";
+		if ($n == 0) {
+		    $format = "0";
 		}
 		for (my $i=0; $i<$n; $i++) {
 		    my $arg = $args[$i];
@@ -84,15 +90,19 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 			&& $varname !~ /\[\]$/
 			) {
 #		    if (exists $syscallStringTypes{$argType}) {
-			# its a string
+			# it's a string
 			push @{$syscall[$num]{args}}, "s";
+			$format .= "s";
 			print "is a string\n";
 		    }
 		    else {
 			push @{$syscall[$num]{args}}, "4";
+			$format .= "4";
 			print "is a 4-byte int\n";
 		    }
 		}
+		print "format is $format\n";
+		$syscall[$num]{format} = $format;
 	    }
 	}
 	else {
@@ -119,20 +129,24 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
     foreach my $filename (@files) {
 	if ($filename =~    /iferret_log_arg_fmt.h/
 	    || $filename =~ /iferret_ops.h/
+	    || $filename =~ /iferret_log.c/
+	    || $filename =~ /iferret.c/
 	    || $filename =~ /iferret_op_str.c/
 	    || $filename =~ /iferret_syscall_switch.h/
+	    || $filename =~ /iferret_socketcall.c/
 	    ) {
 	    next;
 	}
 
-	print "examining file $filename\n";
 
 	my @lines = `cd $iferretDir; grep \"iferret_log_op_write\" $filename`;
 #find -H /home/tleek/hg/iferret-logging-new -name \"*.[ch]\" -print -exec grep \"iferret_log_op_write\" \'{}\' \\;`;
 
+	if (scalar @lines > 0) {
+	    print "examining file $filename\n";
+	}
 
-
-	my $filename = "none";
+#	my $filename = "none";
 	foreach my $line (@lines) {
 	    
 	    chomp $line;
@@ -201,11 +215,12 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	if ($line =~ /^\s+\/\//) {
 	    next;
 	}
-	if ($line =~ /iferret_log_socketcall_write_va/) {
-	    if ($line =~ /iferret_log_socketcall_write_va\s*\(scp,([^,]+),(.*)\)\;/) {
-		my $name = $1;
-		my $args = $2;
-		&add_socketcall(\%socketcalls, $name, $args, $line);	    
+	if ($line =~ /iferret_log_socketcall_write_/) {
+	    if ($line =~ /iferret_log_socketcall_write_([01248s]+)\s*\(scp,([^,]+),(.*)\)\;/) {
+		my $fmt = $1;
+		my $name = $2;
+		my $args = $3;
+		&add_socketcall(\%socketcalls, $name, $args, $line, $fmt);	    
 	    }
 	    else {
 		print "$line\n";
@@ -325,23 +340,23 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	my $comment .= "// syscall # $syscall[$i]{call_num}\n";
 	$comment .= "// $syscall[$i]{proto}\n";
 	$enum[$ii]{comment} = $comment;
-	my $format = "";
-	if (exists $syscall[$i]{args}) {
-	    if ((scalar @{$syscall[$i]{args}}) == 0) {
-		$format = "0";
-	    }
-	    else {
-		foreach my $arg (@{$syscall[$i]{args}}) {
-		    if ($arg eq "4" || $arg eq "s") {
-			$format .= $arg;
-		    }
-		}
-	    }
-	} 
-	else {
-	    $format = "0";
-	}
-	$enum[$ii]{format} = $format;    
+#	my $format = "";
+#	if (exists $syscall[$i]{args}) {
+#	    if ((scalar @{$syscall[$i]{args}}) == 0) {
+#		$format = "0";
+#	    }
+#	    else {
+#		foreach my $arg (@{$syscall[$i]{args}}) {
+#		    if ($arg eq "4" || $arg eq "s") {
+#			$format .= $arg;
+#		    }
+#		}
+#	    }
+#	} 
+#	else {
+#	    $format = "0";
+#	}
+	$enum[$ii]{format} = $syscall[$i]{format};
 	$ii++;
     }
 
@@ -392,6 +407,11 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 
     for (my $i=0; $i<scalar @enum; $i++) {
 	my $opname = $enum[$i]{opname};
+	print "$opname\n";
+	if (! (exists $enum[$i]{format})) {
+	    print "no format for $i $opname?\n";
+	    die;
+	}
 	print FMT "  // $i \n";
 	print FMT "$enum[$i]{comment}";
 	print FMT "  \"$enum[$i]{format}\"";
@@ -589,27 +609,29 @@ sub add_op() {
     # create or update format string for this op by examining args.
 #    print "$opname $filename\n";
     my $newFmt;   
-    if (!exists $rhOps->{$opname}{format}) {
-	$newFmt = &create_op_format($opname, \@rest);
-    }
-    else {
-	$newFmt = &update_op_format($opname, $rhOps->{$opname}{format}, \@rest);
-    }
+#    if (!exists $rhOps->{$opname}{format}) {
+#	$newFmt = &create_op_format($opname, \@rest);
+#    }
+#    else {
+#	$newFmt = &update_op_format($opname, $rhOps->{$opname}{format}, \@rest);
+#    }
 
     print "2 op is $opname. \n";
     print "$filename\n";
     print "$line\n";
-    $rhOps->{$opname}{format} = &merge_formats ($fmt, $newFmt);
+#    $rhOps->{$opname}{format} = &merge_formats ($fmt, $newFmt);
+    $rhOps->{$opname}{format} = $fmt;
 }
 
 
 
 sub add_socketcall() {
-    my ($rhOps, $opname, $args, $line) = @_;
+    my ($rhOps, $opname, $args, $line, $fmt) = @_;
 
     my @rest = split ',', $args;
     # create or update format string for this op by examining args.
-    $rhOps->{$opname}{format} = &create_op_format($opname, \@rest);
+#    $rhOps->{$opname}{format} = &create_op_format($opname, \@rest);
+    $rhOps->{$opname}{format} = $fmt;
     $rhOps->{$opname}{comment} = "// $line";
 }
 

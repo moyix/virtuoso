@@ -171,6 +171,10 @@ typedef struct subpage_t {
     void *opaque[TARGET_PAGE_SIZE][2][4];
 } subpage_t;
 
+
+
+
+
 static void page_init(void)
 {
     /* NOTE: we can always suppose that qemu_host_page_size >=

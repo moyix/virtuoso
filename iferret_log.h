@@ -73,11 +73,21 @@ typedef struct iferret_op_arg_struct_t {
 } iferret_op_arg_t;
 
 
+typedef struct iferret_syscall_struct_t {
+  uint32_t eax;
+  uint32_t op_num;
+  uint8_t is_sysenter;
+  uint32_t pid;
+  uint32_t callsite_eip;
+  char *command;
+} iferret_syscall_t;
+
 
 typedef struct iferret_op_struct_t {
   iferret_log_op_enum_t num;     // the number of the op
   iferret_op_arg_t arg[100];     // up to 100 arguments
   uint32_t num_args;             // number of arguments 
+  iferret_syscall_t *syscall;
 } iferret_op_t;
 
 /*
@@ -91,14 +101,6 @@ typedef struct iferret_op_struct_t {
 
 
 
-typedef struct iferret_syscall_struct_t {
-  uint32_t eax;
-  uint32_t op_num;
-  uint8_t is_sysenter;
-  uint32_t pid;
-  uint32_t callsite_eip;
-  char *command;
-} iferret_syscall_t;
 
 
 char *if_log_ptr;      
@@ -181,11 +183,12 @@ static inline void iferret_log_sentinel_write(void) {
 #endif
 }
 
-static inline void iferret_log_sentinel_check(void) { 
+static inline int iferret_log_sentinel_check(void) { 
 #ifdef USE_SENTINEL
   uint32_t sent;
   sent = iferret_log_uint32_t_read();
-  assert (sent == THE_SENTINEL);
+  //  assert (sent == THE_SENTINEL);
+  return (sent == THE_SENTINEL);
 #endif
 }
 
@@ -271,17 +274,17 @@ static inline void iferret_log_op_write_1(iferret_log_op_enum_t op_num, uint8_t 
 
 static inline void iferret_log_op_write_2(iferret_log_op_enum_t op_num, uint16_t x) {
   iferret_log_op_write_prologue(op_num);
-  iferret_log_uint8_t_write(x);
+  iferret_log_uint16_t_write(x);
 }
 
 static inline void iferret_log_op_write_4(iferret_log_op_enum_t op_num, uint32_t x) {
   iferret_log_op_write_prologue(op_num);
-  iferret_log_uint8_t_write(x);
+  iferret_log_uint32_t_write(x);
 }
 
 static inline void iferret_log_op_write_8(iferret_log_op_enum_t op_num, uint64_t x) {
   iferret_log_op_write_prologue(op_num);
-  iferret_log_uint8_t_write(x);
+  iferret_log_uint64_t_write(x);
 }
 
 // used in ops_mem.h for (..,MEMSUFFIXNUM,A0);
@@ -337,7 +340,7 @@ static inline void iferret_log_op_write_8884(iferret_log_op_enum_t op_num, uint6
   iferret_log_uint32_t_write(q);
 }
 
-  static inline void iferret_log_op_write_4444(iferret_log_op_enum_t op_num, uint32_t x, uint32_t y, uint32_t z, uint32_t q) {
+static inline void iferret_log_op_write_4444(iferret_log_op_enum_t op_num, uint32_t x, uint32_t y, uint32_t z, uint32_t q) {
   iferret_log_op_write_prologue(op_num);
   iferret_log_uint32_t_write(x);
   iferret_log_uint32_t_write(y);
@@ -347,6 +350,48 @@ static inline void iferret_log_op_write_8884(iferret_log_op_enum_t op_num, uint6
 
 
 void iferret_log_socketcall_write_va(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, ...);
+
+void iferret_log_socketcall_write_4444444444444444444
+(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
+ uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
+ uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7,
+ uint32_t x8, uint32_t x9, uint32_t x10, uint32_t x11,
+ uint32_t x12, uint32_t x13, uint32_t x14, uint32_t x15,
+ uint32_t x16, uint32_t x17, uint32_t x18, uint32_t x19
+ );
+
+
+void iferret_log_socketcall_write_4444444444
+(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
+ uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
+ uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7,
+ uint32_t x8, uint32_t x9);
+
+void iferret_log_socketcall_write_444444444
+(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
+ uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
+ uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7,
+ uint32_t x8);
+  
+void iferret_log_socketcall_write_4444
+(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
+ uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3);
+
+
+void iferret_log_socketcall_write_444
+(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
+ uint32_t x0, uint32_t x1, uint32_t x2);
+
+void iferret_log_socketcall_write_44
+(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
+ uint32_t x0, uint32_t x1);
+
+void iferret_log_socketcall_write_4
+(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
+ uint32_t x0);
+
+
+
 void iferret_log_syscall_write_va(iferret_syscall_t *sc, ...);
 
 void if_log_create(void);
