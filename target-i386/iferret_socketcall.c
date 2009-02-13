@@ -1,5 +1,15 @@
+
+#include <string.h>
+#include <assert.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/uio.h>
+#include <poll.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+
 
 #include "exec.h"
 //#include "lookup_table.h"
@@ -9,8 +19,13 @@
 
 target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 
+#define AL(x) ((x) * sizeof(unsigned long))
+static unsigned char nargs[18]={AL(0),AL(3),AL(3),AL(3),AL(2),AL(3),
+                                AL(3),AL(3),AL(4),AL(4),AL(4),AL(6),
+                                AL(6),AL(2),AL(5),AL(5),AL(3),AL(3)};
 
 void iferret_log_socketcall(iferret_syscall_t *scp) {
+  char tempbuf[1024];
   target_phys_addr_t paddr;
   switch (EBX) {
   case 1: // socket
@@ -29,8 +44,8 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
     break;
   case 2: // bind
     {
-      int fd, len, group, *ptr; struct sockaddr_in *sap;
-      unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7,*str; 
+      int fd, len, group, *ptr; struct sockaddr_in *sap;// pid;
+      unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7; //,*str; 
       unsigned short *sptr;
       unsigned char pkttype, halen; // , sll_addr[8];
       paddr = cpu_get_phys_addr(env, ECX);
@@ -47,11 +62,20 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
 	cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the args
 	//bptr = (unsigned char*)&sa.sin_addr.s_addr;
 	bptr = tempbuf;
-	b0=*bptr++; b1=*bptr++; b2=*bptr++; b3=*bptr++;
-	b4=*bptr++; b5=*bptr++; b6=*bptr++; b7=*bptr++;
+	b0=*bptr++; 
+	b1=*bptr++;
+	b2=*bptr++; 
+	b3=*bptr++;
+	b4=*bptr++;
+	b5=*bptr++;
+	b6=*bptr++; 
+	b7=*bptr++;
 	bptr = tempbuf; bptr+=2;
 	sap = (struct sockaddr_in*) tempbuf;
-	ptr = (int*) tempbuf; ptr++; pid =*ptr++;  group = *ptr++;
+	ptr = (int*) tempbuf; 
+	ptr++; 
+	//	pid = (int) *ptr++;
+	group = *ptr++;
 	if (sap->sin_family == 1 ) { // PF_LOCAL
 	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_BIND_PF_LOCAL,fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
 	  //           fprintf(logfile,"family  1; fd %d; file %s", fd, bptr);
@@ -70,7 +94,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
 	  //                   fd, pid, group);
 	}
 	else if (sap->sin_family == 17 )  {// PF_PACKET
-	  char str[1024];
+	  //char str[1024];
 	  bptr = tempbuf; bptr += 8; sptr = (unsigned short*)bptr;
 	  bptr +=2; pkttype =*bptr; halen =*bptr++;
 	  //                fprintf(logfile,"family 17; fd %d; protocol 0x%x; ifindex 0x%x",
@@ -83,7 +107,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
 	  //		  tempbuf[12], tempbuf[13], tempbuf[14], tempbuf[15],
 	  //		  tempbuf[16], tempbuf[17], tempbuf[18], tempbuf[19]);
 	  //	  iferret_log_syscall_write(scp,EBX,sap->sin_family,fd,*sptr,pktype,halen,addr);
-	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_BIND_PF_PACKET,fd,b0,b1,b2,b3,b4,b5,b6,b7,*sptr,pktype,halen,tempbuf[12], tempbuf[13], tempbuf[14], tempbuf[15],tempbuf[16], tempbuf[17], tempbuf[18], tempbuf[19]);
+	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_BIND_PF_PACKET,fd,b0,b1,b2,b3,b4,b5,b6,b7,*sptr,pkttype,halen,tempbuf[12], tempbuf[13], tempbuf[14], tempbuf[15],tempbuf[16], tempbuf[17], tempbuf[18], tempbuf[19]);
 	} else {
 	  //	  char str[1024];
 	  // fprintf(logfile,"family %2d; fd %d; %d.%d.%d.%d-%d.%d.%d.%d(%c%c%c%c%c%c%c%c); len %d", 
@@ -101,7 +125,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
   case 3: // connect
     {
       int fd, len, *ptr; struct sockaddr_in *sap;
-      unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7, *str; 
+      unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7;// *str; 
       //   fprintf(logfile,"PID %3d (%16s)[sys_connect 102]%d: ", pid, command, EBX);
       paddr = cpu_get_phys_addr(env, ECX);
       if (paddr!=-1)       {
@@ -210,7 +234,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
     break;    
   case 9: // send
     {
-      int fd, msg, len, *ptr;
+      int fd, msg, len, *ptr, i;
       //   fprintf(logfile,"PID %3d (%16s)[sys_send    102]%d: ", pid, command, EBX);
       paddr = cpu_get_phys_addr(env, ECX);
       if (paddr!=-1)       {
@@ -250,7 +274,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
   case 11: // sendto
     {
       int fd,msg, len, *ptr; struct sockaddr_in *sap;
-      unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7, *str;
+      unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7;// *str;
        
       //   fprintf(logfile,"PID %3d (%16s)[sys_sendto  102]%d: ", pid, command, EBX);
       paddr = cpu_get_phys_addr(env, ECX);
@@ -279,10 +303,10 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
 	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_SENDTO_PF_LOCAL, fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
 	}
 	else if (sap->sin_family == 2 ) {// PF_INET
-	  char str[1024];
+	  //	  char str[1024];
 	  //           fprintf(logfile,"[dest: family  2; %d.%d.%d.%d:%d]", 
 	  //                   b4, b5, b6, b7, b2*256+b3);
-	  sprintf(str,"%d.%d.%d.%d:%d", b4, b5, b6, b7, b2*256+b3);
+	  //sprintf(str,"%d.%d.%d.%d:%d", b4, b5, b6, b7, b2*256+b3);
 	  iferret_log_socketcall_write_va(scp,IFLO_SYS_SOCKETCALL_SENDTO_PF_INET, fd,b0,b1,b2,b3,b4,b5,b6,b7,tempbuf);
 	}
 	else {
@@ -414,5 +438,5 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
     }
     break;
   }
-  break;
+
 }

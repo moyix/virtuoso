@@ -68,15 +68,26 @@ typedef void * host_reg_t;
 #define INT8_MIN		(-128)
 #define INT16_MIN		(-32767-1)
 #define INT32_MIN		(-2147483647-1)
+
+#ifndef INT64_MIN
 #define INT64_MIN		(-(int64_t)(9223372036854775807)-1)
+#endif
+
 #define INT8_MAX		(127)
 #define INT16_MAX		(32767)
 #define INT32_MAX		(2147483647)
+
+#ifndef INT64_MAX
 #define INT64_MAX		((int64_t)(9223372036854775807))
+#endif 
+
 #define UINT8_MAX		(255)
 #define UINT16_MAX		(65535)
 #define UINT32_MAX		(4294967295U)
+
+#ifndef UINT64_MAX
 #define UINT64_MAX		((uint64_t)(18446744073709551615))
+#endif
 
 #ifdef _BSD
 typedef struct __sFILE FILE;

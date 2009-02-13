@@ -14,8 +14,6 @@
 
 #include <string.h>
 #include <assert.h>
-#include "exec.h"
-#include "lookup_table.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/uio.h>
@@ -24,6 +22,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "exec.h"
+#include "lookup_table.h"
 #include "linux_task_struct_offsets.h"
 #include "../iferret_log.h"
 #include "iferret_syscall.h"
