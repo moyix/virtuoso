@@ -372,6 +372,13 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	$ii++;
     }
 
+# a dummy end op
+
+    $enum[$ii]{opname} = "IFLO_DUMMY_LAST";
+    $enum[$ii]{comment} = "";
+    $enum[$ii]{format} = "0";
+
+
 
 # okay, now we have an ordering for log ops.
 # create the file with the enum type

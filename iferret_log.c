@@ -452,6 +452,7 @@ void op_hex_dump(char **op_start, int i) {
 }
 
 
+char ** op_start = NULL;
 
 void if_log_spit(char *filename) {
   struct stat fs;
@@ -459,10 +460,11 @@ void if_log_spit(char *filename) {
   uint32_t if_log_size, n, i, num_syscalls, nnn;
   iferret_op_t  *op1, *op2, *op, *op_last, *opt;
   char command1[1024], command2[1024];
-  char **op_start;
 
   nnn = 10 * 1024 * 1024;
-  op_start = (char **) calloc (sizeof (char *) * nnn, 1);
+  if (op_start == NULL) { 
+    op_start = (char **) calloc (sizeof (char *) * nnn, 1);
+  }
 
   op1 = (iferret_op_t *) malloc (sizeof (iferret_op_t));
   op2 = (iferret_op_t *) malloc (sizeof (iferret_op_t));
@@ -470,6 +472,7 @@ void if_log_spit(char *filename) {
   op2->syscall = (iferret_syscall_t *) malloc (sizeof (iferret_syscall_t));
   op1->syscall->command = command1;
   op2->syscall->command = command2;
+
 
   // pull the entire log into memory
   stat(filename, &fs);
@@ -505,16 +508,25 @@ void if_log_spit(char *filename) {
       exit(1);
     }
     iferret_log_op_args_read(op);
+    /*
     if (op->num >= IFLO_SYS_CALLS_START) {
       printf("syscall # %d\n", num_syscalls);
       iferret_spit_op(op);    
     }
+    */
     opt = op; 
     op = op_last;
     op_last = opt;
 
     i++;
   }
+
+
+  free (op1->syscall);
+  free (op2->syscall);
+  free (op1);
+  free (op2);
+
 }
       
 
