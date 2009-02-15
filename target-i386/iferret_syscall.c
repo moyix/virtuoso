@@ -153,29 +153,36 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
   init_table();
 
   
-  if ((EAX==11) || (EAX==119)) {
+  if ((EAX==11) || (EAX==119)
+       ) {
     return;
   }
+
+  //  printf ("syscall is %d\n", EAX);
 
   {
     iferret_syscall_t sc, *scp;
     
     scp = &sc;
-    scp->op_num = EAX + IFLO_SYS_CALLS_START + 1;
-    if (EAX==102) {
-      // sys_socketcall has 17 sub-possibilities.
-      // EBX=1 (socket) ... EBX=17 (recvmsg)
-      // each with its own arg format.
-      scp->op_num += EBX;
-    }
-    if (EAX>102) {
-      scp->op_num += 18;
-    }
-    
+
+
     scp->is_sysenter = is_sysenter;
     scp->pid = pid;
     scp->callsite_eip = eip_for_callsite;
     scp->command = command;
+
+    scp->op_num = EAX + IFLO_SYS_CALLS_START + 1;
+
+    if (EAX==102) {
+      // sys_socketcall has 17 sub-possibilities.
+      // EBX=1 (socket) ... EBX=17 (recvmsg)
+      // each with its own arg format.
+      scp->op_num += IFLO_SYS_SOCKETCALLS_START + EBX;      
+      iferret_log_socketcall(scp);
+      return;
+    }
+
+    
 
     // manage Ryan's stack
     add_element(pid,eip_for_callsite,EAX);    

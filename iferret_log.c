@@ -19,6 +19,8 @@ char *if_log_base = NULL;
 // ptr to next byte to be written in info flow log
 char *if_log_ptr = NULL;      
 
+char *if_log_ptr_op_start = NULL;
+
 uint32_t if_log_rollup_count = 0;  
 
 char *if_keyboard_label=NULL;
@@ -32,6 +34,7 @@ unsigned long long ifregaddr[16];
 
 
 extern unsigned int phys_ram_size;
+
 
 
 
@@ -395,7 +398,7 @@ void if_log_write_to_file() {
   printf ("if_log_ptr - if_log_base = %Lu\n", (unsigned long long) (if_log_ptr - if_log_base));
   printf ("IF_LOG_SIZE = %d\n", IF_LOG_SIZE);
 
-  snprintf (filename, 1024, "/scratch/tmp/ifl-%d-%d", getpid(), if_log_rollup_count);
+  snprintf (filename, 1024, "/scratch/tmp2/ifl-%d-%d", getpid(), if_log_rollup_count);
 
   fp = fopen (filename, "w");
 
@@ -412,12 +415,54 @@ void if_log_write_to_file() {
 }
 
 
+
+void op_hex_dump(char **op_start, int i) {
+  unsigned char *p1, *p2, *p;
+
+  p1 = op_start[i-1]; 
+  p2 = op_start[i];
+  if (p1 == NULL) {
+    printf ("op_hex_dump found nothing.\n");
+  }
+  else {
+    if (p2 == NULL) {
+      p2 = if_log_ptr;
+    }
+    
+    printf ("\ni=%d p1=%p\n", i-1,p1);
+    for (p=p1; p<=p2; p++) {
+      if (p!=p1) {
+	if ((((uint64_t)p) % 16) == 0) {
+	  printf ("\n");
+	}
+	else {
+	  if ((((uint64_t)p) % 4) == 0) {
+	    printf (" ");
+	  }
+	}
+      }
+      if (*p < 0x10) {
+	printf ("0");
+      }
+      printf ("%x", *p);
+    }
+    printf ("\n");
+
+  }
+}
+
+
+
 void if_log_spit(char *filename) {
   struct stat fs;
   FILE *fp;
-  uint32_t if_log_size, n, i, num_syscalls;
+  uint32_t if_log_size, n, i, num_syscalls, nnn;
   iferret_op_t  *op1, *op2, *op, *op_last, *opt;
   char command1[1024], command2[1024];
+  char **op_start;
+
+  nnn = 10 * 1024 * 1024;
+  op_start = (char **) calloc (sizeof (char *) * nnn, 1);
 
   op1 = (iferret_op_t *) malloc (sizeof (iferret_op_t));
   op2 = (iferret_op_t *) malloc (sizeof (iferret_op_t));
@@ -440,17 +485,23 @@ void if_log_spit(char *filename) {
   op_last = NULL;
   op = op1; op_last = op2;
   while (if_log_ptr < if_log_base + if_log_size) {
+    op_start[i] = if_log_ptr;
     op->num = iferret_log_op_only_read();
     if (op->num >= IFLO_SYS_CALLS_START) {
       num_syscalls ++;
     }
     if ((iferret_log_sentinel_check()) == 0) {
       printf ("sentinel failed at op %d\n", i);
-      printf ("%d: ", i-1);
+      printf ("%d %p:", i-1, op_start[i-1]);
       iferret_spit_op(op_last);
-      printf ("%d: ", i);
+      printf ("%d %p: ", i, op_start[i]);
       iferret_spit_op(op);
       printf ("%d syscalls encountered\n", num_syscalls);
+      op_hex_dump(op_start, i-3);
+      op_hex_dump(op_start, i-2);
+      op_hex_dump(op_start, i-1);
+      op_hex_dump(op_start, i);
+      op_hex_dump(op_start, i+1);
       exit(1);
     }
     iferret_log_op_args_read(op);

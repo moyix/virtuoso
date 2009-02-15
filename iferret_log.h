@@ -51,12 +51,12 @@
 
 
 typedef enum {
-  IFLAT_NONE=1,
-  IFLAT_UI8=2,    // IFLAT = Iferret log arg type
-  IFLAT_UI16=3,
-  IFLAT_UI32=4,
-  IFLAT_UI64=5, 
-  IFLAT_STR=6,
+  IFLAT_NONE='0',
+  IFLAT_UI8='1',    // IFLAT = Iferret log arg type
+  IFLAT_UI16='2',
+  IFLAT_UI32='4',
+  IFLAT_UI64='8', 
+  IFLAT_STR='s',
 } iferret_op_arg_type_enum_t;
 
 
@@ -193,10 +193,21 @@ static inline int iferret_log_sentinel_check(void) {
 }
 
 
+// strlen but clipped to 100.  
+static inline uint32_t safe_strlen(char *str) {
+  char *p;
+
+  p = str;
+  while ((*p != '\0') && (p-str < 100)) {
+    p++;
+  }
+  return (p-str);
+}
+
 // write a string to the log
 static inline void iferret_log_string_write(char *str) {
   int i,n;			
-  n = strlen(str);		
+  n = safe_strlen(str);		
   if (n > MAX_STRING_LEN) { 
     n = MAX_STRING_LEN; 
   }

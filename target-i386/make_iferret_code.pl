@@ -34,18 +34,20 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	print "line = $line\n";
 	my @foo = split ' ', $line;
 	my ($call_num, $first, @rest) = @foo;
+	if ($call_num > $maxSyscallNum) {
+	    $maxSyscallNum = $call_num;
+	}
 	my $rest = join ' ', @rest;
 	my $name;
-	$syscall[$num] = {};
-	$syscall[$num]{call_num} = $call_num;
-	$syscall[$num]{proto} = $line;
+	$syscall[$call_num] = {};
+	$syscall[$call_num]{proto} = $line;
 	if ($first eq "missing") {
 	    # we have no prototype for this syscall
 	    my $name = shift @rest;
-	    $syscall[$num]{name} = $name;
-	    $syscall[$num]{noargs} = 1;
-	    $syscall[$num]{format} = "0";
-	    print "syscall $num is missing\n";
+	    $syscall[$call_num]{name} = $name;
+	    $syscall[$call_num]{noargs} = 1;
+	    $syscall[$call_num]{format} = "0";
+	    print "syscall $call_num is missing\n";
 	}
 	elsif ($rest =~ /([^\(\) ]+)\s*\((.+)\);/) {
 	    # we have a prototype 
@@ -56,15 +58,15 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	    my @foo = split ' ', $nameandtype;
 	    my $name = pop @foo;
 	    print "we have a prototype for $name. args=[$inside]\n";
-	    $syscall[$num]{name} = $name;
+	    $syscall[$call_num]{name} = $name;
 	    # examine the protoype args
 	    if ($inside eq "void") {
-		$syscall[$num]{noargs} = 1;
-		print "syscall $num has no args\n";
-		$syscall[$num]{format} = "0";
+		$syscall[$call_num]{noargs} = 1;
+		print "syscall $call_num has no args\n";
+		$syscall[$call_num]{format} = "0";
 	    }
 	    else {
-		$syscall[$num]{args} = ();
+		$syscall[$call_num]{args} = ();
 		$inside =~ s/\*/\* /g;
 		my @args = split ',', $inside;
 		my $n = scalar @args;
@@ -91,28 +93,24 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 			) {
 #		    if (exists $syscallStringTypes{$argType}) {
 			# it's a string
-			push @{$syscall[$num]{args}}, "s";
+			push @{$syscall[$call_num]{args}}, "s";
 			$format .= "s";
 			print "is a string\n";
 		    }
 		    else {
-			push @{$syscall[$num]{args}}, "4";
+			push @{$syscall[$call_num]{args}}, "4";
 			$format .= "4";
 			print "is a 4-byte int\n";
 		    }
 		}
 		print "format is $format\n";
-		$syscall[$num]{format} = $format;
+		$syscall[$call_num]{format} = $format;
 	    }
 	}
 	else {
 	    print "$line\n";
 	    die "Can't understand this one?\n";
 	}
-	$num ++;
-	if ($num > $maxSyscallNum) {
-	    $maxSyscallNum = $num;
-	}    
     }
     my $numSyscalls = scalar @syscall;
     print "$numSyscalls unique syscalls\n";
@@ -206,7 +204,7 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 # examine iferret_socketcall.c to find out how to parse socket syscalls. 
     open F, "/home/tleek/hg/iferret-logging-new/target-i386/iferret_socketcall.c";
     my ($ebx,$name);
-    my %socketcalls;
+    my @socketcalls;
     while (my $line = <F>) {
 #    if ($line =~ /case ([0-9]+): \/\/ ([a-z]+)\s*$/) {
 #	$ebx = $1;
@@ -220,7 +218,7 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 		my $fmt = $1;
 		my $name = $2;
 		my $args = $3;
-		&add_socketcall(\%socketcalls, $name, $args, $line, $fmt);	    
+		&add_socketcall(\@socketcalls, $name, $args, $line, $fmt);	    
 	    }
 	    else {
 		print "$line\n";
@@ -228,7 +226,7 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	    }
 	}
     }
-    my $numSocketcalls = scalar keys %socketcalls;
+    my $numSocketcalls = scalar @socketcalls;
     print "$numSocketcalls unique socket calls\n";
 
 
@@ -243,16 +241,12 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
     print SW "switch (EAX) {\n";
     for (my $i=0; $i<=$maxSyscallNum; $i++) {
 	if (exists $syscall[$i]) {
-	    my $call_num = $syscall[$i]{call_num};
-	    if ($call_num == 102) {
+	    if ($i == 102) {
 		# don't bother with socketcall
 		next;
 	    }
-	    if ($call_num == 90) {
-		print "foo\n";
-	    }
-	    print "case $call_num: // $i $syscall[$i]{proto}\n";
-	    print SW "case $call_num: // $i $syscall[$i]{proto}\n";
+	    print "case $i: // $i $syscall[$i]{proto}\n";
+	    print SW "case $i: // $i $syscall[$i]{proto}\n";
 	    my $numStrings = 1;
 	    unless (exists $syscall[$i]{noargs}) {
 		my $n = scalar @{$syscall[$i]{args}};
@@ -328,6 +322,10 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 # second, all the syscalls (except socketcall)
     for (my $i=0; $i<=$maxSyscallNum; $i++) {
 	if (! (exists $syscall[$i])) {
+	    $enum[$ii]{opname} = "IFLO_UNUSED_$ii";
+	    $enum[$ii]{format} = "0";
+	    $enum[$ii]{comment} = "";
+	    $ii++;
 	    next;
 	}
 	my $name = $syscall[$i]{name};
@@ -337,7 +335,7 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 	print "enum $ii syscall $opname\n";
 	$enum[$ii]{opname} = $opname;
 #	my $comment = "// $ii \n";
-	my $comment .= "// syscall # $syscall[$i]{call_num}\n";
+	my $comment .= "// syscall # $i";
 	$comment .= "// $syscall[$i]{proto}\n";
 	$enum[$ii]{comment} = $comment;
 #	my $format = "";
@@ -366,11 +364,11 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
     $ii++;
 
 # third, all the socketcalls 
-    foreach my $opname (sort keys %socketcalls) {
-	$enum[$ii]{opname} = $opname;
-	print "enum=$ii socketcall $opname\n";
-	$enum[$ii]{comment} = $socketcalls{$opname}{comment};
-	$enum[$ii]{format} = $socketcalls{$opname}{format};
+    foreach my $rh (@socketcalls) {
+	$enum[$ii]{opname} = $rh->{name};
+	print "enum=$ii socketcall $rh->{name}\n";
+	$enum[$ii]{comment} = $rh->{comment};
+	$enum[$ii]{format} = $rh->{format};
 	$ii++;
     }
 
@@ -626,13 +624,19 @@ sub add_op() {
 
 
 sub add_socketcall() {
-    my ($rhOps, $opname, $args, $line, $fmt) = @_;
+    my ($raSocketcalls, $opname, $args, $line, $fmt) = @_;
 
     my @rest = split ',', $args;
     # create or update format string for this op by examining args.
-#    $rhOps->{$opname}{format} = &create_op_format($opname, \@rest);
-    $rhOps->{$opname}{format} = $fmt;
-    $rhOps->{$opname}{comment} = "// $line";
+    my $i = scalar @{$raSocketcalls};
+    my %h;
+    $h{name} = $opname;
+    $h{format} = $fmt;
+    $h{comment} = "// $line";
+    $raSocketcalls->[$i] = \%h;
+#    $raSocketcalls->[$i]{name} = $opname;
+#    $raSocketcalls->[$i]{format} = $fmt;
+#    $raSocketcalls->[$i]{comment} = "// $line";
 }
 
 
