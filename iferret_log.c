@@ -313,6 +313,12 @@ void iferret_log_op_args_read(iferret_op_t *op) {
 void iferret_spit_op(iferret_op_t *op) {
   int i;
   printf ("(%s", iferret_op_num_to_str(op->num));
+  if (op->num >= IFLO_SYS_CALLS_START) {
+    printf (",(is_sysenter,%d)", op->syscall->is_sysenter);
+    printf (",(pid,%d)", op->syscall->pid);
+    printf (",(callsite_eip,%d)", op->syscall->callsite_eip);
+    printf (",(command,%s)", op->syscall->command);
+  }
   for (i=0; i<op->num_args; i++) {
     switch (op->arg[i].type) {
     case IFLAT_NONE:
@@ -448,7 +454,10 @@ void if_log_spit(char *filename) {
       exit(1);
     }
     iferret_log_op_args_read(op);
-    //      iferret_spit_op(&op);    
+    if (op->num >= IFLO_SYS_CALLS_START) {
+      printf("syscall # %d\n", num_syscalls);
+      iferret_spit_op(op);    
+    }
     opt = op; 
     op = op_last;
     op_last = opt;

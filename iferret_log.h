@@ -217,6 +217,7 @@ static inline void iferret_log_string_read(char *str) {
     if (i >= MAX_STRING_LEN) break;
     str[i] = iferret_log_uint8_t_read();
   }
+  str[i] = 0;
 }
 
 
