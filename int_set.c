@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "vslht.h"
+#include "int_set.h"
 
-uint32_t_set_t *uint32_t_set_create() {
+uint32_t_set_t *uint32_t_set_new() {
   uint32_t_set_t *set;
 
   set = (uint32_t_set_t *) malloc (sizeof(uint32_t_set_t));
   assert (set != NULL);
-  set->table = vslht_create();
+  set->table = vslht_new();
   return set;
 }
 

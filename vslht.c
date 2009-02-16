@@ -16,6 +16,8 @@
 */
 
 #include <string.h>
+#include <stdlib.h>
+#include <assert.h>
 #include "vslht.h"
 
 /**
@@ -35,7 +37,7 @@ static void __vslht_resize (vslht *);
 static void __vslht_free_keys (vslht *);
 static uint32_t __vslh_key(vslht *, char *);
 static uint32_t __vslh_log2 (int);
-static uint32_t __vslh_2_to_the_power (uint32_t);
+//static uint32_t __vslh_2_to_the_power (uint32_t);
 
 void *trl_malloc(size_t n) {
   void *foo;

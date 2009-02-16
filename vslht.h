@@ -1,14 +1,5 @@
 /**
-   @file vslht.h 
-
    Header (API) for Very Simple Linear Hash Table (VSLHT).
-
-   $Author$
-   $Id$
-   $Date$
-   $LastChangedDate$
-   $LastChangedRevision$
-   $LastChangedBy$
  */
 
 #ifndef __VSLHT_H__

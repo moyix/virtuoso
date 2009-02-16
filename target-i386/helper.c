@@ -20,6 +20,7 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "exec.h"
 //#include "lookup_table.h"
@@ -28,19 +29,19 @@
 #include "iferret_syscall.h"
 #include "int_set.h"
 
-uint32_t_set_t *pids_seen_table=NULL;
+uint32_t_set_t *pids_seen_table = NULL;
 
-void exit(int status);
+//void exit(int status);
 
-struct _IO_FILE;
+//struct _IO_FILE;
 /* Standard streams.  */
-extern struct _IO_FILE *stdin;          /* Standard input stream.  */
-extern struct _IO_FILE *stdout;         /* Standard output stream.  */
-extern struct _IO_FILE *stderr;         /* Standard error output stream.  */
+//extern struct _IO_FILE *stdin;          /* Standard input stream.  */
+//extern struct _IO_FILE *stdout;         /* Standard output stream.  */
+//extern struct _IO_FILE *stderr;         /* Standard error output stream.  */
 /* C89/C99 say they're macros.  Make them happy.  */
-#define stdin stdin
-#define stdout stdout
-#define stderr stderr
+//#define stdin stdin
+//#define stdout stdout
+//#define stderr stderr
 
 extern pid_t current_pid;
 extern uid_t current_uid;
@@ -50,7 +51,7 @@ extern uid_t parent_uid;
 extern char *parent_command;
 
 void get_current_pid_uid(void);
-void write_current_pid_to_iferret_log(void);
+
 extern pid_t current_pid, last_pid;
 extern uid_t current_uid, last_uid;
 extern uint8_t no_pid_flag, no_uid_flag;
@@ -4751,34 +4752,34 @@ void vmexit(uint64_t exit_code, uint64_t exit_info_1)
 }
 
 
-void write_eip_to_iferret_log(void) {
+void write_eip_to_iferret_log() {
   iferret_log_op_write_4(IFLO_TB_HEAD_EIP, EIP);
 }
 
 
-void write_current_pid_to_iferret_log(void) {
+void write_current_pid_to_iferret_log() {
   iferret_log_op_write_4(IFLO_PID_CHANGE,current_pid);
 }
 
-void write_current_uid_to_iferret_log(void) {
+void write_current_uid_to_iferret_log() {
   iferret_log_op_write_4(IFLO_UID_CHANGE,current_uid);
 }
 
 
-void write_spawn_to_iferret_log(void) {
+void write_spawn_to_iferret_log() {
   iferret_log_op_write_44s44s(IFLO_SPAWN_NEW_PID, current_pid,current_uid,current_command,parent_pid,parent_uid,parent_command);
 }
 
 
 
 
-void helper_manage_pid_stuff(void) {
+void helper_manage_pid_stuff() {
   // computes current process id, user id, command, and same for parent
   // and store in globals
   get_current_pid_uid();    
   if ((no_pid_flag == 1) 
       || (last_pid != current_pid)) {
-      // either first time or current pid has changed.
+    // either first time or current pid has changed.
     // write pid and uid to log
     write_current_pid_to_iferret_log();
   }
@@ -4790,7 +4791,7 @@ void helper_manage_pid_stuff(void) {
   }
   // if this is first time we've ever seen this pid, then log apparent spawn
   if (pids_seen_table == NULL) {
-    pids_seen_table = uint32_t_set_create();
+    pids_seen_table = uint32_t_set_new();
   }  
   if (!(uint32_t_set_mem(pids_seen_table, current_pid))) {
     uint32_t_set_add(pids_seen_table, current_pid);

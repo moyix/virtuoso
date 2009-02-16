@@ -32,8 +32,6 @@ uint8_t if_network_label_changed = 0;
 // we'll be using these as "addresses" for registers
 unsigned long long ifregaddr[16];
 
-// used to keep track of process ids seen so far
-vslht *pids_seen_table=NULL;
 
 extern unsigned int phys_ram_size;
 
