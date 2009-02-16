@@ -182,8 +182,6 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       return;
     }
 
-    
-
     // manage Ryan's stack
     add_element(pid,eip_for_callsite,EAX);    
   

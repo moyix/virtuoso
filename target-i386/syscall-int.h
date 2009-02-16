@@ -740,7 +740,7 @@
 
 					}
 					break;
-				case 2: // bind
+				case 2: // bindb
 					{ int fd, len, group, *ptr; struct sockaddr_in *sap;
 					unsigned char b0, b1, b2, b3, *bptr, b4, b5, b6, b7; 
 					unsigned short *sptr;

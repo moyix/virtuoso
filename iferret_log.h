@@ -413,5 +413,6 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num);
 
 void if_log_rollup(void);
 
+void iferret_spit_op(iferret_op_t *op);
 
 #endif

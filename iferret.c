@@ -1,6 +1,15 @@
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <assert.h>
+
+#include "iferret_log.h"
+#include "target-i386/iferret_ops.h"
 
 #define K 1024
 #define M (K * K)
@@ -8,6 +17,152 @@
 #define BIOS_MEM (8192 * K)
 
 unsigned int phys_ram_size;
+
+
+// ptr to first byte of info flow log
+extern char *if_log_base;      
+
+// ptr to next byte to be written in info flow log
+extern char *if_log_ptr;      
+
+
+
+char ** op_start = NULL;
+uint32_t *count = NULL;
+
+
+
+
+void op_hex_dump(char **op_start, int i) {
+  unsigned char *p1, *p2, *p;
+
+  p1 = op_start[i-1]; 
+  p2 = op_start[i];
+  if (p1 == NULL) {
+    printf ("op_hex_dump found nothing.\n");
+  }
+  else {
+    if (p2 == NULL) {
+      p2 = if_log_ptr;
+    }
+    
+    printf ("\ni=%d p1=%p\n", i-1,p1);
+    for (p=p1; p<=p2; p++) {
+      if (p!=p1) {
+	if ((((uint64_t)p) % 16) == 0) {
+	  printf ("\n");
+	}
+	else {
+	  if ((((uint64_t)p) % 4) == 0) {
+	    printf (" ");
+	  }
+	}
+      }
+      if (*p < 0x10) {
+	printf ("0");
+      }
+      printf ("%x", *p);
+    }
+    printf ("\n");
+
+  }
+}
+
+
+
+
+void if_log_spit(char *filename) {
+  struct stat fs;
+  FILE *fp;
+  uint32_t if_log_size, n, i, num_syscalls, nnn;
+  iferret_op_t  *op1, *op2, *op, *op_last, *opt;
+  char command1[1024], command2[1024];
+
+  nnn = 10 * 1024 * 1024;
+  if (op_start == NULL) { 
+    op_start = (char **) calloc (sizeof (char *) * nnn, 1);
+    count = (uint32_t *) malloc (sizeof (uint32_t) * IFLO_DUMMY_LAST);
+  }
+
+  op1 = (iferret_op_t *) malloc (sizeof (iferret_op_t));
+  op2 = (iferret_op_t *) malloc (sizeof (iferret_op_t));
+  op1->syscall = (iferret_syscall_t *) malloc (sizeof (iferret_syscall_t));
+  op2->syscall = (iferret_syscall_t *) malloc (sizeof (iferret_syscall_t));
+  op1->syscall->command = command1;
+  op2->syscall->command = command2;
+
+
+  // pull the entire log into memory
+  stat(filename, &fs);
+  if_log_size = fs.st_size;
+  fp = fopen(filename, "r");
+  n =  fread(if_log_base, 1, if_log_size, fp);
+  //  printf ("n=%d\n", n);
+  fclose(fp);
+  if_log_ptr = if_log_base;
+  // and then parse the bugger.  
+  i=0;
+  num_syscalls = 0;
+  op_last = NULL;
+  op = op1; op_last = op2;
+  while (if_log_ptr < if_log_base + if_log_size) {
+    op_start[i] = if_log_ptr;
+    op->num = iferret_log_op_only_read();
+    count[op->num]++;
+    if ((iferret_log_sentinel_check()) == 0) {
+      printf ("sentinel failed at op %d\n", i);
+      printf ("%d %p:", i-1, op_start[i-1]);
+      iferret_spit_op(op_last);
+      printf ("%d %p: ", i, op_start[i]);
+      iferret_spit_op(op);
+      printf ("%d syscalls encountered\n", num_syscalls);
+      op_hex_dump(op_start, i-3);
+      op_hex_dump(op_start, i-2);
+      op_hex_dump(op_start, i-1);
+      op_hex_dump(op_start, i);
+      op_hex_dump(op_start, i+1);
+      exit(1);
+    }
+    iferret_log_op_args_read(op);
+
+    if (op->num >= IFLO_SYS_CALLS_START
+	|| op->num == IFLO_IRET
+	|| op->num == IFLO_IRET_PROTECTED
+	|| op->num == IFLO_IRET_REAL
+	|| op->num == IFLO_SET_CPL
+	//	|| op->num == IFLO_TB_HEAD_EIP
+	) {
+      iferret_spit_op(op);
+      num_syscalls ++;
+    }
+    opt = op; 
+    op = op_last;
+    op_last = opt;
+
+    i++;
+  }
+
+
+  free (op1->syscall);
+  free (op2->syscall);
+  free (op1);
+  free (op2);
+
+}
+      
+
+
+int compcounts(const void *pi1, const void *pi2) {
+  uint32_t i1, i2;
+
+  i1 = *((uint32_t *) pi1);
+  i2 = *((uint32_t *) pi2);
+  
+  if (count[i1] > count[i2]) return +1;
+  if (count[i1] < count[i2]) return -1;
+  return 0;
+
+}
 
 
 int main (int argc, char **argv) {
@@ -30,5 +185,21 @@ int main (int argc, char **argv) {
     sprintf(filename, "%s-%d", log_prefix, i);
     printf ("reading log: %s\n", filename);
     if_log_spit(filename);
+  }
+
+  {
+    uint32_t *countind,j;
+
+    countind = (uint32_t *) malloc (sizeof (uint32_t) * IFLO_DUMMY_LAST);
+    for (i=0; i<IFLO_DUMMY_LAST; i++) {
+      countind[i] = i;
+    }
+    qsort (countind, IFLO_DUMMY_LAST, sizeof(uint32_t), compcounts);
+    for (i=0; i<IFLO_DUMMY_LAST; i++) {
+      j = countind[i];
+      if (count[j] > 0) {
+	printf ("%d %d %s \n", count[j], j, iferret_op_num_to_str(j));
+      }
+    }
   }
 }
