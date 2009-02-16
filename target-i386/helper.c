@@ -26,6 +26,9 @@
 #include "host-utils.h"
 #include "iferret_log.h"
 #include "iferret_syscall.h"
+#include "int_set.h"
+
+uint32_t_set_t *pids_seen_table=NULL;
 
 void exit(int status);
 
@@ -41,6 +44,16 @@ extern struct _IO_FILE *stderr;         /* Standard error output stream.  */
 
 extern pid_t current_pid;
 extern uid_t current_uid;
+extern char *current_command;
+extern pid_t parent_pid;
+extern uid_t parent_uid;
+extern char *parent_command;
+
+void get_current_pid_uid(void);
+void write_current_pid_to_iferret_log(void);
+extern pid_t current_pid, last_pid;
+extern uid_t current_uid, last_uid;
+extern uint8_t no_pid_flag, no_uid_flag;
 
 
 //#define DEBUG_PCALL
@@ -637,18 +650,6 @@ do {\
 }
 
 
-
-void write_current_pid_to_iferret_log() {
-  /*     IFLW_PUT_OP(INFO_FLOW_OP_PID_CHANGE); */
-  /*     IFLW_PUT_UINT32_T(current_pid); */
-  iferret_log_op_write_4(IFLO_PID_CHANGE,current_pid);
-}
-
-void write_current_uid_to_iferret_log() {
-  /*     IFLW_PUT_OP(INFO_FLOW_OP_UID_CHANGE); */
-  /*     IFLW_PUT_UINT32_T(current_uid); */
-  iferret_log_op_write_4(IFLO_UID_CHANGE,current_uid);
-}
 
 
 /* protected mode interrupt */
@@ -4750,8 +4751,55 @@ void vmexit(uint64_t exit_code, uint64_t exit_info_1)
 }
 
 
-void helper_log_eip(void) {
+void write_eip_to_iferret_log(void) {
   iferret_log_op_write_4(IFLO_TB_HEAD_EIP, EIP);
+}
+
+
+void write_current_pid_to_iferret_log(void) {
+  iferret_log_op_write_4(IFLO_PID_CHANGE,current_pid);
+}
+
+void write_current_uid_to_iferret_log(void) {
+  iferret_log_op_write_4(IFLO_UID_CHANGE,current_uid);
+}
+
+
+void write_spawn_to_iferret_log(void) {
+  iferret_log_op_write_44s44s(IFLO_SPAWN_NEW_PID, current_pid,current_uid,current_command,parent_pid,parent_uid,parent_command);
+}
+
+
+
+
+void helper_manage_pid_stuff(void) {
+  // computes current process id, user id, command, and same for parent
+  // and store in globals
+  get_current_pid_uid();    
+  if ((no_pid_flag == 1) 
+      || (last_pid != current_pid)) {
+      // either first time or current pid has changed.
+    // write pid and uid to log
+    write_current_pid_to_iferret_log();
+  }
+  if ((no_uid_flag == 1) 
+      || (last_uid != current_uid)) {
+    // either this is first time or
+    // write uid to log
+    write_current_uid_to_iferret_log();
+  }
+  // if this is first time we've ever seen this pid, then log apparent spawn
+  if (pids_seen_table == NULL) {
+    pids_seen_table = uint32_t_set_create();
+  }  
+  if (!(uint32_t_set_mem(pids_seen_table, current_pid))) {
+    uint32_t_set_add(pids_seen_table, current_pid);
+    write_spawn_to_iferret_log();
+  }
+  no_pid_flag = 0;
+  no_uid_flag = 0;
+  last_pid = current_pid;
+  last_uid = current_uid;
 }
 
 #endif

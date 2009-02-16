@@ -27,13 +27,6 @@
 
 #include "iferret_log.h"
 
-void get_current_pid_uid(void);
-void write_current_pid_to_iferret_log(void);
-
-
-extern pid_t current_pid, last_pid;
-extern uid_t current_uid, last_uid;
-extern uint8_t no_pid_flag, no_uid_flag;
 
 #define PTR_TO_ADDR(ptr) (unsigned long long) ((unsigned long) ptr)
 
@@ -3004,31 +2997,22 @@ void OPPROTO op_invlpga(void)
 }
 
 
-void helper_log_eip(void);
+void write_eip_to_iferret_log(void);
+void helper_manage_pid_stuff(void);
 
+// Note: The fn calls within this op need to take no 
+// parameters.  That's why all the work is delegated to
+// inside helper.c and involves global variables.
 void OPPROTO op_info_flow_prologue(void) 
 {
-  // first, let's check if info flow log is anywhere near overflow
+  // check if info flow log is anywhere near overflow
   if ((if_log_ptr - if_log_base) + 10 > IF_LOG_SIZE) {
     if_log_rollup();
   }
-  // second, manage PID stuff.  
-  // computes current process id and storesin global current_pid
-  get_current_pid_uid();  
-  if ((no_pid_flag == 1) || 
-      (last_pid != current_pid)) {
-    // write pid to log
-    write_current_pid_to_iferret_log();
-  }
-  if ((no_uid_flag == 1) || 
-      (last_uid != current_uid)) {
-    // write uid to log
-    helper_log_eip();
-  }
-  no_pid_flag = 0;
-  no_uid_flag = 0;
-  last_pid = current_pid;
-  last_uid = current_uid;
+  // write eip of head of this tb
+  write_eip_to_iferret_log();
+  // manage PID stuff.  
+  helper_manage_pid_stuff();
 }
 
 

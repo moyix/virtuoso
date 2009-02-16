@@ -361,6 +361,17 @@ static inline void iferret_log_op_write_4444(iferret_log_op_enum_t op_num, uint3
 }
 
 
+static inline void iferret_log_op_write_44s44s(iferret_log_op_enum_t op_num, uint32_t x0, uint32_t x1, char *str0, uint32_t y0, uint32_t y1, char *str1) {
+  iferret_log_op_write_prologue(op_num);
+  iferret_log_uint32_t_write(x0);
+  iferret_log_uint32_t_write(x1);
+  iferret_log_string_write(str0);
+  iferret_log_uint32_t_write(y0);
+  iferret_log_uint32_t_write(y1);
+  iferret_log_string_write(str1);
+}
+
+
 void iferret_log_socketcall_write_va(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, ...);
 
 void iferret_log_socketcall_write_4444444444444444444

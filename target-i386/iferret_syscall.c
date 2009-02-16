@@ -37,6 +37,12 @@ target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 
 pid_t current_pid, last_pid;
 uid_t current_uid, last_uid;
+char current_command[256];
+
+
+pid_t parent_pid;
+uid_t parent_uid;
+char parent_command[256];
 
 uint8_t no_pid_flag = 1;
 uint8_t no_uid_flag = 1;
@@ -94,13 +100,16 @@ int copy_string(char *str, uint32_t vaddr) {
 }
   
 
-
+// returns the virtual (?) address of the current task structure
 static inline target_ulong get_task_struct_ptr (target_ulong current_esp) {
   target_phys_addr_t paddr;
   target_ulong current_task;
-  // find current_task, the ptr to the currently executing process' task_struct
+  // paddr is physical address of the current task pointer.
   paddr = cpu_get_phys_addr(env, (target_ulong) (current_esp & CURRENT_TASK_MASK)); 
   if (paddr!=-1) {
+    // read 4 bytes our of physical memory starting from phys addr paddr
+    // and deposit them in current_task, which contains, therefore
+    // a virtual address.
     cpu_physical_memory_read(paddr, (char *) &current_task, 4);
     return (current_task);
   }
@@ -111,9 +120,17 @@ static inline target_ulong get_task_struct_ptr (target_ulong current_esp) {
 
 void get_current_pid_uid() {
   target_ulong current_task; 
+  target_ulong parent_task;
+  
   current_task = get_task_struct_ptr(ESP);
   copy_task_struct_slot(current_task, PID_OFFSET, PID_SIZE, (char *) &current_pid);
   copy_task_struct_slot(current_task, UID_OFFSET, UID_SIZE, (char *) &current_uid);  
+  copy_task_struct_slot(current_task, COMM_OFFSET, COMM_SIZE, current_command);
+  copy_task_struct_slot(current_task, PARENT_TASK_PTR_OFFSET, sizeof(char *), 
+			(char *) &parent_task);
+  copy_task_struct_slot(parent_task, PID_OFFSET, PID_SIZE, (char *) &parent_pid);
+  copy_task_struct_slot(parent_task, UID_OFFSET, UID_SIZE, (char *) &parent_uid);
+  copy_task_struct_slot(parent_task, COMM_OFFSET, COMM_SIZE, parent_command);
 }
 
 

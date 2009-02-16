@@ -1187,6 +1187,9 @@ target_phys_addr_t cpu_get_phys_page_debug(CPUState *env, target_ulong addr)
 }
 
 
+// addr is a virtual address.
+// returns the corresponding physical address, given page tables
+// for currently running process.
 target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr) {
   uint32_t page_offset, page_size, pte;
   target_phys_addr_t paddr;
