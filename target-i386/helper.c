@@ -4767,7 +4767,9 @@ void write_current_uid_to_iferret_log() {
 
 
 void write_spawn_to_iferret_log() {
-  iferret_log_op_write_44s44s(IFLO_SPAWN_NEW_PID, current_pid,current_uid,current_command,parent_pid,parent_uid,parent_command);
+  //  iferret_log_op_write_44s44s(IFLO_SPAWN_NEW_PID, current_pid,current_uid,current_command,parent_pid,parent_uid,parent_command);
+  iferret_log_op_write_4444(IFLO_SPAWN_NEW_PID, current_pid,current_uid,parent_pid,parent_uid);
+  printf ("%d spawned %d\n", parent_pid, current_pid);
 }
 
 
@@ -4777,30 +4779,34 @@ void helper_manage_pid_stuff() {
   // computes current process id, user id, command, and same for parent
   // and store in globals
   get_current_pid_uid();    
-  if ((no_pid_flag == 1) 
-      || (last_pid != current_pid)) {
-    // either first time or current pid has changed.
-    // write pid and uid to log
-    write_current_pid_to_iferret_log();
+  if (current_pid != 0) {
+    if ((no_pid_flag == 1) 
+	|| (last_pid != current_pid)) {
+      // either first time or current pid has changed.
+      // write pid and uid to log
+      write_current_pid_to_iferret_log();
+    }
+    // if this is first time we've ever seen this pid, then log apparent spawn
+    if (pids_seen_table == NULL) {
+      pids_seen_table = uint32_t_set_new();
+    }  
+    if (!(uint32_t_set_mem(pids_seen_table, current_pid))) {
+      uint32_t_set_add(pids_seen_table, current_pid);
+      write_spawn_to_iferret_log();
+    }
+    no_pid_flag = 0;
+    last_pid = current_pid;
   }
-  if ((no_uid_flag == 1) 
-      || (last_uid != current_uid)) {
-    // either this is first time or
-    // write uid to log
-    write_current_uid_to_iferret_log();
+  if (current_uid != 0) {
+    if ((no_uid_flag == 1) 
+	|| (last_uid != current_uid)) {
+      // either this is first time or
+      // write uid to log
+      write_current_uid_to_iferret_log();
+    }
+    no_uid_flag = 0;
+    last_uid = current_uid;
   }
-  // if this is first time we've ever seen this pid, then log apparent spawn
-  if (pids_seen_table == NULL) {
-    pids_seen_table = uint32_t_set_new();
-  }  
-  if (!(uint32_t_set_mem(pids_seen_table, current_pid))) {
-    uint32_t_set_add(pids_seen_table, current_pid);
-    write_spawn_to_iferret_log();
-  }
-  no_pid_flag = 0;
-  no_uid_flag = 0;
-  last_pid = current_pid;
-  last_uid = current_uid;
 }
 
 #endif

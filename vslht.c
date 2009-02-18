@@ -27,7 +27,7 @@ Magic numbers
 #define OCC_FRACTION 0.8    // Max occupancy fraction before resize
 
 #define FALSE 0
-#define TRUE 0
+#define TRUE 1
 
 /**
    Forward definitions of private parts
@@ -435,7 +435,10 @@ static uint32_t __vslh_key(vslht *h, char *key) {
   ub4 jk;
   static ub4 prev_jk=0;
   l = strlen (key);
-  assert (l!=0);
+  if (l==0) {
+    return (0);
+  }
+
   jk = jenk_hash((ub1 *) key, (ub4) l, 0);
   prev_jk=jk;
   return (jk & (h->size - 1));

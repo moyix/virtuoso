@@ -8,7 +8,6 @@ typedef struct uint32_t_set_t_struct {
 } uint32_t_set_t;
 
 uint32_t_set_t *uint32_t_set_new(void);
-void __make_key(char *key, uint32_t x);
 void uint32_t_set_add(uint32_t_set_t *set, uint32_t x);
 void uint32_t_set_remove(uint32_t_set_t *set, uint32_t x);
 uint8_t uint32_t_set_mem(uint32_t_set_t *set, uint32_t x);

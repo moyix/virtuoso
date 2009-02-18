@@ -18,7 +18,8 @@
 #define PID_OFFSET 500
 #define UID_OFFSET 704
 #define COMM_OFFSET 792
-#define PARENT_TASK_PTR_OFFSET (PID_OFFSET + 3 * 4)
+// 3 * 4 didnt work
+#define PARENT_TASK_PTR_OFFSET (PID_OFFSET + 2 * 4)
 
 #define PID_SIZE 4
 #define UID_SIZE 4

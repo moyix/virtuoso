@@ -124,12 +124,25 @@ void if_log_spit(char *filename) {
       exit(1);
     }
     iferret_log_op_args_read(op);
-
+    if (op->num == IFLO_SPAWN_NEW_PID) {
+      printf ("pid %d pid %d spawned by pid %d\n",
+	      op->syscall->pid,
+	      op->arg[0].val.u32,
+	      op->arg[1].val.u32,
+	      op->arg[2].val.u32,
+	      op->arg[3].val.u32);
+    }
+    if (op->num == IFLO_SYS_SYS_EXIT_GROUP) {
+      printf ("pid %d exited.\n", op->syscall->pid);
+    }
     if (op->num >= IFLO_SYS_CALLS_START
-	|| op->num == IFLO_IRET
-	|| op->num == IFLO_IRET_PROTECTED
-	|| op->num == IFLO_IRET_REAL
-	|| op->num == IFLO_SET_CPL
+	//	|| op->num == IFLO_IRET
+	//	|| op->num == IFLO_IRET_PROTECTED
+	//	|| op->num == IFLO_IRET_REAL
+	//	|| op->num == IFLO_SET_CPL
+	//       || op->num == IFLO_SPAWN_NEW_PID
+	//	|| op->num == IFLO_PID_CHANGE
+	//	|| op->num == IFLO_UID_CHANGE
 	//	|| op->num == IFLO_TB_HEAD_EIP
 	) {
       iferret_spit_op(op);

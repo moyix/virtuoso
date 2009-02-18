@@ -125,12 +125,12 @@ void get_current_pid_uid() {
   current_task = get_task_struct_ptr(ESP);
   copy_task_struct_slot(current_task, PID_OFFSET, PID_SIZE, (char *) &current_pid);
   copy_task_struct_slot(current_task, UID_OFFSET, UID_SIZE, (char *) &current_uid);  
-  copy_task_struct_slot(current_task, COMM_OFFSET, COMM_SIZE, current_command);
+  //  copy_task_struct_slot(current_task, COMM_OFFSET, COMM_SIZE, current_command);
   copy_task_struct_slot(current_task, PARENT_TASK_PTR_OFFSET, sizeof(char *), 
 			(char *) &parent_task);
   copy_task_struct_slot(parent_task, PID_OFFSET, PID_SIZE, (char *) &parent_pid);
   copy_task_struct_slot(parent_task, UID_OFFSET, UID_SIZE, (char *) &parent_uid);
-  copy_task_struct_slot(parent_task, COMM_OFFSET, COMM_SIZE, parent_command);
+  //  copy_task_struct_slot(parent_task, COMM_OFFSET, COMM_SIZE, parent_command);
 }
 
 
