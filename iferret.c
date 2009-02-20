@@ -27,10 +27,18 @@ extern char *if_log_ptr;
 
 
 
+
+
+
+
+typedef struct opcount {
+  iferret_log_op_enum_t op_num;
+  uint32_t count;
+} opcount_t;
+
+
+opcount_t *opcount = NULL;
 char ** op_start = NULL;
-uint32_t *count = NULL;
-
-
 
 
 void op_hex_dump(char **op_start, int i) {
@@ -81,7 +89,7 @@ void if_log_spit(char *filename) {
   nnn = 10 * 1024 * 1024;
   if (op_start == NULL) { 
     op_start = (char **) calloc (sizeof (char *) * nnn, 1);
-    count = (uint32_t *) malloc (sizeof (uint32_t) * IFLO_DUMMY_LAST);
+    opcount = (opcount_t *) malloc (sizeof (opcount_t) * IFLO_DUMMY_LAST);
   }
 
   op1 = (iferret_op_t *) malloc (sizeof (iferret_op_t));
@@ -108,7 +116,8 @@ void if_log_spit(char *filename) {
   while (if_log_ptr < if_log_base + if_log_size) {
     op_start[i] = if_log_ptr;
     op->num = iferret_log_op_only_read();
-    count[op->num]++;
+    opcount[op->num].op_num = op->num;
+    opcount[op->num].count ++;
     if ((iferret_log_sentinel_check()) == 0) {
       printf ("sentinel failed at op %d\n", i);
       printf ("%d %p:", i-1, op_start[i-1]);
@@ -165,16 +174,15 @@ void if_log_spit(char *filename) {
       
 
 
-int compcounts(const void *pi1, const void *pi2) {
-  uint32_t i1, i2;
+int compcounts(const void *poc1, const void *poc2) {
+  opcount_t oc1, oc2;
 
-  i1 = *((uint32_t *) pi1);
-  i2 = *((uint32_t *) pi2);
-  
-  if (count[i1] > count[i2]) return +1;
-  if (count[i1] < count[i2]) return -1;
+  oc1 = *((opcount_t *) poc1);
+  oc2 = *((opcount_t *) poc2);
+
+  if (oc1.count > oc2.count) return +1;
+  if (oc1.count < oc2.count) return -1;
   return 0;
-
 }
 
 
@@ -201,17 +209,10 @@ int main (int argc, char **argv) {
   }
 
   {
-    uint32_t *countind,j;
-
-    countind = (uint32_t *) malloc (sizeof (uint32_t) * IFLO_DUMMY_LAST);
+    qsort (opcount, IFLO_DUMMY_LAST, sizeof(uint32_t), compcounts);
     for (i=0; i<IFLO_DUMMY_LAST; i++) {
-      countind[i] = i;
-    }
-    qsort (countind, IFLO_DUMMY_LAST, sizeof(uint32_t), compcounts);
-    for (i=0; i<IFLO_DUMMY_LAST; i++) {
-      j = countind[i];
-      if (count[j] > 0) {
-	printf ("%d %d %s \n", count[j], j, iferret_op_num_to_str(j));
+      if (opcount[i].count > 0) {
+	printf ("%d %d %s \n", i, opcount[i].op_num, iferret_op_num_to_str(opcount[i].op_num));
       }
     }
   }
