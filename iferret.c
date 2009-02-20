@@ -171,7 +171,62 @@ void if_log_spit(char *filename) {
   free (op2);
 
 }
-      
+
+
+
+
+typedef struct iferret_struct_t {
+  iferret_mode_enum_t mode;     // mode -- relaxed / suspicious
+  uint32_t_set_t *mal_pids;     // current set of malicious pids
+  uint32_t eip_at_head_of_tb;   // eip for head of tb currently being executed
+} iferret_t;
+
+
+iferret_t *iferret_create() {
+  iferret_t *iferret;
+
+  iferret = (iferret_t *) my_malloc (sizeof (iferret));
+  iferret->mode = IFERRET_MODE_RELAXED;
+  iferret->mal_pids = uint32_set_new();
+  return (iferret);
+}
+
+
+void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {
+
+  switch op->num {
+      IFLO_
+
+}
+
+
+void iferret_log_process(iferret_t *iferret, char *filename) {
+  struct stat fs;
+  uint32_t n;
+  FILE *fp;
+  iferret_op_t op;
+
+  // pull the entire log into memory
+  stat(filename, &fs);
+  if_log_size = fs.st_size;
+  fp = fopen(filename, "r");
+  n =  fread(if_log_base, 1, if_log_size, fp);
+  fclose(fp);
+  printf ("Processing log %s -- %d bytes\n", filename, n);
+  if_log_ptr = if_log_base;
+
+  // process each op in the log, in sequence
+  while (if_log_ptr < if_log_base + if_log_size) {
+    op.num = iferret_log_op_only_read();
+    if ((iferret_log_sentinel_check()) == 0) {
+      printf ("sentinel failed at op %d\n", i);
+      exit(1);
+    }
+    iferret_log_op_args_read(&op);
+    iferret_op_process(iferret,&op);
+  }
+
+}
 
 
 int compcounts(const void *poc1, const void *poc2) {
@@ -184,6 +239,7 @@ int compcounts(const void *poc1, const void *poc2) {
   if (oc1.count < oc2.count) return -1;
   return 0;
 }
+
 
 
 int main (int argc, char **argv) {
@@ -201,18 +257,21 @@ int main (int argc, char **argv) {
   
   printf ("ram is %d MB, giving total mem of %d\n", ram, phys_ram_size);
 
+
   if_log_create();
+  iferret = iferret_create();
+  // iterate over logfiles and process each in sequence
   for (i=0; i<num_logs; i++) {
     sprintf(filename, "%s-%d", log_prefix, i);
     printf ("reading log: %s\n", filename);
-    if_log_spit(filename);
+    if_log_process(iferret,filename);
   }
 
   {
-    qsort (opcount, IFLO_DUMMY_LAST, sizeof(uint32_t), compcounts);
+    qsort (opcount, IFLO_DUMMY_LAST, sizeof(opcount_t), compcounts);
     for (i=0; i<IFLO_DUMMY_LAST; i++) {
       if (opcount[i].count > 0) {
-	printf ("%d %d %s \n", i, opcount[i].op_num, iferret_op_num_to_str(opcount[i].op_num));
+	printf ("%d %d %d %s \n", i, opcount[i].op_num, opcount[i].count, iferret_op_num_to_str(opcount[i].op_num));
       }
     }
   }
