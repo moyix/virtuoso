@@ -3006,8 +3006,8 @@ void helper_manage_pid_stuff(void);
 void OPPROTO op_info_flow_prologue(void) 
 {
   // check if info flow log is anywhere near overflow
-  if ((if_log_ptr - if_log_base) + 10 > IF_LOG_SIZE) {
-    if_log_rollup();
+  if ((iferret_log_ptr - iferret_log_base) + 10 > IFERRET_LOG_SIZE) {
+    iferret_log_rollup();
   }
   // write eip of head of this tb
   write_eip_to_iferret_log();

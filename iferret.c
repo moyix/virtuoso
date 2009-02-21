@@ -20,10 +20,10 @@ unsigned int phys_ram_size;
 
 
 // ptr to first byte of info flow log
-extern char *if_log_base;      
+extern char *iferret_log_base;      
 
 // ptr to next byte to be written in info flow log
-extern char *if_log_ptr;      
+extern char *iferret_log_ptr;      
 
 
 
@@ -51,7 +51,7 @@ void op_hex_dump(char **op_start, int i) {
   }
   else {
     if (p2 == NULL) {
-      p2 = if_log_ptr;
+      p2 = iferret_log_ptr;
     }
     
     printf ("\ni=%d p1=%p\n", i-1,p1);
@@ -79,10 +79,10 @@ void op_hex_dump(char **op_start, int i) {
 
 
 
-void if_log_spit(char *filename) {
+void iferret_log_spit(char *filename) {
   struct stat fs;
   FILE *fp;
-  uint32_t if_log_size, n, i, num_syscalls, nnn;
+  uint32_t iferret_log_size, n, i, num_syscalls, nnn;
   iferret_op_t  *op1, *op2, *op, *op_last, *opt;
   char command1[1024], command2[1024];
 
@@ -102,19 +102,19 @@ void if_log_spit(char *filename) {
 
   // pull the entire log into memory
   stat(filename, &fs);
-  if_log_size = fs.st_size;
+  iferret_log_size = fs.st_size;
   fp = fopen(filename, "r");
-  n =  fread(if_log_base, 1, if_log_size, fp);
+  n =  fread(iferret_log_base, 1, iferret_log_size, fp);
   //  printf ("n=%d\n", n);
   fclose(fp);
-  if_log_ptr = if_log_base;
+  iferret_log_ptr = iferret_log_base;
   // and then parse the bugger.  
   i=0;
   num_syscalls = 0;
   op_last = NULL;
   op = op1; op_last = op2;
-  while (if_log_ptr < if_log_base + if_log_size) {
-    op_start[i] = if_log_ptr;
+  while (iferret_log_ptr < iferret_log_base + iferret_log_size) {
+    op_start[i] = iferret_log_ptr;
     op->num = iferret_log_op_only_read();
     opcount[op->num].op_num = op->num;
     opcount[op->num].count ++;
@@ -208,15 +208,15 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
 
   // pull the entire log into memory
   stat(filename, &fs);
-  if_log_size = fs.st_size;
+  iferret_log_size = fs.st_size;
   fp = fopen(filename, "r");
-  n =  fread(if_log_base, 1, if_log_size, fp);
+  n =  fread(iferret_log_base, 1, iferret_log_size, fp);
   fclose(fp);
   printf ("Processing log %s -- %d bytes\n", filename, n);
-  if_log_ptr = if_log_base;
+  iferret_log_ptr = iferret_log_base;
 
   // process each op in the log, in sequence
-  while (if_log_ptr < if_log_base + if_log_size) {
+  while (iferret_log_ptr < iferret_log_base + iferret_log_size) {
     op.num = iferret_log_op_only_read();
     if ((iferret_log_sentinel_check()) == 0) {
       printf ("sentinel failed at op %d\n", i);
@@ -258,13 +258,13 @@ int main (int argc, char **argv) {
   printf ("ram is %d MB, giving total mem of %d\n", ram, phys_ram_size);
 
 
-  if_log_create();
+  iferret_log_create();
   iferret = iferret_create();
   // iterate over logfiles and process each in sequence
   for (i=0; i<num_logs; i++) {
     sprintf(filename, "%s-%d", log_prefix, i);
     printf ("reading log: %s\n", filename);
-    if_log_process(iferret,filename);
+    iferret_log_process(iferret,filename);
   }
 
   {

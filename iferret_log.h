@@ -11,9 +11,9 @@
 #define THE_SENTINEL 0x42424242
 #define USE_SENTINEL 1
 #define MAX_STRING_LEN 2048
-#define IF_MAX_KEYBOARD_LABEL_LEN 1024
-#define IF_MAX_NETWORK_LABEL_LEN 2048
-#define IF_LOG_SIZE 50000000
+#define IFERRET_MAX_KEYBOARD_LABEL_LEN 1024
+#define IFERRET_MAX_NETWORK_LABEL_LEN 2048
+#define IFERRET_LOG_SIZE 50000000
 
 // We're pretending that real memeory, registers, io_buffer, and the hard drive are 
 // all in one continuous block of memory.  
@@ -103,64 +103,65 @@ typedef struct iferret_op_struct_t {
 
 
 
-char *if_log_ptr;      
-char *if_log_base;      
+extern char *iferret_log_ptr;      
+extern char *iferret_log_base;      
 
+extern uint8_t iferret_info_flow_on;
 
 
 void iferret_log_op_args_write(iferret_log_op_enum_t op_num, va_list op_args);
 
 void iferret_log_op_args_read(iferret_op_t *op);
 
-void if_set_keyboard_label(const char *label);
-void if_set_network_label(const char *label);
+void iferret_set_keyboard_label(const char *label);
+void iferret_set_network_label(const char *label);
 
 // write various unsigned ints to the log
 // and advance the log pointer
 static inline void iferret_log_uint8_t_write(uint8_t i) {
-  *((uint8_t *)if_log_ptr) = i;	
-  if_log_ptr += sizeof(uint8_t);  
+  *((uint8_t *)iferret_log_ptr) = i;	
+  iferret_log_ptr += sizeof(uint8_t);  
 }
 
 static inline void iferret_log_uint16_t_write(uint16_t i) {
-  *((uint16_t *)if_log_ptr) = i;	
-  if_log_ptr += sizeof(uint16_t);  
+  *((uint16_t *)iferret_log_ptr) = i;	
+  iferret_log_ptr += sizeof(uint16_t);  
 }
 
 static inline void iferret_log_uint32_t_write(uint32_t i) {
-  *((uint32_t *)if_log_ptr) = i;	
-  if_log_ptr += sizeof(uint32_t);  
+  *((uint32_t *)iferret_log_ptr) = i;	
+  iferret_log_ptr += sizeof(uint32_t);  
 }
 
 static inline void iferret_log_uint64_t_write(uint64_t i) {
-  *((uint64_t *)if_log_ptr) = i;	
-  if_log_ptr += sizeof(uint64_t);  
+  *((uint64_t *)iferret_log_ptr) = i;	
+  iferret_log_ptr += sizeof(uint64_t);  
 }
 
 
 // read various unsigned ints from the log
 // and advance the pointer
 static inline uint8_t iferret_log_uint8_t_read(void) {
-  uint8_t i = *((uint8_t *)if_log_ptr);
-  if_log_ptr += sizeof(uint8_t);  
+  uint8_t i = *((uint8_t *)iferret_log_ptr);
+  iferret_log_ptr += sizeof(uint8_t);  
   return(i);
 }
 
 static inline uint16_t iferret_log_uint16_t_read(void) {
-  uint16_t i = *((uint16_t *)if_log_ptr);
-  if_log_ptr += sizeof(uint16_t);  
+  uint16_t i = *((uint16_t *)iferret_log_ptr);
+  iferret_log_ptr += sizeof(uint16_t);  
   return(i);
 }
 
 static inline uint32_t iferret_log_uint32_t_read(void) {
-  uint32_t i = *((uint32_t *)if_log_ptr);
-  if_log_ptr += sizeof(uint32_t);  
+  uint32_t i = *((uint32_t *)iferret_log_ptr);
+  iferret_log_ptr += sizeof(uint32_t);  
   return(i);
 }
 
 static inline uint64_t iferret_log_uint64_t_read(void) {
-  uint64_t i = *((uint64_t *)if_log_ptr);
-  if_log_ptr += sizeof(uint64_t);  
+  uint64_t i = *((uint64_t *)iferret_log_ptr);
+  iferret_log_ptr += sizeof(uint64_t);  
   return(i);
 }
 
@@ -248,8 +249,6 @@ void iferret_log_sentinel(uint8_t write) {
 #endif
 
 
-
-
 static inline void iferret_log_op_write_prologue(iferret_log_op_enum_t op_num) {
   // write the op and the sentinel
   iferret_log_op_only_write(op_num);
@@ -257,111 +256,122 @@ static inline void iferret_log_op_write_prologue(iferret_log_op_enum_t op_num) {
 }
 
 
-// is this used? 
-#if 0
-// write an info-flow op and all its args to the log
-// op is the op number
-// op_fmt is a string telling us how to interpret the elements in op_args
-// op_args is a va_list containing the op args.
-void iferret_log_op_write(iferret_log_op_enum_t op_num, ...) {
-  va_list op_args;
-
-  // write the op and the sentinel
-  iferret_log_op_write_prologue(op_num);
-
-  // write the args specific to this op
-  va_start(op_args, op_num);
-  iferret_log_op_args_write(op_num, op_args);
-}
-#endif
-
 static inline void iferret_log_op_write_0(iferret_log_op_enum_t op_num) {
+#ifdef INFO_FLOW
   iferret_log_op_write_prologue(op_num);
+#endif
 }
 
 static inline void iferret_log_op_write_1(iferret_log_op_enum_t op_num, uint8_t x) {
+#ifdef INFO_FLOW
   iferret_log_op_write_prologue(op_num);
   iferret_log_uint8_t_write(x);
+#endif
 }
 
 static inline void iferret_log_op_write_2(iferret_log_op_enum_t op_num, uint16_t x) {
+#ifdef INFO_FLOW
   iferret_log_op_write_prologue(op_num);
   iferret_log_uint16_t_write(x);
+#endif
 }
 
 static inline void iferret_log_op_write_4(iferret_log_op_enum_t op_num, uint32_t x) {
+#ifdef INFO_FLOW
   iferret_log_op_write_prologue(op_num);
   iferret_log_uint32_t_write(x);
+#endif
 }
 
 static inline void iferret_log_op_write_8(iferret_log_op_enum_t op_num, uint64_t x) {
+#ifdef INFO_FLOW
   iferret_log_op_write_prologue(op_num);
   iferret_log_uint64_t_write(x);
+#endif
 }
 
 // used in ops_mem.h for (..,MEMSUFFIXNUM,A0);
 static inline void iferret_log_op_write_18(iferret_log_op_enum_t op_num, uint8_t x, uint64_t y) {
+#ifdef INFO_FLOW
   iferret_log_op_write_prologue(op_num);
   iferret_log_uint8_t_write(x);
   iferret_log_uint64_t_write(y);
+#endif
 }
 
 // used in ops_template.h for (..,IFRBA(IFRN_T1),2);
 static inline void iferret_log_op_write_81(iferret_log_op_enum_t op_num, uint64_t y, uint8_t x) {
+#ifdef INFO_FLOW
   iferret_log_op_write_prologue(op_num);
   iferret_log_uint64_t_write(y);
   iferret_log_uint8_t_write(x);
+#endif
 }
 
 static inline void iferret_log_op_write_s(iferret_log_op_enum_t op_num, char *s) {
+#ifdef INFO_FLOW
   iferret_log_op_write_prologue(op_num);
   iferret_log_string_write(s);
+#endif
 }
 
 static inline void iferret_log_op_write_84(iferret_log_op_enum_t op_num, uint64_t x, uint32_t y) {
+#ifdef INFO_FLOW
   iferret_log_op_write_prologue(op_num);
   iferret_log_uint64_t_write(x);
   iferret_log_uint32_t_write(y);
+#endif
 }
 
 static inline void iferret_log_op_write_884(iferret_log_op_enum_t op_num, uint64_t x, uint64_t y, uint32_t z) {
+#ifdef INFO_FLOW
   iferret_log_op_write_prologue(op_num);
   iferret_log_uint64_t_write(x);
   iferret_log_uint64_t_write(y);
   iferret_log_uint32_t_write(z);
+#endif
 }
 
 static inline void iferret_log_op_write_88(iferret_log_op_enum_t op_num, uint64_t x, uint64_t y) {
+#ifdef INFO_FLOW
   iferret_log_op_write_prologue(op_num);
   iferret_log_uint64_t_write(x);
   iferret_log_uint64_t_write(y);
+#endif
 }
 
 static inline void iferret_log_op_write_888(iferret_log_op_enum_t op_num, uint64_t x, uint64_t y, uint64_t z) {
+#ifdef INFO_FLOW
   iferret_log_op_write_prologue(op_num);
   iferret_log_uint64_t_write(x);
   iferret_log_uint64_t_write(y);
   iferret_log_uint64_t_write(z);
+#endif
 }
 
 static inline void iferret_log_op_write_8884(iferret_log_op_enum_t op_num, uint64_t x, uint64_t y, uint64_t z, uint32_t q) {
+#ifdef INFO_FLOW
   iferret_log_op_write_prologue(op_num);
   iferret_log_uint64_t_write(x);
   iferret_log_uint64_t_write(y);
   iferret_log_uint64_t_write(z);
   iferret_log_uint32_t_write(q);
+#endif
 }
 
 static inline void iferret_log_op_write_4444(iferret_log_op_enum_t op_num, uint32_t x, uint32_t y, uint32_t z, uint32_t q) {
+#ifdef INFO_FLOW
   iferret_log_op_write_prologue(op_num);
   iferret_log_uint32_t_write(x);
   iferret_log_uint32_t_write(y);
   iferret_log_uint32_t_write(z);
   iferret_log_uint32_t_write(q);
+#endif
 }
 
 
 static inline void iferret_log_op_write_44s44s(iferret_log_op_enum_t op_num, uint32_t x0, uint32_t x1, char *str0, uint32_t y0, uint32_t y1, char *str1) {
+#ifdef INFO_FLOW
   iferret_log_op_write_prologue(op_num);
   iferret_log_uint32_t_write(x0);
   iferret_log_uint32_t_write(x1);
@@ -369,6 +379,7 @@ static inline void iferret_log_op_write_44s44s(iferret_log_op_enum_t op_num, uin
   iferret_log_uint32_t_write(y0);
   iferret_log_uint32_t_write(y1);
   iferret_log_string_write(str1);
+#endif
 }
 
 
@@ -417,12 +428,12 @@ void iferret_log_socketcall_write_4
 
 void iferret_log_syscall_write_va(iferret_syscall_t *sc, ...);
 
-void if_log_create(void);
+void iferret_log_create(void);
 
 // this is defined in iferret_op_str.c, which is auto generated
 char *iferret_op_num_to_str(iferret_log_op_enum_t op_num);
 
-void if_log_rollup(void);
+void iferret_log_rollup(void);
 
 void iferret_spit_op(iferret_op_t *op);
 

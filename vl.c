@@ -242,6 +242,9 @@ static CPUState *cur_cpu;
 static CPUState *next_cpu;
 static int event_pending = 1;
 
+// resides in iferret_log.c
+extern uint8_t iferret_info_flow_on;
+
 #define TFR(expr) do { if ((expr) != -1) break; } while (errno == EINTR)
 
 /***********************************************************/
@@ -7747,6 +7750,10 @@ enum {
     QEMU_OPTION_old_param,
     QEMU_OPTION_clock,
     QEMU_OPTION_startdate,
+
+    // TRL 0902
+    QEMU_OPTION_info_flow
+
 };
 
 typedef struct QEMUOption {
@@ -7856,6 +7863,10 @@ const QEMUOption qemu_options[] = {
 #endif
     { "clock", HAS_ARG, QEMU_OPTION_clock },
     { "startdate", HAS_ARG, QEMU_OPTION_startdate },
+
+    // TRL 0902
+    { "info_flow", 0, QEMU_OPTION_info_flow },
+
     { NULL },
 };
 
@@ -8638,8 +8649,12 @@ int main(int argc, char **argv)
                 
             case QEMU_OPTION_name:
                 qemu_name = optarg;
-                
                 break;
+
+	    case QEMU_OPTION_info_flow:
+	      iferret_info_flow_on=1;
+                break;
+
 #ifdef TARGET_SPARC
             case QEMU_OPTION_prom_env:
                 if (nb_prom_envs >= MAX_PROM_ENVS) {
@@ -8858,8 +8873,8 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    //RWS we need phys_ram_base for if_log_create, so we're inserting here
-    if_log_create();
+    //RWS we need phys_ram_base for iferret_log_create, so we're inserting here
+    iferret_log_create();
 
 
     bdrv_init();

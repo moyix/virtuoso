@@ -31,8 +31,8 @@
 #include "iferret_log.h"
 
 // TRL info-flow 
-extern uint8_t if_keyboard_label_changed;
-extern char *if_keyboard_label;
+extern uint8_t iferret_keyboard_label_changed;
+extern char *iferret_keyboard_label;
 
 
 /* debug PC keyboard */
@@ -318,19 +318,19 @@ static uint32_t kbd_read_data(void *opaque, uint32_t addr)
       // if keyboard label has changed, we need
       // to push the new label to the info-flow log
       // before adding any new keyboard input to the log.
-      if (if_keyboard_label_changed) {
+      if (iferret_keyboard_label_changed) {
 	//	unsigned int i,l;
-	if_keyboard_label_changed = 0;
-	//	printf ("iferret_new_keybaord_label [%s]\n", if_keyboard_label);
+	iferret_keyboard_label_changed = 0;
+	//	printf ("iferret_new_keybaord_label [%s]\n", iferret_keyboard_label);
 	fflush(stdout);
-	iferret_log_op_write_s(IFLO_NEW_KEYBOARD_LABEL, if_keyboard_label);
+	iferret_log_op_write_s(IFLO_NEW_KEYBOARD_LABEL, iferret_keyboard_label);
 	//	IFLW(NEW_KEYBOARD_LABEL);
-/* 	l = strlen(if_keyboard_label); */
-/* 	if (l>=IF_MAX_KEYBOARD_LABEL_LEN) */
-/* 	  l = IF_MAX_KEYBOARD_LABEL_LEN-1; */
+/* 	l = strlen(iferret_keyboard_label); */
+/* 	if (l>=IFERRET_MAX_KEYBOARD_LABEL_LEN) */
+/* 	  l = IFERRET_MAX_KEYBOARD_LABEL_LEN-1; */
 /* 	IFLW_PUT_WORD(l); */
 /* 	for (i=0; i<l; i++) { */
-/* 	  IFLW_PUT_BYTE(if_keyboard_label[i]); */
+/* 	  IFLW_PUT_BYTE(iferret_keyboard_label[i]); */
 /* 	} */
       }
       //      IFLW_KEYBOARD_INPUT(rv);

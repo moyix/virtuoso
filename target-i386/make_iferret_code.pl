@@ -480,8 +480,8 @@ sub create_op_format() {
 	print "arg is $arg\n";
 	if ($arg =~ /^str[0-5]$/
 	    || $arg eq "label"
-	    || $arg eq "if_keyboard_label"
-	    || $arg eq "if_network_label"
+	    || $arg eq "iferret_keyboard_label"
+	    || $arg eq "iferret_network_label"
 	    || $arg eq "tempbuf"
 	    ) {
 	    # in order for this script to recognize an op logfile entry

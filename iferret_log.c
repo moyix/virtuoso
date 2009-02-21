@@ -13,21 +13,24 @@
 #include "target-i386/iferret_log_arg_fmt.h"
 #include "vslht.h"
 
+// turn info-flow logging on or off
+uint8_t iferret_info_flow_on = 0;
+
 // ptr to first byte of info flow log
-char *if_log_base = NULL;      
+char *iferret_log_base = NULL;      
 
 // ptr to next byte to be written in info flow log
-char *if_log_ptr = NULL;      
+char *iferret_log_ptr = NULL;      
 
-char *if_log_ptr_op_start = NULL;
+char *iferret_log_ptr_op_start = NULL;
 
-uint32_t if_log_rollup_count = 0;  
+uint32_t iferret_log_rollup_count = 0;  
 
-char *if_keyboard_label=NULL;
-uint8_t if_keyboard_label_changed = 0;
+char *iferret_keyboard_label=NULL;
+uint8_t iferret_keyboard_label_changed = 0;
 
-char* if_network_label=NULL;
-uint8_t if_network_label_changed = 0;
+char* iferret_network_label=NULL;
+uint8_t iferret_network_label_changed = 0;
 
 // we'll be using these as "addresses" for registers
 unsigned long long ifregaddr[16];
@@ -59,47 +62,54 @@ void iferret_log_syscall_common(iferret_syscall_t *sc, va_list op_args) {
 void iferret_log_syscall_write_va(iferret_syscall_t *sc, ...) {
   va_list op_args;
 
+#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(sc->op_num);
-
   va_start(op_args, sc);
   iferret_log_syscall_common(sc,op_args);
-
+#endif
 }  
 
 
 void iferret_log_socketcall_write_va(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, ...) {
   va_list op_args;
 
+#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
-
   va_start(op_args, op_num);
   iferret_log_syscall_common(sc,op_args);
-}  
+#endif
+}
 
 
 void iferret_log_socketcall_write_4(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
 				    uint32_t x0) {
+
+#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
   // write the std syscall stuff
   iferret_log_syscall_commoner(sc);
   iferret_log_uint32_t_write(x0);
+#endif
 }
 
 void iferret_log_socketcall_write_44(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
 				      uint32_t x0, uint32_t x1) {
+#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
   // write the std syscall stuff
   iferret_log_syscall_commoner(sc);
   iferret_log_uint32_t_write(x0);
   iferret_log_uint32_t_write(x1);
+#endif
 }
 
 void iferret_log_socketcall_write_444(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
 				      uint32_t x0, uint32_t x1, uint32_t x2) {
+#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
   // write the std syscall stuff
@@ -107,11 +117,13 @@ void iferret_log_socketcall_write_444(iferret_syscall_t *sc, iferret_log_op_enum
   iferret_log_uint32_t_write(x0);
   iferret_log_uint32_t_write(x1);
   iferret_log_uint32_t_write(x2);
+#endif
 }
 
 
 void iferret_log_socketcall_write_4444(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
 				       uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3) {
+#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
   // write the std syscall stuff
@@ -120,12 +132,14 @@ void iferret_log_socketcall_write_4444(iferret_syscall_t *sc, iferret_log_op_enu
   iferret_log_uint32_t_write(x1);
   iferret_log_uint32_t_write(x2);
   iferret_log_uint32_t_write(x3);
+#endif
 }
 
 void iferret_log_socketcall_write_444444444(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
 					    uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
 					    uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7,
 					    uint32_t x8) {
+#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
   // write the std syscall stuff
@@ -139,6 +153,7 @@ void iferret_log_socketcall_write_444444444(iferret_syscall_t *sc, iferret_log_o
   iferret_log_uint32_t_write(x6);
   iferret_log_uint32_t_write(x7);
   iferret_log_uint32_t_write(x8);
+#endif
 }
 
 
@@ -146,6 +161,7 @@ void iferret_log_socketcall_write_4444444444(iferret_syscall_t *sc, iferret_log_
 					     uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
 					     uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7,
 					     uint32_t x8, uint32_t x9) {
+#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
   // write the std syscall stuff
@@ -160,6 +176,7 @@ void iferret_log_socketcall_write_4444444444(iferret_syscall_t *sc, iferret_log_
   iferret_log_uint32_t_write(x7);
   iferret_log_uint32_t_write(x8);
   iferret_log_uint32_t_write(x9);
+#endif
 }
 
 
@@ -171,6 +188,7 @@ void iferret_log_socketcall_write_4444444444444444444
  uint32_t x12, uint32_t x13, uint32_t x14, uint32_t x15,
  uint32_t x16, uint32_t x17, uint32_t x18, uint32_t x19
  ) {
+#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
   // write the std syscall stuff
@@ -195,6 +213,7 @@ void iferret_log_socketcall_write_4444444444444444444
   iferret_log_uint32_t_write(x17);
   iferret_log_uint32_t_write(x18);
   iferret_log_uint32_t_write(x19);
+#endif
 }
 
 
@@ -349,32 +368,32 @@ void iferret_spit_op(iferret_op_t *op) {
 
 // this gets called from the qemu monitor in order to 
 // change the current keyboard label
-void if_set_keyboard_label(const char *label) {
-  if (if_keyboard_label == NULL) 
-    if_keyboard_label = (char *) malloc(IF_MAX_KEYBOARD_LABEL_LEN);
-  assert (if_keyboard_label != NULL);
-  printf ("if_set_keyboard_label: label is henceforth [%s]\n", label);
-  strncpy(if_keyboard_label, label, IF_MAX_KEYBOARD_LABEL_LEN);
-  if_keyboard_label_changed = 1;
+void iferret_set_keyboard_label(const char *label) {
+  if (iferret_keyboard_label == NULL) 
+    iferret_keyboard_label = (char *) malloc(IFERRET_MAX_KEYBOARD_LABEL_LEN);
+  assert (iferret_keyboard_label != NULL);
+  printf ("iferret_set_keyboard_label: label is henceforth [%s]\n", label);
+  strncpy(iferret_keyboard_label, label, IFERRET_MAX_KEYBOARD_LABEL_LEN);
+  iferret_keyboard_label_changed = 1;
 }
 
 // this gets called from the qemu monitor in order to 
 // change the current network label
-void if_set_network_label(const char *label) {
-  if (if_network_label == NULL) 
-    if_network_label = (char *) malloc(IF_MAX_NETWORK_LABEL_LEN);
-  assert (if_network_label != NULL);
-  printf ("if_set_network_label: label is henceforth [%s]\n", label);
-  strncpy(if_network_label, label, IF_MAX_NETWORK_LABEL_LEN);
-  if_network_label_changed = 1;
+void iferret_set_network_label(const char *label) {
+  if (iferret_network_label == NULL) 
+    iferret_network_label = (char *) malloc(IFERRET_MAX_NETWORK_LABEL_LEN);
+  assert (iferret_network_label != NULL);
+  printf ("iferret_set_network_label: label is henceforth [%s]\n", label);
+  strncpy(iferret_network_label, label, IFERRET_MAX_NETWORK_LABEL_LEN);
+  iferret_network_label_changed = 1;
 }
 
-void if_log_create() {
+void iferret_log_create() {
   int i;
   // initial info flow log allocation.
-  if_log_ptr = if_log_base = (char *) calloc (IF_LOG_SIZE,1);
-  if_set_keyboard_label("keyboard_startup");
-  if_set_network_label("network_startup");
+  iferret_log_ptr = iferret_log_base = (char *) calloc (IFERRET_LOG_SIZE,1);
+  iferret_set_keyboard_label("keyboard_startup");
+  iferret_set_network_label("network_startup");
   // set up ifregaddr array.
   for (i=0; i<16; i++) {
     // all addresses memory addresses will be on the interval 
@@ -391,32 +410,32 @@ void if_log_create() {
 
 
 // save current if log to a file for some reason    
-void if_log_write_to_file() {
+void iferret_log_write_to_file() {
   char filename[1024];
   FILE *fp;
 
-  printf ("if_log_ptr - if_log_base = %Lu\n", (unsigned long long) (if_log_ptr - if_log_base));
-  printf ("IF_LOG_SIZE = %d\n", IF_LOG_SIZE);
+  printf ("iferret_log_ptr - iferret_log_base = %Lu\n", (unsigned long long) (iferret_log_ptr - iferret_log_base));
+  printf ("IFERRET_LOG_SIZE = %d\n", IFERRET_LOG_SIZE);
 
-  snprintf (filename, 1024, "/scratch/tmp2/ifl-%d-%d", getpid(), if_log_rollup_count);
+  snprintf (filename, 1024, "/scratch/tmp2/ifl-%d-%d", getpid(), iferret_log_rollup_count);
 
   fp = fopen (filename, "w");
 
-  fwrite(if_log_base, 1, if_log_ptr-if_log_base, fp);
+  fwrite(iferret_log_base, 1, iferret_log_ptr-iferret_log_base, fp);
   fclose(fp);
   
   printf ("wrote if log to %s\n", filename);
-  if_log_rollup_count ++;
+  iferret_log_rollup_count ++;
 
 
   // processing complete; ready to write over old log.  
-  if_log_ptr = if_log_base; 
+  iferret_log_ptr = iferret_log_base; 
 
 }
 
 
 // info-flow log is full.  Dump it to a file. 
-void if_log_rollup() {
-  if_log_write_to_file();
+void iferret_log_rollup() {
+  iferret_log_write_to_file();
 }
 

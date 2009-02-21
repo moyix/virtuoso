@@ -1361,6 +1361,7 @@ static term_cmd_t term_cmds[] = {
       "addr size file", "save to disk virtual memory dump starting at 'addr' of size 'size'", },
 
     // TRL 03-2008
+    /*
     { "if_debug", "i", do_info_flow_debug,
       "", "change info-flow debug level (0,1,2,3,4) = (off,low,med,high,omg)",},
     { "if_key_label", "s", do_info_flow_set_keyboard_label,
@@ -1369,6 +1370,8 @@ static term_cmd_t term_cmds[] = {
       "", "turn on info-flow log file saving", },
     { "if_save_log_file_off", "", do_info_flow_save_log_file_off,
       "", "turn off info-flow log file saving", },
+    */
+
     // TRL 0805
     /*
     { "disable_tb_caching", "", do_disable_tb_caching,
