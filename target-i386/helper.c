@@ -419,14 +419,14 @@ static void switch_tss(int tss_selector,
 /*         IFLW_SAVE_REG(IFRN_EDI); */
 
 
-	iferret_log_op_write_4(IFLO_SAVE_REG,EAX);
-	iferret_log_op_write_4(IFLO_SAVE_REG,ECX);
-	iferret_log_op_write_4(IFLO_SAVE_REG,EDX);
-	iferret_log_op_write_4(IFLO_SAVE_REG,EBX);
-	iferret_log_op_write_4(IFLO_SAVE_REG,ESP);
-	iferret_log_op_write_4(IFLO_SAVE_REG,EBP);
-	iferret_log_op_write_4(IFLO_SAVE_REG,ESI);
-	iferret_log_op_write_4(IFLO_SAVE_REG,EDI);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EAX);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,ECX);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EDX);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EBX);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,ESP);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EBP);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,ESI);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EDI);
 
         for(i = 0; i < 6; i++)
             stw_kernel(env->tr.base + (0x48 + i * 4), env->segs[i].selector);
@@ -1732,7 +1732,7 @@ void helper_divl_EAX_T0(void)
         raise_exception(EXCP00_DIVZ);
 
     //  IFLW(DIVL_EAX_T0);
-    iferret_log_op_write_0(IFLO_DIVL_EAX_T0);
+    iferret_log_info_flow_op_write_0(IFLO_DIVL_EAX_T0);
 
     EAX = (uint32_t)q;
     EDX = (uint32_t)r;
@@ -1758,7 +1758,7 @@ void helper_idivl_EAX_T0(void)
         raise_exception(EXCP00_DIVZ);
 
     //  IFLW(IDIVL_EAX_T0);
-    iferret_log_op_write_0(IFLO_IDIVL_EAX_T0);
+    iferret_log_info_flow_op_write_0(IFLO_IDIVL_EAX_T0);
     
     EAX = (uint32_t)q;
     EDX = (uint32_t)r;
@@ -1774,7 +1774,7 @@ void helper_cmpxchg8b(void)
     if (d == (((uint64_t)EDX << 32) | EAX)) {
 
       //      IFLW(CMPXCHG8B_PART1);
-      iferret_log_op_write_0(IFLO_CMPXCHG8B_PART1);
+      iferret_log_info_flow_op_write_0(IFLO_CMPXCHG8B_PART1);
 
         stq(A0, ((uint64_t)ECX << 32) | EBX);
 	// NB: we'll expect this stq to resolve to some cpu-all.h stX_p thingey.
@@ -1786,7 +1786,7 @@ void helper_cmpxchg8b(void)
         EAX = d;
 
 	//	IFLW(CMPXCHG8B_PART2);	
-	iferret_log_op_write_0(IFLO_CMPXCHG8B_PART2);
+	iferret_log_info_flow_op_write_0(IFLO_CMPXCHG8B_PART2);
 
 	// no addr necessary here -- we are just setting EDX/EAX to the 64bits that 
 	// we loaded from addr A0.  Right?
@@ -4260,7 +4260,7 @@ void tlb_fill(target_ulong addr, int is_write, int mmu_idx, void *retaddr)
     env = saved_env;
 
     //    IFLW_SAVE_RESTORE_ENV(RESTORE_ENV);
-    iferret_log_op_write_0(IFLO_RESTORE_ENV);
+    iferret_log_info_flow_op_write_0(IFLO_RESTORE_ENV);
 
 }
 
@@ -4776,6 +4776,7 @@ void write_spawn_to_iferret_log() {
 
 
 void helper_manage_pid_stuff() {
+#ifdef IFERRET_PID_STUFF
   // computes current process id, user id, command, and same for parent
   // and store in globals
   get_current_pid_uid();    
@@ -4807,6 +4808,20 @@ void helper_manage_pid_stuff() {
     no_uid_flag = 0;
     last_uid = current_uid;
   }
+#endif
+}
+
+
+void iferret_debug_log_rollup() {
+  int n;
+  n = iferret_log_ptr - iferret_log_base;
+  if (n > 0 && ((n % 1000) == 0)) {
+    printf ("%d bytes written to iferret log\n", n);
+  }
 }
 
 #endif
+
+
+
+

@@ -62,54 +62,45 @@ void iferret_log_syscall_common(iferret_syscall_t *sc, va_list op_args) {
 void iferret_log_syscall_write_va(iferret_syscall_t *sc, ...) {
   va_list op_args;
 
-#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(sc->op_num);
   va_start(op_args, sc);
   iferret_log_syscall_common(sc,op_args);
-#endif
 }  
 
 
 void iferret_log_socketcall_write_va(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, ...) {
   va_list op_args;
 
-#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
   va_start(op_args, op_num);
   iferret_log_syscall_common(sc,op_args);
-#endif
 }
 
 
 void iferret_log_socketcall_write_4(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
 				    uint32_t x0) {
 
-#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
   // write the std syscall stuff
   iferret_log_syscall_commoner(sc);
   iferret_log_uint32_t_write(x0);
-#endif
 }
 
 void iferret_log_socketcall_write_44(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
 				      uint32_t x0, uint32_t x1) {
-#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
   // write the std syscall stuff
   iferret_log_syscall_commoner(sc);
   iferret_log_uint32_t_write(x0);
   iferret_log_uint32_t_write(x1);
-#endif
 }
 
 void iferret_log_socketcall_write_444(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
 				      uint32_t x0, uint32_t x1, uint32_t x2) {
-#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
   // write the std syscall stuff
@@ -117,13 +108,11 @@ void iferret_log_socketcall_write_444(iferret_syscall_t *sc, iferret_log_op_enum
   iferret_log_uint32_t_write(x0);
   iferret_log_uint32_t_write(x1);
   iferret_log_uint32_t_write(x2);
-#endif
 }
 
 
 void iferret_log_socketcall_write_4444(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
 				       uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3) {
-#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
   // write the std syscall stuff
@@ -132,14 +121,12 @@ void iferret_log_socketcall_write_4444(iferret_syscall_t *sc, iferret_log_op_enu
   iferret_log_uint32_t_write(x1);
   iferret_log_uint32_t_write(x2);
   iferret_log_uint32_t_write(x3);
-#endif
 }
 
 void iferret_log_socketcall_write_444444444(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
 					    uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
 					    uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7,
 					    uint32_t x8) {
-#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
   // write the std syscall stuff
@@ -153,7 +140,6 @@ void iferret_log_socketcall_write_444444444(iferret_syscall_t *sc, iferret_log_o
   iferret_log_uint32_t_write(x6);
   iferret_log_uint32_t_write(x7);
   iferret_log_uint32_t_write(x8);
-#endif
 }
 
 
@@ -161,7 +147,6 @@ void iferret_log_socketcall_write_4444444444(iferret_syscall_t *sc, iferret_log_
 					     uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
 					     uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7,
 					     uint32_t x8, uint32_t x9) {
-#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
   // write the std syscall stuff
@@ -176,7 +161,6 @@ void iferret_log_socketcall_write_4444444444(iferret_syscall_t *sc, iferret_log_
   iferret_log_uint32_t_write(x7);
   iferret_log_uint32_t_write(x8);
   iferret_log_uint32_t_write(x9);
-#endif
 }
 
 
@@ -188,7 +172,6 @@ void iferret_log_socketcall_write_4444444444444444444
  uint32_t x12, uint32_t x13, uint32_t x14, uint32_t x15,
  uint32_t x16, uint32_t x17, uint32_t x18, uint32_t x19
  ) {
-#ifdef INFO_FLOW
   // write the op and the sentinel
   iferret_log_op_write_prologue(op_num);
   // write the std syscall stuff
@@ -213,7 +196,6 @@ void iferret_log_socketcall_write_4444444444444444444
   iferret_log_uint32_t_write(x17);
   iferret_log_uint32_t_write(x18);
   iferret_log_uint32_t_write(x19);
-#endif
 }
 
 
