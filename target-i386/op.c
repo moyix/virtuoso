@@ -3005,21 +3005,18 @@ void helper_manage_pid_stuff(void);
 // inside helper.c and involves global variables.
 void OPPROTO op_info_flow_prologue(void) 
 {
-#ifdef IFERRET
+  // NB: This conditional is *expensive* so don't do it unless info_flow compiled in. 
+#ifdef IFERRET_INFO_FLOW
   // check if info flow log is anywhere near overflow
   if ((iferret_log_ptr - iferret_log_base) + 10 > IFERRET_LOG_SIZE) {
     iferret_log_rollup();
   }
   //  iferret_debug_log_rollup();
-#ifdef IFERRET_INFO_FLOW   
+#endif
   // write eip of head of this tb
   write_eip_to_iferret_log();
-#endif
-#ifdef IFERRET_PID_STUFF
   // manage PID stuff.  
   helper_manage_pid_stuff();
-#endif
-#endif
 }
 
 

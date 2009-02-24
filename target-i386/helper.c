@@ -4752,31 +4752,39 @@ void vmexit(uint64_t exit_code, uint64_t exit_info_1)
 }
 
 
+
 void write_eip_to_iferret_log() {
-  iferret_log_op_write_4(IFLO_TB_HEAD_EIP, EIP);
+#ifdef IFERRET_PHYS_EIP
+  iferret_log_op_write_4(IFLO_TB_HEAD_EIP, cpu_get_phys_addr(env,EIP));
+#endif // IFERRET_PHYS_EIP
 }
+
 
 
 void write_current_pid_to_iferret_log() {
+#ifdef IFERRET_PUID
   iferret_log_op_write_4(IFLO_PID_CHANGE,current_pid);
+#endif
 }
 
+
 void write_current_uid_to_iferret_log() {
+#ifdef IFERRET_PUID
   iferret_log_op_write_4(IFLO_UID_CHANGE,current_uid);
+#endif
 }
 
 
 void write_spawn_to_iferret_log() {
-  //  iferret_log_op_write_44s44s(IFLO_SPAWN_NEW_PID, current_pid,current_uid,current_command,parent_pid,parent_uid,parent_command);
-  iferret_log_op_write_4444(IFLO_SPAWN_NEW_PID, current_pid,current_uid,parent_pid,parent_uid);
+#ifdef IFERRET_PUID
+  iferret_log_op_write_4444(IFLO_SPAWN_NEW_PID,current_pid,current_uid,parent_pid,parent_uid);
   printf ("%d spawned %d\n", parent_pid, current_pid);
+#endif
 }
 
 
-
-
 void helper_manage_pid_stuff() {
-#ifdef IFERRET_PID_STUFF
+#ifdef IFERRET_PUID
   // computes current process id, user id, command, and same for parent
   // and store in globals
   get_current_pid_uid();    
@@ -4808,8 +4816,9 @@ void helper_manage_pid_stuff() {
     no_uid_flag = 0;
     last_uid = current_uid;
   }
-#endif
+#endif // IFERRET_PUID
 }
+
 
 
 void iferret_debug_log_rollup() {

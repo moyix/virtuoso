@@ -486,6 +486,7 @@ my %iferret_fmts;
 	print $fnsfh "  iferret_log_op_enum_t op_num";
 	&write_formals($fnsfh, $fmt);
 	print $fnsfh ")\n{\n";
+	print $fnsfh "  iferret_log_op_write_prologue(op_num);\n";
 	&write_log_calls($fnsfh, $fmt);
 	print $fnsfh "}\n\n";
 
@@ -495,34 +496,34 @@ my %iferret_fmts;
 	&write_formals($fnsfh, $fmt);
 	print $fnsfh ")\n{\n";
 	print $fnsfh "\#ifdef IFERRET_INFO_FLOW \n";
-	print $fnsfh "  iferret_log_op_write_$fmt(op_num";
-	&write_args($fnsfh, $fmt);
-	print $fnsfh ");\n";
+	print $fnsfh "  iferret_log_op_write_prologue(op_num);\n";
+	&write_log_calls($fnsfh, $fmt);
 	print $fnsfh "\#endif\n";
 	print $fnsfh "}\n\n";
 
-	# The syscall version
-	print $fnsfh "static inline void iferret_log_syscall_op_write_$fmt(\n";
+	# The socketcall version
+	print $fnsfh "void iferret_log_socketcall_op_write_$fmt(\n";
+	print $fnsfh "  iferret_syscall_t *sc,\n";
 	print $fnsfh "  iferret_log_op_enum_t op_num";
 	&write_formals($fnsfh, $fmt);
 	print $fnsfh ")\n{\n";
 	print $fnsfh "\#ifdef IFERRET_SYSCALL \n";
-	print $fnsfh "  iferret_log_op_write_$fmt(op_num";
-	&write_args($fnsfh, $fmt);
-	print $fnsfh ");\n";
+	print $fnsfh "  iferret_log_op_write_prologue(op_num);\n";
+	print $fnsfh "  iferret_log_syscall_commoner(sc);\n";
+	&write_log_calls($fnsfh, $fmt);
 	print $fnsfh "\#endif\n";
 	print $fnsfh "}\n\n";
 
-
-	# The socketcall version
-	print $fnsfh "static inline void iferret_log_socketcall_op_write_$fmt(\n";
+	# The syscall version
+	print $fnsfh "void iferret_log_syscall_op_write_$fmt(\n";
+	print $fnsfh "  iferret_syscall_t *sc,\n";
 	print $fnsfh "  iferret_log_op_enum_t op_num";
 	&write_formals($fnsfh, $fmt);
 	print $fnsfh ")\n{\n";
-	print $fnsfh "\#ifdef IFERRET_SOCKETCALL \n";
-	print $fnsfh "  iferret_log_op_write_$fmt(op_num";
-	&write_args($fnsfh, $fmt);
-	print $fnsfh ");\n";
+	print $fnsfh "\#ifdef IFERRET_SYSCALL \n";
+	print $fnsfh "  iferret_log_op_write_prologue(op_num);\n";
+	print $fnsfh "  iferret_log_syscall_commoner(sc);\n";
+	&write_log_calls($fnsfh, $fmt);
 	print $fnsfh "\#endif\n";
 	print $fnsfh "}\n\n";
 	
@@ -566,7 +567,6 @@ sub write_formals() {
 sub write_log_calls() {
     my ($fnsfh, $fmt) = @_;
     
-    print $fnsfh "  iferret_log_op_write_prologue(op_num);\n";
     my $l = length $fmt;
     for (my $i=0; $i<$l; $i++) {
 	my $f = substr($fmt,$i,1);
