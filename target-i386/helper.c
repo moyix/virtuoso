@@ -4760,6 +4760,18 @@ void write_eip_to_iferret_log() {
 }
 
 
+uint8_t in_kernel() {
+  return ((env->hflags & ~HF_CPL_MASK) == 0);
+}
+
+
+static inline int current_pid_valid() {
+  if (current_pid <0 || current_pid>32768) {
+    printf ("not in kernel but current_pid outside allowed range?\n");
+    exit (0);
+  }    
+  return (current_pid >=0 && current_pid<=32768);
+}
 
 void write_current_pid_to_iferret_log() {
 #ifdef IFERRET_PUID
@@ -4787,8 +4799,8 @@ void helper_manage_pid_stuff() {
 #ifdef IFERRET_PUID
   // computes current process id, user id, command, and same for parent
   // and store in globals
-  get_current_pid_uid();    
-  if (current_pid != 0) {
+  if (!in_kernel()) {
+    get_current_pid_uid();    
     if ((no_pid_flag == 1) 
 	|| (last_pid != current_pid)) {
       // either first time or current pid has changed.
@@ -4805,8 +4817,6 @@ void helper_manage_pid_stuff() {
     }
     no_pid_flag = 0;
     last_pid = current_pid;
-  }
-  if (current_uid != 0) {
     if ((no_uid_flag == 1) 
 	|| (last_uid != current_uid)) {
       // either this is first time or

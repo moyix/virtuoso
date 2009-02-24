@@ -26,7 +26,6 @@
 #include "lookup_table.h"
 #include "linux_task_struct_offsets.h"
 #include "../iferret_log.h"
-#include "iferret_log_simp.h"
 #include "iferret_syscall.h"
 
 extern struct CPUX86State *env;
@@ -131,6 +130,9 @@ void get_current_pid_uid() {
 			(char *) &parent_task);
   copy_task_struct_slot(parent_task, PID_OFFSET, PID_SIZE, (char *) &parent_pid);
   copy_task_struct_slot(parent_task, UID_OFFSET, UID_SIZE, (char *) &parent_uid);
+
+  if (current_pid<0 || current_pid>32768) 
+    current_pid = -1;
   //  copy_task_struct_slot(parent_task, COMM_OFFSET, COMM_SIZE, parent_command);
 }
 
@@ -146,10 +148,16 @@ static inline uint32_t get_uint32_t_phys(uint32_t virt_addr) {
 }
 
 void iferret_check_log_full() {
+  // NB: if we *arent* doing info-flow, then
+  // we can get away with checking the log only
+  // whenever we do any syscall logging.  
+  // but, if we *are* doing info-flow, there's not much point, eh? 
+#ifndef IFERRET_INFO_FLOW
   // check if info flow log is anywhere near overflow
   if ((iferret_log_ptr - iferret_log_base) + 10 > IFERRET_LOG_SIZE) {
     iferret_log_rollup();
   }
+#endif
 }
 
 
@@ -275,10 +283,10 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
       // NB: PID & EIP should be enough to match up.  EAX is the retval. 
       //      IFLS_IIII(IRET_OR_SYSEXIT, pid, eip_for_callsite, syscall_element.syscall_num, EAX);
       if (is_iret) {
-	iferret_log_syscall_op_write_4444(IFLO_IRET, pid, eip_for_callsite, syscall_element.syscall_num, EAX);
+	iferret_log_sysret_op_write_4444(IFLO_IRET, pid, eip_for_callsite, syscall_element.syscall_num, EAX);
       }
       else {
-	iferret_log_syscall_op_write_4444(IFLO_SYSEXIT_RET, pid, eip_for_callsite, syscall_element.syscall_num, EAX);
+	iferret_log_sysret_op_write_4444(IFLO_SYSEXIT_RET, pid, eip_for_callsite, syscall_element.syscall_num, EAX);
       }
       // and remove that call site item from the stack
       del_element(pid,syscall_element.offset-1);

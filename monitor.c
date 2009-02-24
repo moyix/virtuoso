@@ -374,6 +374,7 @@ static void do_info_cpu_stats (void)
 
 static void do_quit(void)
 {
+  iferret_log_rollup();
     exit(0);
 }
 
@@ -1258,18 +1259,16 @@ static void do_wav_capture (const char *path,
 #endif
 
 
+/*
 static void do_info_flow_debug(int l) {
-  //  if_debug_set(l);
+   if_debug_set(l);
 }
-
 
 
 // these ones should be called *after* issuing a stop to halt emulation. 
 static void do_info_flow_set_keyboard_label(const char *label) {
-  /*
   term_printf ("im in ur do_info_flow_set_keyboard_label %s\n", label);
   if_set_keyboard_label(label);
-  */
 }
 
 
@@ -1284,7 +1283,7 @@ static void do_info_flow_save_log_file_off() {
   //  if_save_log_off();
 }
 
-
+*/
 
 
 

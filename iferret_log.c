@@ -11,7 +11,6 @@
 
 #include "iferret_log.h"
 #include "target-i386/iferret_log_arg_fmt.h"
-#include "target-i386/iferret_log_simp.h"
 #include "vslht.h"
 
 // turn info-flow logging on or off
@@ -41,23 +40,6 @@ extern unsigned int phys_ram_size;
 
 
 
-
-void iferret_log_syscall_commoner(iferret_syscall_t *sc) {
-  // write the std syscall other args.
-  iferret_log_uint8_t_write(sc->is_sysenter);  
-  iferret_log_uint32_t_write(sc->pid);
-  iferret_log_uint32_t_write(sc->callsite_eip);
-  iferret_log_string_write(sc->command);
-
-}  
-
-
-void iferret_log_syscall_common(iferret_syscall_t *sc, va_list op_args) {
-  // write the std syscall other args.
-  iferret_log_syscall_commoner(sc);
-  // write the args specific to this call
-  iferret_log_op_args_write(sc->op_num, op_args);
-}  
 
 
 void iferret_log_syscall_write_va(iferret_syscall_t *sc, ...) {
@@ -203,7 +185,7 @@ void iferret_log_socketcall_write_4444444444444444444
   iferret_log_uint32_t_write(x18);
   iferret_log_uint32_t_write(x19);
 }
-
+*/
 
 
 
