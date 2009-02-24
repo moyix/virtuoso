@@ -2611,7 +2611,7 @@ void cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
                 /* RAM case */
                 ptr = phys_ram_base + addr1;
                 //		IFLW_CPU_WRITE_ADDR((ptr - (unsigned long) phys_ram_base));
-		iferret_log_op_write_8(IFLO_CPU_WRITE_ADDR,addr1);
+		iferret_log_info_flow_op_write_8(IFLO_CPU_WRITE_ADDR,addr1);
                 memcpy(ptr, buf, l);
                 if (!cpu_physical_memory_is_dirty(addr1)) {
                     /* invalidate code */
@@ -2648,7 +2648,7 @@ void cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
 	      addr1 =  (pd & TARGET_PAGE_MASK) + (addr & ~TARGET_PAGE_MASK);
 	      ptr = phys_ram_base + addr1;
 	      //		IFLW_CPU_READ_ADDR((ptr - phys_ram_base));
-	      iferret_log_op_write_8(IFLO_CPU_READ_ADDR, addr1);
+	      iferret_log_info_flow_op_write_8(IFLO_CPU_READ_ADDR, addr1);
 	      memcpy(buf, ptr, l);
             }
         }

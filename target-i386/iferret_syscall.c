@@ -26,6 +26,7 @@
 #include "lookup_table.h"
 #include "linux_task_struct_offsets.h"
 #include "../iferret_log.h"
+#include "iferret_log_simp.h"
 #include "iferret_syscall.h"
 
 extern struct CPUX86State *env;

@@ -152,7 +152,7 @@ DATA_TYPE REGPARM(1) glue(glue(__ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
             if ((addr & (DATA_SIZE - 1)) != 0)
                 goto do_unaligned_access;
 	    //	    IFLW_MMU_LD(IO_ALIGNED,addr, RYANS_MAGIC_NUMBER_2);
-	    iferret_log_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_IO_ALIGNED_,CSUFFIX), addr, RYANS_MAGIC_NUMBER_2,mmu_idx);  
+	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_IO_ALIGNED_,CSUFFIX), addr, RYANS_MAGIC_NUMBER_2,mmu_idx);  
             res = glue(io_read, SUFFIX)(physaddr, tlb_addr);
         } else if (((addr & ~TARGET_PAGE_MASK) + DATA_SIZE - 1) >= TARGET_PAGE_SIZE) {
             /* slow unaligned access (it spans two pages or IO) */
@@ -172,7 +172,7 @@ DATA_TYPE REGPARM(1) glue(glue(__ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
             }
 #endif
 	    //            IFLW_MMU_LD(UNALIGNED_SAME_PAGE,addr,physaddr);
-	    iferret_log_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_SAME_PAGE_,CSUFFIX), addr, physaddr, mmu_idx);
+	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_SAME_PAGE_,CSUFFIX), addr, physaddr, mmu_idx);
             res = glue(glue(ld, USUFFIX), _raw)((uint8_t *)(long)physaddr);
         }
     } else {
@@ -183,7 +183,7 @@ DATA_TYPE REGPARM(1) glue(glue(__ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
             do_unaligned_access(addr, READ_ACCESS_TYPE, mmu_idx, retaddr);
 #endif
 	//        IFLW_MMU_TLB_FILL();
-	iferret_log_op_write_0(IFLO_MMU_TLB_FILL);	
+	iferret_log_info_flow_op_write_0(IFLO_MMU_TLB_FILL);	
         tlb_fill(addr, READ_ACCESS_TYPE, mmu_idx, retaddr);
         goto redo;
     }
@@ -210,7 +210,7 @@ static DATA_TYPE glue(glue(slow_ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
             if ((addr & (DATA_SIZE - 1)) != 0)
                 goto do_unaligned_access;
 	    //	    IFLW_MMU_LD(UNALIGNED_DIFFERENT_PAGE_IO_PART2,addr,RYANS_MAGIC_NUMBER_2);
-	    iferret_log_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_IO_PART2_,CSUFFIX),addr,RYANS_MAGIC_NUMBER_2,mmu_idx);
+	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_IO_PART2_,CSUFFIX),addr,RYANS_MAGIC_NUMBER_2,mmu_idx);
             res = glue(io_read, SUFFIX)(physaddr, tlb_addr);
         } else if (((addr & ~TARGET_PAGE_MASK) + DATA_SIZE - 1) >= TARGET_PAGE_SIZE) {
         do_unaligned_access:
@@ -218,7 +218,7 @@ static DATA_TYPE glue(glue(slow_ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
             addr1 = addr & ~(DATA_SIZE - 1);
             addr2 = addr1 + DATA_SIZE;
 	    //	    IFLW_MMU_LD(UNALIGNED_DIFFERENT_PAGE_PART1,addr, RYANS_MAGIC_NUMBER_2);
-	    iferret_log_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART1_,CSUFFIX),addr,RYANS_MAGIC_NUMBER_2,mmu_idx);
+	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART1_,CSUFFIX),addr,RYANS_MAGIC_NUMBER_2,mmu_idx);
             res1 = glue(glue(slow_ld, SUFFIX), MMUSUFFIX)(addr1,
                                                           mmu_idx, retaddr);
             res2 = glue(glue(slow_ld, SUFFIX), MMUSUFFIX)(addr2,
@@ -233,12 +233,12 @@ static DATA_TYPE glue(glue(slow_ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
         } else {
 	  /* unaligned/aligned access in the same page */
 	  //	    IFLW_MMU_LD(UNALIGNED_DIFFERENT_PAGE_PART2,addr,physaddr);
-	  iferret_log_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART2_,CSUFFIX),addr,physaddr,mmu_idx);
+	  iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART2_,CSUFFIX),addr,physaddr,mmu_idx);
             res = glue(glue(ld, USUFFIX), _raw)((uint8_t *)(long)physaddr);
         }
     } else {
       //      IFLW_MMU_TLB_FILL();
-      iferret_log_op_write_0(IFLO_MMU_TLB_FILL);	
+      iferret_log_info_flow_op_write_0(IFLO_MMU_TLB_FILL);	
         /* the page is not in the TLB : fill it */
         tlb_fill(addr, READ_ACCESS_TYPE, mmu_idx, retaddr);
         goto redo;
@@ -299,7 +299,7 @@ void REGPARM(2) glue(glue(__st, SUFFIX), MMUSUFFIX)(target_ulong addr,
                 goto do_unaligned_access;
             retaddr = GETPC();
 	    //	    IFLW_MMU_ST(IO_ALIGNED,addr, RYANS_MAGIC_NUMBER_2, val);
-	    iferret_log_op_write_8884(glue(IFLO_MMU_ST_IO_ALIGNED_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx);
+	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_IO_ALIGNED_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx);
             glue(io_write, SUFFIX)(physaddr, val, tlb_addr, retaddr);
         } else if (((addr & ~TARGET_PAGE_MASK) + DATA_SIZE - 1) >= TARGET_PAGE_SIZE) {
         do_unaligned_access:
@@ -318,7 +318,7 @@ void REGPARM(2) glue(glue(__st, SUFFIX), MMUSUFFIX)(target_ulong addr,
             }
 #endif
 	    //            IFLW_MMU_ST(UNALIGNED_SAME_PAGE,addr,physaddr,val);
-	    iferret_log_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_SAME_PAGE_,CSUFFIX),addr, physaddr, val, mmu_idx); 
+	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_SAME_PAGE_,CSUFFIX),addr, physaddr, val, mmu_idx); 
            glue(glue(st, SUFFIX), _raw)((uint8_t *)(long)physaddr, val);
         }
     } else {
@@ -329,7 +329,7 @@ void REGPARM(2) glue(glue(__st, SUFFIX), MMUSUFFIX)(target_ulong addr,
             do_unaligned_access(addr, 1, mmu_idx, retaddr);
 #endif
 	//        IFLW_MMU_TLB_FILL();
-	iferret_log_op_write_0(IFLO_MMU_TLB_FILL);	
+	iferret_log_info_flow_op_write_0(IFLO_MMU_TLB_FILL);	
         tlb_fill(addr, 1, mmu_idx, retaddr);
         goto redo;
     }
@@ -355,12 +355,12 @@ static void glue(glue(slow_st, SUFFIX), MMUSUFFIX)(target_ulong addr,
             if ((addr & (DATA_SIZE - 1)) != 0)
                 goto do_unaligned_access;
 	    //	    IFLW_MMU_ST(UNALIGNED_DIFFERENT_PAGE_IO_PART2, addr, RYANS_MAGIC_NUMBER_2, val);
-	    iferret_log_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_IO_PART2_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx); 
+	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_IO_PART2_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx); 
             glue(io_write, SUFFIX)(physaddr, val, tlb_addr, retaddr);
         } else if (((addr & ~TARGET_PAGE_MASK) + DATA_SIZE - 1) >= TARGET_PAGE_SIZE) {
         do_unaligned_access:
 	  //           IFLW_MMU_ST(UNALIGNED_DIFFERENT_PAGE_PART1, addr, RYANS_MAGIC_NUMBER_2, val);
-	    iferret_log_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART1_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx); 
+	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART1_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx); 
             /* XXX: not efficient, but simple */
             /* Note: relies on the fact that tlb_fill() does not remove the
              * previous page from the TLB cache.  */
@@ -375,13 +375,13 @@ static void glue(glue(slow_st, SUFFIX), MMUSUFFIX)(target_ulong addr,
             }
         } else {
 	  //	    IFLW_MMU_ST(UNALIGNED_DIFFERENT_PAGE_PART2,addr,physaddr,val);
-	  iferret_log_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART2_,CSUFFIX),addr, physaddr, val, mmu_idx); 
+	  iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART2_,CSUFFIX),addr, physaddr, val, mmu_idx); 
             /* aligned/unaligned access in the same page */
             glue(glue(st, SUFFIX), _raw)((uint8_t *)(long)physaddr, val);
         }
     } else {
       //        IFLW_MMU_TLB_FILL();
-	iferret_log_op_write_0(IFLO_MMU_TLB_FILL);	
+	iferret_log_info_flow_op_write_0(IFLO_MMU_TLB_FILL);	
         /* the page is not in the TLB : fill it */
         tlb_fill(addr, 1, mmu_idx, retaddr);
         goto redo;

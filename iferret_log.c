@@ -11,6 +11,7 @@
 
 #include "iferret_log.h"
 #include "target-i386/iferret_log_arg_fmt.h"
+#include "target-i386/iferret_log_simp.h"
 #include "vslht.h"
 
 // turn info-flow logging on or off
@@ -63,7 +64,7 @@ void iferret_log_syscall_write_va(iferret_syscall_t *sc, ...) {
   va_list op_args;
 
   // write the op and the sentinel
-  iferret_log_op_write_prologue(sc->op_num);
+  iferret_log_op_prologue_write(sc->op_num);
   va_start(op_args, sc);
   iferret_log_syscall_common(sc,op_args);
 }  
@@ -73,7 +74,7 @@ void iferret_log_socketcall_write_va(iferret_syscall_t *sc, iferret_log_op_enum_
   va_list op_args;
 
   // write the op and the sentinel
-  iferret_log_op_write_prologue(op_num);
+  iferret_log_op_prologue_write(op_num);
   va_start(op_args, op_num);
   iferret_log_syscall_common(sc,op_args);
 }
@@ -83,7 +84,7 @@ void iferret_log_socketcall_write_4(iferret_syscall_t *sc, iferret_log_op_enum_t
 				    uint32_t x0) {
 
   // write the op and the sentinel
-  iferret_log_op_write_prologue(op_num);
+  iferret_log_op_prologue_write(op_num);
   // write the std syscall stuff
   iferret_log_syscall_commoner(sc);
   iferret_log_uint32_t_write(x0);
@@ -92,7 +93,7 @@ void iferret_log_socketcall_write_4(iferret_syscall_t *sc, iferret_log_op_enum_t
 void iferret_log_socketcall_write_44(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
 				      uint32_t x0, uint32_t x1) {
   // write the op and the sentinel
-  iferret_log_op_write_prologue(op_num);
+  iferret_log_op_prologue_write(op_num);
   // write the std syscall stuff
   iferret_log_syscall_commoner(sc);
   iferret_log_uint32_t_write(x0);
@@ -102,7 +103,7 @@ void iferret_log_socketcall_write_44(iferret_syscall_t *sc, iferret_log_op_enum_
 void iferret_log_socketcall_write_444(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
 				      uint32_t x0, uint32_t x1, uint32_t x2) {
   // write the op and the sentinel
-  iferret_log_op_write_prologue(op_num);
+  iferret_log_op_prologue_write(op_num);
   // write the std syscall stuff
   iferret_log_syscall_commoner(sc);
   iferret_log_uint32_t_write(x0);
@@ -114,7 +115,7 @@ void iferret_log_socketcall_write_444(iferret_syscall_t *sc, iferret_log_op_enum
 void iferret_log_socketcall_write_4444(iferret_syscall_t *sc, iferret_log_op_enum_t op_num, 
 				       uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3) {
   // write the op and the sentinel
-  iferret_log_op_write_prologue(op_num);
+  iferret_log_op_prologue_write(op_num);
   // write the std syscall stuff
   iferret_log_syscall_commoner(sc);
   iferret_log_uint32_t_write(x0);
@@ -128,7 +129,7 @@ void iferret_log_socketcall_write_444444444(iferret_syscall_t *sc, iferret_log_o
 					    uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7,
 					    uint32_t x8) {
   // write the op and the sentinel
-  iferret_log_op_write_prologue(op_num);
+  iferret_log_op_prologue_write(op_num);
   // write the std syscall stuff
   iferret_log_syscall_commoner(sc);
   iferret_log_uint32_t_write(x0);
@@ -148,7 +149,7 @@ void iferret_log_socketcall_write_4444444444(iferret_syscall_t *sc, iferret_log_
 					     uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7,
 					     uint32_t x8, uint32_t x9) {
   // write the op and the sentinel
-  iferret_log_op_write_prologue(op_num);
+  iferret_log_op_prologue_write(op_num);
   // write the std syscall stuff
   iferret_log_syscall_commoner(sc);
   iferret_log_uint32_t_write(x0);
@@ -173,7 +174,7 @@ void iferret_log_socketcall_write_4444444444444444444
  uint32_t x16, uint32_t x17, uint32_t x18, uint32_t x19
  ) {
   // write the op and the sentinel
-  iferret_log_op_write_prologue(op_num);
+  iferret_log_op_prologue_write(op_num);
   // write the std syscall stuff
   iferret_log_syscall_commoner(sc);
   iferret_log_uint32_t_write(x0);
