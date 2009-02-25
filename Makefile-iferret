@@ -3,8 +3,8 @@ TD=target-i386
  
 CFLAGS= -g
 
-iferret: iferret.o iferret_log.o iferret_op_str.o
-	$(CC) $(CFLAGS) -o iferret iferret.o iferret_log.o iferret_op_str.o
+iferret: iferret.o iferret_log.o iferret_op_str.o int_set.o vslht.o
+	$(CC) $(CFLAGS) -o iferret iferret.o iferret_log.o iferret_op_str.o int_set.o vslht.o
 
 
 iferret.o: iferret.c
@@ -16,7 +16,13 @@ iferret_log.o: iferret_log.c
 iferret_op_str.o: $(TD)/iferret_op_str.c
 	$(CC) $(CFLAGS) -c $(TD)/iferret_op_str.c 
 
+int_set.o: int_set.c
+	$(CC) $(CFLAGS) -c int_set.c 
+
+vslht.o: vslht.c
+	$(CC) $(CFLAGS) -c vslht.c 
+
 
 clean:
-	rm -f iferret.o iferret_log.o  $(TD)/iferret_op_str.o
+	rm -f iferret.o iferret_log.o  $(TD)/iferret_op_str.o int_set.o
 

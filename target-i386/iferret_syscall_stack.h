@@ -1,17 +1,22 @@
-#ifndef __LOOKUP_TABLE_
-#define __LOOKUP_TABLE_
+#ifndef __IFERRET_SYSCALL_STACK_H_
+#define __IFERRET_SYSCALL_STACK_H_
 
-struct syscall_entry{
+#include "iferret_log.h"
+
+#define MAX_PIDS 32768
+
+tyepdef struct iferret_syscall_stack_element_struct_t {
+  iferret_syscall_t syscall;
   int syscall_num;
   int eip;
   int offset;
-};
+} iferret_syscall_stack_element_t;
 
-struct syscall_stack{
+tyepdef struct iferret_syscall_stack_struct_t {
   int size;
   int capacity;
-  struct syscall_entry* stack;
-};
+  iferret_syscall_stack_element_t* stack;
+} iferret_syscall_stack_t;
 
 
 

@@ -38,11 +38,13 @@ target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 pid_t current_pid, last_pid;
 uid_t current_uid, last_uid;
 char current_command[256];
-
-
 pid_t parent_pid;
 uid_t parent_uid;
 char parent_command[256];
+struct timespec current_start_time;
+struct timespec current_real_start_time;
+struct timespec parent_start_time;
+struct timespec parent_real_start_time;
 
 uint8_t no_pid_flag = 1;
 uint8_t no_uid_flag = 1;
@@ -126,10 +128,15 @@ void get_current_pid_uid() {
   copy_task_struct_slot(current_task, PID_OFFSET, PID_SIZE, (char *) &current_pid);
   copy_task_struct_slot(current_task, UID_OFFSET, UID_SIZE, (char *) &current_uid);  
   //  copy_task_struct_slot(current_task, COMM_OFFSET, COMM_SIZE, current_command);
+  copy_task_struct_slot(current_task, REAL_START_TIME_OFFSET, REAL_START_TIME_SIZE, 
+			(char *) &current_real_start_time);
+  copy_task_struct_slot(current_task, START_TIME_OFFSET, START_TIME_SIZE, 
+			(char *) &current_start_time);
   copy_task_struct_slot(current_task, PARENT_TASK_PTR_OFFSET, sizeof(char *), 
 			(char *) &parent_task);
   copy_task_struct_slot(parent_task, PID_OFFSET, PID_SIZE, (char *) &parent_pid);
   copy_task_struct_slot(parent_task, UID_OFFSET, UID_SIZE, (char *) &parent_uid);
+
 
   if (current_pid<0 || current_pid>32768) 
     current_pid = -1;
@@ -204,20 +211,22 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
     scp->pid = pid;
     scp->callsite_eip = eip_for_callsite;
     scp->command = command;
-    
+    scp->eax = EAX;
+    scp->ebx = EBX;
+
     scp->op_num = EAX + IFLO_SYS_CALLS_START + 1;
     
     if (EAX==102) {
       // sys_socketcall has 17 sub-possibilities.
       // EBX=1 (socket) ... EBX=17 (recvmsg)
       // each with its own arg format.
-      scp->op_num += IFLO_SYS_SOCKETCALLS_START + EBX;      
+      scp->op_num = IFLO_SYS_SOCKETCALLS_START + EBX;      
       iferret_log_socketcall(scp);
       return;
     }
     
     // manage Ryan's stack
-    add_element(pid,eip_for_callsite,EAX);    
+    iferret_push_syscall(pid,eip_for_callsite,*scp);    
     
     // fprintf(logfile, "PID: %d, stack size:%d\n",pid,get_stack_size(pid));
     
@@ -289,7 +298,7 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
 	iferret_log_sysret_op_write_4444(IFLO_SYSEXIT_RET, pid, eip_for_callsite, syscall_element.syscall_num, EAX);
       }
       // and remove that call site item from the stack
-      del_element(pid,syscall_element.offset-1);
+      iferret_del_syscall_here(pid,syscall_element.offset-1);
     }	      
   }
 #endif

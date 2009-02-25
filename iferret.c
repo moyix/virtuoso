@@ -10,6 +10,7 @@
 
 #include "iferret_log.h"
 #include "target-i386/iferret_ops.h"
+#include "int_set.h"
 
 #define K 1024
 #define M (K * K)
@@ -25,6 +26,17 @@ extern char *iferret_log_base;
 // ptr to next byte to be written in info flow log
 extern char *iferret_log_ptr;      
 
+typedef enum iferret_mode_enum {
+  IFERRET_MODE_RELAXED,
+  IFERRET_MODE_SUSPICIOUS
+} iferret_mode_t;
+
+
+typedef struct iferret_struct_t {
+  iferret_mode_t mode;          // mode -- relaxed / suspicious
+  uint32_t_set_t *mal_pids;     // current set of malicious pids
+  uint32_t eip_at_head_of_tb;   // eip for head of tb currently being executed
+} iferret_t;
 
 
 
@@ -39,6 +51,16 @@ typedef struct opcount {
 
 opcount_t *opcount = NULL;
 char ** op_start = NULL;
+
+
+void *my_malloc(size_t n) {
+  void *p;
+
+  p = malloc(n);
+  assert(p!=0);
+  return (p);
+}
+
 
 
 void op_hex_dump(char **op_start, int i) {
@@ -57,11 +79,11 @@ void op_hex_dump(char **op_start, int i) {
     printf ("\ni=%d p1=%p\n", i-1,p1);
     for (p=p1; p<=p2; p++) {
       if (p!=p1) {
-	if ((((uint64_t)p) % 16) == 0) {
+	if ((((size_t)p) % 16) == 0) {
 	  printf ("\n");
 	}
 	else {
-	  if ((((uint64_t)p) % 4) == 0) {
+	  if ((((size_t)p) % 4) == 0) {
 	    printf (" ");
 	  }
 	}
@@ -175,34 +197,42 @@ void iferret_log_spit(char *filename) {
 
 
 
-typedef struct iferret_struct_t {
-  iferret_mode_enum_t mode;     // mode -- relaxed / suspicious
-  uint32_t_set_t *mal_pids;     // current set of malicious pids
-  uint32_t eip_at_head_of_tb;   // eip for head of tb currently being executed
-} iferret_t;
-
-
 iferret_t *iferret_create() {
   iferret_t *iferret;
 
-  iferret = (iferret_t *) my_malloc (sizeof (iferret));
+  iferret = (iferret_t *) my_malloc (sizeof (iferret_t));
   iferret->mode = IFERRET_MODE_RELAXED;
-  iferret->mal_pids = uint32_set_new();
+  iferret->mal_pids = uint32_t_set_new();
   return (iferret);
 }
 
 
+
+void iferret_push_syscall(iferret_t *iferret, iferret_syscall_t *sc) {
+  add_element(sc->pid, sc->callsite_eip, sc);
+}
+
 void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {
 
-  switch op->num {
-      IFLO_
-
+  if (op->num == IFLO_PID_CHANGE) {
+    // -->   iferret_log_op_write_4(IFLO_PID_CHANGE,current_pid);
+    iferret->current_pid = op->arg[0].u32;
+  }
+  if ((op->num > IFLO_SYS_CALLS_START) 
+      || (op-> == IFLO_IRET) 
+      || (op-> == IFLO_SYSEXIT_RET))  {  
+    iferret_push_syscall(iferret,op->syscall);
+  }
+  if (op->num < IFLO_SYS_CALLS_START) {
+    iferret_info_flow_process(iferret,op);
+  }
+ 
 }
 
 
 void iferret_log_process(iferret_t *iferret, char *filename) {
   struct stat fs;
-  uint32_t n;
+  uint32_t i, n, iferret_log_size;
   FILE *fp;
   iferret_op_t op;
 
@@ -216,6 +246,7 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
   iferret_log_ptr = iferret_log_base;
 
   // process each op in the log, in sequence
+  i=0;
   while (iferret_log_ptr < iferret_log_base + iferret_log_size) {
     op.num = iferret_log_op_only_read();
     if ((iferret_log_sentinel_check()) == 0) {
@@ -224,6 +255,7 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
     }
     iferret_log_op_args_read(&op);
     iferret_op_process(iferret,&op);
+    i++;
   }
 
 }
@@ -245,7 +277,8 @@ int compcounts(const void *poc1, const void *poc2) {
 int main (int argc, char **argv) {
   char *log_prefix, filename[1024];
   int i,num_logs, ram;
-  
+  iferret_t *iferret; 
+
   if (argc != 4) {
     printf ("Usage: iferret ramsize log_prefix num_logs\n");
     exit(1);
