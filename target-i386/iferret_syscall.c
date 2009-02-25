@@ -23,10 +23,11 @@
 #include <unistd.h>
 
 #include "exec.h"
-#include "lookup_table.h"
+
 #include "linux_task_struct_offsets.h"
 #include "../iferret_log.h"
 #include "iferret_syscall.h"
+#include "iferret_syscall_stack.h"
 
 extern struct CPUX86State *env;
 extern pid_t pid;
@@ -192,7 +193,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
   copy_task_struct_slot(current_task, UID_OFFSET, UID_SIZE, (char *) &uid);
   copy_task_struct_slot(current_task, COMM_OFFSET, COMM_SIZE, command);
   
-  init_table();
+  //  init_table();
   
   
   if ((EAX==11) || (EAX==119)
@@ -247,7 +248,8 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
   uint8_t is_sysenter;
   target_ulong current_task;
   target_phys_addr_t paddr, eip_for_callsite;
-  struct syscall_entry syscall_element;
+  iferret_syscall_stack_element_t element;
+
   int pid,uid;
   char command[COMM_SIZE];
 
@@ -282,23 +284,23 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
     cpu_physical_memory_read(paddr, (char *) &eip_for_callsite, 4);    
     // find corresponding call to do_interrupt or sys_enter that preceded this return
     if (is_iret) {
-      syscall_element = find_element_with_eip(pid, eip_for_callsite, another_eip);
+      element = iferret_get_syscall_with_eip(pid, eip_for_callsite, another_eip);
     }
     else {
-      syscall_element = find_element_with_eip(pid, eip_for_callsite, -1);
+      element = iferret_get_syscall_with_eip(pid, eip_for_callsite, -1);
     }
-    if (syscall_element.eip != -1){
+    if (element.syscall.callsite_eip != -1){
       // found it!  Log it. 
       // NB: PID & EIP should be enough to match up.  EAX is the retval. 
-      //      IFLS_IIII(IRET_OR_SYSEXIT, pid, eip_for_callsite, syscall_element.syscall_num, EAX);
+      //      IFLS_IIII(IRET_OR_SYSEXIT, pid, eip_for_callsite, element.syscall_num, EAX);
       if (is_iret) {
-	iferret_log_sysret_op_write_4444(IFLO_IRET, pid, eip_for_callsite, syscall_element.syscall_num, EAX);
+	iferret_log_sysret_op_write_4444(IFLO_IRET, pid, eip_for_callsite, element.syscall.eax, EAX);
       }
       else {
-	iferret_log_sysret_op_write_4444(IFLO_SYSEXIT_RET, pid, eip_for_callsite, syscall_element.syscall_num, EAX);
+	iferret_log_sysret_op_write_4444(IFLO_SYSEXIT_RET, pid, eip_for_callsite, element.syscall.eax, EAX);
       }
       // and remove that call site item from the stack
-      iferret_delete_syscall_at_offset(pid, syscall_element.offset-1);
+      iferret_delete_syscall_at_offset(pid, element.offset);
     }	      
   }
 #endif

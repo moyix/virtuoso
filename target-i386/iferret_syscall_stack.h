@@ -9,7 +9,7 @@ typedef struct iferret_syscall_stack_element_struct_t {
   iferret_syscall_t syscall;   // syscall info
   //  int syscall_num;
   //  int eip;
-  int offset;                  // index of this element ?
+  int index;                  // index of this element ?
 } iferret_syscall_stack_element_t;
 
 typedef struct iferret_syscall_stack_struct_t {

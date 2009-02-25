@@ -5,6 +5,7 @@
 
 iferret_syscall_stack_t *iferret_syscall_stack=NULL;
 
+const iferret_syscall_stack_element_t not_found_element = {{-1,-1,-1,-1,-1,-1,NULL},-1};
 
 static inline void *my_malloc(size_t n) {
   void *p;
@@ -79,7 +80,7 @@ void iferret_push_syscall(iferret_syscall_t syscall) {
   stack = &(iferret_syscall_stack[syscall.pid]);
   // add the element.
   stack->stack[stack->size].syscall = syscall;	
-  stack->stack[stack->size].offset = stack->size; // element needs to know its own offset
+  stack->stack[stack->size].index = stack->size; // element needs to know its own index as it will get disconnected
   stack->size++;
 }
 
@@ -91,8 +92,8 @@ int iferret_get_syscall_stack_size(int pid) {
 }
 
 
-// deletes the element at this offset within the stack for pid.
-void iferret_delete_syscall_at_offset(int pid, int offset) {
+// deletes the element at this index within the stack for pid.
+void iferret_delete_syscall_at_index(int pid, int index) {
   iferret_syscall_stack_t *stack;
   int i;	
   check_pid(pid);
@@ -103,41 +104,55 @@ void iferret_delete_syscall_at_offset(int pid, int offset) {
     printf("Error, attempting to underflow\n");
     exit(1);
   }
-  if (offset == 0) {
-    // last one added is removed -- just decrease size.
-    // note: don't bother shrinking stack -- might need capacity later
+  if (stack->size == 1) {
+    // only one there -- just decrease stack size by one.
   }
   else {
-    // move everything down by one to delete element at offset.  
+    // move everything down by one to delete element at index  
     // note that offset=0 means delete element from top of stack,
     // offset=1 means delete element one down from top, etc.
-    for(i=stack->size - offset - 1; i < stack->size - 1; i++) {
+    //    for(i=stack->size - offset - 1; i < stack->size - 1; i++) {
+    for (i=index; i<stack->size-1; i++) {
       stack->stack[i].syscall = stack->stack[i+1].syscall;
-      stack->stack[i].offset = i;
+      stack->stack[i].index = i;
     }
   }
   stack->size --;
 }
 
-const iferret_syscall_stack_element_t not_found_element = {{-1,-1,-1,-1,-1,-1,NULL},-1};
+void iferret_delete_syscall_at_offset(int pid, int offset) {
+  iferret_syscall_stack_t *stack;
+  check_pid(pid);
+  iferret_init_syscall_stacks();
+  check_pid(pid);
+  stack = &(iferret_syscall_stack[pid]);
+  iferret_delete_syscall_at_index(pid, stack->size - 1 - offset);
+}
 
 
 // Return the element at offset for pid's stack, or a default value if
 // there stack isn't deep enough to have that value, to indicate not found.
+iferret_syscall_stack_element_t iferret_get_syscall_at_index(int pid, int index) {
+  iferret_syscall_stack_t *stack;
+  check_pid(pid);
+  stack = &(iferret_syscall_stack[pid]);
+  if (index<0 || index>=stack->size) {
+    return not_found_element;		
+  }
+  return stack->stack[index];
+}
+
+
+// same as ..._index except offset is index wrt to end, i.e. top of stack
+// that is, offset=0 is last element or stack->size-1.
+// offset=1 is 2nd to last, i.e. stack->size-2.
+// etc.
 iferret_syscall_stack_element_t iferret_get_syscall_at_offset(int pid, int offset) {
   iferret_syscall_stack_t *stack;
   check_pid(pid);
   stack = &(iferret_syscall_stack[pid]);
-  if (stack->size - offset <= 0){
-    /*
-    iferret_syscall_stack_element_t default_element;
-    default_element.offset = -1;
-    default_element.syscall.callsite_eip = -1;
-    default_element.syscall.eax = -1;  
-    */
-    return not_found_element;		
-  }
-  return stack->stack[stack->size - 1 - offset];
+  assert (offset >= 0);
+  return (iferret_get_syscall_at_index(pid, stack->size - 1 - offset));
 }
 
 
@@ -146,12 +161,12 @@ iferret_syscall_stack_element_t iferret_get_syscall_at_offset(int pid, int offse
 // Return that element. 
 // NB: special element with .eip slot set to -1 will be returned if not found. 
 iferret_syscall_stack_element_t iferret_get_syscall_with_eip(int pid, int this_eip, int another_eip) {
-  int offset;
+  int index;
   iferret_syscall_stack_element_t element;
   iferret_syscall_stack_t *stack;
   stack = &(iferret_syscall_stack[pid]);
-  for (offset=0; offset<stack->size; offset++) {
-    element = iferret_get_syscall_at_offset(pid,offset);
+  for (index=stack->size-1; index>=0; index--) {
+    element = iferret_get_syscall_at_index(pid,index);
     if (element.syscall.callsite_eip == this_eip) {
       // eips match 
       return element;
@@ -163,21 +178,6 @@ iferret_syscall_stack_element_t iferret_get_syscall_with_eip(int pid, int this_e
     }
   }
   return not_found_element;
-  /*
-  do {
-    element = iferret_get_syscall_at_offset(pid,offset);
-    offset ++;
-  } while ((element.syscall.callsite_eip != -1)
-           && (element.syscall.callsite_eip != this_eip)
-	   && ((another_eip != -1) && 
-	       (element.syscall.callsite_eip != another_eip)));
-  if (element.syscall.callsite_eip == -1)
-    // didn't find it
-    return element;
-  
-  assert((element.syscall.callsite_eip == -1) || (element.offset == offset));
-  return (element);
-  */
 }
 
 
@@ -281,10 +281,12 @@ int main (int argc, char** argv) {
 	pid = rand() % MAX_PID;
 	if ((rand () % 2) == 0) {
 	  int offset; 
+	  iferret_syscall_stack_element_t element;
 	  offset = rand() % 10;
-	  if ((iferret_get_syscall_at_offset(pid,offset)).offset != -1) {
-	    printf ("deleting pid=%d offset=%d\n", pid, offset);
-	    del_syscall(pid,offset);
+	  element = iferret_get_syscall_at_offset(pid,offset);
+	  if (element.index != -1) {
+	    printf ("deleting pid=%d offset=%d index=%d\n", pid, offset, element.index);
+	    iferret_delete_syscall_at_offset(pid,offset);
 	  }
 	}
 	else { 
@@ -292,9 +294,9 @@ int main (int argc, char** argv) {
 	  eip = rand();
 	  iferret_syscall_stack_element_t element;
 	  element = iferret_get_syscall_with_eip(pid,eip,-1);
-	  if (element.offset != -1) {
-	    printf ("deleting pid=%d offset=%d\n", pid, element.offset);	    
-	    del_syscall(pid,element.offset);
+	  if (element.index != -1) {
+	    printf ("deleting pid=%d index=%d\n", pid, element.index);	    
+	    iferret_delete_syscall_at_index(pid,element.index);
 	  }
 	}
       }
