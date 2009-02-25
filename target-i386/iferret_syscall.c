@@ -227,7 +227,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
     }
     
     // manage Ryan's stack
-    iferret_push_syscall(*scp);    
+    iferret_syscall_stack_push(*scp);    
     
     // fprintf(logfile, "PID: %d, stack size:%d\n",pid,get_stack_size(pid));
     
@@ -284,10 +284,10 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
     cpu_physical_memory_read(paddr, (char *) &eip_for_callsite, 4);    
     // find corresponding call to do_interrupt or sys_enter that preceded this return
     if (is_iret) {
-      element = iferret_get_syscall_with_eip(pid, eip_for_callsite, another_eip);
+      element = iferret_syscall_stack_get_with_eip(pid, eip_for_callsite, another_eip);
     }
     else {
-      element = iferret_get_syscall_with_eip(pid, eip_for_callsite, -1);
+      element = iferret_syscall_stack_get_with_eip(pid, eip_for_callsite, -1);
     }
     if (element.syscall.callsite_eip != -1){
       // found it!  Log it. 
@@ -300,7 +300,7 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
 	iferret_log_sysret_op_write_4444(IFLO_SYSEXIT_RET, pid, eip_for_callsite, element.syscall.eax, EAX);
       }
       // and remove that call site item from the stack
-      iferret_delete_syscall_at_offset(pid, element.offset);
+      iferret_syscall_stack_delete_at_offset(pid, element.offset);
     }	      
   }
 #endif

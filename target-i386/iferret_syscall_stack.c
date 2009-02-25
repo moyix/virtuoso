@@ -24,7 +24,7 @@ static inline void *my_realloc(void *p, size_t n) {
 
 
 // initialize the per-pid syscall stacks. 
-void iferret_init_syscall_stacks(){
+void iferret_syscall_stacks_init(){
   int i;
   if (iferret_syscall_stack == NULL) {
     iferret_syscall_stack = (iferret_syscall_stack_t *)
@@ -39,10 +39,10 @@ void iferret_init_syscall_stacks(){
 
 
 // check if table for pid is big enough.  grow if necessary
-void iferret_resize_syscall_stack(int pid) {
+void _resize_syscall_stack(int pid) {
   iferret_syscall_stack_t *stack;
   // make sure they exist.
-  iferret_init_syscall_stacks();
+  iferret_syscall_stacks_init();
   // local pointer 
   stack = &(iferret_syscall_stack[pid]);
   // no space at all
@@ -62,7 +62,7 @@ void iferret_resize_syscall_stack(int pid) {
 
 
 // die if pid not in allowed range
-void check_pid(int pid) {
+void _check_pid(int pid) {
   if ((pid < 0) || (pid > MAX_PID-1)) {
     printf("Error pid out of range\n");
     exit(1);
@@ -71,11 +71,11 @@ void check_pid(int pid) {
 
 
 // push this (eip,syscall_num) pair to stack for pid.
-void iferret_push_syscall(iferret_syscall_t syscall) {
+void iferret_syscall_stack_push(iferret_syscall_t syscall) {
   iferret_syscall_stack_t *stack;
-  check_pid(syscall.pid);
+  _check_pid(syscall.pid);
   // check to see if there's capacity in the stack  
-  iferret_resize_syscall_stack(syscall.pid);
+  _resize_syscall_stack(syscall.pid);
   // this is the stack for this pid. 
   stack = &(iferret_syscall_stack[syscall.pid]);
   // add the element.
@@ -86,19 +86,18 @@ void iferret_push_syscall(iferret_syscall_t syscall) {
 
 
 // just returns the number of elements in stack for pid
-int iferret_get_syscall_stack_size(int pid) {
-  iferret_init_syscall_stacks();
-  return iferret_syscall_stack[pid].size;
-}
+//int iferret_syscall_stack_get_size(int pid) {
+//  iferret_syscall_stacks_init();
+//  return iferret_syscall_stack[pid].size;
+//}
 
 
 // deletes the element at this index within the stack for pid.
-void iferret_delete_syscall_at_index(int pid, int index) {
+void iferret_syscall_stack_delete_at_index(int pid, int index) {
   iferret_syscall_stack_t *stack;
   int i;	
-  check_pid(pid);
-  iferret_init_syscall_stacks();
-  check_pid(pid);
+  _check_pid(pid);
+  iferret_syscall_stacks_init();
   stack = &(iferret_syscall_stack[pid]);
   if (stack->size == 0) {
     printf("Error, attempting to underflow\n");
@@ -120,21 +119,20 @@ void iferret_delete_syscall_at_index(int pid, int index) {
   stack->size --;
 }
 
-void iferret_delete_syscall_at_offset(int pid, int offset) {
+void iferret_syscall_stack_delete_at_offset(int pid, int offset) {
   iferret_syscall_stack_t *stack;
-  check_pid(pid);
-  iferret_init_syscall_stacks();
-  check_pid(pid);
+  _check_pid(pid);
+  iferret_syscall_stacks_init();
   stack = &(iferret_syscall_stack[pid]);
-  iferret_delete_syscall_at_index(pid, stack->size - 1 - offset);
+  iferret_syscall_stack_delete_at_index(pid, stack->size - 1 - offset);
 }
 
 
 // Return the element at offset for pid's stack, or a default value if
 // there stack isn't deep enough to have that value, to indicate not found.
-iferret_syscall_stack_element_t iferret_get_syscall_at_index(int pid, int index) {
+iferret_syscall_stack_element_t iferret_syscall_stack_get_at_index(int pid, int index) {
   iferret_syscall_stack_t *stack;
-  check_pid(pid);
+  _check_pid(pid);
   stack = &(iferret_syscall_stack[pid]);
   if (index<0 || index>=stack->size) {
     return not_found_element;		
@@ -147,12 +145,12 @@ iferret_syscall_stack_element_t iferret_get_syscall_at_index(int pid, int index)
 // that is, offset=0 is last element or stack->size-1.
 // offset=1 is 2nd to last, i.e. stack->size-2.
 // etc.
-iferret_syscall_stack_element_t iferret_get_syscall_at_offset(int pid, int offset) {
+iferret_syscall_stack_element_t iferret_syscall_stack_get_at_offset(int pid, int offset) {
   iferret_syscall_stack_t *stack;
-  check_pid(pid);
+  _check_pid(pid);
   stack = &(iferret_syscall_stack[pid]);
   assert (offset >= 0);
-  return (iferret_get_syscall_at_index(pid, stack->size - 1 - offset));
+  return (iferret_syscall_stack_get_at_index(pid, stack->size - 1 - offset));
 }
 
 
@@ -160,13 +158,14 @@ iferret_syscall_stack_element_t iferret_get_syscall_at_offset(int pid, int offse
 // for this pid linearly until you find first item matching eip. 
 // Return that element. 
 // NB: special element with .eip slot set to -1 will be returned if not found. 
-iferret_syscall_stack_element_t iferret_get_syscall_with_eip(int pid, int this_eip, int another_eip) {
+iferret_syscall_stack_element_t iferret_syscall_stack_get_with_eip(int pid, int this_eip, int another_eip) {
   int index;
   iferret_syscall_stack_element_t element;
   iferret_syscall_stack_t *stack;
+  _check_pid(pid);
   stack = &(iferret_syscall_stack[pid]);
   for (index=stack->size-1; index>=0; index--) {
-    element = iferret_get_syscall_at_index(pid,index);
+    element = iferret_syscall_stack_get_at_index(pid,index);
     if (element.syscall.callsite_eip == this_eip) {
       // eips match 
       return element;
@@ -182,27 +181,27 @@ iferret_syscall_stack_element_t iferret_get_syscall_with_eip(int pid, int this_e
 
 
 
-void add_syscall(int pid, int call_num, int callsite_eip) {
+void _add_syscall(int pid, int call_num, int callsite_eip) {
   iferret_syscall_t syscall;
   syscall.pid = pid;
   syscall.eax = call_num;
   syscall.callsite_eip = callsite_eip;
-  iferret_push_syscall(syscall);
+  iferret_syscall_stack_push(syscall);
 }
 
 
-void del_syscall(int pid, int offset) {
-  iferret_delete_syscall_at_offset(pid,offset);
+void _del_syscall(int pid, int offset) {
+  iferret_syscall_stack_delete_at_offset(pid,offset);
 }
 
-void print_syscall(iferret_syscall_t syscall) {
+void _print_syscall(iferret_syscall_t syscall) {
   printf ("(call_num=%d,callsite_eip=%d)",
 	  syscall.eax,
 	  syscall.callsite_eip);
 }
 
 
-void print_iferret_syscall_stack(){
+void _print_stacks(){
   int pid,i,n;
   
   printf ("syscall stack:\n");
@@ -215,7 +214,7 @@ void print_iferret_syscall_stack(){
       printf ("pid=%d size=%d\n", pid, stack->size);
       for (i=0; i<stack->size; i++) {
 	printf ("  %d", i);
-	print_syscall(stack->stack[i].syscall);
+	_print_syscall(stack->stack[i].syscall);
 	printf ("\n");
       }
     }
@@ -226,35 +225,35 @@ void print_iferret_syscall_stack(){
 
 
 int main (int argc, char** argv) {
-  iferret_init_syscall_stacks();
+  iferret_syscall_stacks_init();
 
-  add_syscall(13,4,100);
-  del_syscall(13,0);
-  add_syscall(133,10,100);
-  del_syscall(133,0);
+  _add_syscall(13,4,100);
+  _del_syscall(13,0);
+  _add_syscall(133,10,100);
+  _del_syscall(133,0);
   // this fails -- nothing there for 134; attempted underflow
-  // del_syscall(134,12);
+  // _del_syscall(134,12);
 
-  add_syscall(144,15,100);
-  add_syscall(32455,255,100);
+  _add_syscall(144,15,100);
+  _add_syscall(32455,255,100);
   // another one for 144
-  add_syscall(144,133,200);
+  _add_syscall(144,133,200);
 
   printf("syscall for 144 @ 0: ");
-  print_syscall((iferret_get_syscall_at_offset(144,0)).syscall);
+  _print_syscall((iferret_syscall_stack_get_at_offset(144,0)).syscall);
   printf ("\n");
 
   printf("syscall for 144 @ 1: ");
-  print_syscall((iferret_get_syscall_at_offset(144,1)).syscall);
+  _print_syscall((iferret_syscall_stack_get_at_offset(144,1)).syscall);
   printf ("\n");
   
   printf("syscall for 144 with eip=100: ");
-  print_syscall((iferret_get_syscall_with_eip(144,100,-1)).syscall);
+  _print_syscall((iferret_syscall_stack_get_with_eip(144,100,-1)).syscall);
   printf ("\n");
   
-  del_syscall(32455,0);  
-  del_syscall(144,0);
-  del_syscall(144,0);
+  _del_syscall(32455,0);  
+  _del_syscall(144,0);
+  _del_syscall(144,0);
   
  
   {
@@ -264,7 +263,7 @@ int main (int argc, char** argv) {
       printf ("i=%d\n", i);
       if ((i%1000) == 0) {
 	printf ("\n i=%d f=%d\n", i,f);
-	print_iferret_syscall_stack();
+	_print_stacks();
 	f--;
       }
 
@@ -274,7 +273,7 @@ int main (int argc, char** argv) {
 	eax = rand() % 500;
 	eip = rand();	
 	printf ("adding pid=%d eax=%d eip=%d\n", pid, eax, eip); 
-	add_syscall(pid,eax,eip);
+	_add_syscall(pid,eax,eip);
       }
       else {
 	int pid;
@@ -283,20 +282,20 @@ int main (int argc, char** argv) {
 	  int offset; 
 	  iferret_syscall_stack_element_t element;
 	  offset = rand() % 10;
-	  element = iferret_get_syscall_at_offset(pid,offset);
+	  element = iferret_syscall_stack_get_at_offset(pid,offset);
 	  if (element.index != -1) {
 	    printf ("deleting pid=%d offset=%d index=%d\n", pid, offset, element.index);
-	    iferret_delete_syscall_at_offset(pid,offset);
+	    iferret_syscall_stack_delete_at_offset(pid,offset);
 	  }
 	}
 	else { 
 	  int eip;
 	  eip = rand();
 	  iferret_syscall_stack_element_t element;
-	  element = iferret_get_syscall_with_eip(pid,eip,-1);
+	  element = iferret_syscall_stack_get_with_eip(pid,eip,-1);
 	  if (element.index != -1) {
 	    printf ("deleting pid=%d index=%d\n", pid, element.index);	    
-	    iferret_delete_syscall_at_index(pid,element.index);
+	    iferret_syscall_stack_delete_at_index(pid,element.index);
 	  }
 	}
       }
@@ -304,15 +303,15 @@ int main (int argc, char** argv) {
   }
   
   /*
-  add_syscall(14155,223,100);
-  add_syscall(1555,16,100);
-  add_syscall(32000,0,100);
-  add_syscall(1,35,100);
-  add_syscall(0,4,100);
+  _add_syscall(14155,223,100);
+  _add_syscall(1555,16,100);
+  _add_syscall(32000,0,100);
+  _add_syscall(1,35,100);
+  _add_syscall(0,4,100);
 
-  del_syscall(14155,0);
-  del_syscall(1555,0);
-  del_syscall(1,0);
+  _del_syscall(14155,0);
+  _del_syscall(1555,0);
+  _del_syscall(1,0);
   */
 
   //  print_iferret_syscall_stack  ();
