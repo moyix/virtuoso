@@ -75,12 +75,11 @@ typedef struct iferret_op_arg_struct_t {
 
 typedef struct iferret_syscall_struct_t {
   uint32_t eax;
+  uint32_t ebx;
   uint32_t op_num;
   uint8_t is_sysenter;
   uint32_t pid;
   uint32_t callsite_eip;
-  uint32_t eax;
-  uint32_t ebx;
   char *command;
 } iferret_syscall_t;
 

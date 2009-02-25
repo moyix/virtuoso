@@ -3,19 +3,19 @@
 
 #include "iferret_log.h"
 
-#define MAX_PIDS 32768
+#define MAX_PID 32768
 
-tyepdef struct iferret_syscall_stack_element_struct_t {
-  iferret_syscall_t syscall;
-  int syscall_num;
-  int eip;
-  int offset;
+typedef struct iferret_syscall_stack_element_struct_t {
+  iferret_syscall_t syscall;   // syscall info
+  //  int syscall_num;
+  //  int eip;
+  int offset;                  // index of this element ?
 } iferret_syscall_stack_element_t;
 
-tyepdef struct iferret_syscall_stack_struct_t {
-  int size;
-  int capacity;
-  iferret_syscall_stack_element_t* stack;
+typedef struct iferret_syscall_stack_struct_t {
+  int size;        // number of elements in the stack (also, the offset at which to add next one)
+  int capacity;    // how many would fit in currently allocated stack before overflow
+  iferret_syscall_stack_element_t* stack;  // the stack itself -- an array of elements
 } iferret_syscall_stack_t;
 
 
@@ -24,17 +24,14 @@ tyepdef struct iferret_syscall_stack_struct_t {
 
 //struct syscall_stack table[32768];
 
-void init_table(void); 
+void iferret_init_syscall_stacks(void); 
 
-void add_element(int PID, int eip, int syscall_num);
+void iferret_push_syscall(iferret_syscall_t syscall);			  
 
-int get_stack_size(int pid);
+void iferret_delete_syscall_at_offset(int pid, int offset);
 
-void del_element(int PID, int offset);
+iferret_syscall_stack_element_t iferret_get_syscall_at_offset(int pid, int offset);
 
-struct syscall_entry find_element(int PID, int offset);
-
-struct syscall_entry find_element_with_eip(int PID, int this_eip, int another_eip);
-
+iferret_syscall_stack_element_t iferret_get_syscall_with_eip(int pid, int this_eip, int another_eip);
 
 #endif

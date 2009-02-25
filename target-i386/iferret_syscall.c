@@ -226,7 +226,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
     }
     
     // manage Ryan's stack
-    iferret_push_syscall(pid,eip_for_callsite,*scp);    
+    iferret_push_syscall(*scp);    
     
     // fprintf(logfile, "PID: %d, stack size:%d\n",pid,get_stack_size(pid));
     
@@ -298,7 +298,7 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
 	iferret_log_sysret_op_write_4444(IFLO_SYSEXIT_RET, pid, eip_for_callsite, syscall_element.syscall_num, EAX);
       }
       // and remove that call site item from the stack
-      iferret_del_syscall_here(pid,syscall_element.offset-1);
+      iferret_delete_syscall_at_offset(pid, syscall_element.offset-1);
     }	      
   }
 #endif
