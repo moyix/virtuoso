@@ -24,14 +24,18 @@ typedef struct iferret_syscall_stack_struct_t {
 
 //struct syscall_stack table[32768];
 
-void iferret_init_syscall_stacks(void); 
+void iferret_syscall_stacks_init(void); 
 
-void iferret_push_syscall(iferret_syscall_t syscall);			  
+void iferret_syscall_stack_push(iferret_syscall_t syscall);			  
 
-void iferret_delete_syscall_at_offset(int pid, int offset);
+void iferret_syscall_stack_delete_at_offset(int pid, int offset);
 
-iferret_syscall_stack_element_t iferret_get_syscall_at_offset(int pid, int offset);
+void iferret_syscall_stack_delete_at_index(int pid, int index);
 
-iferret_syscall_stack_element_t iferret_get_syscall_with_eip(int pid, int this_eip, int another_eip);
+iferret_syscall_stack_element_t iferret_syscall_stack_get_at_offset(int pid, int offset);
+
+iferret_syscall_stack_element_t iferret_syscall_stack_get_at_index(int pid, int index);
+
+iferret_syscall_stack_element_t iferret_syscall_stack_get_with_eip(int pid, int this_eip, int another_eip);
 
 #endif

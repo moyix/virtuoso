@@ -107,6 +107,7 @@ my %iferret_fmts;
 		print "format is $format\n";
 		$syscall[$call_num]{format} = $format;
 	    }
+	    $iferret_fmts{$syscall[$call_num]{format}} = 1;
 	}
 	else {
 	    print "$line\n";
@@ -275,8 +276,8 @@ my %iferret_fmts;
 		    }
 		}
 	    }
-	    print "iferret_log_syscall_write_va(scp";
-	    print SW "iferret_log_syscall_write_va(scp";
+	    print "iferret_log_syscall_op_write_$syscall[$i]{format}(scp";
+	    print SW "iferret_log_syscall_op_write_$syscall[$i]{format}(scp";
 	    unless (exists $syscall[$i]{noargs}) {
 		my $n = scalar @{$syscall[$i]{args}};
 		my $numStrings = 1;
@@ -526,12 +527,16 @@ my %iferret_fmts;
 
 	# The syscall version
 	print $fnsfh "static inline void iferret_log_syscall_op_write_$fmt(\n";
-	print $fnsfh "  iferret_syscall_t *sc,\n";
-	print $fnsfh "  iferret_log_op_enum_t op_num";
-	&write_formals($fnsfh, $fmt);
+	print $fnsfh "  iferret_syscall_t *sc";
+	if ($fmt eq "1") {
+	    print "foo\n";
+	}
+	if (!($fmt eq "0")) {
+	    &write_formals($fnsfh, $fmt);
+	}
 	print $fnsfh ")\n{\n";
 	print $fnsfh "\#ifdef IFERRET_SYSCALL \n";
-	print $fnsfh "  iferret_log_op_write_prologue(op_num);\n";
+	print $fnsfh "  iferret_log_op_write_prologue(sc->op_num);\n";
 	print $fnsfh "  iferret_log_syscall_commoner(sc);\n";
 	&write_log_calls($fnsfh, $fmt);
 	print $fnsfh "\#endif\n";

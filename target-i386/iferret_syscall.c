@@ -50,6 +50,12 @@ struct timespec parent_real_start_time;
 uint8_t no_pid_flag = 1;
 uint8_t no_uid_flag = 1;
 
+uint8_t iferret_in_kernel(void);
+
+void write_current_uid_to_iferret_log(void);
+void write_current_pid_to_iferret_log(void);
+
+
 /* Argument list sizes for sys_socketcall */
 /*
 #define AL(x) ((x) * sizeof(unsigned long))
@@ -57,6 +63,10 @@ static unsigned char nargs[18]={AL(0),AL(3),AL(3),AL(3),AL(2),AL(3),
                                 AL(3),AL(3),AL(4),AL(4),AL(4),AL(6),
                                 AL(6),AL(2),AL(5),AL(5),AL(3),AL(3)};
 */
+
+static inline int current_pid_valid() {
+  return (current_pid>0 && current_pid<=32768);
+}
 
 
 
@@ -124,7 +134,11 @@ static inline target_ulong get_task_struct_ptr (target_ulong current_esp) {
 void get_current_pid_uid() {
   target_ulong current_task; 
   target_ulong parent_task;
-  
+
+  // save last pid.
+  last_pid = current_pid;
+
+  // compute current pid &c
   current_task = get_task_struct_ptr(ESP);
   copy_task_struct_slot(current_task, PID_OFFSET, PID_SIZE, (char *) &current_pid);
   copy_task_struct_slot(current_task, UID_OFFSET, UID_SIZE, (char *) &current_uid);  
@@ -138,9 +152,27 @@ void get_current_pid_uid() {
   copy_task_struct_slot(parent_task, PID_OFFSET, PID_SIZE, (char *) &parent_pid);
   copy_task_struct_slot(parent_task, UID_OFFSET, UID_SIZE, (char *) &parent_uid);
 
+  if (! (current_pid_valid())) {
+    // map pids that can't be valid to 0
+    current_pid = 0;
+    current_uid = 0;
+  }
 
-  if (current_pid<0 || current_pid>32768) 
-    current_pid = -1;
+
+  if (no_pid_flag == 1) {
+    printf ("1 last_pid=%d current_pid is %d\n", last_pid, current_pid);
+    write_current_pid_to_iferret_log();
+    write_current_uid_to_iferret_log();
+    no_pid_flag = 0;
+  }
+  else {
+    if (last_pid != current_pid) {
+      printf ("2 last_pid=%d current_pid is %d\n", last_pid, current_pid);
+      write_current_pid_to_iferret_log();
+      write_current_uid_to_iferret_log();
+    }
+  }
+
   //  copy_task_struct_slot(parent_task, COMM_OFFSET, COMM_SIZE, parent_command);
 }
 
@@ -174,6 +206,10 @@ void iferret_check_log_full() {
 // current system call 
 void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) {
 #ifdef IFERRET_SYSCALL
+
+  if (iferret_in_kernel() || (!(current_pid_valid()))) {
+    return;
+  }
 
   iferret_check_log_full();
 
@@ -253,6 +289,10 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
   int pid,uid;
   char command[COMM_SIZE];
 
+  if (iferret_in_kernel() || (!(current_pid_valid()))) {
+    return;
+  }
+
   iferret_check_log_full();
     
   // get addr of pointer to current task
@@ -299,8 +339,12 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
       else {
 	iferret_log_sysret_op_write_4444(IFLO_SYSEXIT_RET, pid, eip_for_callsite, element.syscall.eax, EAX);
       }
+      if (element.syscall.eax == 120) {
+	printf ("came back from a clone.  %d spawned %d \n", element.syscall.pid, EAX);
+      }
+
       // and remove that call site item from the stack
-      iferret_syscall_stack_delete_at_offset(pid, element.offset);
+      iferret_syscall_stack_delete_at_index(pid, element.index);
     }	      
   }
 #endif
@@ -311,6 +355,9 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
 // log system call (via sysexit) return value 
 void iferret_log_syscall_ret_sysexit(uint32_t callsite_esp) {
 #ifdef IFERRET_SYSCALL
+  if (iferret_in_kernel() || (!(current_pid_valid()))) {
+    return;
+  }
   iferret_check_log_full();
   iferret_log_syscall_ret(0, callsite_esp, -1);
 #endif
@@ -320,6 +367,9 @@ void iferret_log_syscall_ret_sysexit(uint32_t callsite_esp) {
 // log system call (vial iret) return value 
 void iferret_log_syscall_ret_iret(uint32_t callsite_esp, uint32_t another_eip) {
 #if IFERRET_SYSCALL 
+  if (iferret_in_kernel() || (!(current_pid_valid()))) {
+    return;
+  }
   iferret_check_log_full();
   iferret_log_syscall_ret(1, callsite_esp, another_eip);
 #endif

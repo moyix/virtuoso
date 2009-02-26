@@ -3003,7 +3003,7 @@ void helper_manage_pid_stuff(void);
 // Note: The fn calls within this op need to take no 
 // parameters.  That's why all the work is delegated to
 // inside helper.c and involves global variables.
-void OPPROTO op_info_flow_prologue(void) 
+void OPPROTO op_iferret_prologue(void) 
 {
   // NB: This conditional is *expensive* so don't do it unless info_flow compiled in. 
 #ifdef IFERRET_INFO_FLOW

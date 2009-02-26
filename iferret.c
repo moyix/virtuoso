@@ -36,6 +36,7 @@ typedef struct iferret_struct_t {
   iferret_mode_t mode;          // mode -- relaxed / suspicious
   uint32_t_set_t *mal_pids;     // current set of malicious pids
   uint32_t eip_at_head_of_tb;   // eip for head of tb currently being executed
+  uint32_t current_pid;
 } iferret_t;
 
 
@@ -208,19 +209,22 @@ iferret_t *iferret_create() {
 
 
 
-void iferret_push_syscall(iferret_t *iferret, iferret_syscall_t *sc) {
-  add_element(sc->pid, sc->callsite_eip, sc);
+void iferret_push_syscall(iferret_t *iferret, iferret_syscall_t *scp) {
+  //  iferret_syscall_stack_push(*scp);    
+}
+
+void iferret_info_flow_process(iferret_t *iferret, iferret_op_t *op) {
 }
 
 void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {
 
   if (op->num == IFLO_PID_CHANGE) {
     // -->   iferret_log_op_write_4(IFLO_PID_CHANGE,current_pid);
-    iferret->current_pid = op->arg[0].u32;
+    iferret->current_pid = op->arg[0].val.u32;
   }
   if ((op->num > IFLO_SYS_CALLS_START) 
-      || (op-> == IFLO_IRET) 
-      || (op-> == IFLO_SYSEXIT_RET))  {  
+      || (op->num == IFLO_IRET) 
+      || (op->num == IFLO_SYSEXIT_RET))  {  
     iferret_push_syscall(iferret,op->syscall);
   }
   if (op->num < IFLO_SYS_CALLS_START) {

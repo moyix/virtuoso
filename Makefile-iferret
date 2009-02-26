@@ -16,6 +16,10 @@ iferret_log.o: iferret_log.c
 iferret_op_str.o: $(TD)/iferret_op_str.c
 	$(CC) $(CFLAGS) -c $(TD)/iferret_op_str.c 
 
+iferret_syscall.o: $(TD)/iferret_syscall.c
+	$(CC) $(CFLAGS) -c $(TD)/iferret_syscall.c 
+
+
 int_set.o: int_set.c
 	$(CC) $(CFLAGS) -c int_set.c 
 

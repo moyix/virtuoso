@@ -133,6 +133,7 @@ void iferret_syscall_stack_delete_at_offset(int pid, int offset) {
 iferret_syscall_stack_element_t iferret_syscall_stack_get_at_index(int pid, int index) {
   iferret_syscall_stack_t *stack;
   _check_pid(pid);
+  iferret_syscall_stacks_init();
   stack = &(iferret_syscall_stack[pid]);
   if (index<0 || index>=stack->size) {
     return not_found_element;		
@@ -148,6 +149,7 @@ iferret_syscall_stack_element_t iferret_syscall_stack_get_at_index(int pid, int 
 iferret_syscall_stack_element_t iferret_syscall_stack_get_at_offset(int pid, int offset) {
   iferret_syscall_stack_t *stack;
   _check_pid(pid);
+  iferret_syscall_stacks_init();
   stack = &(iferret_syscall_stack[pid]);
   assert (offset >= 0);
   return (iferret_syscall_stack_get_at_index(pid, stack->size - 1 - offset));
@@ -163,6 +165,7 @@ iferret_syscall_stack_element_t iferret_syscall_stack_get_with_eip(int pid, int 
   iferret_syscall_stack_element_t element;
   iferret_syscall_stack_t *stack;
   _check_pid(pid);
+  iferret_syscall_stacks_init();
   stack = &(iferret_syscall_stack[pid]);
   for (index=stack->size-1; index>=0; index--) {
     element = iferret_syscall_stack_get_at_index(pid,index);
@@ -181,6 +184,7 @@ iferret_syscall_stack_element_t iferret_syscall_stack_get_with_eip(int pid, int 
 
 
 
+#if 0
 void _add_syscall(int pid, int call_num, int callsite_eip) {
   iferret_syscall_t syscall;
   syscall.pid = pid;
@@ -222,7 +226,6 @@ void _print_stacks(){
   printf ("%d pids with non-empty stacks\n", n);
 }
 	     
-
 
 int main (int argc, char** argv) {
   iferret_syscall_stacks_init();
@@ -316,3 +319,4 @@ int main (int argc, char** argv) {
 
   //  print_iferret_syscall_stack  ();
 }
+#endif

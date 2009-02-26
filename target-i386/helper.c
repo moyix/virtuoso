@@ -4760,17 +4760,19 @@ void write_eip_to_iferret_log() {
 }
 
 
-uint8_t in_kernel() {
-  return ((env->hflags & ~HF_CPL_MASK) == 0);
+uint8_t iferret_in_kernel() {
+  /*
+  printf("HF_CPL_MASK=%x ~HF_CPL_MAS=%x env->hflags=%x (env->hflags & ~HF_CPL_MASK) = %x\n", 
+	 HF_CPL_MASK, ~HF_CPL_MASK, 
+	 env->hflags,
+	 env->hflags & ~HF_CPL_MASK);
+  */
+  return ((env->hflags & HF_CPL_MASK) == 0);
 }
 
 
 static inline int current_pid_valid() {
-  if (current_pid <0 || current_pid>32768) {
-    printf ("not in kernel but current_pid outside allowed range?\n");
-    exit (0);
-  }    
-  return (current_pid >=0 && current_pid<=32768);
+  return (current_pid>0 && current_pid<=32768);
 }
 
 void write_current_pid_to_iferret_log() {
@@ -4797,35 +4799,7 @@ void write_spawn_to_iferret_log() {
 
 void helper_manage_pid_stuff() {
 #ifdef IFERRET_PUID
-  // computes current process id, user id, command, and same for parent
-  // and store in globals
-  if (!in_kernel()) {
-    get_current_pid_uid();    
-    if ((no_pid_flag == 1) 
-	|| (last_pid != current_pid)) {
-      // either first time or current pid has changed.
-      // write pid and uid to log
-      write_current_pid_to_iferret_log();
-    }
-    // if this is first time we've ever seen this pid, then log apparent spawn
-    if (pids_seen_table == NULL) {
-      pids_seen_table = uint32_t_set_new();
-    }  
-    if (!(uint32_t_set_mem(pids_seen_table, current_pid))) {
-      uint32_t_set_add(pids_seen_table, current_pid);
-      write_spawn_to_iferret_log();
-    }
-    no_pid_flag = 0;
-    last_pid = current_pid;
-    if ((no_uid_flag == 1) 
-	|| (last_uid != current_uid)) {
-      // either this is first time or
-      // write uid to log
-      write_current_uid_to_iferret_log();
-    }
-    no_uid_flag = 0;
-    last_uid = current_uid;
-  }
+  get_current_pid_uid();    
 #endif // IFERRET_PUID
 }
 
