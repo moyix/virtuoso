@@ -160,14 +160,14 @@ void get_current_pid_uid() {
 
 
   if (no_pid_flag == 1) {
-    printf ("1 last_pid=%d current_pid is %d\n", last_pid, current_pid);
+    //    printf ("1 last_pid=%d current_pid is %d\n", last_pid, current_pid);
     write_current_pid_to_iferret_log();
     write_current_uid_to_iferret_log();
     no_pid_flag = 0;
   }
   else {
     if (last_pid != current_pid) {
-      printf ("2 last_pid=%d current_pid is %d\n", last_pid, current_pid);
+      //      printf ("2 last_pid=%d current_pid is %d\n", last_pid, current_pid);
       write_current_pid_to_iferret_log();
       write_current_uid_to_iferret_log();
     }

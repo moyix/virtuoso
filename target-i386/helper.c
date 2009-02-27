@@ -4792,7 +4792,7 @@ void write_current_uid_to_iferret_log() {
 void write_spawn_to_iferret_log() {
 #ifdef IFERRET_PUID
   iferret_log_op_write_4444(IFLO_SPAWN_NEW_PID,current_pid,current_uid,parent_pid,parent_uid);
-  printf ("%d spawned %d\n", parent_pid, current_pid);
+  //  printf ("%d spawned %d\n", parent_pid, current_pid);
 #endif
 }
 
