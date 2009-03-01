@@ -65,7 +65,7 @@ static unsigned char nargs[18]={AL(0),AL(3),AL(3),AL(3),AL(2),AL(3),
 */
 
 static inline int current_pid_valid() {
-  return (current_pid>0 && current_pid<=32768);
+  return (current_pid>=0 && current_pid<=32768);
 }
 
 

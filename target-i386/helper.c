@@ -2744,17 +2744,22 @@ static inline void helper_ret_protected(int shift, int is_iret, int addend)
 
     iferret_log_syscall_ret_iret(old_esp, new_eip);
 
-/*
-  	fprintf(logfile, "Printing off the stack\n");
-        for(i=0; i<50; i++){
-                 paddr = cpu_get_phys_page_debug(env, ESP+4*i);
-                 if (paddr!=-1) {
-                       cpu_physical_memory_read(paddr, &stack_val, 4);
-                 }
-                fprintf(logfile, "%d: 0x%08x\n",i,stack_val);
-        }  
- */
-//    printf("IRET returning to EIP:0x%08x EAX:%d\n",env->eip,EAX);
+    {
+      int i;
+      target_phys_addr_t paddr;
+      uint32_t stack_val;
+      printf("Printing off the stack\n");
+      for(i=0; i<50; i++){
+	paddr = cpu_get_phys_page_debug(env, ESP+4*i);
+	if (paddr!=-1) {
+	  cpu_physical_memory_read(paddr, &stack_val, 4);
+	}
+	fprintf(logfile, "%d: 0x%08x\n",i,stack_val);
+      }
+    }  
+    printf("IRET returning to EIP:0x%08x EAX:%d\n",env->eip,EAX);
+
+
     if (is_iret) {
         /* NOTE: 'cpl' is the _old_ CPL */
         eflags_mask = TF_MASK | AC_MASK | ID_MASK | RF_MASK | NT_MASK;
@@ -2963,17 +2968,22 @@ void helper_sysexit(void)
       //    	printf("Bingo!\n");
     }
 
-    /*	
-    fprintf(logfile, "Printing off the stack\n");
-    for(i=0; i<50; i++){
-      paddr = cpu_get_phys_page_debug(env, ECX+4*i);
-      if (paddr!=-1) {
-	cpu_physical_memory_read(paddr, &stack_val, 4);
+    
+    {
+      int i;
+      target_phys_addr_t paddr;
+      uint32_t stack_val;
+      printf("Printing off the stack\n");
+      for(i=0; i<50; i++){
+	paddr = cpu_get_phys_page_debug(env, ECX+4*i);
+	if (paddr!=-1) {
+	  cpu_physical_memory_read(paddr, &stack_val, 4);
+	}
+	printf("%d: 0x%08x\n",i,stack_val);
       }
-      fprintf(logfile, "%d: 0x%08x\n",i,stack_val);
     }
 
-	
+    /*
     #include "syscall-ret.h"
     free(tempbuf);
     free(command);
