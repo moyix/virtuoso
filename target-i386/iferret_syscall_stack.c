@@ -24,9 +24,10 @@ static inline void *my_realloc(void *p, size_t n) {
 
 
 void iferret_syscall_print(iferret_syscall_t syscall) {
-  printf ("syscall(eax=%d,op_num=%d,is_sysenter=%d,pid=%d,callsite_eip=%x)",
+  printf ("syscall(eax=%d,op_num=%d(%s),is_sysenter=%d,pid=%d,callsite_eip=%x)",
 	  syscall.eax,
 	  syscall.op_num,
+	  iferret_op_num_to_str(syscall.op_num),
 	  syscall.is_sysenter,
 	  syscall.pid,
 	  syscall.callsite_eip);
@@ -195,11 +196,11 @@ iferret_syscall_stack_element_t iferret_syscall_stack_get_with_eip(int pid, int 
 
 
 void iferret_syscall_stacks_print(){
-  int pid,i,n;
+  int pid,i,n,nn;
   
   if (iferret_syscall_stack != NULL) {
     printf ("syscall stack:\n");
-    n=0;
+    n=nn=0;
     for (pid=0; pid<MAX_PID; pid++) {
       iferret_syscall_stack_t *stack;
       stack = &(iferret_syscall_stack[pid]);
@@ -212,8 +213,9 @@ void iferret_syscall_stacks_print(){
 	  printf ("\n");
 	}
       }
+      nn += stack->size;
     }
-    printf ("%d pids with non-empty stacks\n", n);
+    printf ("%d pids with non-empty stacks.  %d elements in all stacks\n", n, nn);
   }
 }
 	     

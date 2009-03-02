@@ -142,13 +142,16 @@ void iferret_spit_stack(target_ulong addr, char *label) {
   int i;
   target_phys_addr_t paddr;
   uint32_t stack_val;
-  printf("stack: %s\n", label);
-  for (i=0; i<10; i++){
-    paddr = cpu_get_phys_page_debug(env, ECX+4*i);
+  printf("stack: addr=0x%x %s\n", addr,label);
+  // stack grows down on x86, i.e. to push somethine we subtract 4 from ESP and then 
+  // store the 4-byte quantity there.  
+  for (i=0; i<51; i++){
+    paddr = cpu_get_phys_addr(env, addr+4*i);
     if (paddr!=-1) {
       cpu_physical_memory_read(paddr, (char *) &stack_val, 4);
     }
-    printf("%d: 0x%08x\n",i,stack_val);
+    if (stack_val != 0)
+      printf("%d: 0x%08x\n",i,stack_val);
   }
 }
 
@@ -902,8 +905,10 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
 
 
     if (intno == 0x80) {
-      printf ("do_interrupt_protected iferret_log_syscall_enter(%d,%x)\n",
-	      0, old_eip);
+      /*
+      printf ("do_interrupt_protected iferret_log_syscall_enter env->eip=0x%x old_eip=0x%x next_eip=0x%x\n",
+      	      env->eip, old_eip, next_eip);
+      */
       iferret_log_syscall_enter(0, old_eip);
     } // if (intno == 0x80)
 	
@@ -2760,8 +2765,8 @@ static inline void helper_ret_protected(int shift, int is_iret, int addend)
     free(command);
     */
 
-    printf("helper_ret_protected, iferret_log_syscall_iret(%x, %x)\n",
-	   old_esp, env->eip);
+    //    printf("helper_ret_protected, iferret_log_syscall_iret old_esp=0x%x env->eip=0x%x\n",
+    //	   old_esp, env->eip);
     iferret_log_syscall_ret_iret(old_esp, env->eip);
 
     //    iferret_spit_stack(ESP, "helper_ret_protected (ESP)");
@@ -2865,40 +2870,49 @@ void helper_sysenter(void)
   target_phys_addr_t paddr;
 
  
-  printf("In your sys_enter EIP=0x%08x\n",EIP); 	
-  
-  //  iferret_spit_stack(ESP, "helper_sysenter 1 (ESP)");
-    
+  //  printf("In your sys_enter EIP=0x%08x\n",EIP); 	
+  /*
+  printf ("gs is 0x%x\n", env->segs[R_GS].base);
+  paddr = cpu_get_
+  printf ("*(gs:10) is 0x%x\n", env->segs[R_GS].base);
+  */
+
   /*  
   tempbuf = malloc(120);
   command = malloc(120);
   */	
 
-    dt = &env->idt;
-    ptr = dt->base + 128 *8;
-    e1 = ldl_kernel(ptr);
-    e2 = ldl_kernel(ptr+4); 
-
-    get_ss_esp_from_tss(&ss,&esp, 0);
-    load_segment(&ss_e1,&ss_e2,ss); 
-    sp_mask = get_sp_mask(ss_e2);
-    ssp = get_seg_base(ss_e1,ss_e2);
-
-    saved_esp = ESP;
-    SET_ESP(esp, sp_mask);
-
-    {
-      target_phys_addr_t paddr;
-      uint32_t eip_for_callsite;
-      paddr = cpu_get_phys_page_debug(env, saved_esp+4*3);
-      if (paddr!=-1) {
-	cpu_physical_memory_read(paddr, (char *) &eip_for_callsite, 4);
-      } else {
-	exit(1);
-      }
-      printf ("helper_sysenter iferret_log_syscall_enter(%d,%x)\n",
-	      1, eip_for_callsite);
-      iferret_log_syscall_enter(1, eip_for_callsite);
+  // e1 & e2 are unused. huh?
+  dt = &env->idt;
+  // NB: 0x80 is 128
+  ptr = dt->base + 128 *8;
+  e1 = ldl_kernel(ptr);
+  e2 = ldl_kernel(ptr+4); 
+  
+  // this figures out correct stack seg and esp for ring 0.
+  get_ss_esp_from_tss(&ss,&esp, 0);
+  load_segment(&ss_e1,&ss_e2,ss); 
+  sp_mask = get_sp_mask(ss_e2);
+  ssp = get_seg_base(ss_e1,ss_e2);
+  
+  // this saves and then changes the stack
+  saved_esp = ESP;
+  SET_ESP(esp, sp_mask);
+  
+  {
+    target_phys_addr_t paddr;
+    uint32_t eip_for_callsite;
+    paddr = cpu_get_phys_addr(env, saved_esp+4*3);
+    if (paddr!=-1) {
+      cpu_physical_memory_read(paddr, (char *) &eip_for_callsite, 4);
+    } else {
+      exit(1);
+    }
+    //    printf ("helper_sysenter iferret_log_syscall_enter(%d,%x)\n",
+    //	    1, eip_for_callsite);
+    //    iferret_spit_stack(saved_esp, "helper_sysenter (saved_esp)");
+    //    iferret_spit_stack(ESP, "helper_sysenter (ESP)");
+    iferret_log_syscall_enter(1, eip_for_callsite);
   }
 
     /*
@@ -2944,7 +2958,7 @@ void helper_sysexit(void)
     //    struct syscall_entry syscall_element;
     int restored_eip; //, offset;
 	
-    //    fprintf(logfile, "In your sys_exit EDX=0x%08x\n",EDX);  
+    //    printf("In your sys_exit EDX=0x%08x\n",EDX);  
     //    tempbuf = malloc(120);
     //    command = malloc(120);
 
@@ -2982,8 +2996,8 @@ void helper_sysexit(void)
     */
 
 
-    printf ("helper_sysexit iferret_log_syscall_ret_sysexit(%x)\n", 
-	    ESP);
+    //    printf ("helper_sysexit iferret_log_syscall_ret_sysexit ESP=0x%x\n", 
+    //	    ESP);
     iferret_log_syscall_ret_sysexit(ESP);
 
     ESP = saved_esp;
