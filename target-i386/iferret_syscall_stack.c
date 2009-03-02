@@ -23,6 +23,16 @@ static inline void *my_realloc(void *p, size_t n) {
 }
 
 
+void iferret_syscall_print(iferret_syscall_t syscall) {
+  printf ("syscall(eax=%d,op_num=%d,is_sysenter=%d,pid=%d,callsite_eip=%x)",
+	  syscall.eax,
+	  syscall.op_num,
+	  syscall.is_sysenter,
+	  syscall.pid,
+	  syscall.callsite_eip);
+}
+
+
 // initialize the per-pid syscall stacks. 
 void iferret_syscall_stacks_init(){
   int i;
@@ -184,6 +194,31 @@ iferret_syscall_stack_element_t iferret_syscall_stack_get_with_eip(int pid, int 
 
 
 
+void iferret_syscall_stacks_print(){
+  int pid,i,n;
+  
+  if (iferret_syscall_stack != NULL) {
+    printf ("syscall stack:\n");
+    n=0;
+    for (pid=0; pid<MAX_PID; pid++) {
+      iferret_syscall_stack_t *stack;
+      stack = &(iferret_syscall_stack[pid]);
+      if (stack!=NULL && stack->size > 0) {
+	n++;
+	printf ("pid=%d size=%d\n", pid, stack->size);
+	for (i=0; i<stack->size; i++) {
+	  printf ("  %d", i);
+	  iferret_syscall_print(stack->stack[i].syscall);
+	  printf ("\n");
+	}
+      }
+    }
+    printf ("%d pids with non-empty stacks\n", n);
+  }
+}
+	     
+
+
 #if 0
 void _add_syscall(int pid, int call_num, int callsite_eip) {
   iferret_syscall_t syscall;
@@ -198,34 +233,6 @@ void _del_syscall(int pid, int offset) {
   iferret_syscall_stack_delete_at_offset(pid,offset);
 }
 
-void _print_syscall(iferret_syscall_t syscall) {
-  printf ("(call_num=%d,callsite_eip=%d)",
-	  syscall.eax,
-	  syscall.callsite_eip);
-}
-
-
-void _print_stacks(){
-  int pid,i,n;
-  
-  printf ("syscall stack:\n");
-  n=0;
-  for (pid=0; pid<MAX_PID; pid++) {
-    iferret_syscall_stack_t *stack;
-    stack = &(iferret_syscall_stack[pid]);
-    if (stack->size > 0) {
-      n++;
-      printf ("pid=%d size=%d\n", pid, stack->size);
-      for (i=0; i<stack->size; i++) {
-	printf ("  %d", i);
-	_print_syscall(stack->stack[i].syscall);
-	printf ("\n");
-      }
-    }
-  }
-  printf ("%d pids with non-empty stacks\n", n);
-}
-	     
 
 int main (int argc, char** argv) {
   iferret_syscall_stacks_init();

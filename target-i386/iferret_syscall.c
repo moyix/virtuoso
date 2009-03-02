@@ -232,12 +232,13 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
   //  init_table();
   
   
+  /*
   if ((EAX==11) || (EAX==119)
       ) {
     return;
   }
+  */
   
-  //  printf ("syscall is %d\n", EAX);
   
   {
     iferret_syscall_t sc, *scp;
@@ -252,18 +253,30 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
     scp->ebx = EBX;
 
     scp->op_num = EAX + IFLO_SYS_CALLS_START + 1;
+
     
     if (EAX==102) {
       // sys_socketcall has 17 sub-possibilities.
       // EBX=1 (socket) ... EBX=17 (recvmsg)
       // each with its own arg format.
       scp->op_num = IFLO_SYS_SOCKETCALLS_START + EBX;      
+    }
+
+    printf ("pushing ");
+    iferret_syscall_print(*scp);
+    printf ("\n");
+
+    // manage Ryan's stack
+    iferret_syscall_stack_push(*scp);    
+
+
+    if (EAX==102) {
       iferret_log_socketcall(scp);
       return;
     }
     
-    // manage Ryan's stack
-    iferret_syscall_stack_push(*scp);    
+
+    
     
     // fprintf(logfile, "PID: %d, stack size:%d\n",pid,get_stack_size(pid));
     
@@ -320,24 +333,33 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
     is_sysenter = 1;
   }
   if (paddr!=-1) {
-    // callsite eip is stack_val
     cpu_physical_memory_read(paddr, (char *) &eip_for_callsite, 4);    
     // find corresponding call to do_interrupt or sys_enter that preceded this return
+    printf ("looking for syscall is_iret=%d pid=%d eip_for_callsite=%x ", 
+	    is_iret, pid, eip_for_callsite);
+    iferret_syscall_stacks_print();
     if (is_iret) {
       element = iferret_syscall_stack_get_with_eip(pid, eip_for_callsite, another_eip);
+      printf ("another_eip=%x\n", another_eip);
     }
     else {
       element = iferret_syscall_stack_get_with_eip(pid, eip_for_callsite, -1);
+      printf ("\n");
     }
     if (element.syscall.callsite_eip != -1){
+      printf ("  found it ret_val=%d ", EAX);
+      iferret_syscall_print(element.syscall);
+      printf ("\n");
       // found it!  Log it. 
       // NB: PID & EIP should be enough to match up.  EAX is the retval. 
       //      IFLS_IIII(IRET_OR_SYSEXIT, pid, eip_for_callsite, element.syscall_num, EAX);
       if (is_iret) {
-	iferret_log_sysret_op_write_4444(IFLO_IRET, pid, eip_for_callsite, element.syscall.eax, EAX);
+	iferret_log_sysret_op_write_44444(IFLO_IRET, pid, eip_for_callsite,
+					  another_eip, element.syscall.eax, EAX);
       }
       else {
-	iferret_log_sysret_op_write_4444(IFLO_SYSEXIT_RET, pid, eip_for_callsite, element.syscall.eax, EAX);
+	iferret_log_sysret_op_write_44444(IFLO_SYSEXIT_RET, pid, eip_for_callsite, 
+					  another_eip, element.syscall.eax, EAX);
       }
       if (element.syscall.eax == 120) {
 	printf ("came back from a clone.  %d spawned %d \n", element.syscall.pid, EAX);
@@ -345,7 +367,10 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
 
       // and remove that call site item from the stack
       iferret_syscall_stack_delete_at_index(pid, element.index);
-    }	      
+    }
+    else {
+      printf ("  not found.\n");
+    }
   }
 #endif
 }

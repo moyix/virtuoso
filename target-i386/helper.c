@@ -137,6 +137,22 @@ const CPU86_LDouble f15rk[7] =
     3.32192809488736234781L,  /*l2t*/
 };
 
+
+void iferret_spit_stack(target_ulong addr, char *label) {    
+  int i;
+  target_phys_addr_t paddr;
+  uint32_t stack_val;
+  printf("stack: %s\n", label);
+  for (i=0; i<10; i++){
+    paddr = cpu_get_phys_page_debug(env, ECX+4*i);
+    if (paddr!=-1) {
+      cpu_physical_memory_read(paddr, (char *) &stack_val, 4);
+    }
+    printf("%d: 0x%08x\n",i,stack_val);
+  }
+}
+
+
 /* thread support */
 
 spinlock_t global_cpu_lock = SPIN_LOCK_UNLOCKED;
@@ -886,6 +902,8 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
 
 
     if (intno == 0x80) {
+      printf ("do_interrupt_protected iferret_log_syscall_enter(%d,%x)\n",
+	      0, old_eip);
       iferret_log_syscall_enter(0, old_eip);
     } // if (intno == 0x80)
 	
@@ -2742,22 +2760,12 @@ static inline void helper_ret_protected(int shift, int is_iret, int addend)
     free(command);
     */
 
-    iferret_log_syscall_ret_iret(old_esp, new_eip);
+    printf("helper_ret_protected, iferret_log_syscall_iret(%x, %x)\n",
+	   old_esp, env->eip);
+    iferret_log_syscall_ret_iret(old_esp, env->eip);
 
-    {
-      int i;
-      target_phys_addr_t paddr;
-      uint32_t stack_val;
-      printf("Printing off the stack\n");
-      for(i=0; i<50; i++){
-	paddr = cpu_get_phys_page_debug(env, ESP+4*i);
-	if (paddr!=-1) {
-	  cpu_physical_memory_read(paddr, &stack_val, 4);
-	}
-	fprintf(logfile, "%d: 0x%08x\n",i,stack_val);
-      }
-    }  
-    printf("IRET returning to EIP:0x%08x EAX:%d\n",env->eip,EAX);
+    //    iferret_spit_stack(ESP, "helper_ret_protected (ESP)");
+    //IRET returning to EIP:0x%08x EAX:%d\n",env->eip,EAX);
 
 
     if (is_iret) {
@@ -2853,21 +2861,15 @@ void helper_sysenter(void)
   //  char tsbuf[1000];
   SegmentCache *dt;
   target_ulong ssp, ptr;
-  uint32 e1,e2,ss,esp,ss_e1,ss_e2,saved_esp,sp_mask;
+  uint32_t e1,e2,ss,esp,ss_e1,ss_e2,saved_esp,sp_mask,i,stack_val;
+  target_phys_addr_t paddr;
 
+ 
+  printf("In your sys_enter EIP=0x%08x\n",EIP); 	
+  
+  //  iferret_spit_stack(ESP, "helper_sysenter 1 (ESP)");
+    
   /*  
-  fprintf(logfile, "In your sys_enter EIP=0x%08x\n",EIP); 	
-  
-  fprintf(logfile, "Printing off the stack\n");
-  for(i=0; i<50; i++){
-    paddr = cpu_get_phys_page_debug(env, ESP+4*i);
-    if (paddr!=-1) {
-      cpu_physical_memory_read(paddr, (char *) &stack_val, 4);
-    }	
-    fprintf(logfile, "%d: 0x%08x\n",i,stack_val);
-  }
-  
-  
   tempbuf = malloc(120);
   command = malloc(120);
   */	
@@ -2894,8 +2896,10 @@ void helper_sysenter(void)
       } else {
 	exit(1);
       }
+      printf ("helper_sysenter iferret_log_syscall_enter(%d,%x)\n",
+	      1, eip_for_callsite);
       iferret_log_syscall_enter(1, eip_for_callsite);
-    }
+  }
 
     /*
     free(tempbuf);
@@ -2968,20 +2972,8 @@ void helper_sysexit(void)
       //    	printf("Bingo!\n");
     }
 
-    
-    {
-      int i;
-      target_phys_addr_t paddr;
-      uint32_t stack_val;
-      printf("Printing off the stack\n");
-      for(i=0; i<50; i++){
-	paddr = cpu_get_phys_page_debug(env, ECX+4*i);
-	if (paddr!=-1) {
-	  cpu_physical_memory_read(paddr, &stack_val, 4);
-	}
-	printf("%d: 0x%08x\n",i,stack_val);
-      }
-    }
+
+    // iferret_spit_stack(ECX);
 
     /*
     #include "syscall-ret.h"
@@ -2989,6 +2981,9 @@ void helper_sysexit(void)
     free(command);
     */
 
+
+    printf ("helper_sysexit iferret_log_syscall_ret_sysexit(%x)\n", 
+	    ESP);
     iferret_log_syscall_ret_sysexit(ESP);
 
     ESP = saved_esp;

@@ -1,10 +1,12 @@
 
 TD=target-i386
  
-CFLAGS= -g
+CFLAGS= -g -I .
+OBJS = iferret.o iferret_log.o iferret_syscall_stack.o iferret_op_str.o int_set.o vslht.o
+SRCS = $(OBJS,.o=.c) 
 
-iferret: iferret.o iferret_log.o iferret_op_str.o int_set.o vslht.o
-	$(CC) $(CFLAGS) -o iferret iferret.o iferret_log.o iferret_op_str.o int_set.o vslht.o
+iferret: $(OBJS)
+	$(CC) $(CFLAGS) -o iferret $(OBJS)
 
 
 iferret.o: iferret.c
@@ -19,6 +21,8 @@ iferret_op_str.o: $(TD)/iferret_op_str.c
 iferret_syscall.o: $(TD)/iferret_syscall.c
 	$(CC) $(CFLAGS) -c $(TD)/iferret_syscall.c 
 
+iferret_syscall_stack.o: $(TD)/iferret_syscall_stack.c
+	$(CC) $(CFLAGS) -c $(TD)/iferret_syscall_stack.c 
 
 int_set.o: int_set.c
 	$(CC) $(CFLAGS) -c int_set.c 
@@ -28,5 +32,5 @@ vslht.o: vslht.c
 
 
 clean:
-	rm -f iferret.o iferret_log.o  $(TD)/iferret_op_str.o int_set.o
+	rm -f $(OBJS)
 

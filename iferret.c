@@ -10,7 +10,9 @@
 
 #include "iferret_log.h"
 #include "target-i386/iferret_ops.h"
+#include "target-i386/iferret_syscall_stack.h"
 #include "int_set.h"
+
 
 #define K 1024
 #define M (K * K)
@@ -180,6 +182,23 @@ void iferret_log_spit(char *filename) {
       iferret_spit_op(op);
       num_syscalls ++;
     }
+    if ((op->num == IFLO_IRET) || (op->num == IFLO_SYSEXIT_RET)) {
+      if (op->num == IFLO_IRET) {
+	printf("iret ");
+      }
+      else {
+	printf("sysexit ");
+      }
+      printf ("pid1=%d pid2=%d eip=%x eip2=%x callnum=%d retval=%d\n",
+	      op->syscall->pid,
+	      op->arg[0].val.u32,
+	      op->arg[1].val.u32,
+	      op->arg[2].val.u32,
+	      op->arg[3].val.u32,
+	      op->arg[4].val.u32);
+    }
+    
+
     opt = op; 
     op = op_last;
     op_last = opt;
@@ -210,10 +229,26 @@ iferret_t *iferret_create() {
 
 
 void iferret_push_syscall(iferret_t *iferret, iferret_syscall_t *scp) {
-  //  iferret_syscall_stack_push(*scp);    
+  iferret_syscall_stack_push(*scp);    
+}
+
+void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
+  uint32_t pid, eip_for_callsite, another_eip, callnum, retval;
+  iferret_syscall_stack_element_t element;
+
+  pid = op->arg[0].val.u32;
+  eip_for_callsite = op->arg[1].val.u32;
+  another_eip = op->arg[2].val.u32;
+  callnum = op->arg[3].val.u32; 
+  retval = op->arg[4].val.u32;
+  element = iferret_syscall_stack_get_with_eip(pid,eip_for_callsite,another_eip);
+  assert(element.syscall.callsite_eip != -1);
+  printf ("syscall %s returned %d\n", iferret_op_num_to_str(op->num), retval);
+
 }
 
 void iferret_info_flow_process(iferret_t *iferret, iferret_op_t *op) {
+
 }
 
 void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {
@@ -222,10 +257,12 @@ void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {
     // -->   iferret_log_op_write_4(IFLO_PID_CHANGE,current_pid);
     iferret->current_pid = op->arg[0].val.u32;
   }
-  if ((op->num > IFLO_SYS_CALLS_START) 
-      || (op->num == IFLO_IRET) 
-      || (op->num == IFLO_SYSEXIT_RET))  {  
+  if (op->num > IFLO_SYS_CALLS_START) {
     iferret_push_syscall(iferret,op->syscall);
+  }
+  if ((op->num == IFLO_IRET) 
+      || (op->num == IFLO_SYSEXIT_RET))  {  
+    iferret_pop_and_process_syscall(iferret,op);
   }
   if (op->num < IFLO_SYS_CALLS_START) {
     iferret_info_flow_process(iferret,op);
@@ -239,6 +276,11 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
   uint32_t i, n, iferret_log_size;
   FILE *fp;
   iferret_op_t op;
+  iferret_syscall_t syscall;
+  char command[256];
+
+  op.syscall = &syscall;
+  op.syscall->command = command;
 
   // pull the entire log into memory
   stat(filename, &fs);
@@ -301,9 +343,11 @@ int main (int argc, char **argv) {
   for (i=0; i<num_logs; i++) {
     sprintf(filename, "%s-%d", log_prefix, i);
     printf ("reading log: %s\n", filename);
-    iferret_log_process(iferret,filename);
+    //    iferret_log_process(iferret,filename);
+    iferret_log_spit(filename);
   }
 
+  /*
   {
     qsort (opcount, IFLO_DUMMY_LAST, sizeof(opcount_t), compcounts);
     for (i=0; i<IFLO_DUMMY_LAST; i++) {
@@ -312,4 +356,5 @@ int main (int argc, char **argv) {
       }
     }
   }
+  */
 }
