@@ -5,16 +5,16 @@
 #include "vslht.h"
 #include "int_set.h"
 
-uint32_t_set_t *uint32_t_set_new() {
-  uint32_t_set_t *set;
+int_set_t *int_set_new() {
+  int_set_t *set;
 
-  set = (uint32_t_set_t *) malloc (sizeof(uint32_t_set_t));
+  set = (int_set_t *) malloc (sizeof(int_set_t));
   assert (set != NULL);
   set->table = vslht_new();
   return set;
 }
 
-uint8_t hex_digit(uint32_t x, uint32_t p) {
+static inline uint8_t hex_digit(uint32_t x, uint32_t p) {
   x = (x & (0xf << (p*4))) >> (p*4);
   if (x < 10) return (x + '0');
   if (x < 16 && 10 <= x) {
@@ -23,7 +23,7 @@ uint8_t hex_digit(uint32_t x, uint32_t p) {
   return 'X';
 }
     
-void __make_key(char *key, uint32_t x) {
+static void __make_key(char *key, uint32_t x) {
   key[7] = hex_digit(x,0);
   key[6] = hex_digit(x,1);
   key[5] = hex_digit(x,2);
@@ -36,14 +36,14 @@ void __make_key(char *key, uint32_t x) {
 }
 
 // add x to set
-void uint32_t_set_add(uint32_t_set_t *set, uint32_t x) {
+void int_set_add(int_set_t *set, uint32_t x) {
   char key[9];
   __make_key(key,x);
   vslht_add (set->table, key, 1);
 }
 
 // remove x from set
-void uint32_t_set_remove(uint32_t_set_t *set, uint32_t x) {
+void int_set_remove(int_set_t *set, uint32_t x) {
   char key[9];
   __make_key(key,x);
   vslht_remove (set->table, key);
@@ -51,7 +51,7 @@ void uint32_t_set_remove(uint32_t_set_t *set, uint32_t x) {
 
 // returns 1 iff x is in set
 // else returns 0
-uint8_t uint32_t_set_mem(uint32_t_set_t *set, uint32_t x) {
+uint8_t int_set_mem(int_set_t *set, uint32_t x) {
   char key[9];
   __make_key(key,x);
   return (vslht_mem (set->table, key));
@@ -61,21 +61,22 @@ uint8_t uint32_t_set_mem(uint32_t_set_t *set, uint32_t x) {
 /*
 int main () {
   int i;
-  uint32_t_set_t *s;
+  int_set_t *s;
   uint32_t x;
 
-  s = uint32_t_set_new();
+  s = int_set_new();
   srand(100);
   for (i=0; i<10; i++) {
     x = rand();
     printf ("adding %d\n", x);
-    uint32_t_set_add(s,x);
-    printf ("checking %d -- %d\n", x, uint32_t_set_mem(s,x));
+    int_set_add(s,x);
+    printf ("checking %d -- %d\n", x, int_set_mem(s,x));
   }
   srand(100);
   for (i=0; i<10; i++) {
     x = rand();
-    printf ("checking %d -- %d\n", x, uint32_t_set_mem(s,x));
+    printf ("checking %d -- %d\n", x, int_set_mem(s,x));
   }
 }  
+
 */

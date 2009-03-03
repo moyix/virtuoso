@@ -177,6 +177,7 @@ void get_current_pid_uid() {
 }
 
 
+
 static inline uint32_t get_uint32_t_phys(uint32_t virt_addr) {
   target_phys_addr_t paddr;
   uint32_t retval;
@@ -267,8 +268,8 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
 
 
 
-    // this just clogs things up and doesn't indicate much of use
-    if (scp->op_num == IFLO_SYS_SIGRETURN) {
+    // SIGRETURN just clogs things up and doesn't indicate much of use
+    if (scp->op_num == IFLO_SYS_SIGRETURN)
       return;
     }
 
@@ -286,9 +287,11 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
     printf ("\n");
     */
 
-    // manage Ryan's stack
-    iferret_syscall_stack_push(*scp);    
-
+    // EXIT_GROUP doesn't return, so why push it?
+    if (scp->op_num != IFLO_SYS_EXIT_GROUP) {
+      // manage Ryan's stack
+      iferret_syscall_stack_push(*scp);    
+    }
 
     if (EAX==102) {
       iferret_log_socketcall(scp);
@@ -382,12 +385,10 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
       // NB: PID & EIP should be enough to match up.  EAX is the retval. 
       //      IFLS_IIII(IRET_OR_SYSEXIT, pid, eip_for_callsite, element.syscall_num, EAX);
       if (is_iret) {
-	iferret_log_sysret_op_write_44444(IFLO_IRET, pid, eip_for_callsite,
-					  another_eip, element.syscall.eax, EAX);
+	iferret_log_sysret_op_write_44444(IFLO_IRET, pid, eip_for_callsite, another_eip, element.syscall.eax, EAX);
       }
       else {
-	iferret_log_sysret_op_write_44444(IFLO_SYSEXIT_RET, pid, eip_for_callsite, 
-					  another_eip, element.syscall.eax, EAX);
+	iferret_log_sysret_op_write_44444(IFLO_SYSEXIT_RET, pid, eip_for_callsite,another_eip, element.syscall.eax, EAX);
       }
       if (element.syscall.eax == 120) {
 	//	printf ("came back from a clone.  %d spawned %d \n", element.syscall.pid, EAX);

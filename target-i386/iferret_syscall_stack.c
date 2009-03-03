@@ -81,6 +81,12 @@ void _check_pid(int pid) {
 }
 
 
+// note we don't free anything.  We just forget what's there. 
+void iferret_syscall_stack_kill_process(int pid) {
+  iferret_syscall_stack[pid].size = 0;
+}
+
+
 // push this (eip,syscall_num) pair to stack for pid.
 void iferret_syscall_stack_push(iferret_syscall_t syscall) {
   iferret_syscall_stack_t *stack;
@@ -208,17 +214,36 @@ void iferret_syscall_stacks_print(){
 	n++;
 	printf ("pid=%d size=%d\n", pid, stack->size);
 	for (i=0; i<stack->size; i++) {
-	  printf ("  %d", i);
+	  printf ("  %d: ", i);
 	  iferret_syscall_print(stack->stack[i].syscall);
 	  printf ("\n");
 	}
+	nn += stack->size;
       }
-      nn += stack->size;
     }
     printf ("%d pids with non-empty stacks.  %d elements in all stacks\n", n, nn);
   }
 }
 	     
+
+void iferret_syscall_stacks_stats_print(){
+  int i,pid,sum,n,nn=0;
+
+  if (iferret_syscall_stack != NULL) {
+    n=nn=0;
+    for (pid=0; pid<MAX_PID; pid++) {
+      iferret_syscall_stack_t *stack;
+      stack = &(iferret_syscall_stack[pid]);
+      if (stack!=NULL && stack->size > 0) {
+	n++;
+	nn += stack->size;
+	printf ("stack for pid=%d is %d\n", pid, stack->size);
+      }
+    }
+    printf ("%d pids with non-empty stacks.  %d elements in all stacks.  %.2f avg\n",
+	    n, nn, ((float) nn) / ((float) n));
+  }
+}
 
 
 #if 0

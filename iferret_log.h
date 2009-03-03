@@ -49,6 +49,7 @@
 #define IFRBA(rn) ifregaddr[rn]
 
 
+#define IFERRET_OP_MAX_NUM_ARGS 100
 
 typedef enum {
   IFLAT_NONE='0',
@@ -81,12 +82,13 @@ typedef struct iferret_syscall_struct_t {
   uint32_t pid;
   uint32_t callsite_eip;
   char *command;
+  iferret_op_arg_t arg[IFERRET_OP_MAX_NUM_ARGS];
 } iferret_syscall_t;
 
 
 typedef struct iferret_op_struct_t {
   iferret_log_op_enum_t num;     // the number of the op
-  iferret_op_arg_t arg[100];     // up to 100 arguments
+  iferret_op_arg_t arg[IFERRET_OP_MAX_NUM_ARGS];     // up to 100 arguments
   uint32_t num_args;             // number of arguments 
   iferret_syscall_t *syscall;
 } iferret_op_t;
