@@ -257,6 +257,8 @@ static inline void iferret_log_syscall_commoner(iferret_syscall_t *sc) {
   iferret_log_uint8_t_write(sc->is_sysenter);  
   iferret_log_uint32_t_write(sc->pid);
   iferret_log_uint32_t_write(sc->callsite_eip);
+  iferret_log_uint32_t_write(sc->eax);
+  iferret_log_uint32_t_write(sc->ebx);
   iferret_log_string_write(sc->command);
 
 }  

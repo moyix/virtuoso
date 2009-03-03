@@ -243,7 +243,7 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
   retval = op->arg[4].val.u32;
   element = iferret_syscall_stack_get_with_eip(pid,eip_for_callsite,another_eip);
   assert(element.syscall.callsite_eip != -1);
-  printf ("syscall %s returned %d\n", iferret_op_num_to_str(op->num), retval);
+  printf ("syscall %s returned %d\n", iferret_op_num_to_str(op->syscall->eax), retval);
 
 }
 
@@ -343,8 +343,8 @@ int main (int argc, char **argv) {
   for (i=0; i<num_logs; i++) {
     sprintf(filename, "%s-%d", log_prefix, i);
     printf ("reading log: %s\n", filename);
-    //    iferret_log_process(iferret,filename);
-    iferret_log_spit(filename);
+        iferret_log_process(iferret,filename);
+    //iferret_log_spit(filename);
   }
 
   /*

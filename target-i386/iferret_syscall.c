@@ -194,7 +194,7 @@ void iferret_check_log_full() {
   // but, if we *are* doing info-flow, there's not much point, eh? 
 #ifndef IFERRET_INFO_FLOW
   // check if info flow log is anywhere near overflow
-  if ((iferret_log_ptr - iferret_log_base) + 10 > IFERRET_LOG_SIZE) {
+  if ((iferret_log_ptr - iferret_log_base) + 10000 > IFERRET_LOG_SIZE) {
     iferret_log_rollup();
   }
 #endif

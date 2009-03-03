@@ -255,6 +255,8 @@ void iferret_log_op_args_read(iferret_op_t *op) {
     op->syscall->is_sysenter = iferret_log_uint8_t_read();
     op->syscall->pid = iferret_log_uint32_t_read();
     op->syscall->callsite_eip = iferret_log_uint32_t_read();
+    op->syscall->eax = iferret_log_uint32_t_read();
+    op->syscall->ebx = iferret_log_uint32_t_read();
     iferret_log_string_read(op->syscall->command);
   }
 
