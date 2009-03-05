@@ -141,13 +141,13 @@ void iferret_remove_mal_pid(iferret_t *iferret, int pid) {
 
 
 uint8_t iferret_is_pid_mal(iferret_t *iferret, int pid) {
-    return (int_set_mem(iferret->mal_pids, pid));
-    //return 1;
+  return (int_set_mem(iferret->mal_pids, pid));
+  //  return 1;
 }
 
 uint8_t iferret_is_pid_not_mal(iferret_t *iferret, int pid) {
-    return (!(int_set_mem(iferret->mal_pids, pid)));
-    //return 0;
+  return (!(int_set_mem(iferret->mal_pids, pid)));
+  //  return 0;
 }
 
 
@@ -159,6 +159,7 @@ iferret_track_pid_commands(iferret_t *iferret, int pid, char *command) {
     if ((strcmp(s,command)) != 0) {
       printf ("pid %d was [%s] now [%s]\n",
 	      pid, s, command);
+      printf ("digraph a%d [label=\"%d %s\"]\n", pid, pid, command);
     }
   }
   int_string_hashtable_add(iferret->pid_commands,
@@ -324,6 +325,7 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
   int retval;
   char *command; 
 
+  // this is the pid of the process into which we are returning from a syscall?
   pid = op->arg[0].val.u32;
   iferret->current_pid = pid;
 
@@ -347,9 +349,14 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
   //    printf ("returning from clone\n");
   //  }
 
-  iferret_track_pid_commands(iferret, syscall->pid, syscall->command);
+  // NB: syscall->pid is the pid from which the syscall was made.
+  //     and pid is that of the process into which we are returning.
+  if (syscall->pid != pid) {
+    printf ("returning from pid=%d syscall into pid=%d\n", syscall->pid, pid);
+  }
+	    
+  iferret_track_pid_commands(iferret, op->syscall->pid, syscall->command);
   command = int_string_hashtable_find(iferret->pid_commands,pid);
-
 
   // only process this syscall if it at least one of originating or receiving pid
   // is in mal_pids.
@@ -363,11 +370,18 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
   
   assert(syscall->callsite_eip != -1);
   if (syscall->op_num == IFLO_SYS_CLONE) {
+    char *clone_command;
+    clone_command = int_string_hashtable_find(iferret->pid_commands, retval);
     printf ("pid %d [%s] cloned %d [%s]\n", 
 	    syscall->pid, 
 	    command,
 	    retval,
-	    int_string_hashtable_find(iferret->pid_commands, retval));
+	    clone_command);
+
+    printf ("digraph a%d [label=\"%d %s\"]\n", syscall->pid, syscall->pid, command);
+    printf ("digraph a%d [label=\"%d %s\"]\n", retval, retval, clone_command);
+    printf ("digraph a%d -> a%d\n", syscall->pid, retval);
+
     iferret_add_mal_pid(iferret, retval);
   }
   
