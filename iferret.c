@@ -13,7 +13,9 @@
 #include "target-i386/iferret_syscall_stack.h"
 #include "int_set.h"
 #include "int_string_hashtable.h"
-
+#include "int_int_hashtable.h"
+#include "iferret.h"
+#include "iferret_open_fd.h"
 
 #define K 1024
 #define M (K * K)
@@ -31,30 +33,6 @@ extern char *iferret_log_base;
 
 // ptr to next byte to be written in info flow log
 extern char *iferret_log_ptr;      
-
-typedef enum iferret_mode_enum {
-  IFERRET_MODE_RELAXED,
-  IFERRET_MODE_SUSPICIOUS
-} iferret_mode_t;
-
-
-
-typedef struct opcount {
-  iferret_log_op_enum_t op_num;
-  uint32_t count;
-} opcount_t;
-
-
-typedef struct iferret_struct_t {
-  iferret_mode_t mode;          // mode -- relaxed / suspicious
-  int_string_hashtable_t *pid_commands;     // current set of pids seen, mapped to command strings
-  int_set_t *mal_pids;          // current set of malicious pids
-  uint32_t eip_at_head_of_tb;   // eip for head of tb currently being executed
-  uint32_t current_pid;
-  opcount_t *opcount;           // counts for ops encounters
-} iferret_t;
-
-
 
 
 
@@ -132,47 +110,168 @@ iferret_t *iferret_create() {
   iferret->pid_commands = int_string_hashtable_new();
   iferret->mal_pids = int_set_new();
   iferret->opcount = (opcount_t *) my_calloc (sizeof (opcount_t) * IFLO_DUMMY_LAST);
+  iferret->open_fd_table = int_int_hashtable_new();
+  iferret->current_pid = -1;
   return (iferret);
 }
 
 
-void iferret_open_fd(iferret_t *iferret, char *command, int pid, int fd, 
-		     char *filename, int flags, int mode) {
+
+void iferret_add_mal_pid(iferret_t *iferret, int pid) {
+  printf ("Adding pid=%d to mal_pids set\n", pid);
+  int_set_add(iferret->mal_pids, pid);
+}
+
+
+void iferret_remove_mal_pid(iferret_t *iferret, int pid) {
+  printf ("Removing pid=%d from mal_pids set\n", pid);
+  int_set_remove(iferret->mal_pids, pid);
+}
+
+
+uint8_t iferret_is_pid_mal(iferret_t *iferret, int pid) {
+    return (int_set_mem(iferret->mal_pids, pid));
+    //return 0;
+}
+
+uint8_t iferret_is_pid_not_mal(iferret_t *iferret, int pid) {
+    return (!(int_set_mem(iferret->mal_pids, pid)));
+    //return 1;
+}
+
+
+iferret_track_pid_commands(iferret_t *iferret, int pid, char *command) {
+  if (int_string_hashtable_mem(iferret->pid_commands,pid)) {
+    char *s;
+    // we've already seen this pid -- check if command string has changed.
+    s = int_string_hashtable_find(iferret->pid_commands,pid);
+    if ((strcmp(s,command)) != 0) {
+      printf ("pid %d was [%s] now [%s]\n",
+	      pid, s, command);
+      int_string_hashtable_add(iferret->pid_commands,
+			       pid,
+			       command);      
+    }
+  }
+  else {
+    int_string_hashtable_add(iferret->pid_commands,
+			     pid,
+			     command);
+  }
+}
+
+void iferret_open_file(iferret_t *iferret, char *command, int pid, int fd, 
+		       char *filename, int flags, int mode) {
+  /*
   printf ("pid %d [%s] opened fd=%d [%s] with flags=%d mode=%d\n",
 	  pid, command, fd, filename, flags, mode);
-  int_int_ptr_hashtable_add (iferret->open_fds, pid, fd, 
-  
-  
+  */
+  iferret_open_fd_add(iferret, pid, fd, filename, flags, mode);  
 }
-      iferret_close_fd(iferret,scp->pid, syscall->argv[0]);
+
+
+void iferret_close_file(iferret_t *iferret, char *command, int pid, int fd) {
+  iferret_open_fd_t *iofd;
+  if (iferret_open_fd_mem(iferret, pid, fd)) {
+    // yes, it is there. 
+    iofd = iferret_open_fd_find(iferret, pid, fd);
+    /*
+    printf ("pid %d [%s] closed fd=%d\n", pid, command, fd);
+    printf ("filename=%s flags=%d mode=%d\n",
+	    iofd->filename, iofd->flags, iofd->mode);
+    */
+    iferret_open_fd_remove(iferret, pid, fd);
+  }
+  else {
+    // Ignore -- tried to close a file we never saw open of? 
+    /*
+    printf ("iferret_close_fd called with pid=%d fd=%d not in table.\n",
+	    pid, fd);
+    exit (1);
+    */
+  }
+}
+
+
+void iferret_read_file(iferret_t *iferret, int pid, char *command, 
+		       int fd, uint32_t buf, uint32_t count, int retval) {
+  if (iferret_open_fd_mem(iferret, pid, fd)) {
+    // this is a file for which we saw the open
+    printf ("pid %d [%s] read %d of %d bytes from file [%s]\n", 
+	    pid, command, retval, count, 
+	    (iferret_open_fd_find(iferret, pid, fd))->filename);
+  }
+}
+
+
+
+void iferret_write_file(iferret_t *iferret, int pid, char *command, 
+			int fd, uint32_t buf, uint32_t count, int retval) {
+  if (iferret_open_fd_mem(iferret, pid, fd)) {
+    // this is a file for which we saw the open
+    printf ("pid %d [%s] wrote %d of %d bytes from file [%s]\n", 
+	    pid, command, retval, count, 
+	    (iferret_open_fd_find(iferret, pid, fd))->filename);
+  }
+}
+
+
+void iferret_readv_file(iferret_t *iferret, int pid, char *command, int fd)  {
+  if (iferret_open_fd_mem(iferret,pid,fd)) {
+    // this is a file for which we saw the open
+    printf ("pid %d [%s] readv from fd=%d [%s]\n",
+	    pid, command, fd, 
+	    (iferret_open_fd_find(iferret, pid, fd))->filename);
+  }
+}
+
+void iferret_writev_file(iferret_t *iferret, int pid, char *command, int fd)  {
+  if (iferret_open_fd_mem(iferret,pid,fd)) {
+    // this is a file for which we saw the open
+    printf ("pid %d [%s] writev from fd=%d [%s]\n",
+	    pid, command, fd, 
+	    (iferret_open_fd_find(iferret, pid, fd))->filename);
+  }
+}
+
+
 
 // kill
 void iferret_exit_group(iferret_t *iferret, int pid) {
   iferret_syscall_stack_kill_process(pid);
+  iferret_remove_mal_pid(iferret, pid);
   printf ("process group %d exited\n", pid);
 }
 
 
+iferret_count_op(iferret_t *iferret, iferret_op_t *op) {
+  iferret->opcount[op->num].op_num = op->num;
+  iferret->opcount[op->num].count ++;
+}
+
 
 void iferret_process_syscall(iferret_t *iferret, iferret_op_t *op) {
   iferret_syscall_t *scp;
+  scp = op->syscall;  
 
-  scp = op->syscall;
-  //    printf ("syscall is %d %s\n", op->num, iferret_op_num_to_str(op->num));
-  
+  iferret->current_pid = scp->pid;
+  // only process this syscall if it belonged to a process we are tracking
+  if (iferret_is_pid_not_mal(iferret, scp->pid)) {
+    return;
+  }
+  iferret_track_pid_commands(iferret, scp->pid, scp->command);
+  iferret_count_op(iferret,op);
   if (op->num == IFLO_SYS_SYS_EXIT_GROUP) {
     iferret_exit_group(iferret,scp->pid);
     // EXIT_GROUP doesn't return, so why push it onto the stack?
     return;
   }
-
   if (op->num == IFLO_SYS_EXECVE) {
     printf ("pid %d [%s] exec-ed [%s] \n",
 	    scp->pid, 
 	    int_string_hashtable_find(iferret->pid_commands, scp->pid),
 	    op->arg[0].val.str);
   }
-  
   scp->op_num = op->num;
   {
     int i;
@@ -183,9 +282,9 @@ void iferret_process_syscall(iferret_t *iferret, iferret_op_t *op) {
       }
     }
   }
-
   iferret_syscall_stack_push(*scp);    
 }
+
 
 
 void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
@@ -196,14 +295,20 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
   char *command; 
 
   pid = op->arg[0].val.u32;
+  iferret->current_pid = pid;
+  // only process this syscall if it belonged to a process we are tracking
+  if (iferret_is_pid_not_mal(iferret, pid)) {
+    return;
+  }
+  iferret_count_op(iferret,op);
   eip_for_callsite = op->arg[1].val.u32;
   another_eip = op->arg[2].val.u32;
   callnum = op->arg[3].val.u32; 
   retval = op->arg[4].val.u32;
   element = iferret_syscall_stack_get_with_eip(pid,eip_for_callsite,another_eip);
   syscall = &element.syscall;
-  command = int_string_hashtable_find(iferret->pid_commands, syscall->pid),
-
+  command = int_string_hashtable_find(iferret->pid_commands,pid);
+  iferret_track_pid_commands(iferret, syscall->pid, syscall->command);
   assert(syscall->callsite_eip != -1);
   if (syscall->op_num == IFLO_SYS_CLONE) {
     printf ("pid %d [%s] cloned %d [%s]\n", 
@@ -211,43 +316,82 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
 	    command,
 	    retval,
 	    int_string_hashtable_find(iferret->pid_commands, retval));
+    iferret_add_mal_pid(iferret, retval);
   }
-
-  if (syscall->op_num == IFLO_SYS_EXECVE) {
+  
+  switch (syscall->op_num) {
+  case IFLO_SYS_EXECVE:
     printf ("failure of exec %d %d %s\n",
 	    pid,
 	    syscall->pid,
 	    syscall->command);
-  }
-
-  if (syscall->op_num == IFLO_SYS_SYS_OPEN
-      && retval >= 0
-      ) {
-    // keep track of open fds for this pid
-    iferret_open_fd(iferret,
-		    scp->pid,
-		    command,
-		    retval,	    
-		    syscall->arg[0].val.str,
-		    syscall->arg[1].val.u32,
-		    syscall->arg[2].val.u32);
-  }
-
-  if (syscall->op_num == IFLO_SYS_SYS_CLOSE) {
+    break;
+  case IFLO_SYS_SYS_OPEN:
+    if (retval >= 0) {
+      // keep track of open fds for this pid
+      iferret_open_file(iferret, command, syscall->pid, retval,	    
+			syscall->arg[0].val.str,   // filename
+			syscall->arg[1].val.u32,   // flags
+			syscall->arg[2].val.u32);  // mode
+    }
+    break;
+  case IFLO_SYS_SYS_CLOSE:
     if (retval == 0) {
-      printf ("pid %d [%s] closed fd=%d\n", 
-	      syscall->pid, 
-	      command,
-	      syscall->arg[0].val.u32);	  
+      // 0 is success, by the way.  
+      // keep track of open fds for this pid
+      iferret_close_file(iferret, command, syscall->pid, syscall->arg[0].val.u32);
     }
     else {
       printf ("failure of pid %d [%s] trying to close fd=%d\n", 
 	      syscall->pid, command,
 	      syscall->arg[0].val.u32);	  
-      // keep track of open fds for this pid
-      iferret_close_fd(iferret,scp->pid, syscall->argv[0]);
     }
+    break;
+  case IFLO_SYS_SYS_READ: 
+    if (retval > 0) {
+      // at least 1 byte read
+      iferret_read_file(iferret,
+			syscall->pid, 
+			command,
+			syscall->arg[0].val.u32,   // the file descriptor
+			syscall->arg[1].val.u32,   // the dest ptr
+			syscall->arg[2].val.u32,   // num bytes requested for read
+			retval);
+    }
+    break;
+  case IFLO_SYS_SYS_WRITE:
+    if (retval > 0) {
+      // at least 1 byte written
+      iferret_write_file(iferret,
+			 syscall->pid,
+			 command,
+			 syscall->arg[0].val.u32,   // the file descriptor
+			 syscall->arg[1].val.u32,   // the dest ptr
+			 syscall->arg[2].val.u32,   // num bytes requested for read
+			 retval);
+    }
+    break;
+  case IFLO_SYS_SYS_READV: 
+    if (retval > 0) {
+      // at least one byte read
+      iferret_readv_file(iferret,
+			 syscall->pid,
+			 command,
+			 syscall->arg[0].val.u32); // the file descriptor
+    }
+    break;
+  case IFLO_SYS_SYS_WRITEV: 
+    if (retval > 0) {
+      // at least one byte written
+      iferret_writev_file(iferret,
+			  syscall->pid,
+			  command,
+			  syscall->arg[0].val.u32); // the file descriptor
+    }
+  default:
+    break;
   }
+  
 	    
  
 }
@@ -257,44 +401,30 @@ void iferret_info_flow_process(iferret_t *iferret, iferret_op_t *op) {
   // NOP for now.
 }
 
+  
 
-void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {
-  iferret->opcount[op->num].op_num = op->num;
-  iferret->opcount[op->num].count ++;
-
-  if (int_string_hashtable_mem(iferret->pid_commands,op->syscall->pid)) {
-    char *s;
-    // we've already seen this pid -- check if command string has changed.
-    s = int_string_hashtable_find(iferret->pid_commands,op->syscall->pid);
-    if ((strcmp(s,op->syscall->command)) != 0) {
-      printf ("pid %d was [%s] now [%s]\n",
-	      op->syscall->pid, s, op->syscall->command);
-      int_string_hashtable_add(iferret->pid_commands,
-			       op->syscall->pid,
-			       op->syscall->command);      
-    }
-  }
-  else {
-    int_string_hashtable_add(iferret->pid_commands,
-			     op->syscall->pid,
-			     op->syscall->command);
-  }
-
-  if (op->num == IFLO_PID_CHANGE) {
-    // -->   iferret_log_op_write_4(IFLO_PID_CHANGE,current_pid);
-    iferret->current_pid = op->arg[0].val.u32;
-  }
+void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {  
   if (op->num > IFLO_SYS_CALLS_START) {
     iferret_process_syscall(iferret,op);
+  } 
+  else {
+    if (op->num == IFLO_IRET  
+	|| op->num == IFLO_SYSEXIT_RET) {
+      iferret_pop_and_process_syscall(iferret,op);
+    }
+    else {
+      if (iferret_is_pid_mal(iferret, iferret->current_pid)) {
+	iferret_count_op(iferret,op);
+	if (op->num == IFLO_PID_CHANGE) {
+	  iferret->current_pid = op->arg[0].val.u32;
+	}
+	
+	if (op->num < IFLO_SYS_CALLS_START) {
+	  iferret_info_flow_process(iferret,op);
+	}
+      }
+    }
   }
-  if ((op->num == IFLO_IRET) 
-      || (op->num == IFLO_SYSEXIT_RET))  {  
-    iferret_pop_and_process_syscall(iferret,op);
-  }
-  if (op->num < IFLO_SYS_CALLS_START) {
-    iferret_info_flow_process(iferret,op);
-  }
- 
 }
 
 
@@ -363,9 +493,10 @@ int main (int argc, char **argv) {
   
   printf ("ram is %d MB, giving total mem of %d\n", ram, phys_ram_size);
 
-
   iferret_log_create();
   iferret = iferret_create();
+  // this is the seed.  Somehow, we knew this was the pid to follow.
+  iferret_add_mal_pid(iferret, 5685);
   // iterate over logfiles and process each in sequence
   for (i=0; i<num_logs; i++) {
     sprintf(filename, "%s-%d", log_prefix, i);
@@ -373,19 +504,16 @@ int main (int argc, char **argv) {
         iferret_log_process(iferret,filename);
     //iferret_log_spit(filename);
   }
-
-  {
-    qsort (iferret->opcount, IFLO_DUMMY_LAST, sizeof(opcount_t), compcounts);
-    for (i=0; i<IFLO_DUMMY_LAST; i++) {
-      if (iferret->opcount[i].count > 0) {
-	printf ("%d %s \n", 
-		iferret->opcount[i].count, 
+  // stats
+  qsort (iferret->opcount, IFLO_DUMMY_LAST, sizeof(opcount_t), compcounts);
+  for (i=0; i<IFLO_DUMMY_LAST; i++) {
+    if (iferret->opcount[i].count > 0) {
+      printf ("%d %s \n", 
+	      iferret->opcount[i].count, 
 		iferret_op_num_to_str(iferret->opcount[i].op_num));
-      }
     }
   }
-
-  iferret_syscall_stacks_print();
+  //  iferret_syscall_stacks_print();
   iferret_syscall_stacks_stats_print();
   
 }

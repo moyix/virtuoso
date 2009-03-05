@@ -373,7 +373,7 @@ void iferret_log_create() {
     // We'll pretend the registers live starting at phys_ram_size.
     // and we'll make them 8 bytes just for fun.
     ifregaddr[i] = (unsigned long long) ( ((uint64_t) phys_ram_size) + i*8);
-    printf("Register i=%d is at 0x%x\r\n", i, (unsigned int) ifregaddr[i]);
+    //    printf("Register i=%d is at 0x%x\r\n", i, (unsigned int) ifregaddr[i]);
   }
 
 }
