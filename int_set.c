@@ -14,32 +14,74 @@ int_set_t *int_set_new() {
   return set;
 }
 
-static inline uint8_t hex_digit(uint32_t x, uint32_t p) {
-  x = (x & (0xf << (p*4))) >> (p*4);
-  if (x < 10) return (x + '0');
-  if (x < 16 && 10 <= x) {
-    return (x + 'a');
+// given a char that is 0..9 a..f hex digit, 
+// return an int 0..15
+static inline uint8_t charhex(char c) {
+  if (c>='0' && c<='9') 
+    return (c-'0');
+  else {
+    if (c>='a' && c<='f') 
+      return (c - 'a' + 10);
+    else 
+      return -1;
   }
-  return 'X';
+  return -1;
+}
+
+
+// given an int 0..15, return '0'..'9' 'a'..'f'
+static inline char hexchar(uint8_t x) {
+  if (x < 10) 
+    return (x + '0');
+  else {
+    if (x < 16) 
+      return (x + 'a');
+    else 
+      return ('?');
+  }
+  return ('?');
 }
     
+
+// given a char '0'..'9' 'a'..'f', return 0..15
+static inline uint8_t hexdigit(uint32_t x, uint32_t p) {
+  x = (x & (0xf << (p*4))) >> (p*4);
+  return (hexchar((uint8_t) x));
+}
+
 static void __make_key(char *key, uint32_t x) {
-  key[7] = hex_digit(x,0);
-  key[6] = hex_digit(x,1);
-  key[5] = hex_digit(x,2);
-  key[4] = hex_digit(x,3);
-  key[3] = hex_digit(x,4);
-  key[2] = hex_digit(x,5);
-  key[1] = hex_digit(x,6);
-  key[0] = hex_digit(x,7);
+  key[7] = hexdigit(x,0);
+  key[6] = hexdigit(x,1);
+  key[5] = hexdigit(x,2);
+  key[4] = hexdigit(x,3);
+  key[3] = hexdigit(x,4);
+  key[2] = hexdigit(x,5);
+  key[1] = hexdigit(x,6);
+  key[0] = hexdigit(x,7);
   key[8] = '\0';
 }
+
+
+    
+uint32_t key_to_uint32 (char *key) {
+  uint32_t sum;
+  sum = charhex(key[7]) 
+    | (charhex(key[6]) << 4)
+    | (charhex(key[5]) << 8)
+    | (charhex(key[4]) << 12)
+    | (charhex(key[3]) << 16)
+    | (charhex(key[2]) << 20)
+    | (charhex(key[1]) << 24)
+    | (charhex(key[0]) << 28);
+}
+
+
 
 // add x to set
 void int_set_add(int_set_t *set, uint32_t x) {
   char key[9];
   __make_key(key,x);
-  vslht_add (set->table, key, 1);
+  vslht_add (set->table, key, x);
 }
 
 // remove x from set
@@ -57,6 +99,24 @@ uint8_t int_set_mem(int_set_t *set, uint32_t x) {
   return (vslht_mem (set->table, key));
 }
 
+
+void int_set_spit(int_set_t *set) {
+  char **key;
+  int i;
+  key = vslht_key_set(set->table);
+  for (i=0; i<vslht_occ(set->table); i++) {
+    if (key[i] != NULL && vslht_mem(set->table,key[i])) {
+      printf ("%d ", vslht_find(set->table,key[i]));
+      free(key[i]);
+    }
+  }
+  free(key);
+  printf ("\n");
+}
+
+int int_set_size(int_set_t *set) {
+  return (set->table->occ);
+}
 
 /*
 int main () {

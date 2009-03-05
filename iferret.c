@@ -93,7 +93,6 @@ void op_hex_dump(char **op_start, int i) {
 
 
 char *iferret_syscall_num_to_str(int eax, int ebx) {
-
   if (eax == 102) {
     // sys_socketcall
     return (iferret_op_num_to_str(IFLO_SYS_SOCKETCALLS_START + ebx));
@@ -104,11 +103,12 @@ char *iferret_syscall_num_to_str(int eax, int ebx) {
 
 iferret_t *iferret_create() {
   iferret_t *iferret;
-
   iferret = (iferret_t *) my_malloc (sizeof (iferret_t));
   iferret->mode = IFERRET_MODE_RELAXED;
   iferret->pid_commands = int_string_hashtable_new();
   iferret->mal_pids = int_set_new();
+  iferret->mal_files = vslht_new();
+  iferret->read_files = vslht_new();
   iferret->opcount = (opcount_t *) my_calloc (sizeof (opcount_t) * IFLO_DUMMY_LAST);
   iferret->open_fd_table = int_int_hashtable_new();
   iferret->current_pid = -1;
@@ -116,27 +116,38 @@ iferret_t *iferret_create() {
 }
 
 
+void iferret_spit_mal_pids(iferret_t *iferret) {
+  printf ("mal_pids: ");
+  int_set_spit(iferret->mal_pids);
+}
+
 
 void iferret_add_mal_pid(iferret_t *iferret, int pid) {
-  printf ("Adding pid=%d to mal_pids set\n", pid);
-  int_set_add(iferret->mal_pids, pid);
+  if (!(int_set_mem(iferret->mal_pids, pid))) {
+    printf ("Adding pid=%d to mal_pids set\n", pid);
+    int_set_add(iferret->mal_pids, pid);
+    iferret_spit_mal_pids(iferret);
+  }
 }
 
 
 void iferret_remove_mal_pid(iferret_t *iferret, int pid) {
-  printf ("Removing pid=%d from mal_pids set\n", pid);
-  int_set_remove(iferret->mal_pids, pid);
+  if (int_set_mem(iferret->mal_pids, pid)) {
+    printf ("Removing pid=%d from mal_pids set\n", pid);
+    int_set_remove(iferret->mal_pids, pid);
+    iferret_spit_mal_pids(iferret);
+  }
 }
 
 
 uint8_t iferret_is_pid_mal(iferret_t *iferret, int pid) {
     return (int_set_mem(iferret->mal_pids, pid));
-    //return 0;
+    //return 1;
 }
 
 uint8_t iferret_is_pid_not_mal(iferret_t *iferret, int pid) {
     return (!(int_set_mem(iferret->mal_pids, pid)));
-    //return 1;
+    //return 0;
 }
 
 
@@ -148,17 +159,13 @@ iferret_track_pid_commands(iferret_t *iferret, int pid, char *command) {
     if ((strcmp(s,command)) != 0) {
       printf ("pid %d was [%s] now [%s]\n",
 	      pid, s, command);
-      int_string_hashtable_add(iferret->pid_commands,
-			       pid,
-			       command);      
     }
   }
-  else {
-    int_string_hashtable_add(iferret->pid_commands,
+  int_string_hashtable_add(iferret->pid_commands,
 			     pid,
 			     command);
-  }
 }
+
 
 void iferret_open_file(iferret_t *iferret, char *command, int pid, int fd, 
 		       char *filename, int flags, int mode) {
@@ -196,51 +203,58 @@ void iferret_close_file(iferret_t *iferret, char *command, int pid, int fd) {
 void iferret_read_file(iferret_t *iferret, int pid, char *command, 
 		       int fd, uint32_t buf, uint32_t count, int retval) {
   if (iferret_open_fd_mem(iferret, pid, fd)) {
+    char *filename;
+    filename = (iferret_open_fd_find(iferret, pid, fd))->filename; 
     // this is a file for which we saw the open
     printf ("pid %d [%s] read %d of %d bytes from file [%s]\n", 
-	    pid, command, retval, count, 
-	    (iferret_open_fd_find(iferret, pid, fd))->filename);
+	    pid, command, retval, count, filename);
+    vslht_add(iferret->read_files, filename, 1);
   }
 }
-
 
 
 void iferret_write_file(iferret_t *iferret, int pid, char *command, 
 			int fd, uint32_t buf, uint32_t count, int retval) {
   if (iferret_open_fd_mem(iferret, pid, fd)) {
+    char *filename;
+    filename = (iferret_open_fd_find(iferret, pid, fd))->filename; 
     // this is a file for which we saw the open
     printf ("pid %d [%s] wrote %d of %d bytes from file [%s]\n", 
-	    pid, command, retval, count, 
-	    (iferret_open_fd_find(iferret, pid, fd))->filename);
+	    pid, command, retval, count, filename);
+    vslht_add(iferret->mal_files, filename, 1);
   }
 }
 
 
 void iferret_readv_file(iferret_t *iferret, int pid, char *command, int fd)  {
   if (iferret_open_fd_mem(iferret,pid,fd)) {
+    char *filename;
+    filename = (iferret_open_fd_find(iferret, pid, fd))->filename; 
     // this is a file for which we saw the open
     printf ("pid %d [%s] readv from fd=%d [%s]\n",
-	    pid, command, fd, 
-	    (iferret_open_fd_find(iferret, pid, fd))->filename);
+	    pid, command, fd, filename);
+    vslht_add(iferret->read_files, filename, 1);
   }
 }
+
 
 void iferret_writev_file(iferret_t *iferret, int pid, char *command, int fd)  {
   if (iferret_open_fd_mem(iferret,pid,fd)) {
+    char *filename;
+    filename = (iferret_open_fd_find(iferret, pid, fd))->filename; 
     // this is a file for which we saw the open
     printf ("pid %d [%s] writev from fd=%d [%s]\n",
-	    pid, command, fd, 
-	    (iferret_open_fd_find(iferret, pid, fd))->filename);
+	    pid, command, fd, filename);
+    vslht_add(iferret->mal_files, filename, 1);
   }
 }
-
 
 
 // kill
 void iferret_exit_group(iferret_t *iferret, int pid) {
   iferret_syscall_stack_kill_process(pid);
+  printf ("Process group %d exited. \n", pid);
   iferret_remove_mal_pid(iferret, pid);
-  printf ("process group %d exited\n", pid);
 }
 
 
@@ -254,12 +268,28 @@ void iferret_process_syscall(iferret_t *iferret, iferret_op_t *op) {
   iferret_syscall_t *scp;
   scp = op->syscall;  
 
+
   iferret->current_pid = scp->pid;
+
+  /*
+  if (op->num == IFLO_SYS_CLONE) {
+    printf ("call clone\n");
+  }
+  if (op->num == IFLO_SYS_EXECVE) {
+    printf ("call execve\n");
+  }
+  */
+
+  iferret_track_pid_commands(iferret, scp->pid, scp->command);
+
   // only process this syscall if it belonged to a process we are tracking
+  
   if (iferret_is_pid_not_mal(iferret, scp->pid)) {
+    //    printf ("pid %d not mal -- ignoring syscall\n", scp->pid);
     return;
   }
-  iferret_track_pid_commands(iferret, scp->pid, scp->command);
+  
+
   iferret_count_op(iferret,op);
   if (op->num == IFLO_SYS_SYS_EXIT_GROUP) {
     iferret_exit_group(iferret,scp->pid);
@@ -296,19 +326,41 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
 
   pid = op->arg[0].val.u32;
   iferret->current_pid = pid;
-  // only process this syscall if it belonged to a process we are tracking
-  if (iferret_is_pid_not_mal(iferret, pid)) {
-    return;
-  }
-  iferret_count_op(iferret,op);
+
   eip_for_callsite = op->arg[1].val.u32;
   another_eip = op->arg[2].val.u32;
   callnum = op->arg[3].val.u32; 
   retval = op->arg[4].val.u32;
   element = iferret_syscall_stack_get_with_eip(pid,eip_for_callsite,another_eip);
+  if (element.index == -1
+      ) {
+    // not in the stack -- ignore
+    //    printf ("nothing in stack corresponding to pid=%d eip1=0x%x eip2=0x%x\n",
+    //	    pid, eip_for_callsite, another_eip);
+    return;
+  }
+    
+
   syscall = &element.syscall;
-  command = int_string_hashtable_find(iferret->pid_commands,pid);
+
+  //  if (syscall->op_num == IFLO_SYS_CLONE) {
+  //    printf ("returning from clone\n");
+  //  }
+
   iferret_track_pid_commands(iferret, syscall->pid, syscall->command);
+  command = int_string_hashtable_find(iferret->pid_commands,pid);
+
+
+  // only process this syscall if it at least one of originating or receiving pid
+  // is in mal_pids.
+  if (! ((iferret_is_pid_mal(iferret, pid)) || 
+	 (iferret_is_pid_mal(iferret, syscall->pid)))) {
+    //    printf ("pid %d not mal -- ignoring syscall pop\n", pid);
+    return;
+  }
+  
+  iferret_count_op(iferret,op);
+  
   assert(syscall->callsite_eip != -1);
   if (syscall->op_num == IFLO_SYS_CLONE) {
     printf ("pid %d [%s] cloned %d [%s]\n", 
@@ -321,7 +373,7 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
   
   switch (syscall->op_num) {
   case IFLO_SYS_EXECVE:
-    printf ("failure of exec %d %d %s\n",
+    printf ("Failure of exec %d %d %s\n",
 	    pid,
 	    syscall->pid,
 	    syscall->command);
@@ -417,8 +469,7 @@ void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {
 	iferret_count_op(iferret,op);
 	if (op->num == IFLO_PID_CHANGE) {
 	  iferret->current_pid = op->arg[0].val.u32;
-	}
-	
+	}	
 	if (op->num < IFLO_SYS_CALLS_START) {
 	  iferret_info_flow_process(iferret,op);
 	}
@@ -451,6 +502,10 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
   // process each op in the log, in sequence
   i=0;
   while (iferret_log_ptr < iferret_log_base + iferret_log_size) {
+    if (int_set_size(iferret->mal_pids) == 0) {
+      printf ("All Malicious PIDS have exited.\n");
+      return;
+    }
     op.num = iferret_log_op_only_read();
     if ((iferret_log_sentinel_check()) == 0) {
       printf ("sentinel failed at op %d\n", i);
@@ -504,7 +559,35 @@ int main (int argc, char **argv) {
         iferret_log_process(iferret,filename);
     //iferret_log_spit(filename);
   }
-  // stats
+  //  iferret_syscall_stacks_print();
+  iferret_syscall_stacks_stats_print();
+  {
+    char **filename;
+    int i, n;
+    filename = vslht_key_set(iferret->mal_files);
+    printf ("\nFiles written by a malicious process:\n");
+    n = vslht_occ(iferret->mal_files);
+    for (i=0; i<n; i++) {
+      printf("  %s\n", filename[i]);
+      free (filename[i]);
+    } 
+    free(filename);
+  }
+  {
+    char **filename;
+    int i, n;
+    filename = vslht_key_set(iferret->read_files);
+    printf ("\nFiles read by a malicious process:\n");
+    n = vslht_occ(iferret->read_files);
+    for (i=0; i<n; i++) {
+      printf("  %s\n", filename[i]);
+      free (filename[i]);
+    } 
+    free(filename);
+  }
+
+  // op stats
+  printf ("\nOp histogram\n");
   qsort (iferret->opcount, IFLO_DUMMY_LAST, sizeof(opcount_t), compcounts);
   for (i=0; i<IFLO_DUMMY_LAST; i++) {
     if (iferret->opcount[i].count > 0) {
@@ -513,7 +596,5 @@ int main (int argc, char **argv) {
 		iferret_op_num_to_str(iferret->opcount[i].op_num));
     }
   }
-  //  iferret_syscall_stacks_print();
-  iferret_syscall_stacks_stats_print();
-  
+
 }

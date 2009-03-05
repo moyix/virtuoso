@@ -47,6 +47,13 @@ void *trl_malloc(size_t n) {
   return (foo);
 }
 
+void *trl_calloc(size_t n) {
+  void *foo;
+  foo = trl_malloc(n);
+  memset(foo, 0, n);
+  return (foo);
+}
+
 void trl_free(void *foo) {
   free(foo);
 }
@@ -234,6 +241,7 @@ void vslht_remove(vslht *h, char *key) {
       // found it -- remove
       free(h->key[i]);
       h->key[i] = NULL;
+      h->occ --;
       return;
     }
   }
@@ -245,6 +253,7 @@ void vslht_remove(vslht *h, char *key) {
       // found it -- remove
       free(h->key[i]);
       h->key[i] = NULL;
+      h->occ --;
       return;
     }
   }
@@ -318,6 +327,7 @@ void vslht_copy (vslht *h1, vslht *h2) {
    Returns the key set for a VSLHT.
    This function allocates memory, a brand new array containing the keys
    in the VSLHT.  The size of this array is vslht_occ(h);
+   NB: This fn allocates memory
    @param h is the VSLHT whose key set you want to retrieve.
    @return an array of strings, the key set for [h]. 
 */
@@ -379,7 +389,7 @@ static vslht *__vslht_new_size (uint32_t size) {
   h->size = 2 << (s2-1);
   if (h->size != size) 
     h->size *= 2;
-  h->key = (char **) trl_malloc (sizeof(char *) * h->size);
+  h->key = (char **) trl_calloc (sizeof(char *) * h->size);
   h->val = (uint32_t *) trl_malloc (sizeof(uint32_t) * h->size);
   h->occ = 0;
   for (i=0; i<h->size; i++) 

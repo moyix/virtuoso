@@ -240,8 +240,13 @@ void iferret_syscall_stacks_stats_print(){
 	printf ("stack for pid=%d is %d\n", pid, stack->size);
       }
     }
-    printf ("%d pids with non-empty stacks.  %d elements in all stacks.  %.2f avg\n",
-	    n, nn, ((float) nn) / ((float) n));
+    if (n==0) {
+      printf ("\nsyscall_stack is empty\n\n");
+    }
+    else {
+      printf ("\n%d pids with non-empty stacks.  %d elements in all stacks.  %.2f avg\n\n",
+	      n, nn, ((float) nn) / ((float) n));
+    }
   }
 }
 
