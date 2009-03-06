@@ -21,30 +21,49 @@
 
 
 
+//#ifndef IFLW_WRAPPER
+//#error "Why is IFLW_WRAPPER not defined?"
+//#endif
+
+// info-flow log write with reg as an implied param
+//#define IFLW_REG(op)				
+//IFLW_WRAPPER (				
+//  IFLW_PUT_OP(glue(INFO_FLOW_OP_REG_,op));	
+//  IFLW_PUT_ARG(REGNUM);			
+//)
+
+
 void OPPROTO glue(op_movl_A0,REGNAME)(void)
 {
+  //  IFLW_REG(MOVL_A0_R); 
+  iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_A0_R,REGNUM);
     A0 = (uint32_t)REG;
 }
 
 void OPPROTO glue(op_addl_A0,REGNAME)(void)
 {
+  //  IFLW_REG(ADDL_A0_R); 
+  iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_ADDL_A0_R,REGNUM);
     A0 = (uint32_t)(A0 + REG);
 }
 
 void OPPROTO glue(glue(op_addl_A0,REGNAME),_s1)(void)
 {
+  //  IFLW_REG(ADDL_A0_R_S1);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_ADDL_A0_R_S1,REGNUM);
     A0 = (uint32_t)(A0 + (REG << 1));
 }
 
 void OPPROTO glue(glue(op_addl_A0,REGNAME),_s2)(void)
 {
+  //  IFLW_REG(ADDL_A0_R_S2);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_ADDL_A0_R_S2,REGNUM);
     A0 = (uint32_t)(A0 + (REG << 2));
 }
 
 void OPPROTO glue(glue(op_addl_A0,REGNAME),_s3)(void)
 {
+  //  IFLW_REG(ADDL_A0_R_S3);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_ADDL_A0_R_S3,REGNUM);
     A0 = (uint32_t)(A0 + (REG << 3));
 }
@@ -78,42 +97,49 @@ void OPPROTO glue(glue(op_addq_A0,REGNAME),_s3)(void)
 
 void OPPROTO glue(op_movl_T0,REGNAME)(void)
 {
+  //  IFLW_REG(MOVL_T0_R);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_T0_R,REGNUM);
     T0 = REG;
 }
 
 void OPPROTO glue(op_movl_T1,REGNAME)(void)
 {
+  //  IFLW_REG(MOVL_T1_R);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_T1_R,REGNUM);
     T1 = REG;
 }
 
 void OPPROTO glue(op_movh_T0,REGNAME)(void)
 {
+  //  IFLW_REG(MOVH_T0_R);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_T0_R,REGNUM);
     T0 = REG >> 8;
 }
 
 void OPPROTO glue(op_movh_T1,REGNAME)(void)
 {
+  //  IFLW_REG(MOVH_T1_R);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_T1_R,REGNUM);
     T1 = REG >> 8;
 }
 
 void OPPROTO glue(glue(op_movl,REGNAME),_T0)(void)
 {
+  //  IFLW_REG(MOVL_R_T0);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_R_T0,REGNUM);
     REG = (uint32_t)T0;
 }
 
 void OPPROTO glue(glue(op_movl,REGNAME),_T1)(void)
 {
+  //  IFLW_REG(MOVL_R_T1);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_R_T1,REGNUM);
     REG = (uint32_t)T1;
 }
 
 void OPPROTO glue(glue(op_movl,REGNAME),_A0)(void)
 {
+  //  IFLW_REG(MOVL_R_A0);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_R_A0,REGNUM);
     REG = (uint32_t)A0;
 }
@@ -139,6 +165,7 @@ void OPPROTO glue(glue(op_movq,REGNAME),_A0)(void)
 void OPPROTO glue(glue(op_cmovw,REGNAME),_T1_T0)(void)
 {
   if (T0) {
+    //    IFLW_REG(CMOVW_R_T1_T0);
     iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVW_R_T1_T0,REGNUM);
         REG = (REG & ~0xffff) | (T1 & 0xffff);
   }
@@ -148,6 +175,7 @@ void OPPROTO glue(glue(op_cmovw,REGNAME),_T1_T0)(void)
 void OPPROTO glue(glue(op_cmovl,REGNAME),_T1_T0)(void)
 {
   if (T0) {
+    //    IFLW_REG(CMOVL_R_T1_T0);
     iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVL_R_T1_T0,REGNUM);
         REG = (uint32_t)T1;
   }
@@ -167,6 +195,7 @@ void OPPROTO glue(glue(op_cmovq,REGNAME),_T1_T0)(void)
 /* NOTE: T0 high order bits are ignored */
 void OPPROTO glue(glue(op_movw,REGNAME),_T0)(void)
 {
+  //  IFLW_REG(MOVW_R_T0);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVW_R_T0,REGNUM);
     REG = (REG & ~0xffff) | (T0 & 0xffff);
 }
@@ -174,6 +203,7 @@ void OPPROTO glue(glue(op_movw,REGNAME),_T0)(void)
 /* NOTE: T0 high order bits are ignored */
 void OPPROTO glue(glue(op_movw,REGNAME),_T1)(void)
 {
+  //  IFLW_REG(MOVW_R_T1);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVW_R_T1,REGNUM);
     REG = (REG & ~0xffff) | (T1 & 0xffff);
 }
@@ -181,6 +211,7 @@ void OPPROTO glue(glue(op_movw,REGNAME),_T1)(void)
 /* NOTE: A0 high order bits are ignored */
 void OPPROTO glue(glue(op_movw,REGNAME),_A0)(void)
 {
+  //  IFLW_REG(MOVW_R_A0);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVW_R_A0,REGNUM);
     REG = (REG & ~0xffff) | (A0 & 0xffff);
 }
@@ -188,6 +219,7 @@ void OPPROTO glue(glue(op_movw,REGNAME),_A0)(void)
 /* NOTE: T0 high order bits are ignored */
 void OPPROTO glue(glue(op_movb,REGNAME),_T0)(void)
 {
+  //  IFLW_REG(MOVB_R_T0);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVB_R_T0,REGNUM);
     REG = (REG & ~0xff) | (T0 & 0xff);
 }
@@ -195,6 +227,7 @@ void OPPROTO glue(glue(op_movb,REGNAME),_T0)(void)
 /* NOTE: T0 high order bits are ignored */
 void OPPROTO glue(glue(op_movh,REGNAME),_T0)(void)
 {
+  //  IFLW_REG(MOVH_R_T0);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_R_T0,REGNUM);
     REG = (REG & ~0xff00) | ((T0 & 0xff) << 8);
 }
@@ -202,6 +235,7 @@ void OPPROTO glue(glue(op_movh,REGNAME),_T0)(void)
 /* NOTE: T1 high order bits are ignored */
 void OPPROTO glue(glue(op_movb,REGNAME),_T1)(void)
 {
+  //  IFLW_REG(MOVB_R_T1);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVB_R_T1,REGNUM);
     REG = (REG & ~0xff) | (T1 & 0xff);
 }
@@ -209,6 +243,7 @@ void OPPROTO glue(glue(op_movb,REGNAME),_T1)(void)
 /* NOTE: T1 high order bits are ignored */
 void OPPROTO glue(glue(op_movh,REGNAME),_T1)(void)
 {
+  //  IFLW_REG(MOVH_R_T1);
   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_R_T1,REGNUM);
     REG = (REG & ~0xff00) | ((T1 & 0xff) << 8);
 }

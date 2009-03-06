@@ -631,6 +631,30 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_OPREG_TEMPL_MOVW_R_T1:
     rv = "IFLO_OPREG_TEMPL_MOVW_R_T1";
     break;
+  case IFLO_OPS_MEM_LDL_T0_A0:
+    rv = "IFLO_OPS_MEM_LDL_T0_A0";
+    break;
+  case IFLO_OPS_MEM_LDSB_T0_A0:
+    rv = "IFLO_OPS_MEM_LDSB_T0_A0";
+    break;
+  case IFLO_OPS_MEM_LDSB_T1_A0:
+    rv = "IFLO_OPS_MEM_LDSB_T1_A0";
+    break;
+  case IFLO_OPS_MEM_LDSW_T0_A0:
+    rv = "IFLO_OPS_MEM_LDSW_T0_A0";
+    break;
+  case IFLO_OPS_MEM_LDUB_T0_A0:
+    rv = "IFLO_OPS_MEM_LDUB_T0_A0";
+    break;
+  case IFLO_OPS_MEM_LDUB_T1_A0:
+    rv = "IFLO_OPS_MEM_LDUB_T1_A0";
+    break;
+  case IFLO_OPS_MEM_LDUW_T0_A0:
+    rv = "IFLO_OPS_MEM_LDUW_T0_A0";
+    break;
+  case IFLO_OPS_MEM_LDUW_T1_A0:
+    rv = "IFLO_OPS_MEM_LDUW_T1_A0";
+    break;
   case IFLO_ORL_T0_T1:
     rv = "IFLO_ORL_T0_T1";
     break;
@@ -1189,8 +1213,8 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_SYS_SYS_IOPERM:
     rv = "IFLO_SYS_SYS_IOPERM";
     break;
-  case IFLO_UNUSED_394:
-    rv = "IFLO_UNUSED_394";
+  case IFLO_UNUSED_402:
+    rv = "IFLO_UNUSED_402";
     break;
   case IFLO_SYS_SYS_SYSLOG:
     rv = "IFLO_SYS_SYS_SYSLOG";
@@ -1549,11 +1573,11 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_SYS_SYS_FCNTL64:
     rv = "IFLO_SYS_SYS_FCNTL64";
     break;
-  case IFLO_UNUSED_514:
-    rv = "IFLO_UNUSED_514";
+  case IFLO_UNUSED_522:
+    rv = "IFLO_UNUSED_522";
     break;
-  case IFLO_UNUSED_515:
-    rv = "IFLO_UNUSED_515";
+  case IFLO_UNUSED_523:
+    rv = "IFLO_UNUSED_523";
     break;
   case IFLO_SYS_SYS_GETTID:
     rv = "IFLO_SYS_SYS_GETTID";
@@ -1636,8 +1660,8 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_SYS_SYS_FADVISE64:
     rv = "IFLO_SYS_SYS_FADVISE64";
     break;
-  case IFLO_UNUSED_543:
-    rv = "IFLO_UNUSED_543";
+  case IFLO_UNUSED_551:
+    rv = "IFLO_UNUSED_551";
     break;
   case IFLO_SYS_SYS_EXIT_GROUP:
     rv = "IFLO_SYS_SYS_EXIT_GROUP";

@@ -1,9 +1,6 @@
 #!/usr/bin/perl -w 
 
 
-you need to update this code to tolerate multi-line c calls 
-because you just added a bunch
-
 use strict;
 
 # set of types used to represent a string as a syscall arg.

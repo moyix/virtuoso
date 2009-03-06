@@ -29,7 +29,7 @@
 #include "iferret_syscall.h"
 #include "int_set.h"
 
-uint32_t_set_t *pids_seen_table = NULL;
+//uint32_t_set_t *pids_seen_table = NULL;
 
 //void exit(int status);
 
@@ -55,6 +55,9 @@ void get_current_pid_uid(void);
 extern pid_t current_pid, last_pid;
 extern uid_t current_uid, last_uid;
 extern uint8_t no_pid_flag, no_uid_flag;
+
+// from helper2.c
+target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 
 
 //#define DEBUG_PCALL
@@ -2866,8 +2869,8 @@ void helper_sysenter(void)
   //  char tsbuf[1000];
   SegmentCache *dt;
   target_ulong ssp, ptr;
-  uint32_t e1,e2,ss,esp,ss_e1,ss_e2,saved_esp,sp_mask,i,stack_val;
-  target_phys_addr_t paddr;
+  uint32_t e1,e2,ss,esp,ss_e1,ss_e2,saved_esp,sp_mask; //i,stack_val;
+  //target_phys_addr_t paddr;
 
  
   //  printf("In your sys_enter EIP=0x%08x\n",EIP); 	

@@ -227,7 +227,7 @@ void iferret_syscall_stacks_print(){
 	     
 
 void iferret_syscall_stacks_stats_print(){
-  int i,pid,sum,n,nn=0;
+  int pid,n,nn=0;
 
   if (iferret_syscall_stack != NULL) {
     n=nn=0;
