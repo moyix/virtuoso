@@ -29,7 +29,7 @@
 #include "iferret_syscall.h"
 #include "int_set.h"
 
-uint32_t_set_t *pids_seen_table = NULL;
+
 
 //void exit(int status);
 

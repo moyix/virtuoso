@@ -269,7 +269,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
 
 
     // SIGRETURN just clogs things up and doesn't indicate much of use
-    if (scp->op_num == IFLO_SYS_SIGRETURN)
+    if (scp->op_num == IFLO_SYS_SIGRETURN) {
       return;
     }
 
@@ -288,7 +288,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
     */
 
     // EXIT_GROUP doesn't return, so why push it?
-    if (scp->op_num != IFLO_SYS_EXIT_GROUP) {
+    if (scp->op_num != IFLO_SYS_SYS_EXIT_GROUP) {
       // manage Ryan's stack
       iferret_syscall_stack_push(*scp);    
     }
