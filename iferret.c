@@ -472,22 +472,20 @@ void iferret_info_flow_process(iferret_t *iferret, iferret_op_t *op) {
 void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {  
   if (op->num > IFLO_SYS_CALLS_START) {
     iferret_process_syscall(iferret,op);
+    return;
   } 
-  else {
-    if (op->num == IFLO_IRET  
-	|| op->num == IFLO_SYSEXIT_RET) {
-      iferret_pop_and_process_syscall(iferret,op);
-    }
-    else {
-      if (iferret_is_pid_mal(iferret, iferret->current_pid)) {
-	iferret_count_op(iferret,op);
-	if (op->num == IFLO_PID_CHANGE) {
-	  iferret->current_pid = op->arg[0].val.u32;
-	}	
-	if (op->num < IFLO_SYS_CALLS_START) {
-	  iferret_info_flow_process(iferret,op);
-	}
-      }
+  if (op->num == IFLO_IRET  
+      || op->num == IFLO_SYSEXIT_RET) {
+    iferret_pop_and_process_syscall(iferret,op);
+    return;
+  }
+  if (iferret_is_pid_mal(iferret, iferret->current_pid)) {
+    iferret_count_op(iferret,op);
+    if (op->num == IFLO_PID_CHANGE) {
+      iferret->current_pid = op->arg[0].val.u32;
+    }	
+    if (op->num < IFLO_SYS_CALLS_START) {
+      iferret_info_flow_process(iferret,op);
     }
   }
 }

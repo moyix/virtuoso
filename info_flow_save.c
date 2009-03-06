@@ -4491,3 +4491,116 @@ if (if_op == INFO_FLOW_OP_NETWORK_INPUT_BYTE_T0){
 
 
 
+
+// num bytes with label in this reg
+int nbwlfr(char *label, if_regnum_t rn) {
+  return 
+    (exists_taint_with_label(wctull(IFRBA(rn)),1, label, __FILE__,__LINE__))
+    + (exists_taint_with_label(wctull(IFRBA(rn))+1,1, label, __FILE__,__LINE__))
+    + (exists_taint_with_label(wctull(IFRBA(rn))+2,1, label, __FILE__,__LINE__))
+    + (exists_taint_with_label(wctull(IFRBA(rn))+3,1, label, __FILE__,__LINE__));
+}
+
+
+int nbwl(char *label) {
+  int n;
+
+  return 
+    // num bytes in all of memory with this label
+    (how_many_bytes_with_this_label(label) 
+     // minus those for various bogus qemu regs
+     - nbwlfr(label,IFRN_T0) 
+     - nbwlfr(label,IFRN_T1) 
+     - nbwlfr(label,IFRN_A0) 
+     - nbwlfr(label,IFRN_Q0) 
+     - nbwlfr(label,IFRN_Q1) 
+     - nbwlfr(label,IFRN_Q2) 
+     - nbwlfr(label,IFRN_Q3) 
+     - nbwlfr(label,IFRN_Q4));
+}
+    
+
+
+
+// info-flow log is full.  Iterate over all the operations in that log,
+// arranging to call the appropriate taint-graph functions for each.
+uint32_t if_log_rollup() {
+  char *if_p;
+  double t;
+  size_t n;
+
+  assert (if_log_ptr != NULL);
+
+  if (debug_at_least_med()) 
+    printf ("entering if_log_rollup\n");
+
+  if (if_log_only == TRUE || if_save_log == TRUE) {
+    // DONT actually do the rollup. 
+    if (if_save_log == TRUE) {
+      // we are just saving logs to files.
+      if_log_to_file();
+    }
+  } 
+  else { 
+    // We are doing the rollup.
+    if_log_rollup_count ++;
+    n = if_log_ptr - if_log_base;
+    if (debug_at_least_low()) 
+      printf ("log rollup #%d: %d bytes\n", if_log_rollup_count, (int) n);
+    if (debug_at_least_med())
+      timer_reset();
+    if_p = if_log_base;
+    if_current_op_ind = 0;
+    // loop over log entries and process each
+    while (if_p < if_log_ptr) {
+      if_p = if_process_op(if_p);  
+/*
+      if (foo == TRUE) 
+	printf ("%d bytes have label key-secret-key-4-21\n", 
+		nbwl("key-secret-4-21"));
+  */    
+      if_current_op_ind ++;
+    }
+    if (debug_at_least_med()) {
+      spit_taint();
+      t = timer_time();
+      printf ("%f seconds to roll up the log\n",t);
+      timer_reset();
+    }      
+  }
+
+  if (if_count_ops == TRUE) {
+     if_show_hist();
+  }
+
+  // processing complete; ready to write over old log.  
+  if_log_ptr = if_log_base; 
+
+  /*
+  {
+    float sum = label_taint_count + delete_taint_count + copy_taint_count + compute_taint_count;
+    printf ("%.2f labels\n", ((float) label_taint_count) / sum);
+    printf ("%.2f deletes\n", ((float) delete_taint_count) / sum);
+    printf ("%.2f copies\n,", ((float) copy_taint_count) / sum);
+    printf ("%.2f computes\n", ((float) compute_taint_count) / sum);
+  }
+  */
+
+  /*
+  {
+    int i;
+    for (i=0; i<16; i++) {
+      printf ("%s %d\n", if_reg_str(i), if_reg_taint[i]);
+    }
+  }
+  */
+
+	
+	
+  if (debug_at_least_med()) 
+    printf ("exiting if_log_rollup\n");
+  return (if_current_op_ind);
+}
+
+
+
