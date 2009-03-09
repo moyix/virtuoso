@@ -1,10 +1,12 @@
 make distclean
 
+export IFERRET_DIR=`pwd`
+
 cd target-i386
 ./make_iferret_code.pl
 
 cd ..
- ./configure --disable-kqemu --prefix=/home/tleek/hg/iferret-light/iferret-logging-new/install --target-list=i386-softmmu  --disable-linux-user --disable-darwin-user \
+ ./configure --disable-kqemu --prefix=$IFERRET_DIR/install --target-list=i386-softmmu  --disable-linux-user --disable-darwin-user \
  --extra-cflags="-DIFERRET_SYSCALL"
 # --extra-cflags="-DIFERRET_SYSCALL -DIFERRET_PUID"
 

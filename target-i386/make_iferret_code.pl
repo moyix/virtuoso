@@ -119,9 +119,10 @@ my %iferret_fmts;
     print "$numSyscalls unique syscalls\n";
 
 
-    my $iferretDir = "/home/tleek/hg/iferret-light/iferret-logging-new";
+    my $iferretDir = $ENV{'IFERRET_DIR'};
 
 
+    print "iferret dir is $iferretDir\n";
     
 # examine all the source files looking for iferret_log_info_flow_op_write calls
     my %ops;
@@ -219,7 +220,7 @@ my %iferret_fmts;
     
 
 # examine iferret_socketcall.c to find out how to parse socket syscalls. 
-    open F, "/home/tleek/hg/iferret-light/iferret-logging-new/target-i386/iferret_socketcall.c";
+    open F, "$iferretDir/target-i386/iferret_socketcall.c";
     my ($ebx,$name);
     my @socketcalls;
     while (my $line = <F>) {
