@@ -1434,9 +1434,6 @@ IFLO_SHR_T0_T1_CC,
 // --> 	iferret_log_info_flow_op_write_18(IFLO_SHR_T0_T1_CC_MEMWRITE, SHIFT, A0);
 IFLO_SHR_T0_T1_CC_MEMWRITE,
 // 272 
-// ./target-i386/helper.c
-
-// -->   iferret_log_op_write_4444(IFLO_SPAWN_NEW_PID,current_pid,current_uid,parent_pid,parent_uid);
 // ./target-i386/iferret_syscall.c
 
 // --> 	iferret_log_op_write_44(IFLO_SPAWN_NEW_PID,EAX,element.syscall.pid);

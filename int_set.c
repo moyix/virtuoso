@@ -73,6 +73,7 @@ uint32_t key_to_uint32 (char *key) {
     | (charhex(key[2]) << 20)
     | (charhex(key[1]) << 24)
     | (charhex(key[0]) << 28);
+  return (sum);
 }
 
 
@@ -106,7 +107,7 @@ void int_set_spit(int_set_t *set) {
   key = vslht_key_set(set->table);
   for (i=0; i<vslht_occ(set->table); i++) {
     if (key[i] != NULL && vslht_mem(set->table,key[i])) {
-      printf ("%d ", vslht_find(set->table,key[i]));
+      printf ("%lu ", vslht_find(set->table,key[i]));
       free(key[i]);
     }
   }

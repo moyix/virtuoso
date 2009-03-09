@@ -151,7 +151,7 @@ containing a key) be kept below OCC_FRACTION.
 The value of 0.8 that we use for OCC_FRACTION was chosen empirically
 as a good trade-off between unused space and update time. 
 */                                           
-void vslht_add (vslht *h, char *key, uint32_t val) {
+void vslht_add (vslht *h, char *key, uint64_t val) {
   uint32_t i,b;
   if ( h->occ >= ((float) h->size) * OCC_FRACTION) 
     // resize hash if necessary
@@ -281,7 +281,7 @@ case we return the corresponding value, or until we
 encounter a NULL value in which case we fail since we were    
 asked to retreive a value not in the table.                   
 */
-uint32_t vslht_find (vslht *h, char *key) {
+uint64_t vslht_find (vslht *h, char *key) {
   uint32_t i,b;
   b = __vslh_key(h,key);
   for (i=b; i<h->size; i++) {
@@ -390,7 +390,7 @@ static vslht *__vslht_new_size (uint32_t size) {
   if (h->size != size) 
     h->size *= 2;
   h->key = (char **) trl_calloc (sizeof(char *) * h->size);
-  h->val = (uint32_t *) trl_malloc (sizeof(uint32_t) * h->size);
+  h->val = (uint64_t *) trl_malloc (sizeof(uint64_t) * h->size);
   h->occ = 0;
   for (i=0; i<h->size; i++) 
     h->key[i] = NULL;

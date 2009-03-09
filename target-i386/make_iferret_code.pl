@@ -119,7 +119,7 @@ my %iferret_fmts;
     print "$numSyscalls unique syscalls\n";
 
 
-    my $iferretDir = "/home/tleek/hg/iferret-logging-new";
+    my $iferretDir = "/home/tleek/hg/iferret-light/iferret-logging-new";
 
 
     
@@ -202,9 +202,9 @@ my %iferret_fmts;
 	    }
 #	    else {
 #	    $filename = $line;
-#	    if ($filename eq "/home/tleek/hg/iferret-logging-new/target-i386/iferret_log_arg_fmt.h"
-#		|| $filename eq "/home/tleek/hg/iferret-logging-new/target-i386/iferret_ops.h"
-#		|| $filename eq "/home/tleek/hg/iferret-logging-new/target-i386/iferret_op_str.c"
+#	    if ($filename eq "/home/tleek/hg/iferret-light/iferret-logging-new/target-i386/iferret_log_arg_fmt.h"
+#		|| $filename eq "/home/tleek/hg/iferret-light/iferret-logging-new/target-i386/iferret_ops.h"
+#		|| $filename eq "/home/tleek/hg/iferret-light/iferret-logging-new/target-i386/iferret_op_str.c"
 #		
 #		) {
 #		$skip = 1;
@@ -219,7 +219,7 @@ my %iferret_fmts;
     
 
 # examine iferret_socketcall.c to find out how to parse socket syscalls. 
-    open F, "/home/tleek/hg/iferret-logging-new/target-i386/iferret_socketcall.c";
+    open F, "/home/tleek/hg/iferret-light/iferret-logging-new/target-i386/iferret_socketcall.c";
     my ($ebx,$name);
     my @socketcalls;
     while (my $line = <F>) {

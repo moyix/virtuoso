@@ -290,7 +290,7 @@ char *iferret_log_arg_format[] = {
 // ./target-i386/ops_template.h
 
 // -->     iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2,IFRBA(IFRN_T0),4);    
-  "84",
+  "81",
   // 56 
 // ./target-i386/op.c
 
@@ -1435,9 +1435,6 @@ char *iferret_log_arg_format[] = {
 // --> 	iferret_log_info_flow_op_write_18(IFLO_SHR_T0_T1_CC_MEMWRITE, SHIFT, A0);
   "18",
   // 272 
-// ./target-i386/helper.c
-
-// -->   iferret_log_op_write_4444(IFLO_SPAWN_NEW_PID,current_pid,current_uid,parent_pid,parent_uid);
 // ./target-i386/iferret_syscall.c
 
 // --> 	iferret_log_op_write_44(IFLO_SPAWN_NEW_PID,EAX,element.syscall.pid);

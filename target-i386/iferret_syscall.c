@@ -131,7 +131,7 @@ static inline target_ulong get_task_struct_ptr (target_ulong current_esp) {
 }
 
 
-void get_current_pid_uid() {
+void iferret_get_current_pid_uid() {
   target_ulong current_task; 
   target_ulong parent_task;
 
@@ -208,6 +208,13 @@ void iferret_check_log_full() {
 void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) {
 #ifdef IFERRET_SYSCALL
 
+  //target_phys_addr_t paddr; 
+  //char tempbuf[1204];
+  target_ulong current_task;
+  char command[COMM_SIZE];
+  char str1[MAX_STRING_LEN], str2[MAX_STRING_LEN], str3[MAX_STRING_LEN];
+  int pid, uid; // , len, i;
+
   /*
   if (iferret_in_kernel() || (!(current_pid_valid()))) {
     return;
@@ -216,12 +223,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
 
   iferret_check_log_full();
 
-  //target_phys_addr_t paddr; 
-  //char tempbuf[1204];
-  target_ulong current_task;
-  char command[COMM_SIZE];
-  char str1[MAX_STRING_LEN], str2[MAX_STRING_LEN], str3[MAX_STRING_LEN];
-  int pid, uid; // , len, i;
+  iferret_get_current_pid_uid();
   
   
   // find current_task, the ptr to the currently executing process' task_struct
@@ -332,6 +334,7 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
   */
 
   iferret_check_log_full();
+  iferret_get_current_pid_uid();
     
   // get addr of pointer to current task
   current_task = get_task_struct_ptr(callsite_esp);
@@ -415,7 +418,6 @@ void iferret_log_syscall_ret_sysexit(uint32_t callsite_esp) {
     return;
   }
   */
-  iferret_check_log_full();
   iferret_log_syscall_ret(0, callsite_esp, -1);
 #endif
 }
@@ -429,7 +431,6 @@ void iferret_log_syscall_ret_iret(uint32_t callsite_esp, uint32_t another_eip) {
     return;
   }
   */
-  iferret_check_log_full();
   iferret_log_syscall_ret(1, callsite_esp, another_eip);
 #endif
 }
