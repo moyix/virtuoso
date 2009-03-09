@@ -19,12 +19,6 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_AAS:
     rv = "IFLO_AAS";
     break;
-  case IFLO_ADC_T0_T1_CC:
-    rv = "IFLO_ADC_T0_T1_CC";
-    break;
-  case IFLO_ADC_T0_T1_CC_MEMWRITE:
-    rv = "IFLO_ADC_T0_T1_CC_MEMWRITE";
-    break;
   case IFLO_ADDL_A0_AL:
     rv = "IFLO_ADDL_A0_AL";
     break;
@@ -76,9 +70,6 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_ADDW_ESP_IM:
     rv = "IFLO_ADDW_ESP_IM";
     break;
-  case IFLO_ADD_BIT_A0_T1:
-    rv = "IFLO_ADD_BIT_A0_T1";
-    break;
   case IFLO_ANDL_A0_FFFF:
     rv = "IFLO_ANDL_A0_FFFF";
     break;
@@ -94,23 +85,8 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_ARPL:
     rv = "IFLO_ARPL";
     break;
-  case IFLO_BSF_T0_CC:
-    rv = "IFLO_BSF_T0_CC";
-    break;
-  case IFLO_BSR_T0_CC:
-    rv = "IFLO_BSR_T0_CC";
-    break;
   case IFLO_BSWAPL_T0:
     rv = "IFLO_BSWAPL_T0";
-    break;
-  case IFLO_BTC_T0_T1_CC:
-    rv = "IFLO_BTC_T0_T1_CC";
-    break;
-  case IFLO_BTR_T0_T1_CC:
-    rv = "IFLO_BTR_T0_T1_CC";
-    break;
-  case IFLO_BTS_T0_T1_CC:
-    rv = "IFLO_BTS_T0_T1_CC";
     break;
   case IFLO_CLTS:
     rv = "IFLO_CLTS";
@@ -120,15 +96,6 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
     break;
   case IFLO_CMPXCHG8B_PART2:
     rv = "IFLO_CMPXCHG8B_PART2";
-    break;
-  case IFLO_CMPXCHG_T0_T1_EAX_CC:
-    rv = "IFLO_CMPXCHG_T0_T1_EAX_CC";
-    break;
-  case IFLO_CMPXCHG_T0_T1_EAX_CC_CASE2:
-    rv = "IFLO_CMPXCHG_T0_T1_EAX_CC_CASE2";
-    break;
-  case IFLO_CMPXCHG_T0_T1_EAX_CC_MEMWRITE:
-    rv = "IFLO_CMPXCHG_T0_T1_EAX_CC_MEMWRITE";
     break;
   case IFLO_CPUID:
     rv = "IFLO_CPUID";
@@ -205,12 +172,6 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_INVLPG_A0:
     rv = "IFLO_INVLPG_A0";
     break;
-  case IFLO_IN_DX_T0:
-    rv = "IFLO_IN_DX_T0";
-    break;
-  case IFLO_IN_T0_T1:
-    rv = "IFLO_IN_T0_T1";
-    break;
   case IFLO_IRET:
     rv = "IFLO_IRET";
     break;
@@ -250,153 +211,6 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_LTR_T0:
     rv = "IFLO_LTR_T0";
     break;
-  case IFLO_MMU_LD_DIRECT_B:
-    rv = "IFLO_MMU_LD_DIRECT_B";
-    break;
-  case IFLO_MMU_LD_DIRECT_L:
-    rv = "IFLO_MMU_LD_DIRECT_L";
-    break;
-  case IFLO_MMU_LD_DIRECT_Q:
-    rv = "IFLO_MMU_LD_DIRECT_Q";
-    break;
-  case IFLO_MMU_LD_DIRECT_W:
-    rv = "IFLO_MMU_LD_DIRECT_W";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_IO_ALIGNED_B:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_IO_ALIGNED_B";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_IO_ALIGNED_L:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_IO_ALIGNED_L";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_IO_ALIGNED_Q:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_IO_ALIGNED_Q";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_IO_ALIGNED_W:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_IO_ALIGNED_W";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_IO_PART2_B:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_IO_PART2_B";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_IO_PART2_L:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_IO_PART2_L";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_IO_PART2_Q:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_IO_PART2_Q";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_IO_PART2_W:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_IO_PART2_W";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART1_B:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART1_B";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART1_L:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART1_L";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART1_Q:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART1_Q";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART1_W:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART1_W";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART2_B:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART2_B";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART2_L:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART2_L";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART2_Q:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART2_Q";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART2_W:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART2_W";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_SAME_PAGE_B:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_SAME_PAGE_B";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_SAME_PAGE_L:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_SAME_PAGE_L";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_SAME_PAGE_Q:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_SAME_PAGE_Q";
-    break;
-  case IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_SAME_PAGE_W:
-    rv = "IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_SAME_PAGE_W";
-    break;
-  case IFLO_MMU_ST_DIRECT_B:
-    rv = "IFLO_MMU_ST_DIRECT_B";
-    break;
-  case IFLO_MMU_ST_DIRECT_L:
-    rv = "IFLO_MMU_ST_DIRECT_L";
-    break;
-  case IFLO_MMU_ST_DIRECT_Q:
-    rv = "IFLO_MMU_ST_DIRECT_Q";
-    break;
-  case IFLO_MMU_ST_DIRECT_W:
-    rv = "IFLO_MMU_ST_DIRECT_W";
-    break;
-  case IFLO_MMU_ST_IO_ALIGNED_B:
-    rv = "IFLO_MMU_ST_IO_ALIGNED_B";
-    break;
-  case IFLO_MMU_ST_IO_ALIGNED_L:
-    rv = "IFLO_MMU_ST_IO_ALIGNED_L";
-    break;
-  case IFLO_MMU_ST_IO_ALIGNED_Q:
-    rv = "IFLO_MMU_ST_IO_ALIGNED_Q";
-    break;
-  case IFLO_MMU_ST_IO_ALIGNED_W:
-    rv = "IFLO_MMU_ST_IO_ALIGNED_W";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_IO_PART2_B:
-    rv = "IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_IO_PART2_B";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_IO_PART2_L:
-    rv = "IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_IO_PART2_L";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_IO_PART2_Q:
-    rv = "IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_IO_PART2_Q";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_IO_PART2_W:
-    rv = "IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_IO_PART2_W";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART1_B:
-    rv = "IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART1_B";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART1_L:
-    rv = "IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART1_L";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART1_Q:
-    rv = "IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART1_Q";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART1_W:
-    rv = "IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART1_W";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART2_B:
-    rv = "IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART2_B";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART2_L:
-    rv = "IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART2_L";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART2_Q:
-    rv = "IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART2_Q";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART2_W:
-    rv = "IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART2_W";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_SAME_PAGE_B:
-    rv = "IFLO_MMU_ST_UNALIGNED_SAME_PAGE_B";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_SAME_PAGE_L:
-    rv = "IFLO_MMU_ST_UNALIGNED_SAME_PAGE_L";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_SAME_PAGE_Q:
-    rv = "IFLO_MMU_ST_UNALIGNED_SAME_PAGE_Q";
-    break;
-  case IFLO_MMU_ST_UNALIGNED_SAME_PAGE_W:
-    rv = "IFLO_MMU_ST_UNALIGNED_SAME_PAGE_W";
-    break;
-  case IFLO_MMU_TLB_FILL:
-    rv = "IFLO_MMU_TLB_FILL";
-    break;
   case IFLO_MOVB_EFLAGS_T0:
     rv = "IFLO_MOVB_EFLAGS_T0";
     break;
@@ -432,9 +246,6 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
     break;
   case IFLO_MOVL_T0_0:
     rv = "IFLO_MOVL_T0_0";
-    break;
-  case IFLO_MOVL_T0_DSHIFT:
-    rv = "IFLO_MOVL_T0_DSHIFT";
     break;
   case IFLO_MOVL_T0_EFLAGS:
     rv = "IFLO_MOVL_T0_EFLAGS";
@@ -526,50 +337,11 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_NEGL_T0:
     rv = "IFLO_NEGL_T0";
     break;
-  case IFLO_NETWORK_INPUT_BYTE_T0:
-    rv = "IFLO_NETWORK_INPUT_BYTE_T0";
-    break;
-  case IFLO_NETWORK_INPUT_BYTE_T1:
-    rv = "IFLO_NETWORK_INPUT_BYTE_T1";
-    break;
-  case IFLO_NETWORK_INPUT_LONG_T0:
-    rv = "IFLO_NETWORK_INPUT_LONG_T0";
-    break;
-  case IFLO_NETWORK_INPUT_LONG_T1:
-    rv = "IFLO_NETWORK_INPUT_LONG_T1";
-    break;
-  case IFLO_NETWORK_INPUT_WORD_T0:
-    rv = "IFLO_NETWORK_INPUT_WORD_T0";
-    break;
-  case IFLO_NETWORK_INPUT_WORD_T1:
-    rv = "IFLO_NETWORK_INPUT_WORD_T1";
-    break;
-  case IFLO_NETWORK_OUTPUT_BYTE_T0:
-    rv = "IFLO_NETWORK_OUTPUT_BYTE_T0";
-    break;
-  case IFLO_NETWORK_OUTPUT_BYTE_T1:
-    rv = "IFLO_NETWORK_OUTPUT_BYTE_T1";
-    break;
-  case IFLO_NETWORK_OUTPUT_LONG_T0:
-    rv = "IFLO_NETWORK_OUTPUT_LONG_T0";
-    break;
-  case IFLO_NETWORK_OUTPUT_LONG_T1:
-    rv = "IFLO_NETWORK_OUTPUT_LONG_T1";
-    break;
-  case IFLO_NETWORK_OUTPUT_WORD_T0:
-    rv = "IFLO_NETWORK_OUTPUT_WORD_T0";
-    break;
-  case IFLO_NETWORK_OUTPUT_WORD_T1:
-    rv = "IFLO_NETWORK_OUTPUT_WORD_T1";
-    break;
   case IFLO_NEW_KEYBOARD_LABEL:
     rv = "IFLO_NEW_KEYBOARD_LABEL";
     break;
   case IFLO_NOTL_T0:
     rv = "IFLO_NOTL_T0";
-    break;
-  case IFLO_OPREG_TEMPL_ADDL_A0_R:
-    rv = "IFLO_OPREG_TEMPL_ADDL_A0_R";
     break;
   case IFLO_OPREG_TEMPL_ADDL_A0_R_S1:
     rv = "IFLO_OPREG_TEMPL_ADDL_A0_R_S1";
@@ -631,6 +403,246 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_OPREG_TEMPL_MOVW_R_T1:
     rv = "IFLO_OPREG_TEMPL_MOVW_R_T1";
     break;
+  case IFLO_OPS_MEM_LDL_T0_A0:
+    rv = "IFLO_OPS_MEM_LDL_T0_A0";
+    break;
+  case IFLO_OPS_MEM_LDL_T1_A0:
+    rv = "IFLO_OPS_MEM_LDL_T1_A0";
+    break;
+  case IFLO_OPS_MEM_LDSB_T0_A0:
+    rv = "IFLO_OPS_MEM_LDSB_T0_A0";
+    break;
+  case IFLO_OPS_MEM_LDSB_T1_A0:
+    rv = "IFLO_OPS_MEM_LDSB_T1_A0";
+    break;
+  case IFLO_OPS_MEM_LDSW_T0_A0:
+    rv = "IFLO_OPS_MEM_LDSW_T0_A0";
+    break;
+  case IFLO_OPS_MEM_LDSW_T1_A0:
+    rv = "IFLO_OPS_MEM_LDSW_T1_A0";
+    break;
+  case IFLO_OPS_MEM_LDUB_T0_A0:
+    rv = "IFLO_OPS_MEM_LDUB_T0_A0";
+    break;
+  case IFLO_OPS_MEM_LDUB_T1_A0:
+    rv = "IFLO_OPS_MEM_LDUB_T1_A0";
+    break;
+  case IFLO_OPS_MEM_LDUW_T0_A0:
+    rv = "IFLO_OPS_MEM_LDUW_T0_A0";
+    break;
+  case IFLO_OPS_MEM_LDUW_T1_A0:
+    rv = "IFLO_OPS_MEM_LDUW_T1_A0";
+    break;
+  case IFLO_OPS_MEM_STB_T0_A0:
+    rv = "IFLO_OPS_MEM_STB_T0_A0";
+    break;
+  case IFLO_OPS_MEM_STL_T0_A0:
+    rv = "IFLO_OPS_MEM_STL_T0_A0";
+    break;
+  case IFLO_OPS_MEM_STL_T1_A0:
+    rv = "IFLO_OPS_MEM_STL_T1_A0";
+    break;
+  case IFLO_OPS_MEM_STW_T0_A0:
+    rv = "IFLO_OPS_MEM_STW_T0_A0";
+    break;
+  case IFLO_OPS_MEM_STW_T1_A0:
+    rv = "IFLO_OPS_MEM_STW_T1_A0";
+    break;
+  case IFLO_OPS_TEMPLATE_ADC_T0_T1_CC:
+    rv = "IFLO_OPS_TEMPLATE_ADC_T0_T1_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_ADC_T0_T1_CC_MEMWRITE:
+    rv = "IFLO_OPS_TEMPLATE_ADC_T0_T1_CC_MEMWRITE";
+    break;
+  case IFLO_OPS_TEMPLATE_ADD_BIT_A0_T1:
+    rv = "IFLO_OPS_TEMPLATE_ADD_BIT_A0_T1";
+    break;
+  case IFLO_OPS_TEMPLATE_BSF_T0_CC:
+    rv = "IFLO_OPS_TEMPLATE_BSF_T0_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_BSR_T0_CC:
+    rv = "IFLO_OPS_TEMPLATE_BSR_T0_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_BTC_T0_T1_CC:
+    rv = "IFLO_OPS_TEMPLATE_BTC_T0_T1_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_BTR_T0_T1_CC:
+    rv = "IFLO_OPS_TEMPLATE_BTR_T0_T1_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_BTS_T0_T1_CC:
+    rv = "IFLO_OPS_TEMPLATE_BTS_T0_T1_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC:
+    rv = "IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_CASE2:
+    rv = "IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_CASE2";
+    break;
+  case IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE:
+    rv = "IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE";
+    break;
+  case IFLO_OPS_TEMPLATE_HD_TRANSFER_PART1:
+    rv = "IFLO_OPS_TEMPLATE_HD_TRANSFER_PART1";
+    break;
+  case IFLO_OPS_TEMPLATE_HD_TRANSFER_PART2:
+    rv = "IFLO_OPS_TEMPLATE_HD_TRANSFER_PART2";
+    break;
+  case IFLO_OPS_TEMPLATE_IN_DX_T0:
+    rv = "IFLO_OPS_TEMPLATE_IN_DX_T0";
+    break;
+  case IFLO_OPS_TEMPLATE_IN_T0_T1:
+    rv = "IFLO_OPS_TEMPLATE_IN_T0_T1";
+    break;
+  case IFLO_OPS_TEMPLATE_MOVL_T0_DSHIFT:
+    rv = "IFLO_OPS_TEMPLATE_MOVL_T0_DSHIFT";
+    break;
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T0:
+    rv = "IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T0";
+    break;
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T1:
+    rv = "IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T1";
+    break;
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T0:
+    rv = "IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T0";
+    break;
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T1:
+    rv = "IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T1";
+    break;
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_WORD_T0:
+    rv = "IFLO_OPS_TEMPLATE_NETWORK_INPUT_WORD_T0";
+    break;
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_WORD_T1:
+    rv = "IFLO_OPS_TEMPLATE_NETWORK_INPUT_WORD_T1";
+    break;
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T0:
+    rv = "IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T0";
+    break;
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T1:
+    rv = "IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T1";
+    break;
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T0:
+    rv = "IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T0";
+    break;
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T1:
+    rv = "IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T1";
+    break;
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T0:
+    rv = "IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T0";
+    break;
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T1:
+    rv = "IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T1";
+    break;
+  case IFLO_OPS_TEMPLATE_RCL_T0_T1_CC:
+    rv = "IFLO_OPS_TEMPLATE_RCL_T0_T1_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_RCL_T0_T1_CC_MEMWRITE:
+    rv = "IFLO_OPS_TEMPLATE_RCL_T0_T1_CC_MEMWRITE";
+    break;
+  case IFLO_OPS_TEMPLATE_RCR_T0_T1_CC:
+    rv = "IFLO_OPS_TEMPLATE_RCR_T0_T1_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_RCR_T0_T1_CC_MEMWRITE:
+    rv = "IFLO_OPS_TEMPLATE_RCR_T0_T1_CC_MEMWRITE";
+    break;
+  case IFLO_OPS_TEMPLATE_ROL_T0_T1:
+    rv = "IFLO_OPS_TEMPLATE_ROL_T0_T1";
+    break;
+  case IFLO_OPS_TEMPLATE_ROL_T0_T1_CC:
+    rv = "IFLO_OPS_TEMPLATE_ROL_T0_T1_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_ROL_T0_T1_CC_MEMWRITE:
+    rv = "IFLO_OPS_TEMPLATE_ROL_T0_T1_CC_MEMWRITE";
+    break;
+  case IFLO_OPS_TEMPLATE_ROL_T0_T1_MEMRITE:
+    rv = "IFLO_OPS_TEMPLATE_ROL_T0_T1_MEMRITE";
+    break;
+  case IFLO_OPS_TEMPLATE_ROR_T0_T1:
+    rv = "IFLO_OPS_TEMPLATE_ROR_T0_T1";
+    break;
+  case IFLO_OPS_TEMPLATE_ROR_T0_T1_CC:
+    rv = "IFLO_OPS_TEMPLATE_ROR_T0_T1_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_ROR_T0_T1_CC_MEMRITE:
+    rv = "IFLO_OPS_TEMPLATE_ROR_T0_T1_CC_MEMRITE";
+    break;
+  case IFLO_OPS_TEMPLATE_ROR_T0_T1_MEMWRITE:
+    rv = "IFLO_OPS_TEMPLATE_ROR_T0_T1_MEMWRITE";
+    break;
+  case IFLO_OPS_TEMPLATE_SAR_T0_T1:
+    rv = "IFLO_OPS_TEMPLATE_SAR_T0_T1";
+    break;
+  case IFLO_OPS_TEMPLATE_SAR_T0_T1_CC:
+    rv = "IFLO_OPS_TEMPLATE_SAR_T0_T1_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_SAR_T0_T1_CC_MEMWRITE:
+    rv = "IFLO_OPS_TEMPLATE_SAR_T0_T1_CC_MEMWRITE";
+    break;
+  case IFLO_OPS_TEMPLATE_SBB_T0_T1_CC:
+    rv = "IFLO_OPS_TEMPLATE_SBB_T0_T1_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_SBB_T0_T1_CC_MEMWRITE:
+    rv = "IFLO_OPS_TEMPLATE_SBB_T0_T1_CC_MEMWRITE";
+    break;
+  case IFLO_OPS_TEMPLATE_SETBE_T0_SUB:
+    rv = "IFLO_OPS_TEMPLATE_SETBE_T0_SUB";
+    break;
+  case IFLO_OPS_TEMPLATE_SETB_T0_SUB:
+    rv = "IFLO_OPS_TEMPLATE_SETB_T0_SUB";
+    break;
+  case IFLO_OPS_TEMPLATE_SETLE_T0_SUB:
+    rv = "IFLO_OPS_TEMPLATE_SETLE_T0_SUB";
+    break;
+  case IFLO_OPS_TEMPLATE_SETL_T0_SUB:
+    rv = "IFLO_OPS_TEMPLATE_SETL_T0_SUB";
+    break;
+  case IFLO_OPS_TEMPLATE_SETS_T0_SUB:
+    rv = "IFLO_OPS_TEMPLATE_SETS_T0_SUB";
+    break;
+  case IFLO_OPS_TEMPLATE_SETZ_T0_SUB:
+    rv = "IFLO_OPS_TEMPLATE_SETZ_T0_SUB";
+    break;
+  case IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC:
+    rv = "IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE:
+    rv = "IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE";
+    break;
+  case IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC:
+    rv = "IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE:
+    rv = "IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE";
+    break;
+  case IFLO_OPS_TEMPLATE_SHL_T0_T1:
+    rv = "IFLO_OPS_TEMPLATE_SHL_T0_T1";
+    break;
+  case IFLO_OPS_TEMPLATE_SHL_T0_T1_CC:
+    rv = "IFLO_OPS_TEMPLATE_SHL_T0_T1_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_SHL_T0_T1_CC_MEMWRITE:
+    rv = "IFLO_OPS_TEMPLATE_SHL_T0_T1_CC_MEMWRITE";
+    break;
+  case IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC:
+    rv = "IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE:
+    rv = "IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE";
+    break;
+  case IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC:
+    rv = "IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE:
+    rv = "IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE";
+    break;
+  case IFLO_OPS_TEMPLATE_SHR_T0_T1:
+    rv = "IFLO_OPS_TEMPLATE_SHR_T0_T1";
+    break;
+  case IFLO_OPS_TEMPLATE_SHR_T0_T1_CC:
+    rv = "IFLO_OPS_TEMPLATE_SHR_T0_T1_CC";
+    break;
+  case IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE:
+    rv = "IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE";
+    break;
   case IFLO_ORL_T0_T1:
     rv = "IFLO_ORL_T0_T1";
     break;
@@ -639,18 +651,6 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
     break;
   case IFLO_PROTECTED_T0_T1:
     rv = "IFLO_PROTECTED_T0_T1";
-    break;
-  case IFLO_RCL_T0_T1_CC:
-    rv = "IFLO_RCL_T0_T1_CC";
-    break;
-  case IFLO_RCL_T0_T1_CC_MEMWRITE:
-    rv = "IFLO_RCL_T0_T1_CC_MEMWRITE";
-    break;
-  case IFLO_RCR_T0_T1_CC:
-    rv = "IFLO_RCR_T0_T1_CC";
-    break;
-  case IFLO_RCR_T0_T1_CC_MEMWRITE:
-    rv = "IFLO_RCR_T0_T1_CC_MEMWRITE";
     break;
   case IFLO_RDMSR:
     rv = "IFLO_RDMSR";
@@ -661,50 +661,11 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_RESTORE_ENV:
     rv = "IFLO_RESTORE_ENV";
     break;
-  case IFLO_ROL_T0_T1:
-    rv = "IFLO_ROL_T0_T1";
-    break;
-  case IFLO_ROL_T0_T1_CC:
-    rv = "IFLO_ROL_T0_T1_CC";
-    break;
-  case IFLO_ROL_T0_T1_CC_MEMWRITE:
-    rv = "IFLO_ROL_T0_T1_CC_MEMWRITE";
-    break;
-  case IFLO_ROL_T0_T1_MEMRITE:
-    rv = "IFLO_ROL_T0_T1_MEMRITE";
-    break;
-  case IFLO_ROR_T0_T1:
-    rv = "IFLO_ROR_T0_T1";
-    break;
-  case IFLO_ROR_T0_T1_CC:
-    rv = "IFLO_ROR_T0_T1_CC";
-    break;
-  case IFLO_ROR_T0_T1_CC_MEMRITE:
-    rv = "IFLO_ROR_T0_T1_CC_MEMRITE";
-    break;
-  case IFLO_ROR_T0_T1_MEMWRITE:
-    rv = "IFLO_ROR_T0_T1_MEMWRITE";
-    break;
   case IFLO_SALC:
     rv = "IFLO_SALC";
     break;
-  case IFLO_SAR_T0_T1:
-    rv = "IFLO_SAR_T0_T1";
-    break;
-  case IFLO_SAR_T0_T1_CC:
-    rv = "IFLO_SAR_T0_T1_CC";
-    break;
-  case IFLO_SAR_T0_T1_CC_MEMWRITE:
-    rv = "IFLO_SAR_T0_T1_CC_MEMWRITE";
-    break;
   case IFLO_SAVE_REG:
     rv = "IFLO_SAVE_REG";
-    break;
-  case IFLO_SBB_T0_T1_CC:
-    rv = "IFLO_SBB_T0_T1_CC";
-    break;
-  case IFLO_SBB_T0_T1_CC_MEMWRITE:
-    rv = "IFLO_SBB_T0_T1_CC_MEMWRITE";
     break;
   case IFLO_SEG_T0:
     rv = "IFLO_SEG_T0";
@@ -715,26 +676,14 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_SETBE_T0_CC:
     rv = "IFLO_SETBE_T0_CC";
     break;
-  case IFLO_SETBE_T0_SUB:
-    rv = "IFLO_SETBE_T0_SUB";
-    break;
   case IFLO_SETB_T0_CC:
     rv = "IFLO_SETB_T0_CC";
-    break;
-  case IFLO_SETB_T0_SUB:
-    rv = "IFLO_SETB_T0_SUB";
     break;
   case IFLO_SETLE_T0_CC:
     rv = "IFLO_SETLE_T0_CC";
     break;
-  case IFLO_SETLE_T0_SUB:
-    rv = "IFLO_SETLE_T0_SUB";
-    break;
   case IFLO_SETL_T0_CC:
     rv = "IFLO_SETL_T0_CC";
-    break;
-  case IFLO_SETL_T0_SUB:
-    rv = "IFLO_SETL_T0_SUB";
     break;
   case IFLO_SETO_T0_CC:
     rv = "IFLO_SETO_T0_CC";
@@ -745,59 +694,11 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_SETS_T0_CC:
     rv = "IFLO_SETS_T0_CC";
     break;
-  case IFLO_SETS_T0_SUB:
-    rv = "IFLO_SETS_T0_SUB";
-    break;
   case IFLO_SETZ_T0_CC:
     rv = "IFLO_SETZ_T0_CC";
     break;
-  case IFLO_SETZ_T0_SUB:
-    rv = "IFLO_SETZ_T0_SUB";
-    break;
   case IFLO_SET_CPL:
     rv = "IFLO_SET_CPL";
-    break;
-  case IFLO_SHLD_T0_T1_ECX_CC:
-    rv = "IFLO_SHLD_T0_T1_ECX_CC";
-    break;
-  case IFLO_SHLD_T0_T1_ECX_CC_MEMWRITE:
-    rv = "IFLO_SHLD_T0_T1_ECX_CC_MEMWRITE";
-    break;
-  case IFLO_SHLD_T0_T1_IM_CC:
-    rv = "IFLO_SHLD_T0_T1_IM_CC";
-    break;
-  case IFLO_SHLD_T0_T1_IM_CC_MEMWRITE:
-    rv = "IFLO_SHLD_T0_T1_IM_CC_MEMWRITE";
-    break;
-  case IFLO_SHL_T0_T1:
-    rv = "IFLO_SHL_T0_T1";
-    break;
-  case IFLO_SHL_T0_T1_CC:
-    rv = "IFLO_SHL_T0_T1_CC";
-    break;
-  case IFLO_SHL_T0_T1_CC_MEMWRITE:
-    rv = "IFLO_SHL_T0_T1_CC_MEMWRITE";
-    break;
-  case IFLO_SHRD_T0_T1_ECX_CC:
-    rv = "IFLO_SHRD_T0_T1_ECX_CC";
-    break;
-  case IFLO_SHRD_T0_T1_ECX_CC_MEMWRITE:
-    rv = "IFLO_SHRD_T0_T1_ECX_CC_MEMWRITE";
-    break;
-  case IFLO_SHRD_T0_T1_IM_CC:
-    rv = "IFLO_SHRD_T0_T1_IM_CC";
-    break;
-  case IFLO_SHRD_T0_T1_IM_CC_MEMWRITE:
-    rv = "IFLO_SHRD_T0_T1_IM_CC_MEMWRITE";
-    break;
-  case IFLO_SHR_T0_T1:
-    rv = "IFLO_SHR_T0_T1";
-    break;
-  case IFLO_SHR_T0_T1_CC:
-    rv = "IFLO_SHR_T0_T1_CC";
-    break;
-  case IFLO_SHR_T0_T1_CC_MEMWRITE:
-    rv = "IFLO_SHR_T0_T1_CC_MEMWRITE";
     break;
   case IFLO_SPAWN_NEW_PID:
     rv = "IFLO_SPAWN_NEW_PID";
@@ -834,51 +735,6 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
     break;
   case IFLO_XOR_T0_1:
     rv = "IFLO_XOR_T0_1";
-    break;
-  case ILFO_OPS_MEM_LDL_T0_A0:
-    rv = "ILFO_OPS_MEM_LDL_T0_A0";
-    break;
-  case ILFO_OPS_MEM_LDL_T1_A0:
-    rv = "ILFO_OPS_MEM_LDL_T1_A0";
-    break;
-  case ILFO_OPS_MEM_LDSB_T0_A0:
-    rv = "ILFO_OPS_MEM_LDSB_T0_A0";
-    break;
-  case ILFO_OPS_MEM_LDSB_T1_A0:
-    rv = "ILFO_OPS_MEM_LDSB_T1_A0";
-    break;
-  case ILFO_OPS_MEM_LDSW_T0_A0:
-    rv = "ILFO_OPS_MEM_LDSW_T0_A0";
-    break;
-  case ILFO_OPS_MEM_LDSW_T1_A0:
-    rv = "ILFO_OPS_MEM_LDSW_T1_A0";
-    break;
-  case ILFO_OPS_MEM_LDUB_T0_A0:
-    rv = "ILFO_OPS_MEM_LDUB_T0_A0";
-    break;
-  case ILFO_OPS_MEM_LDUB_T1_A0:
-    rv = "ILFO_OPS_MEM_LDUB_T1_A0";
-    break;
-  case ILFO_OPS_MEM_LDUW_T0_A0:
-    rv = "ILFO_OPS_MEM_LDUW_T0_A0";
-    break;
-  case ILFO_OPS_MEM_LDUW_T1_A0:
-    rv = "ILFO_OPS_MEM_LDUW_T1_A0";
-    break;
-  case ILFO_OPS_MEM_STB_T0_A0:
-    rv = "ILFO_OPS_MEM_STB_T0_A0";
-    break;
-  case ILFO_OPS_MEM_STL_T0_A0:
-    rv = "ILFO_OPS_MEM_STL_T0_A0";
-    break;
-  case ILFO_OPS_MEM_STL_T1_A0:
-    rv = "ILFO_OPS_MEM_STL_T1_A0";
-    break;
-  case ILFO_OPS_MEM_STW_T0_A0:
-    rv = "ILFO_OPS_MEM_STW_T0_A0";
-    break;
-  case ILFO_OPS_MEM_STW_T1_A0:
-    rv = "ILFO_OPS_MEM_STW_T1_A0";
     break;
   case IFLO_SYS_CALLS_START:
     rv = "IFLO_SYS_CALLS_START";
@@ -1189,8 +1045,8 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_SYS_SYS_IOPERM:
     rv = "IFLO_SYS_SYS_IOPERM";
     break;
-  case IFLO_UNUSED_394:
-    rv = "IFLO_UNUSED_394";
+  case IFLO_UNUSED_346:
+    rv = "IFLO_UNUSED_346";
     break;
   case IFLO_SYS_SYS_SYSLOG:
     rv = "IFLO_SYS_SYS_SYSLOG";
@@ -1549,11 +1405,11 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_SYS_SYS_FCNTL64:
     rv = "IFLO_SYS_SYS_FCNTL64";
     break;
-  case IFLO_UNUSED_514:
-    rv = "IFLO_UNUSED_514";
+  case IFLO_UNUSED_466:
+    rv = "IFLO_UNUSED_466";
     break;
-  case IFLO_UNUSED_515:
-    rv = "IFLO_UNUSED_515";
+  case IFLO_UNUSED_467:
+    rv = "IFLO_UNUSED_467";
     break;
   case IFLO_SYS_SYS_GETTID:
     rv = "IFLO_SYS_SYS_GETTID";
@@ -1636,8 +1492,8 @@ char *iferret_op_num_to_str(iferret_log_op_enum_t op_num) {
   case IFLO_SYS_SYS_FADVISE64:
     rv = "IFLO_SYS_SYS_FADVISE64";
     break;
-  case IFLO_UNUSED_543:
-    rv = "IFLO_UNUSED_543";
+  case IFLO_UNUSED_495:
+    rv = "IFLO_UNUSED_495";
     break;
   case IFLO_SYS_SYS_EXIT_GROUP:
     rv = "IFLO_SYS_SYS_EXIT_GROUP";

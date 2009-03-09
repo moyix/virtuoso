@@ -149,8 +149,7 @@ void OPPROTO glue(glue(op_rol, MEM_SUFFIX), _T0_T1_cc)(void)
         T0 &= DATA_MASK;
         T0 = (T0 << count) | (T0 >> (DATA_BITS - count));
 #ifdef MEM_WRITE
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_CC_MEMWRITE,SHIFT,
-					  cpu_get_phys_addr(env,A0));
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_ROL_T0_T1_CC,SHIFT);
@@ -179,7 +178,7 @@ void OPPROTO glue(glue(op_ror, MEM_SUFFIX), _T0_T1_cc)(void)
         T0 &= DATA_MASK;
         T0 = (T0 >> count) | (T0 << (DATA_BITS - count));
 #ifdef MEM_WRITE
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_CC_MEMRITE,SHIFT,A0);
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_CC_MEMRITE,SHIFT,cpu_get_phys_addr(env,A0));
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_ROR_T0_T1_CC,SHIFT);
@@ -205,7 +204,7 @@ void OPPROTO glue(glue(op_rol, MEM_SUFFIX), _T0_T1)(void)
         T0 &= DATA_MASK;
         T0 = (T0 << count) | (T0 >> (DATA_BITS - count));
 #ifdef MEM_WRITE
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_MEMRITE,SHIFT,A0);
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_MEMRITE,SHIFT,cpu_get_phys_addr(env,A0));
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_ROL_T0_T1,SHIFT);
@@ -225,7 +224,7 @@ void OPPROTO glue(glue(op_ror, MEM_SUFFIX), _T0_T1)(void)
         T0 &= DATA_MASK;
         T0 = (T0 >> count) | (T0 << (DATA_BITS - count));
 #ifdef MEM_WRITE
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_MEMWRITE,SHIFT,A0);
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_ROR_T0_T1,SHIFT);
@@ -258,7 +257,7 @@ void OPPROTO glue(glue(op_rcl, MEM_SUFFIX), _T0_T1_cc)(void)
             res |= T0 >> (DATA_BITS + 1 - count);
         T0 = res;
 #ifdef MEM_WRITE
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_RCL_T0_T1_CC_MEMWRITE,SHIFT,A0);
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_RCL_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_RCL_T0_T1_CC,SHIFT);
@@ -295,7 +294,7 @@ void OPPROTO glue(glue(op_rcr, MEM_SUFFIX), _T0_T1_cc)(void)
             res |= T0 << (DATA_BITS + 1 - count);
         T0 = res;
 #ifdef MEM_WRITE
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_RCR_T0_T1_CC_MEMWRITE,SHIFT,A0);
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_RCR_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_RCR_T0_T1_CC,SHIFT);
@@ -321,7 +320,7 @@ void OPPROTO glue(glue(op_shl, MEM_SUFFIX), _T0_T1_cc)(void)
         src = (DATA_TYPE)T0 << (count - 1);
         T0 = T0 << count;
 #ifdef MEM_WRITE
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHL_T0_T1_CC_MEMWRITE,SHIFT,A0);
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHL_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHL_T0_T1_CC,SHIFT);
@@ -347,7 +346,7 @@ void OPPROTO glue(glue(op_shr, MEM_SUFFIX), _T0_T1_cc)(void)
         src = T0 >> (count - 1);
         T0 = T0 >> count;
 #ifdef MEM_WRITE
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE, SHIFT, A0);
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE, SHIFT, cpu_get_phys_addr(env,A0));
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHR_T0_T1_CC, SHIFT);
@@ -373,7 +372,7 @@ void OPPROTO glue(glue(op_sar, MEM_SUFFIX), _T0_T1_cc)(void)
         T0 = src >> count;
         src = src >> (count - 1);
 #ifdef MEM_WRITE
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SAR_T0_T1_CC_MEMWRITE,SHIFT,A0);
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SAR_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SAR_T0_T1_CC,SHIFT);
@@ -403,7 +402,7 @@ void OPPROTO glue(glue(op_shld, MEM_SUFFIX), _T0_T1_im_cc)(void)
         res |= T1 << (count - 16);
     T0 = res >> 16;
 #ifdef MEM_WRITE
-    iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE,SHIFT,A0);
+    iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
     glue(st, MEM_SUFFIX)(A0, T0);
 #else
     iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC,SHIFT);
@@ -429,7 +428,7 @@ void OPPROTO glue(glue(op_shld, MEM_SUFFIX), _T0_T1_ECX_cc)(void)
           res |= T1 << (count - 16);
         T0 = res >> 16;
 #ifdef MEM_WRITE
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE,SHIFT,A0);
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC,SHIFT);
@@ -456,7 +455,7 @@ void OPPROTO glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_im_cc)(void)
         res |= T1 << (32 - count);
     T0 = res;
 #ifdef MEM_WRITE
-    iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,A0);
+    iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
     glue(st, MEM_SUFFIX)(A0, T0);
 #else
     iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC,SHIFT);
@@ -483,7 +482,7 @@ void OPPROTO glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_ECX_cc)(void)
             res |= T1 << (32 - count);
         T0 = res;
 #ifdef MEM_WRITE
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE,SHIFT,A0);
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC,SHIFT);
@@ -508,7 +507,7 @@ void OPPROTO glue(glue(op_shld, MEM_SUFFIX), _T0_T1_im_cc)(void)
     tmp = T0 << (count - 1);
     T0 = (T0 << count) | (T1 >> (DATA_BITS - count));
 #ifdef MEM_WRITE
-    iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE,SHIFT,A0);
+    iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
     glue(st, MEM_SUFFIX)(A0, T0);
 #else
     iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC,SHIFT);
@@ -532,7 +531,7 @@ void OPPROTO glue(glue(op_shld, MEM_SUFFIX), _T0_T1_ECX_cc)(void)
         tmp = T0 << (count - 1);
         T0 = (T0 << count) | (T1 >> (DATA_BITS - count));
 #ifdef MEM_WRITE
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE,SHIFT,A0);
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
         glue(st, MEM_SUFFIX)(A0, T0);
 #else 
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC,SHIFT);
@@ -557,7 +556,7 @@ void OPPROTO glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_im_cc)(void)
     tmp = T0 >> (count - 1);
     T0 = (T0 >> count) | (T1 << (DATA_BITS - count));
 #ifdef MEM_WRITE
-    iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,A0);
+    iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
     glue(st, MEM_SUFFIX)(A0, T0);
 #else
     iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC,SHIFT);
@@ -582,7 +581,7 @@ void OPPROTO glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_ECX_cc)(void)
         tmp = T0 >> (count - 1);
         T0 = (T0 >> count) | (T1 << (DATA_BITS - count));
 #ifdef MEM_WRITE
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE,SHIFT,A0);
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC,SHIFT);
@@ -606,7 +605,7 @@ void OPPROTO glue(glue(op_adc, MEM_SUFFIX), _T0_T1_cc)(void)
     cf = cc_table[CC_OP].compute_c();
     T0 = T0 + T1 + cf;
 #ifdef MEM_WRITE
-    iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ADC_T0_T1_CC_MEMWRITE,SHIFT,A0);
+    iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ADC_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
     glue(st, MEM_SUFFIX)(A0, T0);
 #else
     iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_ADC_T0_T1_CC,SHIFT);
@@ -625,7 +624,7 @@ void OPPROTO glue(glue(op_sbb, MEM_SUFFIX), _T0_T1_cc)(void)
     cf = cc_table[CC_OP].compute_c();
     T0 = T0 - T1 - cf;
 #ifdef MEM_WRITE
-    iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SBB_T0_T1_CC_MEMWRITE,SHIFT,A0);
+    iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SBB_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
     glue(st, MEM_SUFFIX)(A0, T0);
 #else
     iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SBB_T0_T1_CC,SHIFT);
@@ -647,7 +646,7 @@ void OPPROTO glue(glue(op_cmpxchg, MEM_SUFFIX), _T0_T1_EAX_cc)(void)
 	//        IFLW_CMPXCHG_T0_T1_EAX_CC(INFO_FLOW_OP_CMPXCHG_T0_T1_EAX_CC_CASE1);
 #ifdef MEM_WRITE
 	//        IFLW_CMPXCHG_T0_T1_EAX_CC(INFO_FLOW_OP_CMPXCHG_T0_T1_EAX_CC_CASE2);
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE,SHIFT,A0);
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC,SHIFT);

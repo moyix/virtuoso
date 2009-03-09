@@ -39,7 +39,7 @@ static void __make_key(char *key, uint32_t x) {
 }
 
 // add x to hashtable
-void int_int_hashtable_add(int_int_hashtable_t *hashtable, uint32_t x, uint32_t y) {
+void int_int_hashtable_add(int_int_hashtable_t *hashtable, uint32_t x, uint64_t y) {
   char key[9];
   __make_key(key,x);
   vslht_add (hashtable->table, key, y);
@@ -63,7 +63,7 @@ uint8_t int_int_hashtable_mem(int_int_hashtable_t *hashtable, uint32_t x) {
 
 // returns the string correspond to x iff x is in hashtable
 // else returns 0
-uint32_t int_int_hashtable_find(int_int_hashtable_t *hashtable, uint32_t x) {
+uint64_t int_int_hashtable_find(int_int_hashtable_t *hashtable, uint32_t x) {
   char key[9];
   __make_key(key,x);
   vslht_find (hashtable->table, key);

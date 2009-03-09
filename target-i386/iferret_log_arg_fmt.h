@@ -26,1066 +26,1063 @@ char *iferret_log_arg_format[] = {
 // -->     iferret_log_info_flow_op_write_0(IFLO_AAS);
   "0",
   // 4 
-// ./target-i386/ops_template_mem.h
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_ADC_T0_T1_CC,SHIFT);
-  "1",
-  // 5 
-// ./target-i386/ops_template_mem.h
-
-// -->     iferret_log_info_flow_op_write_18(IFLO_ADC_T0_T1_CC_MEMWRITE,SHIFT,A0);
-  "18",
-  // 6 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDL_A0_AL);
   "0",
-  // 7 
+  // 5 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDL_A0_IM);
   "0",
-  // 8 
+  // 6 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_8(IFLO_ADDL_A0_SEG, PTR_TO_ADDR(env) + PARAM1);  
   "8",
-  // 9 
+  // 7 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDL_A0_SS);
   "0",
-  // 10 
+  // 8 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDL_EDI_T0);
   "0",
-  // 11 
+  // 9 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDL_ESI_T0);
   "0",
-  // 12 
+  // 10 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDL_ESP_2);
   "0",
-  // 13 
+  // 11 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDL_ESP_4);
   "0",
-  // 14 
+  // 12 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDL_ESP_IM);
   "0",
-  // 15 
+  // 13 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDL_T0_IM);
   "0",
-  // 16 
+  // 14 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDL_T0_T1);
   "0",
-  // 17 
+  // 15 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDL_T1_IM);
   "0",
-  // 18 
+  // 16 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDW_EDI_T0);
   "0",
-  // 19 
+  // 17 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDW_ESI_T0);
   "0",
-  // 20 
+  // 18 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDW_ESP_2);
   "0",
-  // 21 
+  // 19 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDW_ESP_4);
   "0",
-  // 22 
+  // 20 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ADDW_ESP_IM);
   "0",
-  // 23 
-// ./target-i386/ops_template.h
-
-// -->   iferret_log_info_flow_op_write_1(IFLO_ADD_BIT_A0_T1,SHIFT);
-  "1",
-  // 24 
+  // 21 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ANDL_A0_FFFF);
   "0",
-  // 25 
+  // 22 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ANDL_T0_FFFF);
   "0",
-  // 26 
+  // 23 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ANDL_T0_IM);
   "0",
-  // 27 
+  // 24 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ANDL_T0_T1);
   "0",
-  // 28 
+  // 25 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ARPL);
   "0",
-  // 29 
-// ./target-i386/ops_template.h
-
-// --> 	iferret_log_info_flow_op_write_1(IFLO_BSF_T0_CC,SHIFT);
-  "1",
-  // 30 
-// ./target-i386/ops_template.h
-
-// --> 	iferret_log_info_flow_op_write_1(IFLO_BSR_T0_CC,SHIFT);
-  "1",
-  // 31 
+  // 26 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_BSWAPL_T0);
   "0",
-  // 32 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_BTC_T0_T1_CC,SHIFT);
-  "1",
-  // 33 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_BTR_T0_T1_CC,SHIFT);
-  "1",
-  // 34 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_BTS_T0_T1_CC,SHIFT);
-  "1",
-  // 35 
+  // 27 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_CLTS);
   "0",
-  // 36 
+  // 28 
 // ./target-i386/helper.c
 
 // -->       iferret_log_info_flow_op_write_0(IFLO_CMPXCHG8B_PART1);
   "0",
-  // 37 
+  // 29 
 // ./target-i386/helper.c
 
 // --> 	iferret_log_info_flow_op_write_0(IFLO_CMPXCHG8B_PART2);
   "0",
-  // 38 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_1(IFLO_CMPXCHG_T0_T1_EAX_CC,SHIFT);
-  "1",
-  // 39 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_1(IFLO_CMPXCHG_T0_T1_EAX_CC_CASE2,SHIFT);
-  "1",
-  // 40 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_18(IFLO_CMPXCHG_T0_T1_EAX_CC_MEMWRITE,SHIFT,A0);
-  "18",
-  // 41 
+  // 30 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_CPUID);
   "0",
-  // 42 
+  // 31 
 // ./exec.c
 
 // --> 	      iferret_log_info_flow_op_write_8(IFLO_CPU_READ_ADDR, addr1);
   "8",
-  // 43 
+  // 32 
 // ./exec.c
 
 // --> 		iferret_log_info_flow_op_write_8(IFLO_CPU_WRITE_ADDR,addr1);
   "8",
-  // 44 
+  // 33 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_DAA);
   "0",
-  // 45 
+  // 34 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_DAS);
   "0",
-  // 46 
+  // 35 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_DECL_ECX);
   "0",
-  // 47 
+  // 36 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_DECL_T0);
   "0",
-  // 48 
+  // 37 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_DECW_ECX);
   "0",
-  // 49 
+  // 38 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_DIVB_AL_T0);
   "0",
-  // 50 
+  // 39 
 // ./target-i386/helper.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_DIVL_EAX_T0);
   "0",
-  // 51 
+  // 40 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ENTER_LEVEL);
   "0",
-  // 52 
+  // 41 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_FNSTSW_EAX);
   "0",
-  // 53 
+  // 42 
 // ./hw/ide.c
 
 // -->     iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, IO_BUFFER_BASE_ADDR, HD_BASE_ADDR + sector_num*512, n*512);
   "884",
-  // 54 
+  // 43 
 // ./hw/ide.c
 
 // -->     iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1, IO_BUFFER_BASE_ADDR + (s->data_ptr - s->data_ptr_base));
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1,IFRBA(IFRN_T0));    
   "8",
-  // 55 
+  // 44 
 // ./hw/ide.c
 
 // -->     iferret_log_info_flow_op_write_84(IFLO_HD_TRANSFER_PART2, IO_BUFFER_BASE_ADDR + (s->data_ptr - s->data_ptr_base), 4);
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2,IFRBA(IFRN_T0),4);    
   "84",
-  // 56 
+  // 45 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_IDIVB_AL_T0);
   "0",
-  // 57 
+  // 46 
 // ./target-i386/helper.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_IDIVL_EAX_T0);
   "0",
-  // 58 
+  // 47 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_IDIVW_AX_T0);
   "0",
-  // 59 
+  // 48 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_IMULB_A0_T0);
   "0",
-  // 60 
+  // 49 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_IMULL_EAX_T0);
   "0",
-  // 61 
+  // 50 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_IMULL_T0_T1);
   "0",
-  // 62 
+  // 51 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_IMULW_AX_T0);
   "0",
-  // 63 
+  // 52 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_IMULW_T0_T1);
   "0",
-  // 64 
+  // 53 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_INCL_T0);
   "0",
-  // 65 
+  // 54 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_INVLPG_A0);
   "0",
-  // 66 
-// ./target-i386/ops_template.h
-
-// -->   iferret_log_info_flow_op_write_1(IFLO_IN_DX_T0,SHIFT);
-  "1",
-  // 67 
-// ./target-i386/ops_template.h
-
-// -->   iferret_log_info_flow_op_write_1(IFLO_IN_T0_T1,SHIFT);
-  "1",
-  // 68 
+  // 55 
 // ./target-i386/iferret_syscall.c
 
 // --> 	iferret_log_sysret_op_write_44444(IFLO_IRET, pid, eip_for_callsite, another_eip, element.syscall.eax, EAX);
   "44444",
-  // 69 
+  // 56 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_IRET_PROTECTED);
   "0",
-  // 70 
+  // 57 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_IRET_REAL);
   "0",
-  // 71 
+  // 58 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_JMP_T0);
   "0",
-  // 72 
+  // 59 
 // ./hw/pckbd.c
 
 // -->       iferret_log_info_flow_op_write_4(IFLO_KEYBOARD_INPUT, rv);
   "4",
-  // 73 
+  // 60 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_LAR);
   "0",
-  // 74 
+  // 61 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_LCALL_PROTECTED_T0_T1);
   "0",
-  // 75 
+  // 62 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_LCALL_REAL_T0_T1);
   "0",
-  // 76 
+  // 63 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_LLDT_T0);
   "0",
-  // 77 
+  // 64 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_LMSW_T0);
   "0",
-  // 78 
+  // 65 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_LRET_PROTECTED);
   "0",
-  // 79 
+  // 66 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_LSL);
   "0",
-  // 80 
+  // 67 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_LTR_T0);
   "0",
-  // 81 
-// ./softmmu_header.h
-
-// --> 	iferret_log_info_flow_op_write_88(glue(IFLO_MMU_LD_DIRECT_,CSUFFIX),ptr,physaddr);
-  "88",
-  // 82 
-// ./softmmu_header.h
-
-// --> 	iferret_log_info_flow_op_write_88(glue(IFLO_MMU_LD_DIRECT_,CSUFFIX),ptr,physaddr);
-  "88",
-  // 83 
-// ./softmmu_header.h
-
-// --> 	iferret_log_info_flow_op_write_88(glue(IFLO_MMU_LD_DIRECT_,CSUFFIX),ptr,physaddr);
-  "88",
-  // 84 
-// ./softmmu_header.h
-
-// --> 	iferret_log_info_flow_op_write_88(glue(IFLO_MMU_LD_DIRECT_,CSUFFIX),ptr,physaddr);
-  "88",
-  // 85 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_IO_ALIGNED_,CSUFFIX), addr, RYANS_MAGIC_NUMBER_2,mmu_idx);  
-  "884",
-  // 86 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_IO_ALIGNED_,CSUFFIX), addr, RYANS_MAGIC_NUMBER_2,mmu_idx);  
-  "884",
-  // 87 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_IO_ALIGNED_,CSUFFIX), addr, RYANS_MAGIC_NUMBER_2,mmu_idx);  
-  "884",
-  // 88 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_IO_ALIGNED_,CSUFFIX), addr, RYANS_MAGIC_NUMBER_2,mmu_idx);  
-  "884",
-  // 89 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_IO_PART2_,CSUFFIX),addr,RYANS_MAGIC_NUMBER_2,mmu_idx);
-  "884",
-  // 90 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_IO_PART2_,CSUFFIX),addr,RYANS_MAGIC_NUMBER_2,mmu_idx);
-  "884",
-  // 91 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_IO_PART2_,CSUFFIX),addr,RYANS_MAGIC_NUMBER_2,mmu_idx);
-  "884",
-  // 92 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_IO_PART2_,CSUFFIX),addr,RYANS_MAGIC_NUMBER_2,mmu_idx);
-  "884",
-  // 93 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART1_,CSUFFIX),addr,RYANS_MAGIC_NUMBER_2,mmu_idx);
-  "884",
-  // 94 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART1_,CSUFFIX),addr,RYANS_MAGIC_NUMBER_2,mmu_idx);
-  "884",
-  // 95 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART1_,CSUFFIX),addr,RYANS_MAGIC_NUMBER_2,mmu_idx);
-  "884",
-  // 96 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART1_,CSUFFIX),addr,RYANS_MAGIC_NUMBER_2,mmu_idx);
-  "884",
-  // 97 
-// ./softmmu_template.h
-
-// --> 	  iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART2_,CSUFFIX),addr,physaddr,mmu_idx);
-  "884",
-  // 98 
-// ./softmmu_template.h
-
-// --> 	  iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART2_,CSUFFIX),addr,physaddr,mmu_idx);
-  "884",
-  // 99 
-// ./softmmu_template.h
-
-// --> 	  iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART2_,CSUFFIX),addr,physaddr,mmu_idx);
-  "884",
-  // 100 
-// ./softmmu_template.h
-
-// --> 	  iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_DIFFERENT_PAGE_PART2_,CSUFFIX),addr,physaddr,mmu_idx);
-  "884",
-  // 101 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_SAME_PAGE_,CSUFFIX), addr, physaddr, mmu_idx);
-  "884",
-  // 102 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_SAME_PAGE_,CSUFFIX), addr, physaddr, mmu_idx);
-  "884",
-  // 103 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_SAME_PAGE_,CSUFFIX), addr, physaddr, mmu_idx);
-  "884",
-  // 104 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_884(glue(IFLO_MMU_PHYS_ADDR_LD_UNALIGNED_SAME_PAGE_,CSUFFIX), addr, physaddr, mmu_idx);
-  "884",
-  // 105 
-// ./softmmu_header.h
-
-// --> 	iferret_log_info_flow_op_write_888(glue(IFLO_MMU_ST_DIRECT_,CSUFFIX),ptr,physaddr,v);
-  "888",
-  // 106 
-// ./softmmu_header.h
-
-// --> 	iferret_log_info_flow_op_write_888(glue(IFLO_MMU_ST_DIRECT_,CSUFFIX),ptr,physaddr,v);
-  "888",
-  // 107 
-// ./softmmu_header.h
-
-// --> 	iferret_log_info_flow_op_write_888(glue(IFLO_MMU_ST_DIRECT_,CSUFFIX),ptr,physaddr,v);
-  "888",
-  // 108 
-// ./softmmu_header.h
-
-// --> 	iferret_log_info_flow_op_write_888(glue(IFLO_MMU_ST_DIRECT_,CSUFFIX),ptr,physaddr,v);
-  "888",
-  // 109 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_IO_ALIGNED_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx);
-  "8884",
-  // 110 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_IO_ALIGNED_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx);
-  "8884",
-  // 111 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_IO_ALIGNED_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx);
-  "8884",
-  // 112 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_IO_ALIGNED_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx);
-  "8884",
-  // 113 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_IO_PART2_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx); 
-  "8884",
-  // 114 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_IO_PART2_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx); 
-  "8884",
-  // 115 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_IO_PART2_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx); 
-  "8884",
-  // 116 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_IO_PART2_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx); 
-  "8884",
-  // 117 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART1_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx); 
-  "8884",
-  // 118 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART1_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx); 
-  "8884",
-  // 119 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART1_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx); 
-  "8884",
-  // 120 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART1_,CSUFFIX),addr, RYANS_MAGIC_NUMBER_2, val, mmu_idx); 
-  "8884",
-  // 121 
-// ./softmmu_template.h
-
-// --> 	  iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART2_,CSUFFIX),addr, physaddr, val, mmu_idx); 
-  "8884",
-  // 122 
-// ./softmmu_template.h
-
-// --> 	  iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART2_,CSUFFIX),addr, physaddr, val, mmu_idx); 
-  "8884",
-  // 123 
-// ./softmmu_template.h
-
-// --> 	  iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART2_,CSUFFIX),addr, physaddr, val, mmu_idx); 
-  "8884",
-  // 124 
-// ./softmmu_template.h
-
-// --> 	  iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_DIFFERENT_PAGE_PART2_,CSUFFIX),addr, physaddr, val, mmu_idx); 
-  "8884",
-  // 125 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_SAME_PAGE_,CSUFFIX),addr, physaddr, val, mmu_idx); 
-  "8884",
-  // 126 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_SAME_PAGE_,CSUFFIX),addr, physaddr, val, mmu_idx); 
-  "8884",
-  // 127 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_SAME_PAGE_,CSUFFIX),addr, physaddr, val, mmu_idx); 
-  "8884",
-  // 128 
-// ./softmmu_template.h
-
-// --> 	    iferret_log_info_flow_op_write_8884(glue(IFLO_MMU_ST_UNALIGNED_SAME_PAGE_,CSUFFIX),addr, physaddr, val, mmu_idx); 
-  "8884",
-  // 129 
-// ./softmmu_template.h
-
-// --> 	iferret_log_info_flow_op_write_0(IFLO_MMU_TLB_FILL);	
-  "0",
-  // 130 
+  // 68 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_MOVB_EFLAGS_T0);
   "0",
-  // 131 
+  // 69 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVL_A0_IM);
   "0",
-  // 132 
+  // 70 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_8(IFLO_MOVL_A0_SEG, PTR_TO_ADDR(env) + PARAM1);
   "8",
-  // 133 
+  // 71 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVL_CRN_T0);
   "0",
-  // 134 
+  // 72 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVL_DRN_T0);
   "0",
-  // 135 
+  // 73 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_MOVL_EFLAGS_T0);
   "0",
-  // 136 
+  // 74 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_MOVL_EFLAGS_T0_CPL0);
   "0",
-  // 137 
+  // 75 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_MOVL_EFLAGS_T0_IO);
   "0",
-  // 138 
+  // 76 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVL_EIP_IM);
   "0",
-  // 139 
+  // 77 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_8(IFLO_MOVL_ENV_T0, PTR_TO_ADDR(env) + PARAM1);
   "8",
-  // 140 
+  // 78 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_8(IFLO_MOVL_ENV_T1, PTR_TO_ADDR(env) + PARAM1);
   "8",
-  // 141 
+  // 79 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_0);
   "0",
-  // 142 
-// ./target-i386/ops_template.h
-
-// -->   iferret_log_info_flow_op_write_1(IFLO_MOVL_T0_DSHIFT,SHIFT);
-  "1",
-  // 143 
+  // 80 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_EFLAGS);
   "0",
-  // 144 
+  // 81 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_8(IFLO_MOVL_T0_ENV, PTR_TO_ADDR(env) + PARAM1);
   "8",
-  // 145 
+  // 82 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_IM);
   "0",
-  // 146 
+  // 83 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_IMU);
   "0",
-  // 147 
+  // 84 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_SEG);
   "0",
-  // 148 
+  // 85 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_T1);
   "0",
-  // 149 
+  // 86 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVL_T1_A0);
   "0",
-  // 150 
+  // 87 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVL_T1_IM);
   "0",
-  // 151 
+  // 88 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVL_T1_IMU);
   "0",
-  // 152 
+  // 89 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVSBL_T0_T0);
   "0",
-  // 153 
+  // 90 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVSBW_AX_AL);
   "0",
-  // 154 
+  // 91 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVSLQ_EDX_EAX);
   "0",
-  // 155 
+  // 92 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVSWL_DX_AX);
   "0",
-  // 156 
+  // 93 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVSWL_EAX_AX);
   "0",
-  // 157 
+  // 94 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVSWL_T0_T0);
   "0",
-  // 158 
+  // 95 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_8(IFLO_MOVTL_ENV_T0, PTR_TO_ADDR(env) + PARAM1);
   "8",
-  // 159 
+  // 96 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_8(IFLO_MOVTL_ENV_T1, PTR_TO_ADDR(env) + PARAM1);
   "8",
-  // 160 
+  // 97 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVTL_T0_CR8);
   "0",
-  // 161 
+  // 98 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_8(IFLO_MOVTL_T0_ENV, PTR_TO_ADDR(env) + PARAM1);
   "8",
-  // 162 
+  // 99 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_8(IFLO_MOVTL_T1_ENV, PTR_TO_ADDR(env) + PARAM1);
   "8",
-  // 163 
+  // 100 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_MOVW_EFLAGS_T0);
   "0",
-  // 164 
+  // 101 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_MOVW_EFLAGS_T0_CPL0);
   "0",
-  // 165 
+  // 102 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_MOVW_EFLAGS_T0_IO);
   "0",
-  // 166 
+  // 103 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVZBL_T0_T0);
   "0",
-  // 167 
+  // 104 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_MOVZWL_T0_T0);
   "0",
-  // 168 
+  // 105 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_MOV_T0_CC);
   "0",
-  // 169 
+  // 106 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_MULB_A0_T0);
   "0",
-  // 170 
+  // 107 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_MULL_EAX_T0);
   "0",
-  // 171 
+  // 108 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_MULW_AX_T0);
   "0",
-  // 172 
+  // 109 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_NEGL_T0);
   "0",
-  // 173 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_4(IFLO_NETWORK_INPUT_BYTE_T0,T0);	
-  "4",
-  // 174 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_4(IFLO_NETWORK_INPUT_BYTE_T1,T1);
-  "4",
-  // 175 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_4(IFLO_NETWORK_INPUT_LONG_T0,T0);	
-  "4",
-  // 176 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_4(IFLO_NETWORK_INPUT_LONG_T1,T1);
-  "4",
-  // 177 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_4(IFLO_NETWORK_INPUT_WORD_T0,T0);	
-  "4",
-  // 178 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_4(IFLO_NETWORK_INPUT_WORD_T1,T1);
-  "4",
-  // 179 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_0(IFLO_NETWORK_OUTPUT_BYTE_T0);     
-  "0",
-  // 180 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_0(IFLO_NETWORK_OUTPUT_BYTE_T1); 
-  "0",
-  // 181 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_0(IFLO_NETWORK_OUTPUT_LONG_T0);     
-  "0",
-  // 182 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_0(IFLO_NETWORK_OUTPUT_LONG_T1); 
-  "0",
-  // 183 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_0(IFLO_NETWORK_OUTPUT_WORD_T0);     
-  "0",
-  // 184 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_0(IFLO_NETWORK_OUTPUT_WORD_T1); 
-  "0",
-  // 185 
+  // 110 
 // ./hw/pckbd.c
 
 // --> 	iferret_log_info_flow_op_write_s(IFLO_NEW_KEYBOARD_LABEL, iferret_keyboard_label);
   "s",
-  // 186 
+  // 111 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_NOTL_T0);
   "0",
-  // 187 
-// ./target-i386/opreg_template.h
-
-// -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_ADDL_A0_R,REGNUM);
-  "1",
-  // 188 
+  // 112 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_ADDL_A0_R_S1,REGNUM);
   "1",
-  // 189 
+  // 113 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_ADDL_A0_R_S2,REGNUM);
   "1",
-  // 190 
+  // 114 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_ADDL_A0_R_S3,REGNUM);
   "1",
-  // 191 
+  // 115 
 // ./target-i386/opreg_template.h
 
 // -->     iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVL_R_T1_T0,REGNUM);
   "1",
-  // 192 
+  // 116 
+// ./iferret_info_flow.c
+
+// -->     iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVW_R_T1_T0,REGNUM);
 // ./target-i386/opreg_template.h
 
 // -->     iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVW_R_T1_T0,REGNUM);
   "1",
-  // 193 
+  // 117 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVB_R_T0,REGNUM);
   "1",
-  // 194 
+  // 118 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVB_R_T1,REGNUM);
   "1",
-  // 195 
+  // 119 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_R_T0,REGNUM);
   "1",
-  // 196 
+  // 120 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_R_T1,REGNUM);
   "1",
-  // 197 
+  // 121 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_T0_R,REGNUM);
   "1",
-  // 198 
+  // 122 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_T1_R,REGNUM);
   "1",
-  // 199 
+  // 123 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_A0_R,REGNUM);
   "1",
-  // 200 
+  // 124 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_R_A0,REGNUM);
   "1",
-  // 201 
+  // 125 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_R_T0,REGNUM);
   "1",
-  // 202 
+  // 126 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_R_T1,REGNUM);
   "1",
-  // 203 
+  // 127 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_T0_R,REGNUM);
   "1",
-  // 204 
+  // 128 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_T1_R,REGNUM);
   "1",
-  // 205 
+  // 129 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVW_R_A0,REGNUM);
   "1",
-  // 206 
+  // 130 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVW_R_T0,REGNUM);
   "1",
-  // 207 
+  // 131 
 // ./target-i386/opreg_template.h
 
 // -->   iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVW_R_T1,REGNUM);
   "1",
+  // 132 
+// ./target-i386/ops_mem.h
+
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDL_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+  "18",
+  // 133 
+// ./target-i386/ops_mem.h
+
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDL_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+  "18",
+  // 134 
+// ./target-i386/ops_mem.h
+
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+  "18",
+  // 135 
+// ./target-i386/ops_mem.h
+
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+  "18",
+  // 136 
+// ./target-i386/ops_mem.h
+
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSW_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+  "18",
+  // 137 
+// ./target-i386/ops_mem.h
+
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSW_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+  "18",
+  // 138 
+// ./target-i386/ops_mem.h
+
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+  "18",
+  // 139 
+// ./target-i386/ops_mem.h
+
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+  "18",
+  // 140 
+// ./target-i386/ops_mem.h
+
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));  
+  "18",
+  // 141 
+// ./target-i386/ops_mem.h
+
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+  "18",
+  // 142 
+// ./target-i386/ops_mem.h
+
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STB_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+  "18",
+  // 143 
+// ./target-i386/ops_mem.h
+
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STL_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+  "18",
+  // 144 
+// ./target-i386/ops_mem.h
+
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STL_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+  "18",
+  // 145 
+// ./target-i386/ops_mem.h
+
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STW_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+  "18",
+  // 146 
+// ./target-i386/ops_mem.h
+
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STW_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+  "18",
+  // 147 
+// ./target-i386/ops_template_mem.h
+
+// -->     iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_ADC_T0_T1_CC,SHIFT);
+  "1",
+  // 148 
+// ./target-i386/ops_template_mem.h
+
+// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ADC_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+  "18",
+  // 149 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_ADD_BIT_A0_T1,SHIFT);
+  "1",
+  // 150 
+// ./target-i386/ops_template.h
+
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BSF_T0_CC,SHIFT);
+  "1",
+  // 151 
+// ./target-i386/ops_template.h
+
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BSR_T0_CC,SHIFT);
+  "1",
+  // 152 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BTC_T0_T1_CC,SHIFT);
+  "1",
+  // 153 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BTR_T0_T1_CC,SHIFT);
+  "1",
+  // 154 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BTS_T0_T1_CC,SHIFT);
+  "1",
+  // 155 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC,SHIFT);
+  "1",
+  // 156 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_CASE2,SHIFT);
+  "1",
+  // 157 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+  "18",
+  // 158 
+// ./target-i386/ops_template.h
+
+// -->     iferret_log_info_flow_op_write_8(IFLO_OPS_TEMPLATE_HD_TRANSFER_PART1,IFRBA(IFRN_T0));    
+  "8",
+  // 159 
+// ./target-i386/ops_template.h
+
+// -->     iferret_log_info_flow_op_write_81(IFLO_OPS_TEMPLATE_HD_TRANSFER_PART2,IFRBA(IFRN_T0),4);    
+  "81",
+  // 160 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_IN_DX_T0,SHIFT);
+  "1",
+  // 161 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_IN_T0_T1,SHIFT);
+  "1",
+  // 162 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_MOVL_T0_DSHIFT,SHIFT);
+  "1",
+  // 163 
+// ./target-i386/ops_template.h
+
+// -->     iferret_log_info_flow_op_write_4(IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T0,T0);	
+  "4",
+  // 164 
+// ./target-i386/ops_template.h
+
+// -->     iferret_log_info_flow_op_write_4(IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T1,T1);
+  "4",
+  // 165 
+// ./target-i386/ops_template.h
+
+// -->     iferret_log_info_flow_op_write_4(IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T0,T0);	
+  "4",
+  // 166 
+// ./target-i386/ops_template.h
+
+// -->     iferret_log_info_flow_op_write_4(IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T1,T1);
+  "4",
+  // 167 
+// ./target-i386/ops_template.h
+
+// -->     iferret_log_info_flow_op_write_4(IFLO_OPS_TEMPLATE_NETWORK_INPUT_WORD_T0,T0);	
+  "4",
+  // 168 
+// ./target-i386/ops_template.h
+
+// -->     iferret_log_info_flow_op_write_4(IFLO_OPS_TEMPLATE_NETWORK_INPUT_WORD_T1,T1);
+  "4",
+  // 169 
+// ./target-i386/ops_template.h
+
+// -->     iferret_log_info_flow_op_write_0(IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T0);     
+  "0",
+  // 170 
+// ./target-i386/ops_template.h
+
+// -->     iferret_log_info_flow_op_write_0(IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T1); 
+  "0",
+  // 171 
+// ./target-i386/ops_template.h
+
+// -->     iferret_log_info_flow_op_write_0(IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T0);     
+  "0",
+  // 172 
+// ./target-i386/ops_template.h
+
+// -->     iferret_log_info_flow_op_write_0(IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T1); 
+  "0",
+  // 173 
+// ./target-i386/ops_template.h
+
+// -->     iferret_log_info_flow_op_write_0(IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T0);     
+  "0",
+  // 174 
+// ./target-i386/ops_template.h
+
+// -->     iferret_log_info_flow_op_write_0(IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T1); 
+  "0",
+  // 175 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_RCL_T0_T1_CC,SHIFT);
+  "1",
+  // 176 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_RCL_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+  "18",
+  // 177 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_RCR_T0_T1_CC,SHIFT);
+  "1",
+  // 178 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_RCR_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+  "18",
+  // 179 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_ROL_T0_T1,SHIFT);
+  "1",
+  // 180 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_ROL_T0_T1_CC,SHIFT);
+  "1",
+  // 181 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+  "18",
+  // 182 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_MEMRITE,SHIFT,cpu_get_phys_addr(env,A0));
+  "18",
+  // 183 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_ROR_T0_T1,SHIFT);
+  "1",
+  // 184 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_ROR_T0_T1_CC,SHIFT);
+  "1",
+  // 185 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_CC_MEMRITE,SHIFT,cpu_get_phys_addr(env,A0));
+  "18",
+  // 186 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+  "18",
+  // 187 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SAR_T0_T1,SHIFT);
+  "1",
+  // 188 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SAR_T0_T1_CC,SHIFT);
+  "1",
+  // 189 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SAR_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+  "18",
+  // 190 
+// ./target-i386/ops_template_mem.h
+
+// -->     iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SBB_T0_T1_CC,SHIFT);
+  "1",
+  // 191 
+// ./target-i386/ops_template_mem.h
+
+// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SBB_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+  "18",
+  // 192 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETBE_T0_SUB,SHIFT);
+  "1",
+  // 193 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETB_T0_SUB,SHIFT);
+  "1",
+  // 194 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETLE_T0_SUB,SHIFT);
+  "1",
+  // 195 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETL_T0_SUB,SHIFT);
+  "1",
+  // 196 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETS_T0_SUB,SHIFT);
+  "1",
+  // 197 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETZ_T0_SUB,SHIFT);
+  "1",
+  // 198 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC,SHIFT);
+  "1",
+  // 199 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+  "18",
+  // 200 
+// ./target-i386/ops_template_mem.h
+
+// -->     iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC,SHIFT);
+  "1",
+  // 201 
+// ./target-i386/ops_template_mem.h
+
+// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+  "18",
+  // 202 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHL_T0_T1,SHIFT);
+  "1",
+  // 203 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHL_T0_T1_CC,SHIFT);
+  "1",
+  // 204 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHL_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+  "18",
+  // 205 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC,SHIFT);
+  "1",
+  // 206 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+  "18",
+  // 207 
+// ./target-i386/ops_template_mem.h
+
+// -->     iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC,SHIFT);
+  "1",
   // 208 
+// ./target-i386/ops_template_mem.h
+
+// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+  "18",
+  // 209 
+// ./target-i386/ops_template.h
+
+// -->   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHR_T0_T1,SHIFT);
+  "1",
+  // 210 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHR_T0_T1_CC, SHIFT);
+  "1",
+  // 211 
+// ./target-i386/ops_template_mem.h
+
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE, SHIFT, cpu_get_phys_addr(env,A0));
+  "18",
+  // 212 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_ORL_T0_T1);
   "0",
-  // 209 
+  // 213 
 // ./target-i386/helper.c
 
 // -->   iferret_log_op_write_4(IFLO_PID_CHANGE,current_pid);
   "4",
-  // 210 
+  // 214 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_PROTECTED_T0_T1);
   "0",
-  // 211 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_1(IFLO_RCL_T0_T1_CC,SHIFT);
-  "1",
-  // 212 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_18(IFLO_RCL_T0_T1_CC_MEMWRITE,SHIFT,A0);
-  "18",
-  // 213 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_1(IFLO_RCR_T0_T1_CC,SHIFT);
-  "1",
-  // 214 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_18(IFLO_RCR_T0_T1_CC_MEMWRITE,SHIFT,A0);
-  "18",
   // 215 
 // ./target-i386/op.c
 
@@ -1102,1450 +1099,1210 @@ char *iferret_log_arg_format[] = {
 // -->     iferret_log_info_flow_op_write_0(IFLO_RESTORE_ENV);
   "0",
   // 218 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_1(IFLO_ROL_T0_T1,SHIFT);
-  "1",
-  // 219 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_1(IFLO_ROL_T0_T1_CC,SHIFT);
-  "1",
-  // 220 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_18(IFLO_ROL_T0_T1_CC_MEMWRITE,SHIFT,A0);
-  "18",
-  // 221 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_18(IFLO_ROL_T0_T1_MEMRITE,SHIFT,A0);
-  "18",
-  // 222 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_1(IFLO_ROR_T0_T1,SHIFT);
-  "1",
-  // 223 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_1(IFLO_ROR_T0_T1_CC,SHIFT);
-  "1",
-  // 224 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_18(IFLO_ROR_T0_T1_CC_MEMRITE,SHIFT,A0);
-  "18",
-  // 225 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_18(IFLO_ROR_T0_T1_MEMWRITE,SHIFT,A0);
-  "18",
-  // 226 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_SALC);
   "0",
-  // 227 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_SAR_T0_T1,SHIFT);
-  "1",
-  // 228 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_1(IFLO_SAR_T0_T1_CC,SHIFT);
-  "1",
-  // 229 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_18(IFLO_SAR_T0_T1_CC_MEMWRITE,SHIFT,A0);
-  "18",
-  // 230 
+  // 219 
 // ./target-i386/helper.c
 
 // --> 	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EDI);
   "4",
-  // 231 
-// ./target-i386/ops_template_mem.h
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_SBB_T0_T1_CC,SHIFT);
-  "1",
-  // 232 
-// ./target-i386/ops_template_mem.h
-
-// -->     iferret_log_info_flow_op_write_18(IFLO_SBB_T0_T1_CC_MEMWRITE,SHIFT,A0);
-  "18",
-  // 233 
+  // 220 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_SEG_T0);
   "0",
-  // 234 
+  // 221 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_SEG_T0_VM);
   "0",
-  // 235 
+  // 222 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_SETBE_T0_CC);
   "0",
-  // 236 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_SETBE_T0_SUB,SHIFT);
-  "1",
-  // 237 
+  // 223 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_SETB_T0_CC);
   "0",
-  // 238 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_SETB_T0_SUB,SHIFT);
-  "1",
-  // 239 
+  // 224 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_SETLE_T0_CC);
   "0",
-  // 240 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_SETLE_T0_SUB,SHIFT);
-  "1",
-  // 241 
+  // 225 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_SETL_T0_CC);
   "0",
-  // 242 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_SETL_T0_SUB,SHIFT);
-  "1",
-  // 243 
+  // 226 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_SETO_T0_CC);
   "0",
-  // 244 
+  // 227 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_SETP_T0_CC);
   "0",
-  // 245 
+  // 228 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_SETS_T0_CC);
   "0",
-  // 246 
-// ./target-i386/ops_template.h
-
-// -->   iferret_log_info_flow_op_write_1(IFLO_SETS_T0_SUB,SHIFT);
-  "1",
-  // 247 
+  // 229 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_SETZ_T0_CC);
   "0",
-  // 248 
-// ./target-i386/ops_template.h
-
-// -->   iferret_log_info_flow_op_write_1(IFLO_SETZ_T0_SUB,SHIFT);
-  "1",
-  // 249 
+  // 230 
 // ./target-i386/cpu.h
 
 // -->     iferret_log_op_write_1(IFLO_SET_CPL,cpl);
   "1",
-  // 250 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_1(IFLO_SHLD_T0_T1_ECX_CC,SHIFT);
-  "1",
-  // 251 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_18(IFLO_SHLD_T0_T1_ECX_CC_MEMWRITE,SHIFT,A0);
-  "18",
-  // 252 
-// ./target-i386/ops_template_mem.h
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_SHLD_T0_T1_IM_CC,SHIFT);
-  "1",
-  // 253 
-// ./target-i386/ops_template_mem.h
-
-// -->     iferret_log_info_flow_op_write_18(IFLO_SHLD_T0_T1_IM_CC_MEMWRITE,SHIFT,A0);
-  "18",
-  // 254 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_SHL_T0_T1,SHIFT);
-  "1",
-  // 255 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_1(IFLO_SHL_T0_T1_CC,SHIFT);
-  "1",
-  // 256 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_18(IFLO_SHL_T0_T1_CC_MEMWRITE,SHIFT,A0);
-  "18",
-  // 257 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_1(IFLO_SHRD_T0_T1_ECX_CC,SHIFT);
-  "1",
-  // 258 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_18(IFLO_SHRD_T0_T1_ECX_CC_MEMWRITE,SHIFT,A0);
-  "18",
-  // 259 
-// ./target-i386/ops_template_mem.h
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_SHRD_T0_T1_IM_CC,SHIFT);
-  "1",
-  // 260 
-// ./target-i386/ops_template_mem.h
-
-// -->     iferret_log_info_flow_op_write_18(IFLO_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,A0);
-  "18",
-  // 261 
-// ./target-i386/ops_template.h
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_SHR_T0_T1,SHIFT);
-  "1",
-  // 262 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_1(IFLO_SHR_T0_T1_CC, SHIFT);
-  "1",
-  // 263 
-// ./target-i386/ops_template_mem.h
-
-// --> 	iferret_log_info_flow_op_write_18(IFLO_SHR_T0_T1_CC_MEMWRITE, SHIFT, A0);
-  "18",
-  // 264 
+  // 231 
 // ./target-i386/helper.c
 
 // -->   iferret_log_op_write_4444(IFLO_SPAWN_NEW_PID,current_pid,current_uid,parent_pid,parent_uid);
 // ./target-i386/iferret_syscall.c
 
 // --> 	iferret_log_op_write_44(IFLO_SPAWN_NEW_PID,EAX,element.syscall.pid);
-  "44",
-  // 265 
+  "4444",
+  // 232 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_SUBL_A0_2);
   "0",
-  // 266 
+  // 233 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_SUBL_A0_4);
   "0",
-  // 267 
+  // 234 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_SUBL_T0_T1);
   "0",
-  // 268 
+  // 235 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_SYSENTER);
   "0",
-  // 269 
+  // 236 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_SYSEXIT); 
   "0",
-  // 270 
+  // 237 
 // ./target-i386/iferret_syscall.c
 
 // --> 	iferret_log_sysret_op_write_44444(IFLO_SYSEXIT_RET, pid, eip_for_callsite,another_eip, element.syscall.eax, EAX);
   "44444",
-  // 271 
+  // 238 
 // ./target-i386/helper.c
 
 // -->   iferret_log_op_write_4(IFLO_TB_HEAD_EIP, cpu_get_phys_addr(env,EIP));
   "4",
-  // 272 
+  // 239 
 // ./target-i386/helper.c
 
 // -->   iferret_log_op_write_4(IFLO_UID_CHANGE,current_uid);
   "4",
-  // 273 
+  // 240 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_WRMSR);
   "0",
-  // 274 
+  // 241 
 // ./target-i386/op.c
 
 // -->   iferret_log_info_flow_op_write_0(IFLO_XORL_T0_T1);
   "0",
-  // 275 
+  // 242 
 // ./target-i386/op.c
 
 // -->     iferret_log_info_flow_op_write_0(IFLO_XOR_T0_1);
   "0",
-  // 276 
-// ./target-i386/ops_mem.h
-
-// -->   iferret_log_info_flow_op_write_18(ILFO_OPS_MEM_LDL_T0_A0,MEMSUFFIXNUM,A0);
-  "18",
-  // 277 
-// ./target-i386/ops_mem.h
-
-// -->   iferret_log_info_flow_op_write_18(ILFO_OPS_MEM_LDL_T1_A0,MEMSUFFIXNUM,A0);
-  "18",
-  // 278 
-// ./target-i386/ops_mem.h
-
-// -->   iferret_log_info_flow_op_write_18(ILFO_OPS_MEM_LDSB_T0_A0,MEMSUFFIXNUM,A0);
-  "18",
-  // 279 
-// ./target-i386/ops_mem.h
-
-// -->   iferret_log_info_flow_op_write_18(ILFO_OPS_MEM_LDSB_T1_A0,MEMSUFFIXNUM,A0);
-  "18",
-  // 280 
-// ./target-i386/ops_mem.h
-
-// -->   iferret_log_info_flow_op_write_18(ILFO_OPS_MEM_LDSW_T0_A0,MEMSUFFIXNUM,A0);
-  "18",
-  // 281 
-// ./target-i386/ops_mem.h
-
-// -->   iferret_log_info_flow_op_write_18(ILFO_OPS_MEM_LDSW_T1_A0,MEMSUFFIXNUM,A0);
-  "18",
-  // 282 
-// ./target-i386/ops_mem.h
-
-// -->   iferret_log_info_flow_op_write_18(ILFO_OPS_MEM_LDUB_T0_A0,MEMSUFFIXNUM,A0);
-  "18",
-  // 283 
-// ./target-i386/ops_mem.h
-
-// -->   iferret_log_info_flow_op_write_18(ILFO_OPS_MEM_LDUB_T1_A0,MEMSUFFIXNUM,A0);
-  "18",
-  // 284 
-// ./target-i386/ops_mem.h
-
-// -->   iferret_log_info_flow_op_write_18(ILFO_OPS_MEM_LDUW_T0_A0,MEMSUFFIXNUM,A0);  
-  "18",
-  // 285 
-// ./target-i386/ops_mem.h
-
-// -->   iferret_log_info_flow_op_write_18(ILFO_OPS_MEM_LDUW_T1_A0,MEMSUFFIXNUM,A0);
-  "18",
-  // 286 
-// ./target-i386/ops_mem.h
-
-// -->   iferret_log_info_flow_op_write_18(ILFO_OPS_MEM_STB_T0_A0,MEMSUFFIXNUM,A0);
-  "18",
-  // 287 
-// ./target-i386/ops_mem.h
-
-// -->   iferret_log_info_flow_op_write_18(ILFO_OPS_MEM_STL_T0_A0,MEMSUFFIXNUM,A0);
-  "18",
-  // 288 
-// ./target-i386/ops_mem.h
-
-// -->   iferret_log_info_flow_op_write_18(ILFO_OPS_MEM_STL_T1_A0,MEMSUFFIXNUM,A0);
-  "18",
-  // 289 
-// ./target-i386/ops_mem.h
-
-// -->   iferret_log_info_flow_op_write_18(ILFO_OPS_MEM_STW_T0_A0,MEMSUFFIXNUM,A0);
-  "18",
-  // 290 
-// ./target-i386/ops_mem.h
-
-// -->   iferret_log_info_flow_op_write_18(ILFO_OPS_MEM_STW_T1_A0,MEMSUFFIXNUM,A0);
-  "18",
-  // 291 
+  // 243 
 //This is just a separator
   "0",
-  // 292 
+  // 244 
 // syscall # 0// 0 long sys_restart_syscall(void);
   "0",
-  // 293 
+  // 245 
 // syscall # 1// 1 long sys_exit(int error_code);
   "4",
-  // 294 
+  // 246 
 // syscall # 2// 2 pid_t fork(void);
   "0",
-  // 295 
+  // 247 
 // syscall # 3// 3 ssize_t sys_read(unsigned int fd, char __user *buf, size_t count);
   "444",
-  // 296 
+  // 248 
 // syscall # 4// 4 ssize_t sys_write(unsigned int fd, const char __user *buf, size_t count);
   "444",
-  // 297 
+  // 249 
 // syscall # 5// 5 long sys_open(const char __user *filename, int flags, int mode);
   "s44",
-  // 298 
+  // 250 
 // syscall # 6// 6 long sys_close(unsigned int fd);
   "4",
-  // 299 
+  // 251 
 // syscall # 7// 7 long sys_waitpid(pid_t pid, int __user *stat_addr, int options);
   "444",
-  // 300 
+  // 252 
 // syscall # 8// 8 long sys_creat(const char __user *pathname, int mode);    
   "s4",
-  // 301 
+  // 253 
 // syscall # 9// 9 long sys_link(const char __user *oldname, const char __user *newname);
   "ss",
-  // 302 
+  // 254 
 // syscall # 10// 10 long sys_unlink(const char __user *pathname);
   "s",
-  // 303 
+  // 255 
 // syscall # 11// 11 int execve(const char *filename, char *const argv[], char *const envp[]);
   "s44",
-  // 304 
+  // 256 
 // syscall # 12// 12 long sys_chdir(const char __user *filename);
   "s",
-  // 305 
+  // 257 
 // syscall # 13// 13 long sys_time(time_t __user *tloc);
   "4",
-  // 306 
+  // 258 
 // syscall # 14// 14 long sys_mknod(const char __user *filename, int mode, unsigned dev);
   "s44",
-  // 307 
+  // 259 
 // syscall # 15// 15 long sys_chmod(const char __user *filename, mode_t mode);
   "s4",
-  // 308 
+  // 260 
 // syscall # 16// 16 long sys_lchown(const char __user *filename, unsigned dev);
   "s4",
-  // 309 
+  // 261 
 // syscall # 17// 17 missing sys_break
   "0",
-  // 310 
+  // 262 
 // syscall # 18// 18 int stat(const char *path, struct stat *buf);
   "s4",
-  // 311 
+  // 263 
 // syscall # 19// 19 off_t sys_lseek(unsigned int fd, off_t offset, unsigned int origin);
   "444",
-  // 312 
+  // 264 
 // syscall # 20// 20 long sys_getpid(void);
   "0",
-  // 313 
+  // 265 
 // syscall # 21// 21 long sys_mount(char __user *dev_name, char __user *dir_name, char __user *type, unsigned long flags, void __user *data);
   "sss44",
-  // 314 
+  // 266 
 // syscall # 22// 22 long sys_umount(char __user *name, int flags);
   "s4",
-  // 315 
+  // 267 
 // syscall # 23// 23 long sys_setuid(uid_t uid);
   "4",
-  // 316 
+  // 268 
 // syscall # 24// 24 long sys_getuid(void);
   "0",
-  // 317 
+  // 269 
 // syscall # 25// 25 long sys_stime(time_t __user *tptr);
   "4",
-  // 318 
+  // 270 
 // syscall # 26// 26 long sys_ptrace(long request, long pid, long addr, long data);
   "4444",
-  // 319 
+  // 271 
 // syscall # 27// 27 unsigned long sys_alarm(unsigned int seconds);
   "4",
-  // 320 
+  // 272 
 // syscall # 28// 28 missing sys_oldfstat 
   "0",
-  // 321 
+  // 273 
 // syscall # 29// 29 long sys_pause(void);
   "0",
-  // 322 
+  // 274 
 // syscall # 30// 30 long sys_utime(char __user *filename, struct utimbuf __user *times);
   "s4",
-  // 323 
+  // 275 
 // syscall # 31// 31 missing sys_stty
   "0",
-  // 324 
+  // 276 
 // syscall # 32// 32 missing sys_gtty
   "0",
-  // 325 
+  // 277 
 // syscall # 33// 33 long sys_access(const char __user *filename, int mode);
   "s4",
-  // 326 
+  // 278 
 // syscall # 34// 34 long sys_nice(int increment);
   "4",
-  // 327 
+  // 279 
 // syscall # 35// 35 missing sys_ftime 
   "0",
-  // 328 
+  // 280 
 // syscall # 36// 36 long sys_sync(void);
   "0",
-  // 329 
+  // 281 
 // syscall # 37// 37 long sys_kill(int pid, int sig);
   "44",
-  // 330 
+  // 282 
 // syscall # 38// 38 long sys_rename(const char __user *oldname, const char __user *newname);
   "ss",
-  // 331 
+  // 283 
 // syscall # 39// 39 long sys_mkdir(const char __user *pathname, int mode);
   "s4",
-  // 332 
+  // 284 
 // syscall # 40// 40 long sys_rmdir(const char __user *pathname);
   "s",
-  // 333 
+  // 285 
 // syscall # 41// 41 long sys_dup(unsigned int fildes);
   "4",
-  // 334 
+  // 286 
 // syscall # 42// 42 int pipe(int pipefd[2]);
   "4",
-  // 335 
+  // 287 
 // syscall # 43// 43 long sys_times(struct tms __user *tbuf);
   "4",
-  // 336 
+  // 288 
 // syscall # 44// 44 missing sys_prof
   "0",
-  // 337 
+  // 289 
 // syscall # 45// 45 unsigned long sys_brk(unsigned long brk);
   "4",
-  // 338 
+  // 290 
 // syscall # 46// 46 long sys_setgid(gid_t gid);
   "4",
-  // 339 
+  // 291 
 // syscall # 47// 47 long sys_getgid(void);
   "0",
-  // 340 
+  // 292 
 // syscall # 48// 48 unsigned long sys_signal(int sig, __sighandler_t handler);
   "44",
-  // 341 
+  // 293 
 // syscall # 49// 49 long sys_geteuid(void);
   "0",
-  // 342 
+  // 294 
 // syscall # 50// 50 long sys_getegid(void);
   "0",
-  // 343 
+  // 295 
 // syscall # 51// 51 long sys_acct(const char __user *name);
   "s",
-  // 344 
+  // 296 
 // syscall # 52// 52 int umount2(const char *target, int flags);
   "s4",
-  // 345 
+  // 297 
 // syscall # 53// 53 missing sys_lock
   "0",
-  // 346 
+  // 298 
 // syscall # 54// 54 long sys_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg);
   "444",
-  // 347 
+  // 299 
 // syscall # 55// 55 long sys_fcntl(unsigned int fd, unsigned int cmd, unsigned long arg);
   "444",
-  // 348 
+  // 300 
 // syscall # 56// 56 missing sys_mpx 
   "0",
-  // 349 
+  // 301 
 // syscall # 57// 57 long sys_setpgid(pid_t pid, pid_t pgid);    
   "44",
-  // 350 
+  // 302 
 // syscall # 58// 58 missing sys_ulimit
   "0",
-  // 351 
+  // 303 
 // syscall # 59// 59 missing sys_oldolduname 
   "0",
-  // 352 
+  // 304 
 // syscall # 60// 60 long sys_umask(int mask);
   "4",
-  // 353 
+  // 305 
 // syscall # 61// 61 long sys_chroot(const char __user *filename);
   "s",
-  // 354 
+  // 306 
 // syscall # 62// 62 long sys_ustat(unsigned dev, struct ustat __user *ubuf);
   "44",
-  // 355 
+  // 307 
 // syscall # 63// 63 long sys_dup2(unsigned int oldfd, unsigned int newfd);
   "44",
-  // 356 
+  // 308 
 // syscall # 64// 64 long sys_getppid(void);
   "0",
-  // 357 
+  // 309 
 // syscall # 65// 65 long sys_getpgrp(void);
   "0",
-  // 358 
+  // 310 
 // syscall # 66// 66 long sys_setsid(void);
   "0",
-  // 359 
+  // 311 
 // syscall # 67// 67 missing sys_sigaction
   "0",
-  // 360 
+  // 312 
 // syscall # 68// 68 long sys_sgetmask(void);
   "0",
-  // 361 
+  // 313 
 // syscall # 69// 69 long sys_ssetmask(int newmask);
   "4",
-  // 362 
+  // 314 
 // syscall # 70// 70 long sys_setreuid(uid_t ruid, uid_t euid);
   "44",
-  // 363 
+  // 315 
 // syscall # 71// 71 long sys_setregid(gid_t rgid, gid_t egid);
   "44",
-  // 364 
+  // 316 
 // syscall # 72// 72 missing sys_sigsuspend
   "0",
-  // 365 
+  // 317 
 // syscall # 73// 73 long sys_sigpending(old_sigset_t __user *set);
   "4",
-  // 366 
+  // 318 
 // syscall # 74// 74 long sys_sethostname(char __user *name, int len);
   "s4",
-  // 367 
+  // 319 
 // syscall # 75// 75 long sys_setrlimit(unsigned int resource, struct rlimit __user *rlim);
   "44",
-  // 368 
+  // 320 
 // syscall # 76// 76 long sys_getrlimit(unsigned int resource, struct rlimit __user *rlim);
   "44",
-  // 369 
+  // 321 
 // syscall # 77// 77 long sys_getrusage(int who, struct rusage __user *ru);
   "44",
-  // 370 
+  // 322 
 // syscall # 78// 78 long sys_gettimeofday(struct timeval __user *tv, struct timezone __user *tz);
   "44",
-  // 371 
+  // 323 
 // syscall # 79// 79 long sys_settimeofday(struct timeval __user *tv, struct timezone __user *tz);
   "44",
-  // 372 
+  // 324 
 // syscall # 80// 80 long sys_getgroups(int gidsetsize, gid_t __user *grouplist);
   "44",
-  // 373 
+  // 325 
 // syscall # 81// 81 long sys_setgroups(int gidsetsize, gid_t __user *grouplist);
   "44",
-  // 374 
+  // 326 
 // syscall # 82// 82 long sys_select(int n, fd_set __user *inp, fd_set __user *outp, fd_set __user *exp, struct timeval __user *tvp);
   "44444",
-  // 375 
+  // 327 
 // syscall # 83// 83 long sys_symlink(const char __user *old, const char __user *new);
   "ss",
-  // 376 
+  // 328 
 // syscall # 84// 84 int oldlstat(const char *path, struct stat *buf);
   "s4",
-  // 377 
+  // 329 
 // syscall # 85// 85 long sys_readlink(const char __user *path, char __user *buf, int bufsiz);
   "s44",
-  // 378 
+  // 330 
 // syscall # 86// 86 long sys_uselib(const char __user *library);
   "s",
-  // 379 
+  // 331 
 // syscall # 87// 87 long sys_swapon(const char __user *specialfile, int swap_flags);
   "s4",
-  // 380 
+  // 332 
 // syscall # 88// 88 long sys_reboot(int magic1, int magic2, unsigned int cmd, void __user *arg);    
   "4444",
-  // 381 
+  // 333 
 // syscall # 89// 89 int readdir(unsigned int fd, struct dirent *dirp, unsigned int count);
   "444",
-  // 382 
+  // 334 
 // syscall # 90// 90 void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
   "444444",
-  // 383 
+  // 335 
 // syscall # 91// 91 long sys_munmap(unsigned long addr, size_t len);
   "44",
-  // 384 
+  // 336 
 // syscall # 92// 92 long sys_truncate(const char __user *path, unsigned long length);
   "s4",
-  // 385 
+  // 337 
 // syscall # 93// 93 long sys_ftruncate(unsigned int fd, unsigned long length);
   "44",
-  // 386 
+  // 338 
 // syscall # 94// 94 long sys_fchmod(unsigned int fd, mode_t mode);
   "44",
-  // 387 
+  // 339 
 // syscall # 95// 95 long sys_fchown(unsigned int fd, uid_t user, gid_t group);
   "444",
-  // 388 
+  // 340 
 // syscall # 96// 96 long sys_getpriority(int which, int who);
   "44",
-  // 389 
+  // 341 
 // syscall # 97// 97 long sys_setpriority(int which, int who, int niceval);
   "444",
-  // 390 
+  // 342 
 // syscall # 98// 98 missing sys_profil
   "0",
-  // 391 
+  // 343 
 // syscall # 99// 99 long sys_statfs(const char __user * path, struct statfs __user *buf);
   "s4",
-  // 392 
+  // 344 
 // syscall # 100// 100 long sys_fstatfs(unsigned int fd, struct statfs __user *buf);
   "44",
-  // 393 
+  // 345 
 // syscall # 101// 101 long sys_ioperm(unsigned long from, unsigned long num, int on);
   "444",
-  // 394 
+  // 346 
   "0",
-  // 395 
+  // 347 
 // syscall # 103// 103 long sys_syslog(int type, char __user *buf, int len);
   "444",
-  // 396 
+  // 348 
 // syscall # 104// 104 long sys_setitimer(int which,  struct itimerval __user *value, struct itimerval __user *ovalue);
   "444",
-  // 397 
+  // 349 
 // syscall # 105// 105 long sys_getitimer(int which, struct itimerval __user *value);
   "44",
-  // 398 
+  // 350 
 // syscall # 106// 106 long sys_stat(char __user *filename, struct __old_kernel_stat __user *statbuf);
   "s4",
-  // 399 
+  // 351 
 // syscall # 107// 107 long sys_lstat(char __user *filename, struct __old_kernel_stat __user *statbuf);
   "s4",
-  // 400 
+  // 352 
 // syscall # 108// 108 long sys_fstat(unsigned int fd, struct __old_kernel_stat __user *statbuf);
   "44",
-  // 401 
+  // 353 
 // syscall # 109// 109 int old_uname(struct utsname *buf);
   "4",
-  // 402 
+  // 354 
 // syscall # 110// 110 int iopl(int level);
   "4",
-  // 403 
+  // 355 
 // syscall # 111// 111 long sys_vhangup(void);
   "0",
-  // 404 
+  // 356 
 // syscall # 112// 112 int idle(void);
   "0",
-  // 405 
+  // 357 
 // syscall # 113// 113 int vm86old(struct vm86_struct *info);
   "4",
-  // 406 
+  // 358 
 // syscall # 114// 114 long sys_wait4(pid_t pid, int __user *stat_addr, int options, struct rusage __user *ru);
   "4444",
-  // 407 
+  // 359 
 // syscall # 115// 115 long sys_swapoff(const char __user *specialfile);
   "s",
-  // 408 
+  // 360 
 // syscall # 116// 116 long sys_sysinfo(struct sysinfo __user *info);
   "4",
-  // 409 
+  // 361 
 // syscall # 117// 117 int ipc(unsigned int call, int first, int second, int third, void *ptr, long fifth);
   "444444",
-  // 410 
+  // 362 
 // syscall # 118// 118 long sys_fsync(unsigned int fd);
   "4",
-  // 411 
+  // 363 
 // syscall # 119// 119 int sigreturn(unsigned long __unused);
   "4",
-  // 412 
+  // 364 
 // syscall # 120// 120 int clone(int (*fn)(void *), void *child_stack, int flags, void *arg, ...);
   "44444",
-  // 413 
+  // 365 
 // syscall # 121// 121 long sys_setdomainname(char __user *name, int len);
   "s4",
-  // 414 
+  // 366 
 // syscall # 122// 122 int uname(struct utsname *buf);
   "4",
-  // 415 
+  // 367 
 // syscall # 123// 123 int modify_ldt(int func, void *ptr, unsigned long bytecount);
   "444",
-  // 416 
+  // 368 
 // syscall # 124// 124 long sys_adjtimex(struct timex __user *txc_p);
   "4",
-  // 417 
+  // 369 
 // syscall # 125// 125 long sys_mprotect(unsigned long start, size_t len, unsigned long prot);
   "444",
-  // 418 
+  // 370 
 // syscall # 126// 126 long sys_sigprocmask(int how, old_sigset_t __user *set, old_sigset_t __user *oset);
   "444",
-  // 419 
+  // 371 
 // syscall # 127// 127 missing sys_create_module 
   "0",
-  // 420 
+  // 372 
 // syscall # 128// 128 long sys_init_module(void __user *umod, unsigned long len, const char __user *uargs);
   "44s",
-  // 421 
+  // 373 
 // syscall # 129// 129 long sys_delete_module(const char __user *name_user, unsigned int flags);
   "s4",
-  // 422 
+  // 374 
 // syscall # 130// 130 missing sys_get_kernel_syms
   "0",
-  // 423 
+  // 375 
 // syscall # 131// 131 long sys_quotactl(unsigned int cmd, const char __user *special, qid_t id, void __user *addr);
   "4s44",
-  // 424 
+  // 376 
 // syscall # 132// 132 long sys_getpgid(pid_t pid);
   "4",
-  // 425 
+  // 377 
 // syscall # 133// 133 long sys_fchdir(unsigned int fd);
   "4",
-  // 426 
+  // 378 
 // syscall # 134// 134 long sys_bdflush(int func, long data);
   "44",
-  // 427 
+  // 379 
 // syscall # 135// 135 long sys_sysfs(int option, unsigned long arg1, unsigned long arg2);
   "444",
-  // 428 
+  // 380 
 // syscall # 136// 136 long sys_personality(u_long personality);
   "4",
-  // 429 
+  // 381 
 // syscall # 137// 137 missing sys_afs_syscall 
   "0",
-  // 430 
+  // 382 
 // syscall # 138// 138 long sys_setfsuid(uid_t uid);
   "4",
-  // 431 
+  // 383 
 // syscall # 139// 139 long sys_setfsgid(gid_t gid);
   "4",
-  // 432 
+  // 384 
 // syscall # 140// 140 missing sys__llseek
   "0",
-  // 433 
+  // 385 
 // syscall # 141// 141 long sys_getdents(unsigned int fd, struct linux_dirent __user *dirent, unsigned int count);
   "444",
-  // 434 
+  // 386 
 // syscall # 142// 142 missing sys__newselect 
   "0",
-  // 435 
+  // 387 
 // syscall # 143// 143 long sys_flock(unsigned int fd, unsigned int cmd);
   "44",
-  // 436 
+  // 388 
 // syscall # 144// 144 long sys_msync(unsigned long start, size_t len, int flags);
   "444",
-  // 437 
+  // 389 
 // syscall # 145// 145 ssize_t sys_readv(unsigned long fd, const struct iovec __user *vec, unsigned long vlen);
   "444",
-  // 438 
+  // 390 
 // syscall # 146// 146 ssize_t sys_writev(unsigned long fd, const struct iovec __user *vec, unsigned long vlen);
   "444",
-  // 439 
+  // 391 
 // syscall # 147// 147 long sys_getsid(pid_t pid);
   "4",
-  // 440 
+  // 392 
 // syscall # 148// 148 long sys_fdatasync(unsigned int fd);
   "4",
-  // 441 
+  // 393 
 // syscall # 149// 149 missing sys__sysctl
   "0",
-  // 442 
+  // 394 
 // syscall # 150// 150 long sys_mlock(unsigned long start, size_t len);
   "44",
-  // 443 
+  // 395 
 // syscall # 151// 151 long sys_munlock(unsigned long start, size_t len);
   "44",
-  // 444 
+  // 396 
 // syscall # 152// 152 long sys_mlockall(int flags);
   "4",
-  // 445 
+  // 397 
 // syscall # 153// 153 long sys_munlockall(void);
   "0",
-  // 446 
+  // 398 
 // syscall # 154// 154 long sys_sched_setparam(pid_t pid, struct sched_param __user *param);
   "44",
-  // 447 
+  // 399 
 // syscall # 155// 155 long sys_sched_getparam(pid_t pid, struct sched_param __user *param);
   "44",
-  // 448 
+  // 400 
 // syscall # 156// 156 long sys_sched_setscheduler(pid_t pid, int policy, struct sched_param __user *param);
   "444",
-  // 449 
+  // 401 
 // syscall # 157// 157 long sys_sched_getscheduler(pid_t pid);
   "4",
-  // 450 
+  // 402 
 // syscall # 158// 158 long sys_sched_yield(void);
   "0",
-  // 451 
+  // 403 
 // syscall # 159// 159 long sys_sched_get_priority_max(int policy);
   "4",
-  // 452 
+  // 404 
 // syscall # 160// 160 long sys_sched_get_priority_min(int policy);
   "4",
-  // 453 
+  // 405 
 // syscall # 161// 161 long sys_sched_rr_get_interval(pid_t pid, struct timespec __user *interval);
   "44",
-  // 454 
+  // 406 
 // syscall # 162// 162 long sys_nanosleep(struct timespec __user *rqtp, struct timespec __user *rmtp);
   "44",
-  // 455 
+  // 407 
 // syscall # 163// 163 unsigned long sys_mremap(unsigned long addr, unsigned long old_len, unsigned long new_len, unsigned long flags, unsigned long new_addr);
   "44444",
-  // 456 
+  // 408 
 // syscall # 164// 164 long sys_setresuid(uid_t ruid, uid_t euid, uid_t suid);
   "444",
-  // 457 
+  // 409 
 // syscall # 165// 165 long sys_getresuid16(old_uid_t __user *ruid, old_uid_t __user *euid, old_uid_t __user *suid);
   "444",
-  // 458 
+  // 410 
 // syscall # 166// 166 missing sys_vm86 
   "0",
-  // 459 
+  // 411 
 // syscall # 167// 167 missing sys_query_module 
   "0",
-  // 460 
+  // 412 
 // syscall # 168// 168 long sys_poll(struct pollfd __user *ufds, unsigned int nfds, long timeout);
   "444",
-  // 461 
+  // 413 
 // syscall # 169// 169 long sys_nfsservctl(int cmd, struct nfsctl_arg __user *arg, void __user *res);
   "444",
-  // 462 
+  // 414 
 // syscall # 170// 170 int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
   "444",
-  // 463 
+  // 415 
 // syscall # 171// 171 long sys_getresgid(gid_t __user *rgid, gid_t __user *egid, gid_t __user *sgid);
   "444",
-  // 464 
+  // 416 
 // syscall # 172// 172 long sys_prctl(int option, unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5);
   "44444",
-  // 465 
+  // 417 
 // syscall # 173// 173 int rt_sigreturn(unsigned long __unused);
   "4",
-  // 466 
+  // 418 
 // syscall # 174// 174 int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);
   "444",
-  // 467 
+  // 419 
 // syscall # 175// 175 int sys_rt_sigprocmask(int how, sigset_t __user *set, sigset_t __user *oset, size_t sigsetsize);
   "4444",
-  // 468 
+  // 420 
 // syscall # 176// 176 long sys_rt_sigpending(sigset_t __user *set, size_t sigsetsize);
   "44",
-  // 469 
+  // 421 
 // syscall # 177// 177 long sys_rt_sigtimedwait(const sigset_t __user *uthese, siginfo_t __user *uinfo, const struct timespec __user *uts, size_t sigsetsize);
   "4444",
-  // 470 
+  // 422 
 // syscall # 178// 178 long sys_rt_sigqueueinfo(int pid, int sig, siginfo_t __user *uinfo);
   "444",
-  // 471 
+  // 423 
 // syscall # 179// 179 int sigsuspend(const sigset_t *mask);
   "4",
-  // 472 
+  // 424 
 // syscall # 180// 180 ssize_t sys_pread64(unsigned int fd, char __user *buf, size_t count, loff_t pos);
   "4444",
-  // 473 
+  // 425 
 // syscall # 181// 181 ssize_t sys_pwrite64(unsigned int fd, const char __user *buf, size_t count, loff_t pos);
   "4444",
-  // 474 
+  // 426 
 // syscall # 182// 182 long sys_chown(const char __user *filename, uid_t user, gid_t group);
   "s44",
-  // 475 
+  // 427 
 // syscall # 183// 183 long sys_getcwd(char __user *buf, unsigned long size);
   "44",
-  // 476 
+  // 428 
 // syscall # 184// 184 long sys_capget(cap_user_header_t header, cap_user_data_t dataptr);
   "44",
-  // 477 
+  // 429 
 // syscall # 185// 185 long sys_capset(cap_user_header_t header, const cap_user_data_t data);
   "44",
-  // 478 
+  // 430 
 // syscall # 186// 186 int sigaltstack(const stack_t *ss, stack_t *oss);
   "44",
-  // 479 
+  // 431 
 // syscall # 187// 187 ssize_t sys_sendfile(int out_fd, int in_fd, off_t __user *offset, size_t count);
   "4444",
-  // 480 
+  // 432 
 // syscall # 188// 188 missing sys_getpmsg 
   "0",
-  // 481 
+  // 433 
 // syscall # 189// 189 missing sys_putpmsg 
   "0",
-  // 482 
+  // 434 
 // syscall # 190// 190 pid_t vfork(void);
   "0",
-  // 483 
+  // 435 
 // syscall # 191// 191 int getrlimit(int resource, struct rlimit *rlim);
   "44",
-  // 484 
+  // 436 
 // syscall # 192// 192 void *mmap2(void *addr, size_t length, int prot, int flags, int fd, off_t pgoffset);
   "444444",
-  // 485 
+  // 437 
 // syscall # 193// 193 long sys_truncate64(const char __user *path, loff_t length);
   "s4",
-  // 486 
+  // 438 
 // syscall # 194// 194 long sys_ftruncate64(unsigned int fd, loff_t length);
   "44",
-  // 487 
+  // 439 
 // syscall # 195// 195 long sys_stat64(char __user *filename, struct stat64 __user *statbuf);
   "s4",
-  // 488 
+  // 440 
 // syscall # 196// 196 long sys_lstat64(char __user *filename, struct stat64 __user *statbuf);
   "s4",
-  // 489 
+  // 441 
 // syscall # 197// 197 long sys_fstat64(unsigned long fd, struct stat64 __user *statbuf);
   "44",
-  // 490 
+  // 442 
 // syscall # 198// 198 int lchown(const char *path, uid_t owner, gid_t group);
   "s44",
-  // 491 
+  // 443 
 // syscall # 199// 199 uid_t getuid(void);
   "0",
-  // 492 
+  // 444 
 // syscall # 200// 200 gid_t getgid(void);
   "0",
-  // 493 
+  // 445 
 // syscall # 201// 201 uid_t geteuid(void);
   "0",
-  // 494 
+  // 446 
 // syscall # 202// 202 gid_t getegid(void);
   "0",
-  // 495 
+  // 447 
 // syscall # 203// 203 int setreuid(uid_t ruid, uid_t euid);
   "44",
-  // 496 
+  // 448 
 // syscall # 204// 204 int setregid(gid_t rgid, gid_t egid);
   "44",
-  // 497 
+  // 449 
 // syscall # 205// 205 int getgroups(int size, gid_t list[]);
   "44",
-  // 498 
+  // 450 
 // syscall # 206// 206 int setgroups(size_t size, const gid_t *list);
   "44",
-  // 499 
+  // 451 
 // syscall # 207// 207 int fchown(int fd, uid_t owner, gid_t group);
   "444",
-  // 500 
+  // 452 
 // syscall # 208// 208 int setresuid(uid_t ruid, uid_t euid, uid_t suid);
   "444",
-  // 501 
+  // 453 
 // syscall # 209// 209 int getresuid(uid_t *ruid, uid_t *euid, uid_t *suid);
   "444",
-  // 502 
+  // 454 
 // syscall # 210// 210 int setresgid32(gid_t rgid, gid_t egid, gid_t sgid);
   "444",
-  // 503 
+  // 455 
 // syscall # 211// 211 int getresgid(gid_t *rgid, gid_t *egid, gid_t *sgid);
   "444",
-  // 504 
+  // 456 
 // syscall # 212// 212 int chown(const char *path, uid_t owner, gid_t group);
   "s44",
-  // 505 
+  // 457 
 // syscall # 213// 213 int setuid(uid_t uid);
   "4",
-  // 506 
+  // 458 
 // syscall # 214// 214 int setgid(gid_t gid);
   "4",
-  // 507 
+  // 459 
 // syscall # 215// 215 int setfsuid(uid_t fsuid);
   "4",
-  // 508 
+  // 460 
 // syscall # 216// 216 int setfsgid(uid_t fsgid);
   "4",
-  // 509 
+  // 461 
 // syscall # 217// 217 long sys_pivot_root(const char __user *new_root, const char __user *put_old);
   "ss",
-  // 510 
+  // 462 
 // syscall # 218// 218 long sys_mincore(unsigned long start, size_t len, unsigned char __user * vec);
   "44s",
-  // 511 
+  // 463 
 // syscall # 219// 219 long sys_madvise(unsigned long start, size_t len, int behavior);
   "444",
-  // 512 
+  // 464 
 // syscall # 220// 220 long sys_getdents64(4(unsigned int fd, struct linux_dirent64 __user *dirent, unsigned int count);
   "444",
-  // 513 
+  // 465 
 // syscall # 221// 221 long sys_fcntl64(unsigned int fd, unsigned int cmd, unsigned long arg);
   "444",
-  // 514 
+  // 466 
   "0",
-  // 515 
+  // 467 
   "0",
-  // 516 
+  // 468 
 // syscall # 224// 224 long sys_gettid(void);
   "0",
-  // 517 
+  // 469 
 // syscall # 225// 225 ssize_t sys_readahead(int fd, loff_t offset, size_t count);
   "444",
-  // 518 
+  // 470 
 // syscall # 226// 226 long sys_setxattr(const char __user *path, const char __user *name, const void __user *value, size_t size, int flags);
   "ss444",
-  // 519 
+  // 471 
 // syscall # 227// 227 long sys_lsetxattr(const char __user *path, const char __user *name, const void __user *value, size_t size, int flags);
   "ss444",
-  // 520 
+  // 472 
 // syscall # 228// 228 long sys_fsetxattr(int fd, const char __user *name, const void __user *value, size_t size, int flags);
   "4s444",
-  // 521 
+  // 473 
 // syscall # 229// 229 ssize_t sys_getxattr(const char __user *path, const char __user *name, void __user *value, size_t size);
   "ss44",
-  // 522 
+  // 474 
 // syscall # 230// 230 ssize_t sys_lgetxattr(const char __user *path, const char __user *name, void __user *value, size_t size);
   "ss44",
-  // 523 
+  // 475 
 // syscall # 231// 231 ssize_t sys_fgetxattr(int fd, const char __user *name, void __user *value, size_t size);
   "4s44",
-  // 524 
+  // 476 
 // syscall # 232// 232 ssize_t sys_listxattr(const char __user *path, char __user *list, size_t size);
   "ss4",
-  // 525 
+  // 477 
 // syscall # 233// 233 ssize_t sys_llistxattr(const char __user *path, char __user *list, size_t size);
   "ss4",
-  // 526 
+  // 478 
 // syscall # 234// 234 ssize_t sys_flistxattr(int fd, char __user *list, size_t size);
   "4s4",
-  // 527 
+  // 479 
 // syscall # 235// 235 long sys_removexattr(const char __user *path, const char __user *name);
   "ss",
-  // 528 
+  // 480 
 // syscall # 236// 236 long sys_lremovexattr(const char __user *path, const char __user *name);
   "ss",
-  // 529 
+  // 481 
 // syscall # 237// 237 long sys_fremovexattr(int fd, const char __user *name);
   "4s",
-  // 530 
+  // 482 
 // syscall # 238// 238 long sys_tkill(int pid, int sig);
   "44",
-  // 531 
+  // 483 
 // syscall # 239// 239 ssize_t sys_sendfile64(int out_fd, int in_fd, loff_t __user *offset, size_t count);
   "4444",
-  // 532 
+  // 484 
 // syscall # 240// 240 long sys_futex(u32 __user *uaddr, int op, u32 val, struct timespec __user *utime, u32 __user *uaddr2, u32 val3);
   "444444",
-  // 533 
+  // 485 
 // syscall # 241// 241 long sys_sched_setaffinity(pid_t pid, unsigned int len, unsigned long __user *user_mask_ptr);
   "444",
-  // 534 
+  // 486 
 // syscall # 242// 242 long sys_sched_getaffinity(pid_t pid, unsigned int len, unsigned long __user *user_mask_ptr);
   "444",
-  // 535 
+  // 487 
 // syscall # 243// 243 int set_thread_area(struct user_desc *u_info);
   "4",
-  // 536 
+  // 488 
 // syscall # 244// 244 int get_thread_area(struct user_desc *u_info);
   "4",
-  // 537 
+  // 489 
 // syscall # 245// 245 int sys_io_setup(unsigned nr_reqs, aio_context_t __user *ctx);
   "44",
-  // 538 
+  // 490 
 // syscall # 246// 246 long sys_io_destroy(aio_context_t ctx);
   "4",
-  // 539 
+  // 491 
 // syscall # 247// 247 long sys_io_getevents(aio_context_t ctx_id, long min_nr,long nr, struct io_event __user *events, struct timespec __user *timeout);
   "44444",
-  // 540 
+  // 492 
 // syscall # 248// 248 long sys_io_submit(aio_context_t, long, struct iocb __user * __user *);
   "444",
-  // 541 
+  // 493 
 // syscall # 249// 249 long sys_io_cancel(aio_context_t ctx_id, struct iocb __user *iocb, struct io_event __user *result);
   "444",
-  // 542 
+  // 494 
 // syscall # 250// 250 int sys_fadvise64(int fd, loff_t offset, size_t len, int advice); 
   "4444",
-  // 543 
+  // 495 
   "0",
-  // 544 
+  // 496 
 // syscall # 252// 252 void sys_exit_group(int error_code);
   "4",
-  // 545 
+  // 497 
 // syscall # 253// 253 long sys_lookup_dcookie(u64 cookie64, char __user *buf, size_t len);
   "444",
-  // 546 
+  // 498 
 // syscall # 254// 254 long sys_epoll_create(int size);
   "4",
-  // 547 
+  // 499 
 // syscall # 255// 255 long sys_epoll_ctl(int epfd, int op, int fd, struct epoll_event __user *event);
   "4444",
-  // 548 
+  // 500 
 // syscall # 256// 256 long sys_epoll_wait(int epfd, struct epoll_event __user *events, int maxevents, int timeout);
   "4444",
-  // 549 
+  // 501 
 // syscall # 257// 257 long sys_remap_file_pages(unsigned long start, unsigned long size, unsigned long prot, unsigned long pgoff, unsigned long flags);
   "44444",
-  // 550 
+  // 502 
 // syscall # 258// 258 long sys_set_tid_address(int __user *tidptr);
   "4",
-  // 551 
+  // 503 
 // syscall # 259// 259 long sys_timer_create(clockid_t which_clock, struct sigevent __user *timer_event_spec, timer_t __user * created_timer_id);
   "444",
-  // 552 
+  // 504 
 // syscall # 260// 260 long sys_timer_settime(timer_t timer_id, int flags, const struct itimerspec __user *new_setting, struct itimerspec __user *old_setting);
   "4444",
-  // 553 
+  // 505 
 // syscall # 261// 261 long sys_timer_gettime(timer_t timer_id, struct itimerspec __user *setting);
   "44",
-  // 554 
+  // 506 
 // syscall # 262// 262 missing sys_timer_getoverrun
   "0",
-  // 555 
+  // 507 
 // syscall # 263// 263 long sys_timer_delete(timer_t timer_id);
   "4",
-  // 556 
+  // 508 
 // syscall # 264// 264 long sys_clock_settime(clockid_t which_clock, const struct timespec __user *tp);
   "44",
-  // 557 
+  // 509 
 // syscall # 265// 265 long sys_clock_gettime(clockid_t which_clock, struct timespec __user *tp);
   "44",
-  // 558 
+  // 510 
 // syscall # 266// 266 long sys_clock_getres(clockid_t which_clock, struct timespec __user *tp);
   "44",
-  // 559 
+  // 511 
 // syscall # 267// 267 long sys_clock_nanosleep(clockid_t which_clock, int flags, const struct timespec __user *rqtp, struct timespec __user *rmtp);
   "4444",
-  // 560 
+  // 512 
 // syscall # 268// 268 long sys_statfs64(const char __user *path, size_t sz, struct statfs64 __user *buf);
   "s44",
-  // 561 
+  // 513 
 // syscall # 269// 269 long sys_fstatfs64(unsigned int fd, size_t sz, struct statfs64 __user *buf);
   "444",
-  // 562 
+  // 514 
 // syscall # 270// 270 long sys_tgkill(int tgid, int pid, int sig);
   "444",
-  // 563 
+  // 515 
 // syscall # 271// 271 long sys_utimes(char __user *filename, struct timeval __user *utimes);
   "s4",
-  // 564 
+  // 516 
 // syscall # 272// 272 long sys_fadvise64_64(int fd, loff_t offset, loff_t len, int advice);
   "4444",
-  // 565 
+  // 517 
 // syscall # 273// 273 missing sys_vserver 
   "0",
-  // 566 
+  // 518 
 // syscall # 274// 274 long sys_mbind(unsigned long start, unsigned long len, unsigned long mode, unsigned long __user *nmask, unsigned long maxnode, unsigned flags);
   "444444",
-  // 567 
+  // 519 
 // syscall # 275// 275 long sys_get_mempolicy(int __user *policy, unsigned long __user *nmask, unsigned long maxnode, unsigned long addr, unsigned long flags);
   "44444",
-  // 568 
+  // 520 
 // syscall # 276// 276 long sys_set_mempolicy(int mode, unsigned long __user *nmask, unsigned long maxnode);
   "444",
-  // 569 
+  // 521 
 // syscall # 277// 277 long sys_mq_open(const char __user *name, int oflag, mode_t mode,  struct mq_attr __user *attr);
   "s444",
-  // 570 
+  // 522 
 // syscall # 278// 278 long sys_mq_unlink(const char __user *name);
   "s",
-  // 571 
+  // 523 
 // syscall # 279// 279 long sys_mq_timedsend(mqd_t mqdes, const char __user *msg_ptr, size_t msg_len, unsigned int msg_prio, const struct timespec __user *abs_timeout);
   "4s444",
-  // 572 
+  // 524 
 // syscall # 280// 280 ssize_t sys_mq_timedreceive(mqd_t mqdes, char __user *msg_ptr,  size_t msg_len, unsigned int __user *msg_prio, const struct timespec __user *abs_timeout);
   "4s444",
-  // 573 
+  // 525 
 // syscall # 281// 281 long sys_mq_notify(mqd_t mqdes, const struct sigevent __user *notification);
   "44",
-  // 574 
+  // 526 
 // syscall # 282// 282 long sys_mq_getsetattr(mqd_t mqdes, const struct mq_attr __user *mqstat, struct mq_attr __user *omqstat);
   "444",
-  // 575 
+  // 527 
 // syscall # 283// 283 long sys_kexec_load(unsigned long entry, unsigned long nr_segments, struct kexec_segment __user *segments, unsigned long flags);
   "4444",
-  // 576 
+  // 528 
 // syscall # 284// 284 long sys_waitid(int which, pid_t pid, struct siginfo __user *infop, int options, struct rusage __user *ru);
   "44444",
-  // 577 
+  // 529 
 // syscall # 285// 285 missing sys_setaltroot 
   "0",
-  // 578 
+  // 530 
 // syscall # 286// 286 long sys_add_key(const char __user *_type, const char __user *_description, const void __user *_payload, size_t plen, key_serial_t destringid);
   "ss444",
-  // 579 
+  // 531 
 // syscall # 287// 287 long sys_request_key(const char __user *_type, const char __user *_description, const char __user *_callout_info, key_serial_t destringid);
   "sss4",
-  // 580 
+  // 532 
 // syscall # 288// 288 long sys_keyctl(int cmd, unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5);
   "44444",
-  // 581 
+  // 533 
 // syscall # 289// 289 long sys_ioprio_set(int which, int who, int ioprio);
   "444",
-  // 582 
+  // 534 
 // syscall # 290// 290 long sys_ioprio_get(int which, int who);
   "44",
-  // 583 
+  // 535 
 // syscall # 291// 291 long sys_inotify_init(void);
   "0",
-  // 584 
+  // 536 
 // syscall # 292// 292 long sys_inotify_add_watch(int fd, const char __user *path, u32 mask);
   "4s4",
-  // 585 
+  // 537 
 // syscall # 293// 293 long sys_inotify_rm_watch(int fd, u32 wd);
   "44",
-  // 586 
+  // 538 
 // syscall # 294// 294 long sys_migrate_pages(pid_t pid, unsigned long maxnode, const unsigned long __user *from, const unsigned long __user *to); 
   "4444",
-  // 587 
+  // 539 
 // syscall # 295// 295 long sys_openat(int dfd, const char __user *filename, int flags, int mode);
   "4s44",
-  // 588 
+  // 540 
 // syscall # 296// 296 long sys_mkdirat(int dfd, const char __user * pathname, int mode);
   "4s4",
-  // 589 
+  // 541 
 // syscall # 297// 297 long sys_mknodat(int dfd, const char __user * filename, int mode, unsigned dev);
   "4s44",
-  // 590 
+  // 542 
 // syscall # 298// 298 long sys_fchownat(int dfd, const char __user *filename, uid_t user, gid_t group, int flag);
   "4s444",
-  // 591 
+  // 543 
 // syscall # 299// 299 long sys_futimesat(int dfd, char __user *filename, struct timeval __user *utimes);
   "4s4",
-  // 592 
+  // 544 
 // syscall # 300// 300 long sys_fstatat64(int dfd, char __user *filename, struct stat64 __user *statbuf, int flag);
   "4s44",
-  // 593 
+  // 545 
 // syscall # 301// 301 long sys_unlinkat(int dfd, const char __user * pathname, int flag);
   "4s4",
-  // 594 
+  // 546 
 // syscall # 302// 302 long sys_renameat(int olddfd, const char __user * oldname, int newdfd, const char __user * newname);
   "4s4s",
-  // 595 
+  // 547 
 // syscall # 303// 303 long sys_linkat(int olddfd, const char __user *oldname, int newdfd, const char __user *newname, int flags);
   "4s4s4",
-  // 596 
+  // 548 
 // syscall # 304// 304 long sys_symlinkat(const char __user * oldname, int newdfd, const char __user * newname);
   "s4s",
-  // 597 
+  // 549 
 // syscall # 305// 305 long sys_readlinkat(int dfd, const char __user *path, char __user *buf, int bufsiz);
   "4s44",
-  // 598 
+  // 550 
 // syscall # 306// 306 long sys_fchmodat(int dfd, const char __user * filename, mode_t mode);
   "4s4",
-  // 599 
+  // 551 
 // syscall # 307// 307 long sys_faccessat(int dfd, const char __user *filename, int mode);
   "4s4",
-  // 600 
+  // 552 
 // syscall # 308// 308 int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, const struct timespec *timeout, const sigset_t *sigmask);
   "444444",
-  // 601 
+  // 553 
 // syscall # 309// 309 int ppoll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, const sigset_t *sigmask);
   "4444",
-  // 602 
+  // 554 
 // syscall # 310// 310 long sys_unshare(unsigned long unshare_flags);
   "4",
-  // 603 
+  // 555 
 // syscall # 311// 311 long sys_set_robust_list(struct robust_list_head __user *head, size_t len);
   "44",
-  // 604 
+  // 556 
 // syscall # 312// 312 long sys_get_robust_list(int pid, struct robust_list_head __user * __user *head_ptr, size_t __user *len_ptr);
   "444",
-  // 605 
+  // 557 
 // syscall # 313// 313 long sys_splice(int fd_in, loff_t __user *off_in, int fd_out, loff_t __user *off_out, size_t len, unsigned int flags);
   "444444",
-  // 606 
+  // 558 
 // syscall # 314// 314 long sys_sync_file_range(int fd, loff_t offset, loff_t nbytes, unsigned int flags);
   "4444",
-  // 607 
+  // 559 
 // syscall # 315// 315 long sys_tee(int fdin, int fdout, size_t len, unsigned int flags);
   "4444",
-  // 608 
+  // 560 
 // syscall # 316// 316 long sys_vmsplice(int fd, const struct iovec __user *iov, unsigned long nr_segs, unsigned int flags);
   "4444",
-  // 609 
+  // 561 
 // syscall # 317// 317 long sys_move_pages(pid_t pid, unsigned long nr_pages, const void __user * __user *pages, const int __user *nodes, int __user *status, int flags);
   "444444",
-  // 610 
+  // 562 
 // syscall # 318// 318 long sys_getcpu(unsigned __user *cpu, unsigned __user *node,  struct getcpu_cache __user *cache);
   "444",
-  // 611 
+  // 563 
 // syscall # 319// 319 long sys_epoll_wait_another(int epfd, struct epoll_event __user *events, int maxevents, int timeout);
   "4444",
-  // 612 
+  // 564 
 // syscall # 320// 320 long sys_utimensat(int dfd, char __user *filename, struct timespec __user *utimes, int flags);
   "4s44",
-  // 613 
+  // 565 
 // syscall # 321// 321 long sys_signalfd(int ufd, sigset_t __user *user_mask, size_t sizemask);
   "444",
-  // 614 
+  // 566 
 // syscall # 322// 322 long sys_timerfd_create(int clockid, int flags);
   "44",
-  // 615 
+  // 567 
 // syscall # 323// 323 long sys_eventfd(unsigned int count);
   "4",
-  // 616 
+  // 568 
 // syscall # 324// 324 long sys_fallocate(int fd, int mode, loff_t offset, loff_t len);
   "4444",
-  // 617 
+  // 569 
 // syscall # 325// 325 long sys_timerfd_settime(int ufd, int flags, const struct itimerspec __user *utmr, struct itimerspec __user *otmr);
   "4444",
-  // 618 
+  // 570 
 // syscall # 326// 326 long sys_timerfd_gettime(int ufd, struct itimerspec __user *otmr); 
   "44",
-  // 619 
+  // 571 
 // syscall # 327// 327 long sys_signalfd4(int ufd, sigset_t __user *user_mask, size_t sizemask, int flags);
   "4444",
-  // 620 
+  // 572 
 // syscall # 328// 328 long sys_eventfd2(unsigned int count, int flags);
   "44",
-  // 621 
+  // 573 
 // syscall # 329// 329 long sys_epoll_create1(int flags);
   "4",
-  // 622 
+  // 574 
 // syscall # 330// 330 long sys_dup3(unsigned int oldfd, unsigned int newfd, int flags); 
   "444",
-  // 623 
+  // 575 
 // syscall # 331// 331 missing sys_pipe2 
   "0",
-  // 624 
+  // 576 
 // syscall # 332// 332 long sys_inotify_init1(int flags);
   "4",
-  // 625 
+  // 577 
 //This is just a separator
   "0",
-  // 626 
+  // 578 
 // 	iferret_log_socketcall_op_write_444(scp,IFLO_SYS_SOCKETCALL_SOCKET,family,type,protocol);
   "444",
-  // 627 
+  // 579 
 // 	  iferret_log_socketcall_op_write_444444444(scp,IFLO_SYS_SOCKETCALL_BIND_PF_LOCAL,fd,b0,b1,b2,b3,b4,b5,b6,b7);
   "444444444",
-  // 628 
+  // 580 
 // 	  iferret_log_socketcall_op_write_444444444(scp,IFLO_SYS_SOCKETCALL_BIND_PF_INET,fd,b0,b1,b2,b3,b4,b5,b6,b7);
   "444444444",
-  // 629 
+  // 581 
 // 	  iferret_log_socketcall_op_write_444444444(scp,IFLO_SYS_SOCKETCALL_BIND_PF_NETLINK,fd,b0,b1,b2,b3,b4,b5,b6,b7);
   "444444444",
-  // 630 
+  // 582 
 // 	  iferret_log_socketcall_op_write_44444444444444444444(scp,IFLO_SYS_SOCKETCALL_BIND_PF_PACKET,fd,b0,b1,b2,b3,b4,b5,b6,b7,*sptr,pkttype,halen,tempbuf[12], tempbuf[13], tempbuf[14], tempbuf[15],tempbuf[16], tempbuf[17], tempbuf[18], tempbuf[19]);
   "44444444444444444444",
-  // 631 
+  // 583 
 // 	  iferret_log_socketcall_op_write_4444444444(scp,IFLO_SYS_SOCKETCALL_BIND_ELSE,sap->sin_family, fd,b0,b1,b2,b3,b4,b5,b6,b7);
   "4444444444",
-  // 632 
+  // 584 
 // 	  iferret_log_socketcall_op_write_444444444(scp,IFLO_SYS_SOCKETCALL_CONNECT_PF_LOCAL, fd,b0,b1,b2,b3,b4,b5,b6,b7);
   "444444444",
-  // 633 
+  // 585 
 // 	  iferret_log_socketcall_op_write_444444444(scp,IFLO_SYS_SOCKETCALL_CONNECT_PF_INET, fd,b0,b1,b2,b3,b4,b5,b6,b7);
   "444444444",
-  // 634 
+  // 586 
 // 	  iferret_log_socketcall_op_write_4444444444(scp,IFLO_SYS_SOCKETCALL_CONNECT_PF_ELSE, sap->sin_family, fd,b0,b1,b2,b3,b4,b5,b6,b7);
   "4444444444",
-  // 635 
+  // 587 
 //       iferret_log_socketcall_op_write_4(scp,IFLO_SYS_SOCKETCALL_LISTEN,*((int*) tempbuf));
   "4",
-  // 636 
+  // 588 
 //       iferret_log_socketcall_op_write_4(scp,IFLO_SYS_SOCKETCALL_ACCEPT,*(int*) tempbuf); 
   "4",
-  // 637 
+  // 589 
 //       iferret_log_socketcall_op_write_4(scp,IFLO_SYS_SOCKETCALL_GETSOCKNAME,*(int*) tempbuf); 
   "4",
-  // 638 
+  // 590 
 //       iferret_log_socketcall_op_write_4(scp,IFLO_SYS_SOCKETCALL_GETPEERNAME,*(int*) tempbuf); 
   "4",
-  // 639 
+  // 591 
 // 	iferret_log_socketcall_op_write_4444(scp,IFLO_SYS_SOCKETCALL_SOCKETPAIR,domain,type,protocol,*(int*)tempbuf); 
   "4444",
-  // 640 
+  // 592 
 // 	iferret_log_socketcall_op_write_4(scp,IFLO_SYS_SOCKETCALL_SEND,fd);
   "4",
-  // 641 
+  // 593 
 // 	iferret_log_socketcall_op_write_444(scp,IFLO_SYS_SOCKETCALL_RECV,fd,msg,len);
   "444",
-  // 642 
+  // 594 
 // 	  iferret_log_socketcall_op_write_444444444(scp,IFLO_SYS_SOCKETCALL_SENDTO_PF_LOCAL, fd,b0,b1,b2,b3,b4,b5,b6,b7);
   "444444444",
-  // 643 
+  // 595 
 // 	  iferret_log_socketcall_op_write_444444444(scp,IFLO_SYS_SOCKETCALL_SENDTO_PF_INET, fd,b0,b1,b2,b3,b4,b5,b6,b7);
   "444444444",
-  // 644 
+  // 596 
 // 	  iferret_log_socketcall_op_write_4444444444(scp,IFLO_SYS_SOCKETCALL_SENDTO_PF_ELSE, sap->sin_family,fd, b0,b1,b2,b3,b4,b5,b6,b7);
   "4444444444",
-  // 645 
+  // 597 
 // 	iferret_log_socketcall_op_write_4(scp,IFLO_SYS_SOCKETCALL_RECVFROM,fd);
   "4",
-  // 646 
+  // 598 
 // 	iferret_log_socketcall_op_write_44(scp,IFLO_SYS_SOCKETCALL_SHUTDOWN,fd,*ptr);
   "44",
-  // 647 
+  // 599 
 // 	iferret_log_socketcall_op_write_444(scp,IFLO_SYS_SOCKETCALL_SETSOCKOPT,fd,level,option);
   "444",
-  // 648 
+  // 600 
 // 	iferret_log_socketcall_op_write_444(scp,IFLO_SYS_SOCKETCALL_GETSOCKOPT,fd,level,option);
   "444",
-  // 649 
+  // 601 
 // 	iferret_log_socketcall_op_write_4(scp,IFLO_SYS_SOCKETCALL_SENDMSG,fd);
   "4",
-  // 650 
+  // 602 
 // 	iferret_log_socketcall_op_write_4(scp,IFLO_SYS_SOCKETCALL_RECVMSG,fd);
   "4",
-  // 651 
+  // 603 
   "0"
 };
 #endif

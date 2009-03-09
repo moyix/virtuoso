@@ -73,6 +73,7 @@ uint32_t key_to_uint32 (char *key) {
     | (charhex(key[2]) << 20)
     | (charhex(key[1]) << 24)
     | (charhex(key[0]) << 28);
+  return (sum);
 }
 
 

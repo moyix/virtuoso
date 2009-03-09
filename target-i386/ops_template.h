@@ -397,14 +397,12 @@ void OPPROTO glue(op_setb_T0_sub, SUFFIX)(void)
     src1 = CC_DST + CC_SRC;
     src2 = CC_SRC;
 
-    //  IFLW_SHIFT(SETB_T0_SUB);
-    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETB_T0_SUB,SHIFT);
+  iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETB_T0_SUB,SHIFT);
     T0 = ((DATA_TYPE)src1 < (DATA_TYPE)src2);
 }
 
 void OPPROTO glue(op_setz_T0_sub, SUFFIX)(void)
 {
-  //  IFLW_SHIFT(SETZ_T0_SUB);
   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETZ_T0_SUB,SHIFT);
     T0 = ((DATA_TYPE)CC_DST == 0);
 }
@@ -415,14 +413,12 @@ void OPPROTO glue(op_setbe_T0_sub, SUFFIX)(void)
     src1 = CC_DST + CC_SRC;
     src2 = CC_SRC;
 
-    //  IFLW_SHIFT(SETBE_T0_SUB);
-    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETBE_T0_SUB,SHIFT);
+  iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETBE_T0_SUB,SHIFT);
     T0 = ((DATA_TYPE)src1 <= (DATA_TYPE)src2);
 }
 
 void OPPROTO glue(op_sets_T0_sub, SUFFIX)(void)
 {
-  //  IFLW_SHIFT(SETS_T0_SUB);
   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETS_T0_SUB,SHIFT);
     T0 = lshift(CC_DST, -(DATA_BITS - 1)) & 1;
 }
@@ -433,8 +429,7 @@ void OPPROTO glue(op_setl_T0_sub, SUFFIX)(void)
     src1 = CC_DST + CC_SRC;
     src2 = CC_SRC;
     
-    //  IFLW_SHIFT(SETL_T0_SUB);
-    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETL_T0_SUB,SHIFT);
+  iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETL_T0_SUB,SHIFT);
     T0 = ((DATA_STYPE)src1 < (DATA_STYPE)src2);
 }
 
@@ -444,8 +439,7 @@ void OPPROTO glue(op_setle_T0_sub, SUFFIX)(void)
     src1 = CC_DST + CC_SRC;
     src2 = CC_SRC;
 
-    //  IFLW_SHIFT(SETLE_T0_SUB);
-    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETLE_T0_SUB,SHIFT);
+  iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETLE_T0_SUB,SHIFT);
     T0 = ((DATA_STYPE)src1 <= (DATA_STYPE)src2);
 }
 
@@ -455,8 +449,7 @@ void OPPROTO glue(glue(op_shl, SUFFIX), _T0_T1)(void)
 {
     int count;
 
-    //  IFLW_SHIFT(SHL_T0_T1);
-    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHL_T0_T1,SHIFT);
+  iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHL_T0_T1,SHIFT);
     count = T1 & SHIFT1_MASK;
     T0 = T0 << count;
     FORCE_RET();
@@ -466,8 +459,7 @@ void OPPROTO glue(glue(op_shr, SUFFIX), _T0_T1)(void)
 {
     int count;
 
-    //  IFLW_SHIFT(SHR_T0_T1);
-    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHR_T0_T1,SHIFT);
+  iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHR_T0_T1,SHIFT);
     count = T1 & SHIFT1_MASK;
     T0 &= DATA_MASK;
     T0 = T0 >> count;
@@ -479,8 +471,7 @@ void OPPROTO glue(glue(op_sar, SUFFIX), _T0_T1)(void)
     int count;
     target_long src;
 
-    //  IFLW_SHIFT(SAR_T0_T1);
-    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SAR_T0_T1,SHIFT);
+  iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SAR_T0_T1,SHIFT);
     count = T1 & SHIFT1_MASK;
     src = (DATA_STYPE)T0;
     T0 = src >> count;
@@ -516,8 +507,7 @@ void OPPROTO glue(glue(op_bts, SUFFIX), _T0_T1_cc)(void)
     int count;
     count = T1 & SHIFT_MASK;
 
-    //    IFLW_SHIFT(BTS_T0_T1_CC);
-    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BTS_T0_T1_CC,SHIFT);
+  iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BTS_T0_T1_CC,SHIFT);
     
     T1 = T0 >> count;
     T0 |= (((target_long)1) << count);
@@ -528,8 +518,7 @@ void OPPROTO glue(glue(op_btr, SUFFIX), _T0_T1_cc)(void)
     int count;
     count = T1 & SHIFT_MASK;
 
-    //    IFLW_SHIFT(BTR_T0_T1_CC);
-    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BTR_T0_T1_CC,SHIFT);
+  iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BTR_T0_T1_CC,SHIFT);
 
     T1 = T0 >> count;
     T0 &= ~(((target_long)1) << count);
@@ -540,8 +529,7 @@ void OPPROTO glue(glue(op_btc, SUFFIX), _T0_T1_cc)(void)
     int count;
     count = T1 & SHIFT_MASK;
 
-    //    IFLW_SHIFT(BTC_T0_T1_CC);
-    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BTC_T0_T1_CC,SHIFT);
+  iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BTC_T0_T1_CC,SHIFT);
 
     T1 = T0 >> count;
     T0 ^= (((target_long)1) << count);
@@ -550,7 +538,6 @@ void OPPROTO glue(glue(op_btc, SUFFIX), _T0_T1_cc)(void)
 void OPPROTO glue(glue(op_add_bit, SUFFIX), _A0_T1)(void)
 {
 
-  //  IFLW_SHIFT(ADD_BIT_A0_T1);
   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_ADD_BIT_A0_T1,SHIFT);
 
     A0 += ((DATA_STYPE)T1 >> (3 + SHIFT)) << SHIFT;
@@ -569,7 +556,6 @@ void OPPROTO glue(glue(op_bsf, SUFFIX), _T0_cc)(void)
             res >>= 1;
         }
 
-	//	IFLW_SHIFT(BSF_T0_CC);
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BSF_T0_CC,SHIFT);
 
         T1 = count;
@@ -593,7 +579,6 @@ void OPPROTO glue(glue(op_bsr, SUFFIX), _T0_cc)(void)
             res <<= 1;
         }
 
-	//	IFLW_SHIFT(BSR_T0_CC);
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BSR_T0_CC,SHIFT);
 
         T1 = count;
@@ -618,7 +603,6 @@ void OPPROTO op_update_bt_cc(void)
 void OPPROTO glue(op_movl_T0_Dshift, SUFFIX)(void)
 {
 
-  //  IFLW_SHIFT(MOVL_T0_DSHIFT);
   iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_MOVL_T0_DSHIFT,SHIFT);
 
     T0 = DF << SHIFT;
@@ -629,15 +613,18 @@ void OPPROTO glue(op_movl_T0_Dshift, SUFFIX)(void)
   // translate into one of cpu_in[b|w|l] in ../vl.c?  
 /* port I/O */
 #if DATA_BITS <= 32
+// I think T0 is the port and T1 is the data to be tossed out on that port.  
 void OPPROTO glue(glue(op_out, SUFFIX), _T0_T1)(void)
 {
+  // apparently this is the port # for hd out.
   if(T0 == 0x01f0){
-    //	IFLW_HD_TRANSFER_PART1(IFRBA(IFRN_T1));	
+    //         IFLW_HD_TRANSFER_PART1(IFRBA(IFRN_T1)); 
     iferret_log_info_flow_op_write_8(IFLO_OPS_TEMPLATE_HD_TRANSFER_PART1,IFRBA(IFRN_T1));
   }
       
-    glue(cpu_out, SUFFIX)(env, T0, T1 & DATA_MASK);
-  
+  glue(cpu_out, SUFFIX)(env, T0, T1 & DATA_MASK);
+
+  // apparently this is the port # for network out.    
   if(T0 == 0xc110){
 #if SUFFIX_QUOTED == 'b'
     //	IFLW_NETWORK_OUTPUT_BYTE_T1();	

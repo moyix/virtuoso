@@ -50,7 +50,12 @@ extern pid_t parent_pid;
 extern uid_t parent_uid;
 extern char *parent_command;
 
+// from iferret_syscall.c
 void get_current_pid_uid(void);
+
+// from helper2.c
+target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
+
 
 extern pid_t current_pid, last_pid;
 extern uid_t current_uid, last_uid;
@@ -2866,8 +2871,8 @@ void helper_sysenter(void)
   //  char tsbuf[1000];
   SegmentCache *dt;
   target_ulong ssp, ptr;
-  uint32_t e1,e2,ss,esp,ss_e1,ss_e2,saved_esp,sp_mask,i,stack_val;
-  target_phys_addr_t paddr;
+  uint32_t e1,e2,ss,esp,ss_e1,ss_e2,saved_esp,sp_mask; //,i,stack_val;
+  //  target_phys_addr_t paddr;
 
  
   //  printf("In your sys_enter EIP=0x%08x\n",EIP); 	

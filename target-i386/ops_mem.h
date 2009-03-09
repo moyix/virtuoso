@@ -14,6 +14,8 @@
 //)
 
 
+// from helper2.c
+target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 
 // T0 = *A0
 void OPPROTO glue(glue(op_ldub, MEMSUFFIX), _T0_A0)(void)
@@ -122,7 +124,8 @@ void OPPROTO glue(glue(op_stl, MEMSUFFIX), _T1_A0)(void)
 }
 
 
-// raincheck
+// iferret takes a raincheck on these ...
+
 /* SSE/MMX support */
 void OPPROTO glue(glue(op_ldq, MEMSUFFIX), _env_A0)(void)
 {

@@ -29,7 +29,7 @@ void iferret_open_fd_add(iferret_t *iferret, int pid, int fd, char *filename,
   else {
     // no table yet for that pid.  create it first.  
     ofd_table = int_int_hashtable_new();
-    int_int_hashtable_add(iferret->open_fd_table, pid, (uint32_t) ofd_table);
+    int_int_hashtable_add(iferret->open_fd_table, pid, (uint64_t) ofd_table);
   }
   if (int_int_hashtable_mem(ofd_table, fd)) {
     // Hey, we already have an entry for this pid/fd. wtf? shouldnt happen

@@ -221,70 +221,60 @@ void OPPROTO op_testl_T0_T1_cc(void)
 
 void OPPROTO op_addl_T0_T1(void)
 {
-  //  IFLW(ADDL_T0_T1);
   iferret_log_info_flow_op_write_0(IFLO_ADDL_T0_T1);
     T0 += T1;
 }
 
 void OPPROTO op_orl_T0_T1(void)
 {
-  //  IFLW(ORL_T0_T1);
   iferret_log_info_flow_op_write_0(IFLO_ORL_T0_T1);
     T0 |= T1;
 }
 
 void OPPROTO op_andl_T0_T1(void)
 {
-  //  IFLW(ANDL_T0_T1);
   iferret_log_info_flow_op_write_0(IFLO_ANDL_T0_T1);
     T0 &= T1;
 }
 
 void OPPROTO op_subl_T0_T1(void)
 {
-  //  IFLW(SUBL_T0_T1);
   iferret_log_info_flow_op_write_0(IFLO_SUBL_T0_T1);
     T0 -= T1;
 }
 
 void OPPROTO op_xorl_T0_T1(void)
 {
-  //  IFLW(XORL_T0_T1);
   iferret_log_info_flow_op_write_0(IFLO_XORL_T0_T1);
     T0 ^= T1;
 }
 
 void OPPROTO op_negl_T0(void)
 {
-  //  IFLW(NEGL_T0);
   iferret_log_info_flow_op_write_0(IFLO_NEGL_T0);
     T0 = -T0;
 }
 
 void OPPROTO op_incl_T0(void)
 {
-  //  IFLW(INCL_T0);
   iferret_log_info_flow_op_write_0(IFLO_INCL_T0);
     T0++;
 }
 
 void OPPROTO op_decl_T0(void)
 {
-  //  IFLW(DECL_T0);
   iferret_log_info_flow_op_write_0(IFLO_DECL_T0);
     T0--;
 }
 
 void OPPROTO op_notl_T0(void)
 {
-  //  IFLW(NOTL_T0);
   iferret_log_info_flow_op_write_0(IFLO_NOTL_T0);
     T0 = ~T0;
 }
 
 void OPPROTO op_bswapl_T0(void)
 {
-  //  IFLW(BSWAPL_T0);
   iferret_log_info_flow_op_write_0(IFLO_BSWAPL_T0);
     T0 = bswap32(T0);
 }
@@ -306,7 +296,6 @@ void OPPROTO op_mulb_AL_T0(void)
     unsigned int res;
     res = (uint8_t)EAX * (uint8_t)T0;
 
-    //  IFLW(MULB_AL_T0);
     iferret_log_info_flow_op_write_0(IFLO_MULB_A0_T0);
 
     EAX = (EAX & ~0xffff) | res;
@@ -319,7 +308,6 @@ void OPPROTO op_imulb_AL_T0(void)
     int res;
     res = (int8_t)EAX * (int8_t)T0;
 
-    //  IFLW(IMULB_AL_T0);
     iferret_log_info_flow_op_write_0(IFLO_IMULB_A0_T0);
 
     EAX = (EAX & ~0xffff) | (res & 0xffff);
@@ -332,7 +320,6 @@ void OPPROTO op_mulw_AX_T0(void)
     unsigned int res;
     res = (uint16_t)EAX * (uint16_t)T0;
 
-    //  IFLW(MULW_AX_T0);
     iferret_log_info_flow_op_write_0(IFLO_MULW_AX_T0);
 
     EAX = (EAX & ~0xffff) | (res & 0xffff);
@@ -346,7 +333,6 @@ void OPPROTO op_imulw_AX_T0(void)
     int res;
     res = (int16_t)EAX * (int16_t)T0;
 
-    //  IFLW(IMULW_AX_T0);
     iferret_log_info_flow_op_write_0(IFLO_IMULW_AX_T0);
 
     EAX = (EAX & ~0xffff) | (res & 0xffff);
@@ -360,7 +346,6 @@ void OPPROTO op_mull_EAX_T0(void)
     uint64_t res;
     res = (uint64_t)((uint32_t)EAX) * (uint64_t)((uint32_t)T0);
 
-    //  IFLW(MULL_EAX_T0);
     iferret_log_info_flow_op_write_0(IFLO_MULL_EAX_T0);
 
     EAX = (uint32_t)res;
@@ -374,7 +359,6 @@ void OPPROTO op_imull_EAX_T0(void)
     int64_t res;
     res = (int64_t)((int32_t)EAX) * (int64_t)((int32_t)T0);
 
-    //  IFLW(IMULL_EAX_T0);
     iferret_log_info_flow_op_write_0(IFLO_IMULL_EAX_T0);
 
     EAX = (uint32_t)(res);
@@ -388,7 +372,6 @@ void OPPROTO op_imulw_T0_T1(void)
     int res;
     res = (int16_t)T0 * (int16_t)T1;
 
-    //  IFLW(IMULW_T0_T1);
     iferret_log_info_flow_op_write_0(IFLO_IMULW_T0_T1);
 
     T0 = res;
@@ -401,7 +384,6 @@ void OPPROTO op_imull_T0_T1(void)
     int64_t res;
     res = (int64_t)((int32_t)T0) * (int64_t)((int32_t)T1);
 
-    //  IFLW(IMULL_T0_T1);
     iferret_log_info_flow_op_write_0(IFLO_IMULL_T0_T1);
 
     T0 = res;
@@ -443,7 +425,6 @@ void OPPROTO op_divb_AL_T0(void)
     q &= 0xff;
     r = (num % den) & 0xff;
 
-    //  IFLW(DIVB_AL_T0);
     iferret_log_info_flow_op_write_0(IFLO_DIVB_AL_T0);
 
     EAX = (EAX & ~0xffff) | (r << 8) | q;
@@ -464,7 +445,6 @@ void OPPROTO op_idivb_AL_T0(void)
     q &= 0xff;
     r = (num % den) & 0xff;
 
-    //  IFLW(IDIVB_AL_T0);
     iferret_log_info_flow_op_write_0(IFLO_IDIVB_AL_T0);
 
     EAX = (EAX & ~0xffff) | (r << 8) | q;
@@ -485,7 +465,6 @@ void OPPROTO op_divw_AX_T0(void)
     q &= 0xffff;
     r = (num % den) & 0xffff;
 
-    //  IFLW(DIVW_AX_T0);
     iferret_log_info_flow_op_write_0(IFLO_IDIVW_AX_T0);
 
     EAX = (EAX & ~0xffff) | q;
@@ -507,7 +486,6 @@ void OPPROTO op_idivw_AX_T0(void)
     q &= 0xffff;
     r = (num % den) & 0xffff;
 
-    //  IFLW(IDIVW_AX_T0);
     iferret_log_info_flow_op_write_0(IFLO_IDIVW_AX_T0);
 
     EAX = (EAX & ~0xffff) | q;
@@ -546,7 +524,6 @@ void OPPROTO op_idivq_EAX_T0(void)
 void OPPROTO op_movl_T0_imu(void)
 {
 
-  //  IFLW(MOVL_T0_IMU);
   iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_IMU);
 
     T0 = (uint32_t)PARAM1;
@@ -554,7 +531,6 @@ void OPPROTO op_movl_T0_imu(void)
 
 void OPPROTO op_movl_T0_im(void)
 {
-  //  IFLW(MOVL_T0_IM);
   iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_IM);
 
     T0 = (int32_t)PARAM1;
@@ -562,7 +538,6 @@ void OPPROTO op_movl_T0_im(void)
 
 void OPPROTO op_addl_T0_im(void)
 {
-  //  IFLW(ADDL_T0_IM);
   iferret_log_info_flow_op_write_0(IFLO_ADDL_T0_IM);
 
     T0 += PARAM1;
@@ -570,7 +545,6 @@ void OPPROTO op_addl_T0_im(void)
 
 void OPPROTO op_andl_T0_ffff(void)
 {
-  //  IFLW(ANDL_T0_FFFF);
   iferret_log_info_flow_op_write_0(IFLO_ANDL_T0_FFFF);
 
     T0 = T0 & 0xffff;
@@ -578,7 +552,6 @@ void OPPROTO op_andl_T0_ffff(void)
 
 void OPPROTO op_andl_T0_im(void)
 {
-  //  IFLW(ANDL_T0_IM);
   iferret_log_info_flow_op_write_0(IFLO_ANDL_T0_IM);
 
     T0 = T0 & PARAM1;
@@ -586,7 +559,6 @@ void OPPROTO op_andl_T0_im(void)
 
 void OPPROTO op_movl_T0_T1(void)
 {
-  //  IFLW(MOVL_T0_T1);
   iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_T1);
 
     T0 = T1;
@@ -597,7 +569,6 @@ void OPPROTO op_movl_T0_T1(void)
 
 void OPPROTO op_movl_T1_imu(void)
 {
-  //  IFLW(MOVL_T1_IMU);
   iferret_log_info_flow_op_write_0(IFLO_MOVL_T1_IMU);
 
     T1 = (uint32_t)PARAM1;
@@ -605,7 +576,6 @@ void OPPROTO op_movl_T1_imu(void)
 
 void OPPROTO op_movl_T1_im(void)
 {
-  //  IFLW(MOVL_T1_IM);
   iferret_log_info_flow_op_write_0(IFLO_MOVL_T1_IM);
 
     T1 = (int32_t)PARAM1;
@@ -613,7 +583,6 @@ void OPPROTO op_movl_T1_im(void)
 
 void OPPROTO op_addl_T1_im(void)
 {
-  //  IFLW(ADDL_T1_IM);
   iferret_log_info_flow_op_write_0(IFLO_ADDL_T1_IM);
 
     T1 += PARAM1;
@@ -621,7 +590,6 @@ void OPPROTO op_addl_T1_im(void)
 
 void OPPROTO op_movl_T1_A0(void)
 {
-  //  IFLW(MOVL_T1_A0);
   iferret_log_info_flow_op_write_0(IFLO_MOVL_T1_A0);
 
     T1 = A0;
@@ -632,7 +600,6 @@ void OPPROTO op_movl_T1_A0(void)
 
 void OPPROTO op_movl_A0_im(void)
 {
-  //  IFLW(MOVL_A0_IM);
   iferret_log_info_flow_op_write_0(IFLO_MOVL_A0_IM);
 
     A0 = (uint32_t)PARAM1;
@@ -642,7 +609,6 @@ void OPPROTO op_movl_A0_im(void)
 // so we're going to push that address right to the blinking info-flow log.  
 void OPPROTO op_addl_A0_im(void)
 {
-  // IFLW(ADDL_A0_IM);
   iferret_log_info_flow_op_write_0(IFLO_ADDL_A0_IM);
 
     A0 = (uint32_t)(A0 + PARAM1);
@@ -652,7 +618,6 @@ void OPPROTO op_addl_A0_im(void)
 
 void OPPROTO op_movl_A0_seg(void)
 {
-  //  IFLW_ADDR(MOVL_A0_SEG, PTR_TO_ADDR(env) + PARAM1);
   iferret_log_info_flow_op_write_8(IFLO_MOVL_A0_SEG, PTR_TO_ADDR(env) + PARAM1);
 
     A0 = (uint32_t)*(target_ulong *)((char *)env + PARAM1);
@@ -660,7 +625,6 @@ void OPPROTO op_movl_A0_seg(void)
 
 void OPPROTO op_addl_A0_seg(void)
 {
-  //  IFLW_ADDR(ADDL_A0_SEG, PTR_TO_ADDR(env) + PARAM1);
   iferret_log_info_flow_op_write_8(IFLO_ADDL_A0_SEG, PTR_TO_ADDR(env) + PARAM1);  
 
     A0 = (uint32_t)(A0 + *(target_ulong *)((char *)env + PARAM1));
@@ -668,7 +632,6 @@ void OPPROTO op_addl_A0_seg(void)
 
 void OPPROTO op_addl_A0_AL(void)
 {
-  //  IFLW(ADDL_A0_AL);
   iferret_log_info_flow_op_write_0(IFLO_ADDL_A0_AL);
 
     A0 = (uint32_t)(A0 + (EAX & 0xff));
@@ -747,7 +710,6 @@ void OPPROTO op_addq_A0_AL(void)
 
 void OPPROTO op_andl_A0_ffff(void)
 {
-  //  IFLW(ANDL_A0_FFFF);
   iferret_log_info_flow_op_write_0(IFLO_ANDL_A0_FFFF);
 
     A0 = A0 & 0xffff;
@@ -779,7 +741,6 @@ void OPPROTO op_andl_A0_ffff(void)
 
 void OPPROTO op_jmp_T0(void)
 {
-  //  IFLW(JMP_T0);
   iferret_log_info_flow_op_write_0(IFLO_JMP_T0);
 
     EIP = T0;
@@ -787,7 +748,6 @@ void OPPROTO op_jmp_T0(void)
 
 void OPPROTO op_movl_eip_im(void)
 {
-  //  IFLW(MOVL_EIP_IM);
   iferret_log_info_flow_op_write_0(IFLO_MOVL_EIP_IM);
 
     EIP = (uint32_t)PARAM1;
@@ -930,7 +890,6 @@ void OPPROTO op_single_step(void)
 
 void OPPROTO op_movl_T0_0(void)
 {
-  //  IFLW(MOVL_T0_0);
   iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_0);
 
     T0 = 0;
@@ -969,7 +928,6 @@ void OPPROTO op_exit_tb(void)
 
 void OPPROTO op_movsbl_T0_T0(void)
 {
-  //  IFLW(MOVSBL_T0_T0);
   iferret_log_info_flow_op_write_0(IFLO_MOVSBL_T0_T0);
 
     T0 = (int8_t)T0;
@@ -977,7 +935,6 @@ void OPPROTO op_movsbl_T0_T0(void)
 
 void OPPROTO op_movzbl_T0_T0(void)
 {
-  //  IFLW(MOVZBL_T0_T0);
   iferret_log_info_flow_op_write_0(IFLO_MOVZBL_T0_T0);
 
     T0 = (uint8_t)T0;
@@ -985,7 +942,6 @@ void OPPROTO op_movzbl_T0_T0(void)
 
 void OPPROTO op_movswl_T0_T0(void)
 {
-  //  IFLW(MOVSWL_T0_T0);
   iferret_log_info_flow_op_write_0(IFLO_MOVSWL_T0_T0);
 
     T0 = (int16_t)T0;
@@ -993,7 +949,6 @@ void OPPROTO op_movswl_T0_T0(void)
 
 void OPPROTO op_movzwl_T0_T0(void)
 {
-  //  IFLW(MOVZWL_T0_T0);
   iferret_log_info_flow_op_write_0(IFLO_MOVZWL_T0_T0);
 
     T0 = (uint16_t)T0;
@@ -1001,7 +956,6 @@ void OPPROTO op_movzwl_T0_T0(void)
 
 void OPPROTO op_movswl_EAX_AX(void)
 {
-  //  IFLW(MOVSWL_EAX_AX);
   iferret_log_info_flow_op_write_0(IFLO_MOVSWL_EAX_AX);
 
     EAX = (uint32_t)((int16_t)EAX);
@@ -1021,7 +975,6 @@ void OPPROTO op_movslq_RAX_EAX(void)
 
 void OPPROTO op_movsbw_AX_AL(void)
 {
-  //  IFLW(MOVSBW_AX_AL);
   iferret_log_info_flow_op_write_0(IFLO_MOVSBW_AX_AL);
 
     EAX = (EAX & ~0xffff) | ((int8_t)EAX & 0xffff);
@@ -1029,14 +982,12 @@ void OPPROTO op_movsbw_AX_AL(void)
 
 void OPPROTO op_movslq_EDX_EAX(void)
 {
-  //  IFLW(MOVSLQ_EDX_EAX);
   iferret_log_info_flow_op_write_0(IFLO_MOVSLQ_EDX_EAX);
     EDX = (uint32_t)((int32_t)EAX >> 31);
 }
 
 void OPPROTO op_movswl_DX_AX(void)
 {
-  //  IFLW(MOVSWL_DX_AX);
   iferret_log_info_flow_op_write_0(IFLO_MOVSWL_DX_AX);
     EDX = (EDX & ~0xffff) | (((int16_t)EAX >> 15) & 0xffff);
 }
@@ -1052,21 +1003,18 @@ void OPPROTO op_movsqo_RDX_RAX(void)
 
 void OPPROTO op_addl_ESI_T0(void)
 {
-  //  IFLW(ADDL_ESI_T0);
   iferret_log_info_flow_op_write_0(IFLO_ADDL_ESI_T0);
     ESI = (uint32_t)(ESI + T0);
 }
 
 void OPPROTO op_addw_ESI_T0(void)
 {
-  //  IFLW(ADDW_ESI_T0);
   iferret_log_info_flow_op_write_0(IFLO_ADDW_ESI_T0);
     ESI = (ESI & ~0xffff) | ((ESI + T0) & 0xffff);
 }
 
 void OPPROTO op_addl_EDI_T0(void)
 {
-  //  IFLW(ADDL_EDI_T0);
   iferret_log_info_flow_op_write_0(IFLO_ADDL_EDI_T0);
 
     EDI = (uint32_t)(EDI + T0);
@@ -1074,21 +1022,18 @@ void OPPROTO op_addl_EDI_T0(void)
 
 void OPPROTO op_addw_EDI_T0(void)
 {
-  //  IFLW(ADDW_EDI_T0);
   iferret_log_info_flow_op_write_0(IFLO_ADDW_EDI_T0);
     EDI = (EDI & ~0xffff) | ((EDI + T0) & 0xffff);
 }
 
 void OPPROTO op_decl_ECX(void)
 {
-  //  IFLW(DECL_ECX);
   iferret_log_info_flow_op_write_0(IFLO_DECL_ECX);
     ECX = (uint32_t)(ECX - 1);
 }
 
 void OPPROTO op_decw_ECX(void)
 {
-  //  IFLW(DECW_ECX);
   iferret_log_info_flow_op_write_0(IFLO_DECW_ECX);
     ECX = (ECX & ~0xffff) | ((ECX - 1) & 0xffff);
 }
@@ -1119,7 +1064,6 @@ void OPPROTO op_decq_ECX(void)
 */
 void op_addl_A0_SS(void)
 {
-  //  IFLW(ADDL_A0_SS);
   iferret_log_info_flow_op_write_0(IFLO_ADDL_A0_SS);
 
     A0 = (uint32_t)(A0 + env->segs[R_SS].base);
@@ -1127,42 +1071,36 @@ void op_addl_A0_SS(void)
 
 void op_subl_A0_2(void)
 {
-  //  IFLW(SUBL_A0_2);
   iferret_log_info_flow_op_write_0(IFLO_SUBL_A0_2);
     A0 = (uint32_t)(A0 - 2);
 }
 
 void op_subl_A0_4(void)
 {
-  //  IFLW(SUBL_A0_4);
   iferret_log_info_flow_op_write_0(IFLO_SUBL_A0_4);
     A0 = (uint32_t)(A0 - 4);
 }
 
 void op_addl_ESP_4(void)
 {
-  //  IFLW(ADDL_ESP_4);
   iferret_log_info_flow_op_write_0(IFLO_ADDL_ESP_4);
     ESP = (uint32_t)(ESP + 4);
 }
 
 void op_addl_ESP_2(void)
 {
-  //  IFLW(ADDL_ESP_2);
   iferret_log_info_flow_op_write_0(IFLO_ADDL_ESP_2);
     ESP = (uint32_t)(ESP + 2);
 }
 
 void op_addw_ESP_4(void)
 {
-  //  IFLW(ADDW_ESP_4);
   iferret_log_info_flow_op_write_0(IFLO_ADDW_ESP_4);
     ESP = (ESP & ~0xffff) | ((ESP + 4) & 0xffff);
 }
 
 void op_addw_ESP_2(void)
 {
-  //  IFLW(ADDW_ESP_2);
   iferret_log_info_flow_op_write_0(IFLO_ADDW_ESP_2);
 
     ESP = (ESP & ~0xffff) | ((ESP + 2) & 0xffff);
@@ -1170,7 +1108,6 @@ void op_addw_ESP_2(void)
 
 void op_addl_ESP_im(void)
 {
-  //  IFLW(ADDL_ESP_IM);
   iferret_log_info_flow_op_write_0(IFLO_ADDL_ESP_IM);
 
     ESP = (uint32_t)(ESP + PARAM1);
@@ -1178,7 +1115,6 @@ void op_addl_ESP_im(void)
 
 void op_addw_ESP_im(void)
 {
-  //  IFLW(ADDW_ESP_IM);
   iferret_log_info_flow_op_write_0(IFLO_ADDW_ESP_IM);
 
     ESP = (ESP & ~0xffff) | ((ESP + PARAM1) & 0xffff);
@@ -1209,7 +1145,6 @@ void op_addq_ESP_im(void)
 // read time stamp counter into edx/eax
 void OPPROTO op_rdtsc(void)
 {
-  //  IFLW(RDTSC);
   iferret_log_info_flow_op_write_0(IFLO_RDTSC);
 
     helper_rdtsc();
@@ -1222,7 +1157,6 @@ void OPPROTO op_rdpmc(void)
 
 void OPPROTO op_cpuid(void)
 {
-  //  IFLW(CPUID);
   iferret_log_info_flow_op_write_0(IFLO_CPUID);
 
     helper_cpuid();
@@ -1230,7 +1164,6 @@ void OPPROTO op_cpuid(void)
 
 void OPPROTO op_enter_level(void)
 {
-  //  IFLW(ENTER_LEVEL);
   iferret_log_info_flow_op_write_0(IFLO_ENTER_LEVEL);
 
     helper_enter_level(PARAM1, PARAM2);
@@ -1245,7 +1178,6 @@ void OPPROTO op_enter64_level(void)
 
 void OPPROTO op_sysenter(void)
 {
-  //  IFLW(SYSENTER);
   iferret_log_info_flow_op_write_0(IFLO_SYSENTER);
 
     helper_sysenter();
@@ -1253,7 +1185,6 @@ void OPPROTO op_sysenter(void)
 
 void OPPROTO op_sysexit(void)
 {
-  //  IFLW(SYSEXIT);
   iferret_log_info_flow_op_write_0(IFLO_SYSEXIT); 
  
     helper_sysexit();
@@ -1273,7 +1204,6 @@ void OPPROTO op_sysret(void)
 
 void OPPROTO op_rdmsr(void)
 {
-  //  IFLW(RDMSR);
   iferret_log_info_flow_op_write_0(IFLO_RDMSR);
 
     helper_rdmsr();
@@ -1281,7 +1211,6 @@ void OPPROTO op_rdmsr(void)
 
 void OPPROTO op_wrmsr(void)
 {
-  //  IFLW(WRMSR);
   iferret_log_info_flow_op_write_0(IFLO_WRMSR);
 
     helper_wrmsr();
@@ -1295,7 +1224,6 @@ void OPPROTO op_aam(void)
     int base = PARAM1;
     int al, ah;
   
-    //  IFLW(AAM);
     iferret_log_info_flow_op_write_0(IFLO_AAM);
 
     al = EAX & 0xff;
@@ -1310,7 +1238,6 @@ void OPPROTO op_aad(void)
     int base = PARAM1;
     int al, ah;
 
-    //  IFLW(AAD);
     iferret_log_info_flow_op_write_0(IFLO_AAD);
 
     al = EAX & 0xff;
@@ -1326,7 +1253,6 @@ void OPPROTO op_aaa(void)
     int al, ah, af;
     int eflags;
 
-    //  IFLW(AAA);
     iferret_log_info_flow_op_write_0(IFLO_AAA);
 
     eflags = cc_table[CC_OP].compute_all();
@@ -1354,7 +1280,6 @@ void OPPROTO op_aas(void)
     int al, ah, af;
     int eflags;
 
-    //  IFLW(AAS);
     iferret_log_info_flow_op_write_0(IFLO_AAS);
 
     eflags = cc_table[CC_OP].compute_all();
@@ -1381,7 +1306,6 @@ void OPPROTO op_daa(void)
     int al, af, cf;
     int eflags;
 
-    //IFLW(DAA);
     iferret_log_info_flow_op_write_0(IFLO_DAA);
 
     eflags = cc_table[CC_OP].compute_all();
@@ -1412,7 +1336,6 @@ void OPPROTO op_das(void)
     int al, al1, af, cf;
     int eflags;
 
-    //  IFLW(DAS);
     iferret_log_info_flow_op_write_0(IFLO_DAS);
 
     eflags = cc_table[CC_OP].compute_all();
@@ -1446,7 +1369,6 @@ void OPPROTO op_das(void)
 /* never use it with R_CS */
 void OPPROTO op_movl_seg_T0(void)
 {
-  //  IFLW(MOVL_SEG_T0);
   iferret_log_info_flow_op_write_0(IFLO_SEG_T0);
 
     load_seg(PARAM1, T0);
@@ -1458,7 +1380,6 @@ void OPPROTO op_movl_seg_T0_vm(void)
     int selector;
     SegmentCache *sc;
 
-    //  IFLW(MOVL_SEG_T0_VM);
     iferret_log_info_flow_op_write_0(IFLO_SEG_T0_VM);
 
     selector = T0 & 0xffff;
@@ -1470,7 +1391,6 @@ void OPPROTO op_movl_seg_T0_vm(void)
 
 void OPPROTO op_movl_T0_seg(void)
 {
-  //  IFLW(MOVL_T0_SEG);
   iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_SEG);
 
     T0 = env->segs[PARAM1].selector;
@@ -1478,7 +1398,6 @@ void OPPROTO op_movl_T0_seg(void)
 
 void OPPROTO op_lsl(void)
 {
-  //  IFLW(LSL);
   iferret_log_info_flow_op_write_0(IFLO_LSL);
 
     helper_lsl();
@@ -1486,7 +1405,6 @@ void OPPROTO op_lsl(void)
 
 void OPPROTO op_lar(void)
 {
-  //  IFLW(LAR);
   iferret_log_info_flow_op_write_0(IFLO_LAR);
 
     helper_lar();
@@ -1504,7 +1422,6 @@ void OPPROTO op_verw(void)
 
 void OPPROTO op_arpl(void)
 {
-  //  IFLW(ARPL);
   iferret_log_info_flow_op_write_0(IFLO_ARPL);
 
     if ((T0 & 3) < (T1 & 3)) {
@@ -1527,7 +1444,6 @@ void OPPROTO op_arpl_update(void)
 /* T0: segment, T1:eip */
 void OPPROTO op_ljmp_protected_T0_T1(void)
 {
-  //  IFLW(LJMP_PROTECTED_T0_T1);
   iferret_log_info_flow_op_write_0(IFLO_PROTECTED_T0_T1);
 
     helper_ljmp_protected_T0_T1(PARAM1);
@@ -1535,7 +1451,6 @@ void OPPROTO op_ljmp_protected_T0_T1(void)
 
 void OPPROTO op_lcall_real_T0_T1(void)
 {
-  //  IFLW(LCALL_REAL_T0_T1);
   iferret_log_info_flow_op_write_0(IFLO_LCALL_REAL_T0_T1);
 
     helper_lcall_real_T0_T1(PARAM1, PARAM2);
@@ -1543,7 +1458,6 @@ void OPPROTO op_lcall_real_T0_T1(void)
 
 void OPPROTO op_lcall_protected_T0_T1(void)
 {
-  //  IFLW(LCALL_PROTECTED_T0_T1);
   iferret_log_info_flow_op_write_0(IFLO_LCALL_PROTECTED_T0_T1);
 
     helper_lcall_protected_T0_T1(PARAM1, PARAM2);
@@ -1551,7 +1465,6 @@ void OPPROTO op_lcall_protected_T0_T1(void)
 
 void OPPROTO op_iret_real(void)
 {
-  //  IFLW(IRET_REAL);
   iferret_log_info_flow_op_write_0(IFLO_IRET_REAL);
 
     helper_iret_real(PARAM1);
@@ -1559,7 +1472,6 @@ void OPPROTO op_iret_real(void)
 
 void OPPROTO op_iret_protected(void)
 {
-  //  IFLW(IRET_PROTECTED);
   iferret_log_info_flow_op_write_0(IFLO_IRET_PROTECTED);
 
     helper_iret_protected(PARAM1, PARAM2);
@@ -1567,7 +1479,6 @@ void OPPROTO op_iret_protected(void)
 
 void OPPROTO op_lret_protected(void)
 {
-  //  IFLW(LRET_PROTECTED);
   iferret_log_info_flow_op_write_0(IFLO_LRET_PROTECTED);
 
     helper_lret_protected(PARAM1, PARAM2);
@@ -1575,7 +1486,6 @@ void OPPROTO op_lret_protected(void)
 
 void OPPROTO op_lldt_T0(void)
 {
-  //  IFLW(LLDT_T0);
   iferret_log_info_flow_op_write_0(IFLO_LLDT_T0);
 
     helper_lldt_T0();
@@ -1583,7 +1493,6 @@ void OPPROTO op_lldt_T0(void)
 
 void OPPROTO op_ltr_T0(void)
 {
-  //  IFLW(LTR_T0);
   iferret_log_info_flow_op_write_0(IFLO_LTR_T0);
 
     helper_ltr_T0();
@@ -1592,7 +1501,6 @@ void OPPROTO op_ltr_T0(void)
 /* CR registers access */
 void OPPROTO op_movl_crN_T0(void)
 {
-  //  IFLW(MOVL_CRN_T0);
   iferret_log_info_flow_op_write_0(IFLO_MOVL_CRN_T0);
 
     helper_movl_crN_T0(PARAM1);
@@ -1641,7 +1549,6 @@ void OPPROTO op_svm_check_intercept_io(void)
 #if !defined(CONFIG_USER_ONLY)
 void OPPROTO op_movtl_T0_cr8(void)
 {
-  //  IFLW(MOVTL_T0_CR8);
   iferret_log_info_flow_op_write_0(IFLO_MOVTL_T0_CR8);
 
     T0 = cpu_get_apic_tpr(env);
@@ -1651,7 +1558,6 @@ void OPPROTO op_movtl_T0_cr8(void)
 /* DR registers access */
 void OPPROTO op_movl_drN_T0(void)
 {
-  //  IFLW(MOVL_DRN_T0);
   iferret_log_info_flow_op_write_0(IFLO_MOVL_DRN_T0);
 
     helper_movl_drN_T0(PARAM1);
@@ -1659,7 +1565,6 @@ void OPPROTO op_movl_drN_T0(void)
 
 void OPPROTO op_lmsw_T0(void)
 {
-  //  IFLW(LMSW_T0);
   iferret_log_info_flow_op_write_0(IFLO_LMSW_T0);
 
     /* only 4 lower bits of CR0 are modified. PE cannot be set to zero
@@ -1670,7 +1575,6 @@ void OPPROTO op_lmsw_T0(void)
 
 void OPPROTO op_invlpg_A0(void)
 {
-  //  IFLW(INVLPG_A0);
   iferret_log_info_flow_op_write_0(IFLO_INVLPG_A0);
 
     helper_invlpg(A0);
@@ -1678,7 +1582,6 @@ void OPPROTO op_invlpg_A0(void)
 
 void OPPROTO op_movl_T0_env(void)
 {
-  //  IFLW_ADDR(MOVL_T0_ENV, PTR_TO_ADDR(env) + PARAM1);
   iferret_log_info_flow_op_write_8(IFLO_MOVL_T0_ENV, PTR_TO_ADDR(env) + PARAM1);
 
     T0 = *(uint32_t *)((char *)env + PARAM1);
@@ -1686,7 +1589,6 @@ void OPPROTO op_movl_T0_env(void)
 
 void OPPROTO op_movl_env_T0(void)
 {
-  //  IFLW_ADDR(MOVL_ENV_T0, PTR_TO_ADDR(env) + PARAM1);
   iferret_log_info_flow_op_write_8(IFLO_MOVL_ENV_T0, PTR_TO_ADDR(env) + PARAM1);
 
     *(uint32_t *)((char *)env + PARAM1) = T0;
@@ -1694,7 +1596,6 @@ void OPPROTO op_movl_env_T0(void)
 
 void OPPROTO op_movl_env_T1(void)
 {
-  //  IFLW_ADDR(MOVL_ENV_T1, PTR_TO_ADDR(env) + PARAM1);
   iferret_log_info_flow_op_write_8(IFLO_MOVL_ENV_T1, PTR_TO_ADDR(env) + PARAM1);
 
     *(uint32_t *)((char *)env + PARAM1) = T1;
@@ -1702,7 +1603,6 @@ void OPPROTO op_movl_env_T1(void)
 
 void OPPROTO op_movtl_T0_env(void)
 {
-  //  IFLW_ADDR(MOVTL_T0_ENV, PTR_TO_ADDR(env) + PARAM1);
   iferret_log_info_flow_op_write_8(IFLO_MOVTL_T0_ENV, PTR_TO_ADDR(env) + PARAM1);
 
     T0 = *(target_ulong *)((char *)env + PARAM1);
@@ -1710,7 +1610,6 @@ void OPPROTO op_movtl_T0_env(void)
 
 void OPPROTO op_movtl_env_T0(void)
 {
-  //  IFLW_ADDR(MOVTL_ENV_T0, PTR_TO_ADDR(env) + PARAM1);
   iferret_log_info_flow_op_write_8(IFLO_MOVTL_ENV_T0, PTR_TO_ADDR(env) + PARAM1);
 
     *(target_ulong *)((char *)env + PARAM1) = T0;
@@ -1718,7 +1617,6 @@ void OPPROTO op_movtl_env_T0(void)
 
 void OPPROTO op_movtl_T1_env(void)
 {
-  //  IFLW_ADDR(MOVTL_T1_ENV, PTR_TO_ADDR(env) + PARAM1);
   iferret_log_info_flow_op_write_8(IFLO_MOVTL_T1_ENV, PTR_TO_ADDR(env) + PARAM1);
 
     T1 = *(target_ulong *)((char *)env + PARAM1);
@@ -1726,7 +1624,6 @@ void OPPROTO op_movtl_T1_env(void)
 
 void OPPROTO op_movtl_env_T1(void)
 {
-  //  IFLW_ADDR(MOVTL_ENV_T1, PTR_TO_ADDR(env) + PARAM1);
   iferret_log_info_flow_op_write_8(IFLO_MOVTL_ENV_T1, PTR_TO_ADDR(env) + PARAM1);
 
     *(target_ulong *)((char *)env + PARAM1) = T1;
@@ -1734,7 +1631,6 @@ void OPPROTO op_movtl_env_T1(void)
 
 void OPPROTO op_clts(void)
 {
-  //  IFLW(CLTS);
   iferret_log_info_flow_op_write_0(IFLO_CLTS);
 
     env->cr[0] &= ~CR0_TS_MASK;
@@ -1779,7 +1675,6 @@ void OPPROTO op_seto_T0_cc(void)
     int eflags;
     eflags = cc_table[CC_OP].compute_all();
 
-    //  IFLW(SETO_T0_CC);
     iferret_log_info_flow_op_write_0(IFLO_SETO_T0_CC);
 
     T0 = (eflags >> 11) & 1;
@@ -1787,7 +1682,6 @@ void OPPROTO op_seto_T0_cc(void)
 
 void OPPROTO op_setb_T0_cc(void)
 {
-  //  IFLW(SETB_T0_CC);
     iferret_log_info_flow_op_write_0(IFLO_SETB_T0_CC);
 
     T0 = cc_table[CC_OP].compute_c();
@@ -1798,7 +1692,6 @@ void OPPROTO op_setz_T0_cc(void)
     int eflags;
     eflags = cc_table[CC_OP].compute_all();
 
-    //  IFLW(SETZ_T0_CC);
     iferret_log_info_flow_op_write_0(IFLO_SETZ_T0_CC);
 
     T0 = (eflags >> 6) & 1;
@@ -1809,7 +1702,6 @@ void OPPROTO op_setbe_T0_cc(void)
     int eflags;
     eflags = cc_table[CC_OP].compute_all();
 
-    //  IFLW(SETBE_T0_CC);
     iferret_log_info_flow_op_write_0(IFLO_SETBE_T0_CC);
 
     T0 = (eflags & (CC_Z | CC_C)) != 0;
@@ -1820,7 +1712,6 @@ void OPPROTO op_sets_T0_cc(void)
     int eflags;
     eflags = cc_table[CC_OP].compute_all();
 
-    //  IFLW(SETS_T0_CC);
     iferret_log_info_flow_op_write_0(IFLO_SETS_T0_CC);
 
     T0 = (eflags >> 7) & 1;
@@ -1831,7 +1722,6 @@ void OPPROTO op_setp_T0_cc(void)
     int eflags;
     eflags = cc_table[CC_OP].compute_all();
 
-    //  IFLW(SETP_T0_CC);
     iferret_log_info_flow_op_write_0(IFLO_SETP_T0_CC);
 
     T0 = (eflags >> 2) & 1;
@@ -1842,7 +1732,6 @@ void OPPROTO op_setl_T0_cc(void)
     int eflags;
     eflags = cc_table[CC_OP].compute_all();
 
-    //  IFLW(SETL_T0_CC);
     iferret_log_info_flow_op_write_0(IFLO_SETL_T0_CC);
 
     T0 = ((eflags ^ (eflags >> 4)) >> 7) & 1;
@@ -1853,7 +1742,6 @@ void OPPROTO op_setle_T0_cc(void)
     int eflags;
     eflags = cc_table[CC_OP].compute_all();
 
-    //  IFLW(SETLE_T0_CC);
     iferret_log_info_flow_op_write_0(IFLO_SETLE_T0_CC);
 
     T0 = (((eflags ^ (eflags >> 4)) & 0x80) || (eflags & CC_Z)) != 0;
@@ -1862,7 +1750,6 @@ void OPPROTO op_setle_T0_cc(void)
 // flip 0 bit
 void OPPROTO op_xor_T0_1(void)
 {
-  //  IFLW(XOR_T0_1);
     iferret_log_info_flow_op_write_0(IFLO_XOR_T0_1);
 
     T0 ^= 1;
@@ -1875,7 +1762,6 @@ void OPPROTO op_set_cc_op(void)
 
 void OPPROTO op_mov_T0_cc(void)
 {
-  //  IFLW(MOV_T0_CC);
     iferret_log_info_flow_op_write_0(IFLO_MOV_T0_CC);
 
     T0 = cc_table[CC_OP].compute_all();
@@ -1885,7 +1771,6 @@ void OPPROTO op_mov_T0_cc(void)
 
 void OPPROTO op_movl_eflags_T0(void)
 {
-  //  IFLW(MOVL_EFLAGS_T0);
     iferret_log_info_flow_op_write_0(IFLO_MOVL_EFLAGS_T0);
 
     load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK));
@@ -1893,7 +1778,6 @@ void OPPROTO op_movl_eflags_T0(void)
 
 void OPPROTO op_movw_eflags_T0(void)
 {
-  //  IFLW(MOVW_EFLAGS_T0);
     iferret_log_info_flow_op_write_0(IFLO_MOVW_EFLAGS_T0);
 
     load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK) & 0xffff);
@@ -1901,7 +1785,6 @@ void OPPROTO op_movw_eflags_T0(void)
 
 void OPPROTO op_movl_eflags_T0_io(void)
 {
-  //  IFLW(MOVL_EFLAGS_T0_IO);
     iferret_log_info_flow_op_write_0(IFLO_MOVL_EFLAGS_T0_IO);
 
     load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK | IF_MASK));
@@ -1909,7 +1792,6 @@ void OPPROTO op_movl_eflags_T0_io(void)
 
 void OPPROTO op_movw_eflags_T0_io(void)
 {
-  //  IFLW(MOVW_EFLAGS_T0_IO);
     iferret_log_info_flow_op_write_0(IFLO_MOVW_EFLAGS_T0_IO);
 
     load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK | IF_MASK) & 0xffff);
@@ -1917,7 +1799,6 @@ void OPPROTO op_movw_eflags_T0_io(void)
 
 void OPPROTO op_movl_eflags_T0_cpl0(void)
 {
-  //  IFLW(MOVL_EFLAGS_T0_CPL0);
     iferret_log_info_flow_op_write_0(IFLO_MOVL_EFLAGS_T0_CPL0);
 
     load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK | IF_MASK | IOPL_MASK));
@@ -1925,7 +1806,6 @@ void OPPROTO op_movl_eflags_T0_cpl0(void)
 
 void OPPROTO op_movw_eflags_T0_cpl0(void)
 {
-  //  IFLW(MOVW_EFLAGS_T0_CPL0);
     iferret_log_info_flow_op_write_0(IFLO_MOVW_EFLAGS_T0_CPL0);
 
     load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK | IF_MASK | IOPL_MASK) & 0xffff);
@@ -1977,7 +1857,6 @@ void OPPROTO op_movb_eflags_T0(void)
 {
     int of;
 
-    //  IFLW(MOVB_EFLAGS_T0);
     iferret_log_info_flow_op_write_0(IFLO_MOVB_EFLAGS_T0);
 
     of = cc_table[CC_OP].compute_all() & CC_O;
@@ -1988,7 +1867,6 @@ void OPPROTO op_movl_T0_eflags(void)
 {
     int eflags;
 
-    //  IFLW(MOVL_T0_EFLAGS);
     iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_EFLAGS);
 
     eflags = cc_table[CC_OP].compute_all();
@@ -2050,7 +1928,6 @@ void OPPROTO op_salc(void)
     int cf;
     cf = cc_table[CC_OP].compute_c();
 
-    //    IFLW(SALC); 
     iferret_log_info_flow_op_write_0(IFLO_SALC);
 
     EAX = (EAX & ~0xff) | ((-cf) & 0xff);
@@ -2804,7 +2681,6 @@ void OPPROTO op_fnstsw_EAX(void)
     int fpus;
     fpus = (env->fpus & ~0x3800) | (env->fpstt & 0x7) << 11;
 
-    //  IFLW(FNSTSW_EAX);
     iferret_log_info_flow_op_write_0(IFLO_FNSTSW_EAX);
 
     EAX = (EAX & ~0xffff) | fpus;
