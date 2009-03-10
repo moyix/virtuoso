@@ -671,77 +671,77 @@ char *iferret_log_arg_format[] = {
   // 132 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDL_T0_A0,MEMSUFFIXNUM,PHYS_A0);
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDL_T0_A0,MEMSUFFIXNUM,phys_a0());
   "18",
   // 133 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDL_T1_A0,MEMSUFFIXNUM,PHYS_A0);
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDL_T1_A0,MEMSUFFIXNUM,phys_a0());
   "18",
   // 134 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T0_A0,MEMSUFFIXNUM,PHYS_A0);
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T0_A0,MEMSUFFIXNUM,phys_a0());
   "18",
   // 135 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T1_A0,MEMSUFFIXNUM,PHYS_A0);
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T1_A0,MEMSUFFIXNUM,phys_a0());
   "18",
   // 136 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSW_T0_A0,MEMSUFFIXNUM,PHYS_A0);
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSW_T0_A0,MEMSUFFIXNUM,phys_a0());
   "18",
   // 137 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSW_T1_A0,MEMSUFFIXNUM,PHYS_A0);
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSW_T1_A0,MEMSUFFIXNUM,phys_a0());
   "18",
   // 138 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T0_A0,MEMSUFFIXNUM,PHYS_A0);
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T0_A0,MEMSUFFIXNUM,phys_a0());
   "18",
   // 139 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T1_A0,MEMSUFFIXNUM,PHYS_A0);
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T1_A0,MEMSUFFIXNUM,phys_a0());
   "18",
   // 140 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T0_A0,MEMSUFFIXNUM,PHYS_A0);  
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T0_A0,MEMSUFFIXNUM,phys_a0());  
   "18",
   // 141 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T1_A0,MEMSUFFIXNUM,PHYS_A0);
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T1_A0,MEMSUFFIXNUM,phys_a0());
   "18",
   // 142 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STB_T0_A0,MEMSUFFIXNUM,PHYS_A0);
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STB_T0_A0,MEMSUFFIXNUM,phys_a0());
   "18",
   // 143 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STL_T0_A0,MEMSUFFIXNUM,PHYS_A0);
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STL_T0_A0,MEMSUFFIXNUM,phys_a0());
   "18",
   // 144 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STL_T1_A0,MEMSUFFIXNUM,PHYS_A0);
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STL_T1_A0,MEMSUFFIXNUM,phys_a0());
   "18",
   // 145 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STW_T0_A0,MEMSUFFIXNUM,PHYS_A0);
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STW_T0_A0,MEMSUFFIXNUM,phys_a0());
   "18",
   // 146 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STW_T1_A0,MEMSUFFIXNUM,PHYS_A0);
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STW_T1_A0,MEMSUFFIXNUM,phys_a0());
   "18",
   // 147 
 // ./target-i386/ops_template_mem.h
@@ -751,7 +751,7 @@ char *iferret_log_arg_format[] = {
   // 148 
 // ./target-i386/ops_template_mem.h
 
-// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ADC_T0_T1_CC_MEMWRITE,SHIFT,PHYS_A0);
+// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ADC_T0_T1_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 149 
 // ./target-i386/ops_template.h
@@ -796,7 +796,7 @@ char *iferret_log_arg_format[] = {
   // 157 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE,SHIFT,PHYS_A0);
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 158 
 // ./target-i386/ops_template.h
@@ -891,7 +891,7 @@ char *iferret_log_arg_format[] = {
   // 176 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_RCL_T0_T1_CC_MEMWRITE,SHIFT,PHYS_A0);
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_RCL_T0_T1_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 177 
 // ./target-i386/ops_template_mem.h
@@ -901,7 +901,7 @@ char *iferret_log_arg_format[] = {
   // 178 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_RCR_T0_T1_CC_MEMWRITE,SHIFT,PHYS_A0);
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_RCR_T0_T1_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 179 
 // ./target-i386/ops_template_mem.h
@@ -916,12 +916,12 @@ char *iferret_log_arg_format[] = {
   // 181 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_CC_MEMWRITE,SHIFT,PHYS_A0);
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 182 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_MEMRITE,SHIFT,PHYS_A0);
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_MEMRITE,SHIFT,phys_a0());
   "18",
   // 183 
 // ./target-i386/ops_template_mem.h
@@ -936,12 +936,12 @@ char *iferret_log_arg_format[] = {
   // 185 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_CC_MEMRITE,SHIFT,PHYS_A0);
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_CC_MEMRITE,SHIFT,phys_a0());
   "18",
   // 186 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_MEMWRITE,SHIFT,PHYS_A0);
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 187 
 // ./target-i386/ops_template.h
@@ -956,7 +956,7 @@ char *iferret_log_arg_format[] = {
   // 189 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SAR_T0_T1_CC_MEMWRITE,SHIFT,PHYS_A0);
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SAR_T0_T1_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 190 
 // ./target-i386/ops_template_mem.h
@@ -966,7 +966,7 @@ char *iferret_log_arg_format[] = {
   // 191 
 // ./target-i386/ops_template_mem.h
 
-// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SBB_T0_T1_CC_MEMWRITE,SHIFT,PHYS_A0);
+// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SBB_T0_T1_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 192 
 // ./target-i386/ops_template.h
@@ -1006,7 +1006,7 @@ char *iferret_log_arg_format[] = {
   // 199 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE,SHIFT,PHYS_A0);
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 200 
 // ./target-i386/ops_template_mem.h
@@ -1016,7 +1016,7 @@ char *iferret_log_arg_format[] = {
   // 201 
 // ./target-i386/ops_template_mem.h
 
-// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE,SHIFT,PHYS_A0);
+// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 202 
 // ./target-i386/ops_template.h
@@ -1031,7 +1031,7 @@ char *iferret_log_arg_format[] = {
   // 204 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHL_T0_T1_CC_MEMWRITE,SHIFT,PHYS_A0);
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHL_T0_T1_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 205 
 // ./target-i386/ops_template_mem.h
@@ -1041,7 +1041,7 @@ char *iferret_log_arg_format[] = {
   // 206 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE,SHIFT,PHYS_A0);
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 207 
 // ./target-i386/ops_template_mem.h
@@ -1051,7 +1051,7 @@ char *iferret_log_arg_format[] = {
   // 208 
 // ./target-i386/ops_template_mem.h
 
-// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,PHYS_A0);
+// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 209 
 // ./target-i386/ops_template.h
@@ -1066,7 +1066,7 @@ char *iferret_log_arg_format[] = {
   // 211 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE, SHIFT, PHYS_A0);
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE, SHIFT, phys_a0());
   "18",
   // 212 
 // ./target-i386/op.c
@@ -1170,7 +1170,7 @@ char *iferret_log_arg_format[] = {
 // ./target-i386/iferret_syscall.c
 
 // --> 	iferret_log_op_write_44(IFLO_SPAWN_NEW_PID,EAX,element.syscall.pid);
-  "44",
+  "4444",
   // 232 
 // ./target-i386/op.c
 
@@ -1204,7 +1204,7 @@ char *iferret_log_arg_format[] = {
   // 238 
 // ./target-i386/helper.c
 
-// -->   iferret_log_op_write_4(IFLO_TB_HEAD_EIP, cpu_get_phys_addr(env,EIP));
+// -->     iferret_log_op_write_4(IFLO_TB_HEAD_EIP, addr);
   "4",
   // 239 
 // ./target-i386/helper.c

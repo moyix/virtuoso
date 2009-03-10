@@ -4779,7 +4779,11 @@ void vmexit(uint64_t exit_code, uint64_t exit_info_1)
 
 void write_eip_to_iferret_log() {
 #ifdef IFERRET_PHYS_EIP
-  iferret_log_op_write_4(IFLO_TB_HEAD_EIP, cpu_get_phys_addr(env,EIP));
+  uint32_t addr;
+  addr = cpu_get_phys_addr(env,EIP);
+  if (addr != -1) {
+    iferret_log_op_write_4(IFLO_TB_HEAD_EIP, addr);
+  }
 #endif // IFERRET_PHYS_EIP
 }
 

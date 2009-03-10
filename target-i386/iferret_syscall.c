@@ -126,7 +126,7 @@ static inline target_ulong get_task_struct_ptr (target_ulong current_esp) {
      cpu_physical_memory_read(paddr, (char *) &current_task, 4);
      return (current_task);
   }
-  assert (paddr != -1);
+  //  assert (paddr != -1);
   return (0);
 }
 
@@ -140,6 +140,9 @@ void iferret_get_current_pid_uid() {
 
   // compute current pid &c
   current_task = get_task_struct_ptr(ESP);
+  if (current_task == 0) 
+    return;
+
   copy_task_struct_slot(current_task, PID_OFFSET, PID_SIZE, (char *) &current_pid);
   copy_task_struct_slot(current_task, UID_OFFSET, UID_SIZE, (char *) &current_uid);  
   //  copy_task_struct_slot(current_task, COMM_OFFSET, COMM_SIZE, current_command);
@@ -227,6 +230,8 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
   
   // find current_task, the ptr to the currently executing process' task_struct
   current_task = get_task_struct_ptr(ESP);
+  if (current_task == 0) 
+    return;
   
   // grab process id, uid and command string. 
   copy_task_struct_slot(current_task, PID_OFFSET, PID_SIZE, (char *) &pid);
@@ -337,6 +342,9 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
     
   // get addr of pointer to current task
   current_task = get_task_struct_ptr(callsite_esp);
+  if (current_task == 0) 
+    return;
+
   //  printf ("current_task = 0x%x\n", current_task);
   
   pid = 0;

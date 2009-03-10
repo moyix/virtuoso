@@ -44,6 +44,22 @@ static inline target_long lshift(target_long x, int n)
         return x >> (-n);
 }
 
+// from helper2.c
+target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
+
+
+static inline int phys_a0() {
+  int addr;
+  addr = cpu_get_phys_addr(env,A0); 
+  if (addr == -1)
+    return 0;
+  else
+    return addr;
+}
+
+
+
+
 /* we define the various pieces of code used by the JIT */
 
 #define REG EAX

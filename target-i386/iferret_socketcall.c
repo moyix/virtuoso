@@ -31,8 +31,8 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
   case 1: // socket
     { 
       int family, type, protocol, *ptr;
-      paddr = cpu_get_phys_addr(env, ECX);
       char tempbuf[1024];
+      paddr = cpu_get_phys_addr(env, ECX);
       if (paddr!=-1)       {
 	bzero(tempbuf, 120);
 	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
