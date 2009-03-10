@@ -4823,7 +4823,7 @@ void write_spawn_to_iferret_log() {
 
 void helper_manage_pid_stuff() {
 #ifdef IFERRET_PUID_EVERY_TB
-  get_current_pid_uid();    
+  iferret_get_current_pid_uid();    
 #endif
 }
 

@@ -670,77 +670,77 @@ IFLO_OPREG_TEMPL_MOVW_R_T1,
 // 132 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDL_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDL_T0_A0,MEMSUFFIXNUM,PHYS_A0);
 IFLO_OPS_MEM_LDL_T0_A0,
 // 133 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDL_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDL_T1_A0,MEMSUFFIXNUM,PHYS_A0);
 IFLO_OPS_MEM_LDL_T1_A0,
 // 134 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T0_A0,MEMSUFFIXNUM,PHYS_A0);
 IFLO_OPS_MEM_LDSB_T0_A0,
 // 135 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T1_A0,MEMSUFFIXNUM,PHYS_A0);
 IFLO_OPS_MEM_LDSB_T1_A0,
 // 136 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSW_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSW_T0_A0,MEMSUFFIXNUM,PHYS_A0);
 IFLO_OPS_MEM_LDSW_T0_A0,
 // 137 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSW_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSW_T1_A0,MEMSUFFIXNUM,PHYS_A0);
 IFLO_OPS_MEM_LDSW_T1_A0,
 // 138 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T0_A0,MEMSUFFIXNUM,PHYS_A0);
 IFLO_OPS_MEM_LDUB_T0_A0,
 // 139 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T1_A0,MEMSUFFIXNUM,PHYS_A0);
 IFLO_OPS_MEM_LDUB_T1_A0,
 // 140 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));  
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T0_A0,MEMSUFFIXNUM,PHYS_A0);  
 IFLO_OPS_MEM_LDUW_T0_A0,
 // 141 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T1_A0,MEMSUFFIXNUM,PHYS_A0);
 IFLO_OPS_MEM_LDUW_T1_A0,
 // 142 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STB_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STB_T0_A0,MEMSUFFIXNUM,PHYS_A0);
 IFLO_OPS_MEM_STB_T0_A0,
 // 143 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STL_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STL_T0_A0,MEMSUFFIXNUM,PHYS_A0);
 IFLO_OPS_MEM_STL_T0_A0,
 // 144 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STL_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STL_T1_A0,MEMSUFFIXNUM,PHYS_A0);
 IFLO_OPS_MEM_STL_T1_A0,
 // 145 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STW_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STW_T0_A0,MEMSUFFIXNUM,PHYS_A0);
 IFLO_OPS_MEM_STW_T0_A0,
 // 146 
 // ./target-i386/ops_mem.h
 
-// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STW_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+// -->   iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_STW_T1_A0,MEMSUFFIXNUM,PHYS_A0);
 IFLO_OPS_MEM_STW_T1_A0,
 // 147 
 // ./target-i386/ops_template_mem.h
@@ -750,7 +750,7 @@ IFLO_OPS_TEMPLATE_ADC_T0_T1_CC,
 // 148 
 // ./target-i386/ops_template_mem.h
 
-// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ADC_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ADC_T0_T1_CC_MEMWRITE,SHIFT,PHYS_A0);
 IFLO_OPS_TEMPLATE_ADC_T0_T1_CC_MEMWRITE,
 // 149 
 // ./target-i386/ops_template.h
@@ -795,7 +795,7 @@ IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_CASE2,
 // 157 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE,SHIFT,PHYS_A0);
 IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE,
 // 158 
 // ./target-i386/ops_template.h
@@ -890,7 +890,7 @@ IFLO_OPS_TEMPLATE_RCL_T0_T1_CC,
 // 176 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_RCL_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_RCL_T0_T1_CC_MEMWRITE,SHIFT,PHYS_A0);
 IFLO_OPS_TEMPLATE_RCL_T0_T1_CC_MEMWRITE,
 // 177 
 // ./target-i386/ops_template_mem.h
@@ -900,7 +900,7 @@ IFLO_OPS_TEMPLATE_RCR_T0_T1_CC,
 // 178 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_RCR_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_RCR_T0_T1_CC_MEMWRITE,SHIFT,PHYS_A0);
 IFLO_OPS_TEMPLATE_RCR_T0_T1_CC_MEMWRITE,
 // 179 
 // ./target-i386/ops_template_mem.h
@@ -915,12 +915,12 @@ IFLO_OPS_TEMPLATE_ROL_T0_T1_CC,
 // 181 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_CC_MEMWRITE,SHIFT,PHYS_A0);
 IFLO_OPS_TEMPLATE_ROL_T0_T1_CC_MEMWRITE,
 // 182 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_MEMRITE,SHIFT,cpu_get_phys_addr(env,A0));
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_MEMRITE,SHIFT,PHYS_A0);
 IFLO_OPS_TEMPLATE_ROL_T0_T1_MEMRITE,
 // 183 
 // ./target-i386/ops_template_mem.h
@@ -935,12 +935,12 @@ IFLO_OPS_TEMPLATE_ROR_T0_T1_CC,
 // 185 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_CC_MEMRITE,SHIFT,cpu_get_phys_addr(env,A0));
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_CC_MEMRITE,SHIFT,PHYS_A0);
 IFLO_OPS_TEMPLATE_ROR_T0_T1_CC_MEMRITE,
 // 186 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_MEMWRITE,SHIFT,PHYS_A0);
 IFLO_OPS_TEMPLATE_ROR_T0_T1_MEMWRITE,
 // 187 
 // ./target-i386/ops_template.h
@@ -955,7 +955,7 @@ IFLO_OPS_TEMPLATE_SAR_T0_T1_CC,
 // 189 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SAR_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SAR_T0_T1_CC_MEMWRITE,SHIFT,PHYS_A0);
 IFLO_OPS_TEMPLATE_SAR_T0_T1_CC_MEMWRITE,
 // 190 
 // ./target-i386/ops_template_mem.h
@@ -965,7 +965,7 @@ IFLO_OPS_TEMPLATE_SBB_T0_T1_CC,
 // 191 
 // ./target-i386/ops_template_mem.h
 
-// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SBB_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SBB_T0_T1_CC_MEMWRITE,SHIFT,PHYS_A0);
 IFLO_OPS_TEMPLATE_SBB_T0_T1_CC_MEMWRITE,
 // 192 
 // ./target-i386/ops_template.h
@@ -1005,7 +1005,7 @@ IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC,
 // 199 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE,SHIFT,PHYS_A0);
 IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE,
 // 200 
 // ./target-i386/ops_template_mem.h
@@ -1015,7 +1015,7 @@ IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC,
 // 201 
 // ./target-i386/ops_template_mem.h
 
-// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE,SHIFT,PHYS_A0);
 IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE,
 // 202 
 // ./target-i386/ops_template.h
@@ -1030,7 +1030,7 @@ IFLO_OPS_TEMPLATE_SHL_T0_T1_CC,
 // 204 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHL_T0_T1_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHL_T0_T1_CC_MEMWRITE,SHIFT,PHYS_A0);
 IFLO_OPS_TEMPLATE_SHL_T0_T1_CC_MEMWRITE,
 // 205 
 // ./target-i386/ops_template_mem.h
@@ -1040,7 +1040,7 @@ IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC,
 // 206 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE,SHIFT,PHYS_A0);
 IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE,
 // 207 
 // ./target-i386/ops_template_mem.h
@@ -1050,7 +1050,7 @@ IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC,
 // 208 
 // ./target-i386/ops_template_mem.h
 
-// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,cpu_get_phys_addr(env,A0));
+// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,PHYS_A0);
 IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE,
 // 209 
 // ./target-i386/ops_template.h
@@ -1065,7 +1065,7 @@ IFLO_OPS_TEMPLATE_SHR_T0_T1_CC,
 // 211 
 // ./target-i386/ops_template_mem.h
 
-// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE, SHIFT, cpu_get_phys_addr(env,A0));
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE, SHIFT, PHYS_A0);
 IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE,
 // 212 
 // ./target-i386/op.c
