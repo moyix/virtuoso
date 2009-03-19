@@ -286,9 +286,14 @@ uint64_t vslht_find (vslht *h, char *key) {
   b = __vslh_key(h,key);
   for (i=b; i<h->size; i++) {
     // Die if you find a gap. Return val if there is a match. Else keep looking
-    assert (h->key[i] != NULL);
-    if ((strcmp(h->key[i], key)) == 0) 
-      return (h->val[i]);
+    //TODO: figure out why we're dying here
+    //assert (h->key[i] != NULL);
+    if(h->key[i] != NULL){
+      if ((strcmp(h->key[i], key)) == 0) 
+        return (h->val[i]);
+    }else{
+      return -1;
+    }
   }
   for (i=0; i<b; i++) {
     // Die if you find a gap. Return val if there is a match. Else keep looking

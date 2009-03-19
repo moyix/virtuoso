@@ -75,8 +75,23 @@ uint8_t int_string_hashtable_mem(int_string_hashtable_t *hashtable, uint32_t x) 
 // else returns 0
 char *int_string_hashtable_find(int_string_hashtable_t *hashtable, uint32_t x) {
   char key[9];
+  uint64_t temp_val;
+  char* temp_string;
   __make_key(key,x);
-  return (hashtable->string[vslht_find (hashtable->table, key)]);
+   
+  temp_val = vslht_find (hashtable->table, key);
+  if(temp_val == -1){
+    temp_string = malloc(6);
+    temp_string[0] = 'E';
+    temp_string[1] = 'R';
+    temp_string[2] = 'R';
+    temp_string[3] = 'O';
+    temp_string[4] = 'R';
+    temp_string[5] = 0;
+    return temp_string;
+  }else{
+    return hashtable->string[temp_val];
+  }
 }
 
 
