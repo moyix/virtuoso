@@ -15,6 +15,7 @@
    $LastChangedBy$
 */
 
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -39,13 +40,14 @@ static uint32_t __vslh_key(vslht *, char *);
 static uint32_t __vslh_log2 (int);
 //static uint32_t __vslh_2_to_the_power (uint32_t);
 
+
 void *trl_malloc(size_t n) {
   void *foo;
-
   foo = malloc(n);
   assert(foo!=NULL);
   return (foo);
 }
+
 
 void *trl_calloc(size_t n) {
   void *foo;
@@ -54,6 +56,7 @@ void *trl_calloc(size_t n) {
   return (foo);
 }
 
+
 void trl_free(void *foo) {
   free(foo);
 }
@@ -61,13 +64,11 @@ void trl_free(void *foo) {
 
 char *trl_strdup(char *foo) {
   char *another_foo;
-  
   another_foo = (char *) trl_malloc(1+strlen(foo));
   strcpy(another_foo, foo);
   return(another_foo);
 }
   
-
 
 /**
    Return a new VSLHT.
@@ -113,6 +114,24 @@ void vslht_free (vslht *h) {
 }
 
 
+/* If there is an empty bin at i, then add a key/val pair.              
+   Otherwise, if key[i] i matches key, then change the value there. 
+   Or, if neither are true, do nothing.     */
+static inline int __maybe_add(vslht *h, int i, char *key, uint64_t val) {
+  if (h->key[i] == NULL) {
+    h->key[i] = (char *) trl_strdup(key);
+    h->val[i] = val;
+    h->occ ++;
+    return 1;
+  }
+  else if ((strcmp(key,h->key[i])) == 0) {
+    h->val[i] = val;   
+    return 1;
+  }
+  return 0;
+}
+
+
 /**
    Add an key/value pair to the VSLHT.  
    Resize the table, if necessary, before adding the pair.
@@ -126,66 +145,43 @@ void vslht_free (vslht *h) {
 */
 /* Details.  
    
-In adding a new key/value pair, we resize the table if occupancy
-goes over the fraction OCC_FRACTION.                                
+   In adding a new key/value pair, we resize the table if occupancy
+   goes over the fraction OCC_FRACTION.                                
    
-Our hash table is a very simple one: a pair of arrays.                  
-You heard it right, there are no buckets here.                          
-I said it was very simple.                                              
-
-We use the hash value, b, that we obtain from                       
-our key string as an initial guess at the ``right''                 
-array index at which to store the key and its value. 
-Starting with b, we search linearly in the h->key array,        
-looking for a place to put key,val, wrapping around if necessary.
-If, in our linear search, we find key in the table                  
-already, then this is an update; we change the corresponding            
-value.                                                                  
-If, on the other hand, we come across a NULL key that means         
-the key is new to the table and so we insert the pair in                
-their two arrays at that index.                                         
-
-Notice this OCC_FRACTION stuff.                                     
-We require that the occupancy of the table (fraction of array slots     
-containing a key) be kept below OCC_FRACTION.       
-The value of 0.8 that we use for OCC_FRACTION was chosen empirically
-as a good trade-off between unused space and update time. 
+   Our hash table is a very simple one: a pair of arrays.                  
+   You heard it right, there are no buckets here.                          
+   I said it was very simple.                                              
+   
+   We use the hash value, b, that we obtain from                       
+   our key string as an initial guess at the ``right''                 
+   array index at which to store the key and its value. 
+   Starting with b, we search linearly in the h->key array,        
+   looking for a place to put key,val, wrapping around if necessary.
+   If, in our linear search, we find key in the table                  
+   already, then this is an update; we change the corresponding            
+   value.                                                                  
+   If, on the other hand, we come across a NULL key that means         
+   the key is new to the table and so we insert the pair in                
+   their two arrays at that index.                                         
+   
+   Notice this OCC_FRACTION stuff.                                     
+   We require that the occupancy of the table (fraction of array slots     
+   containing a key) be kept below OCC_FRACTION.       
+   The value of 0.8 that we use for OCC_FRACTION was chosen empirically
+   as a good trade-off between unused space and update time. 
 */                                           
 void vslht_add (vslht *h, char *key, uint64_t val) {
   uint32_t i,b;
-  if ( h->occ >= ((float) h->size) * OCC_FRACTION) 
+  if ( h->occ >= ((float) h->size) * OCC_FRACTION) {
     // resize hash if necessary
     __vslht_resize (h);
+  }
   b = __vslh_key (h,key);
   for (i=b; i<h->size; i++) {
-    /* If there is an empty bin at i, then add a key/val pair.              
-       Otherwise, if key[i] i matches key, then change the value there. 
-       Or, if neither are true, do nothing.     */
-    if (h->key[i] == NULL) {
-      h->key[i] = (char *) trl_strdup(key);
-      h->val[i] = val;
-      h->occ ++;
-      return ;
-    }
-    else if ((strcmp(key,h->key[i])) == 0) {
-      h->val[i] = val;   
-      return;
-    }
+    if (__maybe_add(h,i,key,val)) return;
   }
   for (i=0; i<b; i++) {
-    /* If there is an empty bin at i, then add a key/val pair.              
-       Otherwise, if the key at i matches key, then change the value there. 
-       Or if neither are true, do nothing.  */
-    if (h->key[i] == NULL) {
-      h->key[i] = (char *) trl_strdup(key);
-      h->val[i] = val;
-      h->occ ++;
-      return ;
-    }
-    else if ((strcmp(key,h->key[i])) == 0) {
-      h->val[i] = val;   
-      return;
-    }
+    if (__maybe_add(h,i,key,val)) return;
   }
 }
 
@@ -218,7 +214,7 @@ uint32_t vslht_mem(vslht *h, char *key) {
     }
   }
   for (i=0; i<b; i++) {
-    // Return false if you find a gap. Return true if there is a match. Else keep looking    
+    // ditto 
     if (h->key[i] == NULL) 
       return (FALSE);
     else if ((strcmp(h->key[i], key)) == 0) {
@@ -229,33 +225,30 @@ uint32_t vslht_mem(vslht *h, char *key) {
 }
 
 
+static inline int __maybe_remove(vslht *h, int i, char *key) {
+  // if you find a gap that means key isn't anywhere -- return
+  if (h->key[i] == NULL) 
+    return 1;
+  else if ((strcmp(h->key[i], key)) == 0) {
+    // found it -- remove
+    free(h->key[i]);
+    h->key[i] = NULL;
+    h->occ --;
+    return 1;
+  }
+  return 0;
+}
+
+
 // remove key/val from table
 void vslht_remove(vslht *h, char *key) {
   uint32_t i,b;
   b = __vslh_key(h,key);
   for (i=b; i<h->size; i++) {
-    // if you find a gap that means key isn't anywhere -- return
-    if (h->key[i] == NULL) 
-      return;
-    else if ((strcmp(h->key[i], key)) == 0) {
-      // found it -- remove
-      free(h->key[i]);
-      h->key[i] = NULL;
-      h->occ --;
-      return;
-    }
+    if (__maybe_remove(h,i,key)) return;
   }
   for (i=0; i<b; i++) {
-    // found a gap -- return
-    if (h->key[i] == NULL) 
-      return;
-    else if ((strcmp(h->key[i], key)) == 0) {
-      // found it -- remove
-      free(h->key[i]);
-      h->key[i] = NULL;
-      h->occ --;
-      return;
-    }
+    if (__maybe_remove(h,i,key)) return;    
   }
   // I guess this means no gaps and key not there? 
   //  only possible if full occupancy
@@ -274,12 +267,12 @@ void vslht_remove(vslht *h, char *key) {
 */
 /* Details.  
    
-Retrieve value from the hash table for key.                        
-Fail (as in exit(-1)) if asked for a value that don't exist.                            
-Again, we search linearly until we either find key, in which       
-case we return the corresponding value, or until we                  
-encounter a NULL value in which case we fail since we were    
-asked to retreive a value not in the table.                   
+   Retrieve value from the hash table for key.                        
+   Fail (as in exit(-1)) if asked for a value that don't exist.                            
+   Again, we search linearly until we either find key, in which       
+   case we return the corresponding value, or until we                  
+   encounter a NULL value in which case we fail since we were    
+   asked to retreive a value not in the table.                   
 */
 uint64_t vslht_find (vslht *h, char *key) {
   uint32_t i,b;
@@ -406,7 +399,7 @@ static vslht *__vslht_new_size (uint32_t size) {
 /* <Function __vslht_resize doubles the size of a hash table>=          */
 static void __vslht_resize (vslht *h) {
   vslht *h2;
-  h2 = __vslht_new_size(h->size*2);
+  h2 = __vslht_new_size(h->size * 2);
   vslht_copy (h,h2); 
   __vslht_free_keys (h);
   trl_free (h->val);
@@ -616,3 +609,90 @@ static uint32_t __vslh_log2 (int x) {
 /*                                                                          */
 /* <Miscellaneous functions>=                                               */
 
+void rand_key(char *k, int n) {
+  int i;
+
+  for (i=0; i<n-1; i++) {
+    k[i] = rand() % 26 + 'a';
+  }
+  k[n-1] = '\0';
+}
+
+
+#define MAX_KEYSIZE 1024
+
+
+void test(int n, int keysize, int vslht_debug) {
+  int i, size;
+  vslht *h;
+  char key[MAX_KEYSIZE];
+  
+  assert (keysize < MAX_KEYSIZE);
+  h = vslht_new();
+  size = 0;
+  for (i=0; i<n; i++) {
+    if (vslht_debug) printf ("i=%d\n", i);
+    rand_key(key,keysize);
+    if (vslht_debug) printf ("key = [%s]\n", key);
+    if (vslht_mem(h,key)) {
+      // already there.  size shouldnt change
+      if (vslht_debug) printf ("already there.\n");
+    }
+    else {
+      // not there.  size will increase
+      if (vslht_debug) printf ("new.\n");
+      size ++;
+    }
+    vslht_add(h,key,1);
+    // better be there.
+    if (!(vslht_mem(h,key))) {
+      printf ("mem failed after add?\n");
+      printf ("i=%d\n", i);
+      exit (1);
+    }
+    if (vslht_debug) printf ("mem succeeded after add.\n");
+    // also, size should agree with our computation
+    if ((vslht_occ(h)) != size) {
+      printf ("vslht_occ(h)=%d size=%d\n", vslht_occ(h), size);
+      printf ("size doesn't make sense after add.\n");
+      printf ("i=%d\n", i);
+      exit(1);
+    }
+    if (vslht_debug) {
+	printf ("vslht_occ(h)=%d size=%d\n", vslht_occ(h), size);
+	printf ("size makes sense after add.\n");
+    }
+    if (((rand()) % 4) == 0) {
+      vslht_remove(h,key);
+      size --;
+      // again make sure size makes sense
+      if ((vslht_occ(h)) != size) {
+	printf ("vslht_occ(h)=%d size=%d\n", vslht_occ(h), size);
+	printf ("size doesn't make sense after remove.\n");
+	printf ("i=%d\n", i);
+	exit(1);
+      }
+      if (vslht_debug) {
+	printf ("vslht_occ(h)=%d size=%d\n", vslht_occ(h), size);
+      	printf ("size makes sense after remove.\n");
+      }
+    }
+  }
+  vslht_free(h);
+}
+
+
+int main (int argc, char **argv) {
+  int i;
+
+  if (argc != 6) {
+    printf ("Usage foo seed num_tests num_keys_per_test key_size debug\n");
+    exit(1);
+  }
+  srand(atoi(argv[1]));
+  for (i=0; i<atoi(argv[2]); i++) {
+    printf ("test %d \n", i);
+    test(atoi(argv[3]), atoi(argv[4]), atoi(argv[5]));
+  }
+
+}
