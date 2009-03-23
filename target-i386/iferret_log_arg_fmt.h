@@ -290,7 +290,7 @@ char *iferret_log_arg_format[] = {
 // ./target-i386/ops_template.h
 
 // -->     iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2,IFRBA(IFRN_T0),4);    
-  "81",
+  "84",
   // 56 
 // ./target-i386/op.c
 
