@@ -74,7 +74,7 @@ uint8_t int_int_hashtable_mem(int_int_hashtable_t *hashtable, uint32_t x) {
 uint64_t int_int_hashtable_find(int_int_hashtable_t *hashtable, uint32_t x) {
   char key[17];
   __make_key(key,x);
-  vslht_find (hashtable->table, key);
+  return (vslht_find (hashtable->table, key));
 }
 
 

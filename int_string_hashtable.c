@@ -89,7 +89,7 @@ char *int_string_hashtable_find(int_string_hashtable_t *hashtable, uint32_t x) {
     temp_string[4] = 'R';
     temp_string[5] = 0;
     return temp_string;
-  }else{
+  } else{
     return hashtable->string[temp_val];
   }
 }

@@ -682,7 +682,7 @@ static uint32_t __vslh_log2 (int x) {
 
 // Fuzz tester for this library follows.   
 // Passes with various args.  
-//#ifdef 0
+#if 0
 
 void rand_key(char *k, int n) {
   int i;
@@ -787,4 +787,4 @@ int main (int argc, char **argv) {
   }
 
 }
-//#endif
+#endif
