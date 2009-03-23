@@ -12,10 +12,11 @@
    The table is little more than a pair of arrays: keys and values. 
 */
 typedef struct vslht {
-  uint32_t size;   ///< num slots in table
-  uint32_t occ;    ///< number of actual key/value pairs 
-  char **key;      ///< array of strings that are keys
-  uint64_t *val;   ///< array of ints that are values
+  uint32_t size;   // num slots in table
+  uint32_t occ;    // number of actual key/value pairs 
+  char **key;      // array of strings that are keys
+  uint64_t *val;   // array of ints that are values
+  char *del;   // lazy deletion
 } vslht;
 
 /// API Functions
