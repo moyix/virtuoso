@@ -48,13 +48,16 @@ static inline target_long lshift(target_long x, int n)
 target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 
 
+// translate A0 into a physical address.  
 static inline int phys_a0() {
   int addr;
+
   addr = cpu_get_phys_addr(env,A0); 
   if (addr == -1)
     return 0;
   else
     return addr;
+  //  return A0;
 }
 
 
@@ -2897,13 +2900,11 @@ void helper_manage_pid_stuff(void);
 // inside helper.c and involves global variables.
 void OPPROTO op_iferret_prologue(void) 
 {
+  float f;
   // NB: This conditional is *expensive* so don't do it unless info_flow compiled in. 
 #ifdef IFERRET_INFO_FLOW
   // check if info flow log is anywhere near overflow
-  if ((iferret_log_ptr - iferret_log_base) + 10 > IFERRET_LOG_SIZE) {
-    iferret_log_rollup();
-  }
-  //  iferret_debug_log_rollup();
+  check_rollup_op();
 #endif
   // write eip of head of this tb
   write_eip_to_iferret_log();

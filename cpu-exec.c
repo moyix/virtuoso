@@ -37,6 +37,9 @@
 
 int tb_invalidated_flag;
 
+
+void check_rollup(char *label);
+
 //#define DEBUG_EXEC
 //#define DEBUG_SIGNAL
 
@@ -676,7 +679,16 @@ int cpu_exec(CPUState *env1)
 		fp.gp = code_gen_buffer + 2 * (1 << 20);
 		(*(void (*)(void)) &fp)();
 #else
+
+
+
+	 	check_rollup("cpu_exec.c 1 ");
+	    
+
                 gen_func();
+
+	 	check_rollup("cpu_exec.c 2 ");
+
 #endif
                 env->current_tb = NULL;
                 /* reset soft MMU for next block (it can currently

@@ -1,4 +1,5 @@
 include config.mak
+include ../config.iferret
 
 TARGET_BASE_ARCH:=$(TARGET_ARCH)
 ifeq ($(TARGET_ARCH), x86_64)
@@ -98,7 +99,7 @@ endif
 
 # We require -O2 to avoid the stack setup prologue in EXIT_TB
 #OP_CFLAGS := -Wall -O2 -g -fno-strict-aliasing -I$(TAINT_DIR)
-OP_CFLAGS := -Wall -O2 -g -fno-strict-aliasing
+OP_CFLAGS := -Wall -O2 -g -fno-strict-aliasing $(IFERRET_POUND_DS)
 
 # cc-option
 # Usage: OP_CFLAGS+=$(call cc-option, -falign-functions=0, -malign-functions=0)

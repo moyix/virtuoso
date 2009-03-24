@@ -13,7 +13,8 @@
 #define MAX_STRING_LEN 2048
 #define IFERRET_MAX_KEYBOARD_LABEL_LEN 1024
 #define IFERRET_MAX_NETWORK_LABEL_LEN 2048
-#define IFERRET_LOG_SIZE 50000000
+#define IFERRET_LOG_SIZE    500000000  // 50 MB
+#define IFERRET_LOG_CUSHION 100000000   // 1 MB
 
 // We're pretending that real memeory, registers, io_buffer, and the hard drive are 
 // all in one continuous block of memory.  
@@ -110,6 +111,7 @@ typedef struct iferret_op_struct_t {
 
 extern char *iferret_log_ptr;      
 extern char *iferret_log_base;      
+extern uint32_t iferret_max_overflow;
 
 extern uint8_t iferret_info_flow_on;
 
@@ -430,7 +432,7 @@ void iferret_log_create(void);
 // this is defined in iferret_op_str.c, which is auto generated
 char *iferret_op_num_to_str(iferret_log_op_enum_t op_num);
 
-void iferret_log_rollup(void);
+void iferret_log_rollup(char *label);
 
 void iferret_spit_op(iferret_op_t *op);
 

@@ -38,7 +38,7 @@ unsigned long long ifregaddr[16];
 
 extern unsigned int phys_ram_size;
 
-
+uint32_t iferret_max_overflow = 0;
 
 
 
@@ -382,12 +382,13 @@ void iferret_log_create() {
 
 
 // save current if log to a file for some reason    
-void iferret_log_write_to_file() {
+void iferret_log_write_to_file(char *label) {
   char filename[1024];
   FILE *fp;
 
-  printf ("iferret_log_ptr - iferret_log_base = %Lu\n", (unsigned long long) (iferret_log_ptr - iferret_log_base));
-  printf ("IFERRET_LOG_SIZE = %d\n", IFERRET_LOG_SIZE);
+  printf ("iferret_log_write_to_file [%s]: iferret_log_ptr - iferret_log_base = %Lu\n", 
+	  label, (unsigned long long) (iferret_log_ptr - iferret_log_base));
+  //  printf ("IFERRET_LOG_SIZE = %d\n", IFERRET_LOG_SIZE);
 
   snprintf (filename, 1024, "/scratch/tmp2/ifl-%d-%d", getpid(), iferret_log_rollup_count);
 
@@ -407,7 +408,7 @@ void iferret_log_write_to_file() {
 
 
 // info-flow log is full.  Dump it to a file. 
-void iferret_log_rollup() {
-  iferret_log_write_to_file();
+void iferret_log_rollup(char *label) {
+  iferret_log_write_to_file(label);
 }
 

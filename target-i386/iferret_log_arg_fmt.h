@@ -586,9 +586,6 @@ char *iferret_log_arg_format[] = {
 // -->     iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVL_R_T1_T0,REGNUM);
   "1",
   // 116 
-// ./iferret_info_flow.c
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVW_R_T1_T0,REGNUM);
 // ./target-i386/opreg_template.h
 
 // -->     iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVW_R_T1_T0,REGNUM);

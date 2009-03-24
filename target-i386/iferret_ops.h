@@ -585,9 +585,6 @@ IFLO_OPREG_TEMPL_ADDL_A0_R_S3,
 // -->     iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVL_R_T1_T0,REGNUM);
 IFLO_OPREG_TEMPL_CMOVL_R_T1_T0,
 // 116 
-// ./iferret_info_flow.c
-
-// -->     iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVW_R_T1_T0,REGNUM);
 // ./target-i386/opreg_template.h
 
 // -->     iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVW_R_T1_T0,REGNUM);

@@ -119,7 +119,7 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
       void OPPROTO glue(glue(op_movq,REGNAME),_A0)(void)
     */
 
-    iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVW_R_T1_T0,REGNUM);
+    //    iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVW_R_T1_T0,REGNUM);
     // mov T1 to REG.  (NB: we are inside the conditional.  So really this isa MOVW.)
     // REG = (REG & ~0xffff) | (T1 & 0xffff);
     // here, copy low 2 bytes from T1 to REG and leave top 24 bytes of REG alone.

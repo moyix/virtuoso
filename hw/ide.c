@@ -810,7 +810,8 @@ static int dma_buf_rw(BMDMAState *bm, int is_write)
         if (l > 0) {
             if (is_write) {
 	      // IFLW_HD_TRANSFER(IO_BUFFER_BASE_ADDR + s->io_buffer_index, bm->cur_prd_addr, l);
-		iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, IO_BUFFER_BASE_ADDR + s->io_buffer_index, bm->cur_prd_addr,  l);
+
+	      iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, IO_BUFFER_BASE_ADDR + s->io_buffer_index, bm->cur_prd_addr,  l);
                 cpu_physical_memory_write(bm->cur_prd_addr,
                                           s->io_buffer + s->io_buffer_index, l);
 		/*
@@ -819,7 +820,7 @@ static int dma_buf_rw(BMDMAState *bm, int is_write)
 		*/
             } else {
 	      // IFLW_HD_TRANSFER(bm->cur_prd_addr, IO_BUFFER_BASE_ADDR + s->io_buffer_index, l);	
-		iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, bm->cur_prd_addr, IO_BUFFER_BASE_ADDR + s->io_buffer_index, l);	
+	      iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, bm->cur_prd_addr, IO_BUFFER_BASE_ADDR + s->io_buffer_index, l);	
                 cpu_physical_memory_read(bm->cur_prd_addr,
                                           s->io_buffer + s->io_buffer_index, l);
 		/*

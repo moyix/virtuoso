@@ -4841,6 +4841,29 @@ void iferret_debug_log_rollup() {
   }
 }
 
+
+void check_rollup(char *label) { 
+  uint32_t remaining;
+  remaining = IFERRET_LOG_SIZE - (iferret_log_ptr - iferret_log_base);
+  printf ("label=%s remaining=%d   cushion=%d\n", label, remaining, IFERRET_LOG_CUSHION);
+  if (remaining < IFERRET_LOG_CUSHION) {
+    uint32_t overflow;
+    overflow = IFERRET_LOG_CUSHION - remaining;
+    printf ("calling rollup label=[%s]\n", label);
+    if (overflow > iferret_max_overflow) {
+      iferret_max_overflow = overflow;
+      printf ("max overflow into cushion so far: %d\n", iferret_max_overflow);
+    }
+    iferret_log_rollup(label);
+  }   
+} 
+
+
+void check_rollup_op() {
+  check_rollup("op.c");
+}
+
+
 #endif
 
 
