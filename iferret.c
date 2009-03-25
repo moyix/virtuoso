@@ -643,7 +643,7 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
       return;
     }
     op.num = iferret_log_op_only_read();
-    //    printf ("%d op=%d %s\n", i, op.num, iferret_op_num_to_str(op.num));
+    //        printf ("%d op=%d %s\n", i, op.num, iferret_op_num_to_str(op.num));
     if ((iferret_log_sentinel_check()) == 0) {
       printf ("sentinel failed at op %d\n", i);
       { 
@@ -705,6 +705,7 @@ int main (int argc, char **argv) {
     iferret_add_mal_pid(iferret, iferret->use_mal_set);
   }
   if (iferret->use_mal_set){
+    printf ("Analyzing with root pid = %d\n", iferret->use_mal_set);
     // pre-process to get malpid list
     // iterate until mal_pid_count is the same as before
     iteration = 1;
@@ -723,13 +724,16 @@ int main (int argc, char **argv) {
       iferret = iferret_create(); //TODO:we should really free old data, but this will work for now
       iferret->mal_pids = temp_mal_pids; 
       iferret->use_mal_set = atoi(argv[4]);
-    }while(int_set_size(iferret->mal_pids) > mal_pid_count);
+    } while(int_set_size(iferret->mal_pids) > mal_pid_count);
     //cleanup for the final show
     iferret_syscall_stack_kill_all_processes();
     temp_mal_pids = iferret->mal_pids; // save off the old mal_pid set
     iferret = iferret_create(); //TODO:we should really free old data, but this will work for now 
     iferret->mal_pids = temp_mal_pids;
     iferret->use_mal_set = atoi(argv[4]);
+  }
+  else {
+    printf ("Initial analysis with no root pid\n");
   }
 
   printf("number of mal_pids is %d\n",int_set_size(iferret->mal_pids));

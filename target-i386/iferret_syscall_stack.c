@@ -86,6 +86,13 @@ void iferret_syscall_stack_kill_process(int pid) {
   iferret_syscall_stack[pid].size = 0;
 }
 
+void iferret_syscall_stack_kill_all_processes() {
+  int i;
+  for (i=0; i<MAX_PID; i++){
+    iferret_syscall_stack[i].size = 0;
+  }
+}
+
 
 // push this (eip,syscall_num) pair to stack for pid.
 void iferret_syscall_stack_push(iferret_syscall_t syscall) {

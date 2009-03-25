@@ -1161,13 +1161,10 @@ char *iferret_log_arg_format[] = {
 // -->     iferret_log_op_write_1(IFLO_SET_CPL,cpl);
   "1",
   // 231 
-// ./target-i386/helper.c
-
-// -->   iferret_log_op_write_4444(IFLO_SPAWN_NEW_PID,current_pid,current_uid,parent_pid,parent_uid);
 // ./target-i386/iferret_syscall.c
 
 // --> 	iferret_log_op_write_44(IFLO_SPAWN_NEW_PID,EAX,element.syscall.pid);
-  "4444",
+  "44",
   // 232 
 // ./target-i386/op.c
 
