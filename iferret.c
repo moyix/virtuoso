@@ -16,10 +16,13 @@
 #include "iferret.h"
 #include "iferret_open_fd.h"
 
-#define K 1024
-#define M (K * K)
-#define VIDEO_MEM ((256 + 64) * K)
-#define BIOS_MEM (8192 * K)
+#define KB 1024
+#define MB (KB * KB)
+#define GB (KB * KB * KB) 
+#define VIDEO_MEM ((256 + 64) * KB)
+#define BIOS_MEM (8192 * KB)
+// some cushion between the end of HD and beginning of something else.
+#define A_BUNCH_OF_SLOP 1024
 
 #define SYSCALL_CLONE 120
 #define SYSCALL_EXECVE 11
@@ -28,6 +31,7 @@
 #define FALSE 0
 
 unsigned int phys_ram_size;
+unsigned long long ifregaddr[16];
 
 
 // ptr to first byte of info flow log
@@ -36,6 +40,10 @@ extern char *iferret_log_base;
 // ptr to next byte to be written in info flow log
 extern char *iferret_log_ptr;      
 
+// an address in our linear address space used in transfers to and from env->slots.
+uint64_t fake_base_addr_for_env;
+// this is used as a scratch space for info-flow.  really.
+uint64_t safe_address_for_arbitrary_tainting;
 
 
 typedef struct op_pos_struct {
@@ -534,7 +542,10 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op, int p
 
 
 void iferret_info_flow_process(iferret_t *iferret, iferret_op_t *op, int pre_process) {
-  // NOP for now.
+  if (!pre_process) {
+    iferret_info_flow_process_op(iferret, op);
+  }
+ 
 }
 
   
@@ -686,20 +697,22 @@ int main (int argc, char **argv) {
   int mal_pid_count; 
   int_set_t* temp_mal_pids;
 
-  if (argc != 5) {
-    printf ("Usage: iferret ramsize log_prefix num_logs\n");
+  if (argc != 6) {
+    printf ("Usage: iferret ramsize(MB) hdsize(GB) log_prefix num_logs\n");
     exit(1);
   }
   ram = atoi(argv[1]);
-  phys_ram_size = ram * M + BIOS_MEM + VIDEO_MEM;
-  log_prefix = argv[2];
-  num_logs = atoi(argv[3]);
+  phys_ram_size = ram * MB + BIOS_MEM + VIDEO_MEM;  
+  fake_base_addr_for_env = phys_ram_size + atoi(argv[2]) * GB + A_BUNCH_OF_SLOP;
+  safe_address_for_arbitrary_tainting = fake_base_addr_for_env + A_BUNCH_OF_SLOP;
+  log_prefix = argv[3];
+  num_logs = atoi(argv[4]);
   
   printf ("ram is %d MB, giving total mem of %d\n", ram, phys_ram_size);
 
   iferret_log_create();
   iferret = iferret_create();
-  iferret->use_mal_set = atoi(argv[4]);
+  iferret->use_mal_set = atoi(argv[5]);
   // this is the seed.  Somehow, we knew this was the pid to follow.
   if (iferret->use_mal_set) {
     iferret_add_mal_pid(iferret, iferret->use_mal_set);

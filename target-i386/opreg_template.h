@@ -29,7 +29,7 @@ void OPPROTO glue(op_movl_A0,REGNAME)(void)
 
 void OPPROTO glue(op_addl_A0,REGNAME)(void)
 {
-  iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_A0_R,REGNUM);
+  iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_ADDL_A0_R,REGNUM);
     A0 = (uint32_t)(A0 + REG);
 }
 

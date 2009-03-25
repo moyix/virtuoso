@@ -1,15 +1,702 @@
 
-// base addr of each of these
-#define T0_BASE IFRBA(IFRN_T0)
-#define T1_BASE IFRBA(IFRN_T1)
-#define A0_BASE IFRBA(IFRN_A0)
+#include <stdio.h>
+#include "iferret_log.h"
+#include "iferret_info_flow.h"
+#include "taint.h"
 
-void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {  
+
+extern unsigned long long ifregaddr[];
+
+extern uint64_t safe_address_for_arbitrary_tainting;
+
+
+extern uint64_t fake_base_addr_for_env;
+
+uint32_t if_debug = 0;
+
+
+
+char* info_flow_reg_str[16] = {
+  "EAX",
+  "ECX",
+  "EDX",
+  "EBX",
+  "ESP",
+  "EBP",
+  "ESI",
+  "EDI",
+  "T0",
+  "T1",
+  "A0",
+  "Q0",
+  "Q1",
+  "Q2",
+  "Q3",
+  "Q4"
+};
+
+// array of flags to indicate if any part of a register is tainted
+uint8_t if_reg_taint[16] = {
+  FALSE,
+  FALSE,
+  FALSE,
+  FALSE,
+  FALSE,
+  FALSE,
+  FALSE,
+  FALSE,
+  FALSE,
+  FALSE,
+  FALSE,
+  FALSE,
+  FALSE,
+  FALSE,
+  FALSE,
+  FALSE
+};
+
+
+
+struct timeval last_time;
+
+char *if_reg_str(int if_regnum) {
+  return (info_flow_reg_str[if_regnum]);
+}
+
+
+void timer_reset (void) {
+  gettimeofday(&last_time, NULL);
+}
+
+
+double timer_time () {
+  struct timeval this_time;
+  gettimeofday(&this_time, NULL);
+  return (this_time.tv_sec - last_time.tv_sec
+	  + (this_time.tv_usec - last_time.tv_usec)/1.0e6);
+}
+
+
+void if_debug_set(int l) {
+  if_debug = l;
+}
+
+
+void if_debug_set_off() {
+  if_debug = IF_DEBUG_OFF;
+}
+
+
+void if_debug_set_low() {
+  if_debug = IF_DEBUG_LOW;
+}
+
+
+void if_debug_set_med() {
+  if_debug = IF_DEBUG_MED;
+}
+
+
+void if_debug_set_high() {
+  if_debug = IF_DEBUG_HIGH;
+}
+
+
+void if_debug_set_omg() {
+  if_debug = IF_DEBUG_OMG;
+}
+
+
+uint8_t debug_off() {
+  return (if_debug == IF_DEBUG_OFF);
+}
+
+
+uint8_t debug_low() {
+  return (if_debug <= IF_DEBUG_LOW);
+}
+
+
+uint8_t debug_med() {
+  return (if_debug <= IF_DEBUG_MED);
+}
+
+
+uint8_t debug_high() {
+  return (if_debug <= IF_DEBUG_HIGH);
+}
+
+
+uint8_t debug_omg() {
+  return (if_debug <= IF_DEBUG_OMG);
+}
+
+
+uint8_t debug_at_least_low() {
+  return (if_debug >= IF_DEBUG_LOW);
+}
+
+
+uint8_t debug_at_least_med() {
+  return (if_debug >= IF_DEBUG_MED);
+}
+
+
+uint8_t debug_at_least_high() {
+  return (if_debug >= IF_DEBUG_HIGH);
+}
+
+
+uint8_t debug_at_least_omg() {
+  return (if_debug >= IF_DEBUG_OMG);
+}
+
+
+
+
+
+// p is an address that came out of the log.  
+// or it might be a fake address, like a register.
+// decide which and print something approriate. 
+void render_address(unsigned long long p) {
+  if (p == IFRBA(IFRN_EAX)) 
+    printf ("&eax");
+  else if (p == IFRBA(IFRN_ECX)) 
+    printf ("&ecx");
+  else if (p == IFRBA(IFRN_EDX)) 
+    printf ("&edx");
+  else if (p == IFRBA(IFRN_EBX)) 
+    printf ("&ebx");
+  else if (p == IFRBA(IFRN_ESP)) 
+    printf ("&esp");
+  else if (p == IFRBA(IFRN_EBP))
+    printf ("&ebp");
+  else if (p == IFRBA(IFRN_ESI)) 
+    printf ("&esi");
+  else if (p == IFRBA(IFRN_EDI)) 
+    printf ("&edi");
+  else if (p == IFRBA(IFRN_T0)) 
+    printf ("&t0");
+  else if (p == IFRBA(IFRN_T1)) 
+    printf ("&t1");
+  else if (p == IFRBA(IFRN_A0)) 
+    printf ("&a0");
+  else if (p == IFRBA(IFRN_Q0)) 
+    printf ("&q0");
+  else if (p == IFRBA(IFRN_Q1)) 
+    printf ("&q1");
+  else if (p == IFRBA(IFRN_Q2)) 
+    printf ("&q2");
+  else if (p == IFRBA(IFRN_Q3)) 
+    printf ("&q3");
+  else if (p == IFRBA(IFRN_Q4)) 
+    printf ("&q4");
+  else 
+    printf ("0x%Lux",p);
+}
+
+
+// returns TRUE iff address is *not* to a QEMU temporary register
+uint8_t addr_is_real(unsigned long long p) {
+  if ((p == IFRBA(IFRN_T0))
+      || (p == IFRBA(IFRN_T1)) 
+      || (p == IFRBA(IFRN_A0)) 
+      || (p == IFRBA(IFRN_Q0)) 
+      || (p == IFRBA(IFRN_Q1)) 
+      || (p == IFRBA(IFRN_Q2)) 
+      || (p == IFRBA(IFRN_Q3)) 
+      || (p == IFRBA(IFRN_Q4)))
+    return FALSE;
+  else 
+    return TRUE;
+}
+
+
+// mark this register as possibly tainted
+inline void info_flow_mark_as_possibly_tainted (uint8_t if_regnum) {
+  if_reg_taint[if_regnum] = TRUE;
+}
+
+
+// mark this register and not possibly tainted
+inline void info_flow_mark_as_not_possibly_tainted (uint8_t if_regnum) {
+  if_reg_taint[if_regnum] = FALSE;
+}
+
+
+// should return TRUE if this reg might be tainted. 
+//inline uint8_t info_flow_possibly_tainted (uint8_t if_regnum) {
+//  return (if_reg_taint[if_regnum] == TRUE);
+//}
+
+inline uint8_t info_flow_possibly_tainted (uint8_t if_regnum) {
+  return (TRUE);
+}
+
+
+
+
+// should return TRUE only if this register cannot be tainted. 
+inline uint8_t info_flow_not_possibly_tainted (uint8_t if_regnum) {
+  return (if_reg_taint[if_regnum] == FALSE);
+}
+
+
+
+inline uint64_t ctull(unsigned long long p) {
+  return (uint64_t) p;
+}
+
+
+inline uint64_t wctull(unsigned long long p) {
+  uint64_t lp;
+  //  char key[9];
+
+  lp = ctull(p);
+
+  /*
+  memset (key,0,16);
+  key[0] = (lp & 0xFF00000000000000) >> 56;
+  key[1] = (lp & 0x00FF000000000000) >> 48;
+  key[2] = (lp & 0x0000FF0000000000) >> 40;
+  key[3] = (lp & 0x000000FF00000000) >> 32;
+  key[4] = (lp & 0x00000000FF000000) >> 24;
+  key[5] = (lp & 0x0000000000FF0000) >> 16;
+  key[6] = (lp & 0x000000000000FF00) >> 8;
+  key[7] = (lp & 0x00000000000000FF);
+  *((uint64_t *) key) = lp;  
+  
+  if (tmh == NULL) 
+    tmh = vslht_new();
+  vslht_add(tmh, key, 1);
+  */
+
+  return (lp);
+}
+
+
+// delete info-flow for (p,p+n-1)
+inline void info_flow_delete(unsigned long long p, size_t n) {
+  delete_taint(wctull(p),n,"NONE",-1);
+}
+
+
+// copy of (p2,p2+n-1) to (p1,p1+n-1)
+inline void info_flow_copy(unsigned long long p1,unsigned long long p2, size_t n) {
+  transfer_taint(wctull(p1),n,wctull(p2),n,1,1,"NONE","NONE",-1);
+}
+
+
+// a non-obliting compute transfer.
+// from (p2,p2+n2-1) to (p1,p1+n1-1)
+inline void info_flow_compute(unsigned long long p1, size_t n1, unsigned long long p2, size_t n2) {
+  transfer_taint(wctull(p1),n1,wctull(p2),n2,0,0,"NONE","NONE",-1);
+}
+
+
+inline void info_flow_label(unsigned long long p, size_t n, char *label) {
+  label_taint(wctull(p),n,label,"NONE",-1);
+}
+
+
+// we want to *add* this label to the current set. 
+inline void info_flow_add_label(unsigned long long p, size_t n, char *label) {
+  // label an extent somewhere in never-never land.
+  label_taint(safe_address_for_arbitrary_tainting, n, label, "NONE", -1);
+  // execute a compute transfer from that to the extent we got as an arg.
+  info_flow_compute(safe_address_for_arbitrary_tainting, n, p, n);
+}
+
+
+///////////////////////////////////////////////////////////
+
+
+/* 
+   p1 is presumed to be the address of some info-flow 
+   register (fake address).
+   load of bytes (p2,p2+n-1) from memory into bottom n bytes of 
+   fake register. 
+   if u is True then this is an unsigned load, so if
+   n<4 we zero out higher-order bytes of the register at p1.  
+   otherwise we sign-extend
+*/
+inline void info_flow_ld(unsigned long long p1, unsigned long long p2, size_t n, uint8_t u) {
+
+  // NB: you are IGNORING u which is wrong!  
+  //  if (if_debug == TRUE) 
+  //    printf ("info_flow_ld %p %p %d %d\n", p1, p2, n, u);
+  // um, we shouldn't have 64-bit lds yet...
+  assert (n<=4);
+  // copy the lower n bytes from p2 into reg at p1
+  info_flow_copy(p1,p2,n);
+  // delete info for upper bytes.
+  if (n<4) {
+    info_flow_delete(p1+n,4-n);
+  }
+}
+
+
+// p1 is address of some info-flow register (fake address).
+// store the low n bytes of that register at location p2.  
+inline void info_flow_st(unsigned long long p1, unsigned long long p2, size_t n) {
+  //  if (if_debug == TRUE) 
+  //    printf ("info_flow_st %p %p %d\n", p1, p2, n);
+  info_flow_ld(p2,p1,n,TRUE);
+}
+
+
+/////////////////////////////////////////
+
+
+// delete info-flow for n bytes of register number rn, starting at offset o.
+// if we delete for all 4 byts, then we can set the big falg.
+inline void if_delete_reg_aux (uint32_t rn, uint32_t o, uint32_t n) {
+  // only bother if reg *may* be tainted 
+  if (info_flow_possibly_tainted(rn)) {		
+    if (debug_at_least_med()) 
+      printf ("%s possibly tainted\n", info_flow_reg_str[rn]);
+    // untaint 
+    info_flow_delete(IFRBA(rn)+o,n);		 
+    if (o==0 && n==4) {
+      // if we untainted the whole thing.  take note. 
+      info_flow_mark_as_not_possibly_tainted(rn); 
+    }
+  }   
+  else {
+    if (debug_at_least_med()) {
+      printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn]);
+    }
+  }
+  if (debug_at_least_med()) {
+    check_reg_taint(rn,__FILE__,__LINE__);
+  }
+}
+
+
+// most common case.  delete info-flow for all of 4-byte register.
+inline void if_delete_r4(uint32_t rn) {
+  if_delete_reg_aux(rn,0,4);
+}
+
+
+// just delete bottom 2 bytes 
+inline void if_delete_r2(uint32_t rn) {
+  if_delete_reg_aux(rn,0,2);
+}
+
+
+// just delete bottom byte
+inline void if_delete_r1(uint32_t rn) {
+  if_delete_reg_aux(rn,0,1);
+}
+
+
+/*
+  Update info-flow graph to represent that 
+  n bytes of register number rn1 starting from offset o1,
+  is a copy of the n bytes of register number rn2 starting from offset o2.
+  note: if rn2 is NOT tainted, we just untaint the 
+  n bytes of rn1 starting with offset o1
+*/
+// rn1 is dest
+// rn2 is source
+inline void if_copy_regs_aux (uint32_t rn1, uint32_t o1, uint32_t rn2, uint32_t o2, uint32_t n) {
+  //  assert (rn1 != UNINITIALIZED && rn2 != UNINITIALIZED);	
+  if (debug_at_least_med()) {
+    check_reg_taint(rn1,__FILE__,__LINE__);
+    check_reg_taint(rn2,__FILE__,__LINE__);
+    printf ("  if_copy_regs_aux (r1=%s o1=%d) (r2=%s o2=%d) n=%d\n",
+	    info_flow_reg_str[rn1], o1, 
+	    info_flow_reg_str[rn2], o2, n);
+  }
+  if (info_flow_possibly_tainted(rn2)) {  
+    if (debug_at_least_med()) {
+      printf ("%s possibly tainted\n", info_flow_reg_str[rn2]);
+    }
+    info_flow_copy(IFRBA(rn1)+o1,IFRBA(rn2)+o2,n);   
+    info_flow_mark_as_possibly_tainted(rn1); 
+  } 
+  else { 
+    if (debug_at_least_med()) {
+      printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn2]);
+    }
+    if (o1==0 && o2==0 && n==4 && info_flow_possibly_tainted(rn1)) { 
+      // untainted rn1 copied to possibly tainted rn2.  
+      // Thus, rn2 not possibly tainted  
+      info_flow_delete(IFRBA(rn1)+o1,n);	
+      info_flow_mark_as_not_possibly_tainted(rn1);	    
+    } 
+  }   
+  if (debug_at_least_med()) {
+    check_reg_taint(rn1,__FILE__,__LINE__);
+    check_reg_taint(rn2,__FILE__,__LINE__);
+  }
+}
+
+
+// most common case.  copy 4-byte reg to another 4-byte reg.
+inline void if_copy_r4(uint32_t rn1, uint32_t rn2) {
+  if_copy_regs_aux(rn1,0,rn2,0,4);
+}
+
+
+// copy 2-byte reg to another 2-byte.  leave higher-order bytes alone
+// NB: x86 is little-endian.
+// So, the 1st byte is least significant, 2nd is next-least significant. 
+inline void if_copy_r2(uint32_t rn1, uint32_t rn2) {
+  if_copy_regs_aux(rn1,0,rn2,0,2);
+}
+
+
+// copy 1-byte reg to another 1-byte. leave higher-order bytes alone
+inline void if_copy_r1(uint32_t rn1, uint32_t rn2) {
+  if_copy_regs_aux(rn1,0,rn2,0,1);
+}
+
+
+/*
+  Update info-flow graph to represent that
+  n1 bytes of rn1 starting from offset o1 are
+  computed from n2 bytes of rn2 starting from 
+  offset o2.
+  NOTE: a "non-oblitting compute transfer"
+*/
+// rn1 is dest
+// rn2 is src
+inline void if_compute_regs_aux (uint32_t rn1, uint32_t o1, uint32_t n1, 
+				 uint32_t rn2, uint32_t o2, uint32_t n2) {
+  //  assert (rn1 != UNINITIALIZED && rn2 != UNINITIALIZED);	
+  if (debug_at_least_med()) {
+    check_reg_taint(rn1,__FILE__,__LINE__);
+    check_reg_taint(rn2,__FILE__,__LINE__);
+  }
+  if (debug_at_least_med()) {
+    printf ("  if_compute_regs_aux (r1=%s o1=%d n1=%d) (r2=%s o2=%d n2=%d)\n",
+	    info_flow_reg_str[rn1], o1, n1,
+	    info_flow_reg_str[rn2], o2, n2);
+  }
+  if (info_flow_possibly_tainted(rn2)) { 
+    if (debug_at_least_med()) {
+      printf ("%s possibly tainted\n", info_flow_reg_str[rn2]);
+    }
+    //  printf("IF_COMPUTE_REGS_AUX(%d,%d,%d,%d,%d,%d)\n", rn1,o1,n1,rn2,o2,n2); 
+    info_flow_compute(IFRBA(rn1)+o1,n1,IFRBA(rn2)+o2,n2); 
+    info_flow_mark_as_possibly_tainted(rn1); 
+  } 
+  else { 
+    if (debug_at_least_med()) {
+      printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn2]);
+    }
+    /*
+      // TRL 0805 whoops this is just bogus, right? 
+      // This is a "non-oblitting" compute transfer.  
+      // if rn2 isn't possibly tainted, it should have no effect upon rn1.
+    if (info_flow_possibly_tainted(rn1)) { 
+      info_flow_delete(IFRBA(rn1)+o1,n1);	
+      info_flow_mark_as_not_possibly_tainted(rn1); 
+    } 
+    */
+  }
+  if (debug_at_least_med()) {
+    check_reg_taint(rn1,__FILE__,__LINE__);
+    check_reg_taint(rn2,__FILE__,__LINE__);
+  }
+}
+
+
+inline void if_compute_r4(uint32_t rn1, uint32_t rn2) {
+  if_compute_regs_aux(rn1,0,4,rn2,0,4);
+}
+
+
+inline void if_compute_r2(uint32_t rn1, uint32_t rn2) {
+  if_compute_regs_aux(rn1,0,2,rn2,0,2);
+}
+
+
+inline void if_compute_r1(uint32_t rn1, uint32_t rn2) {
+  if_compute_regs_aux(rn1,0,1,rn2,0,1);
+}
+
+
+/*
+  This is for all of r1 += r2, r1 -= r2, etc.
+  That is, r1 computed from itself and another register.
+  We do this with a temporary as it streamlines the operations
+  on the taint graph.
+  n is to make the self-compute based on fewer than 4 bytes.  
+*/
+inline void if_self_compute_regs_aux(uint32_t rn1, uint32_t rn2, uint32_t n) {
+  uint8_t r1pt, r2pt;
+
+  //  assert (rn1 != UNINITIALIZED && rn2 != UNINITIALIZED);		
+  if (debug_at_least_med()) {
+    printf ("  if_self_compute_regs_aux r1=%s r2=%s n=%d\n",
+	    info_flow_reg_str[rn1], info_flow_reg_str[rn2],n);
+  }  
+  r1pt = info_flow_possibly_tainted(rn1);
+  r2pt = info_flow_possibly_tainted(rn2);  
+  if (debug_at_least_med()) {
+    if (r1pt == TRUE) 
+      printf ("%s possibly tainted\n", info_flow_reg_str[rn1]);
+    else
+      printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn1]);
+    if (r2pt == TRUE) 
+      printf ("%s possibly tainted\n", info_flow_reg_str[rn2]);
+    else
+      printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn2]);
+  }  
+  if (r1pt || r2pt) {
+    // we split up r1 += r2 into two parts
+    // part 1: q0 = r1 + r2
+    if_delete_reg_aux(IFRN_Q0,0,n); 
+    if_compute_regs_aux(IFRN_Q0,0,n,rn1,0,n); 
+    if_compute_regs_aux(IFRN_Q0,0,n,rn2,0,n); 
+    // part 2: r1 = q0
+    if_copy_regs_aux(rn1,0,IFRN_Q0,0,n); 
+  } 
+}
+
+
+// common case -- r1+=r2 for all four bytes
+inline void if_self_compute_r4(uint32_t rn1, uint32_t rn2) {
+  if_self_compute_regs_aux(rn1,rn2,4);
+}
+
+
+// for bottom 2 bytes
+inline void if_self_compute_r2(uint32_t rn1, uint32_t rn2) {
+  if_self_compute_regs_aux(rn1,rn2,2);
+}
+
+
+// for bottom byte only
+inline void if_self_compute_r1(uint32_t rn1, uint32_t rn2) {
+  if_self_compute_regs_aux(rn1,rn2,1);
+}
+
+
+/*
+  This is for r++, r-- etc.  
+  Again, we make use of the temporary Q0.
+  i.e. Q0 = R + 1;  R = Q0;
+*/
+inline void if_inc_r4(uint32_t rn) {
+  if (debug_at_least_med()) {
+    printf ("  if_inc_r4 r=%s\n",info_flow_reg_str[rn]);
+  }
+  if (info_flow_possibly_tainted(rn)) {		
+    if (debug_at_least_med()) 
+      printf ("%s possibly tainted\n", info_flow_reg_str[rn]);
+    if_delete_r4(IFRN_Q0); 
+    if_compute_r4(IFRN_Q0,rn); 
+    if_copy_r4(rn,IFRN_Q0); 
+  }
+  else {
+    if (debug_at_least_med())     
+      printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn]);
+  }
+}
+
+
+/*
+  load n bytes into register r from location p.
+  u is a uint8_t: True means it's an unsigned ld, False requires sign-extension
+  note, location, p, is really if_addr, which we've already extracted from log.
+  msn is memory suffix number.  To my peril, currently ignoring it... 
+  raincheck?
+  0 _raw
+  1 _kernel
+  2 _user
+*/
+inline void if_ld(uint32_t msn, uint32_t rn, uint32_t n, uint32_t u, unsigned long long p) { 
+  //  assert (msn != UNINITIALIZED); 
+  //  assert (rn != UNINITIALIZED); 
+  //  assert (p != (char *) UNINITIALIZED);	
+  if (debug_at_least_med()) {
+    check_reg_taint(rn,__FILE__,__LINE__);
+  }
+  if (debug_at_least_med()) {
+    printf ("if_ld msn=%d rn=%d n=%d u=%d p=%p\n", msn,rn,n,u,p);
+  }
+  info_flow_ld( IFRBA(rn), p, n, u);	
+  // assume rn might now be tainted.  
+  info_flow_mark_as_possibly_tainted(rn);
+  // check for tainted pointer.
+  if (exists_taint(p,4,"NONE",-1)) {
+    // tainted pointer.  Any labels on the 4 bytes of p need to get transferred as well.  
+    info_flow_compute(p,4,IFRBA(rn),n);
+  }
+  if (debug_at_least_med()) {
+    check_reg_taint(rn,__FILE__,__LINE__);
+  }
+}
+
+
+inline void if_ldu(uint32_t msn, uint32_t rn, uint32_t n, unsigned long long p) {
+  if_ld(msn,rn,n,TRUE,p);
+}
+
+
+inline void if_lds(uint32_t msn, uint32_t rn, uint32_t n, unsigned long long p) {
+  if_ld(msn,rn,n,FALSE,p);
+}
+
+
+// store low n bytes of register r at location p. 
+// msn is memory suffix number. 
+inline void if_st(uint32_t msn, uint32_t rn, uint32_t n, unsigned long long p) {
+  if (debug_at_least_med()) {
+    check_reg_taint(rn,__FILE__,__LINE__);
+  }
+  if (info_flow_possibly_tainted(rn)) {		
+    if (debug_at_least_med()) {
+      printf ("if_st msn=%d r=%s n=%d p=%p\n", msn,info_flow_reg_str[rn],n,p);
+      printf ("%s possibly tainted\n", info_flow_reg_str[rn]);
+    }
+    // note: no way to *mark* an address as possibly tainted.  
+    info_flow_st(IFRBA(rn), p, n);	
+  } 
+  else {
+    if (debug_at_least_med()) 
+      printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn]);
+  }
+  if (debug_at_least_med()) {
+    check_reg_taint(rn,__FILE__,__LINE__);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {  
   iferret_op_arg_t *arg;
-  uint32_t a0_32, a1_32, a2_32, a3_32, a4_32,
+  uint8_t a0_8, a1_8, a2_8, a3_8, a4_8;
+  uint16_t a0_16, a1_16, a2_16, a3_16, a4_16;
+  uint32_t a0_32, a1_32, a2_32, a3_32, a4_32;
+  uint64_t a0_64, a1_64, a2_64, a3_64, a4_64;
   assert (op->num < IFLO_SYS_CALLS_START);
 
   arg = op->arg;
+
+  a0_8 = arg[0].val.u8;
+  a1_8 = arg[1].val.u8;
+  a2_8 = arg[2].val.u8;
+  a3_8 = arg[3].val.u8;
+  a4_8 = arg[4].val.u8;
+
+  a0_16 = arg[0].val.u16;
+  a1_16 = arg[1].val.u16;
+  a2_16 = arg[2].val.u16;
+  a3_16 = arg[3].val.u16;
+  a4_16 = arg[4].val.u16;
   
   a0_32 = arg[0].val.u32;
   a1_32 = arg[1].val.u32;
@@ -41,7 +728,7 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
     // A0 = (uint32_t)REG; 
   case IFLO_OPREG_TEMPL_MOVL_A0_R:  
     // dest,src
-    if_copy_r4(IFRN_A0,a0_32);
+    if_copy_r4(IFRN_A0,a0_8);
     break;
 
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_ADDL_A0_R,REGNUM);
@@ -56,7 +743,7 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_ADDL_A0_R_S3,REGNUM);
     // A0 = (uint32_t)(A0 + (REG << 3));
   case IFLO_OPREG_TEMPL_ADDL_A0_R_S3:
-    if_self_compute_r4(IFRN_A0,a0_32);
+    if_self_compute_r4(IFRN_A0,a0_8);
     break;
 
     /*
@@ -71,45 +758,45 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_T0_R,REGNUM);
     // T0 = REG;
   case IFLO_OPREG_TEMPL_MOVL_T0_R:
-    if_copy_r4(IFRN_T0,a0_32);
+    if_copy_r4(IFRN_T0,a0_8);
     break;
     
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_T1_R,REGNUM);
     // T1 = REG;
   case IFLO_OPREG_TEMPL_MOVL_T1_R:
-    if_copy_r4(IFRN_T1,a0_32);
+    if_copy_r4(IFRN_T1,a0_8);
     break;
 
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_T0_R,REGNUM);
     // T0 = REG >> 8;
   case IFLO_OPREG_TEMPL_MOVH_T0_R:
     if_delete_r4(IFRN_T0);
-    if_compute_r4(IFRN_T0,a0_32);
+    if_compute_r4(IFRN_T0,a0_8);
     break;
 
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_T1_R,REGNUM);
     // T1 = REG >> 8;
   case IFLO_OPREG_TEMPL_MOVH_T1_R:
     if_delete_r4(IFRN_T1);
-    if_compute_r4(IFRN_T1,a0_32);
+    if_compute_r4(IFRN_T1,a0_8);
     break;
 
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_R_T0,REGNUM);
     // REG = (uint32_t)T0;
   case IFLO_OPREG_TEMPL_MOVL_R_T0:
-    if_copy_r4(a0_32,IFRN_T0);
+    if_copy_r4(a0_8,IFRN_T0);
     break;
     
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_R_T1,REGNUM);
     // REG = (uint32_t)T1;
   case IFLO_OPREG_TEMPL_MOVL_R_T1:
-    if_copy_r4(a0_32,IFRN_T1);
+    if_copy_r4(a0_8,IFRN_T1);
     break;
     
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_R_A0,REGNUM);
     // REG = (uint32_t)A0;
   case IFLO_OPREG_TEMPL_MOVL_R_A0:
-    if_copy_r4(a0_32,IFRN_A0);
+    if_copy_r4(a0_8,IFRN_A0);
     break;
 
     /*
@@ -124,7 +811,7 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
     // REG = (REG & ~0xffff) | (T1 & 0xffff);
     // here, copy low 2 bytes from T1 to REG and leave top 24 bytes of REG alone.
   case IFLO_OPREG_TEMPL_CMOVW_R_T1_T0:
-    if_copy_r2(a0_32,IFRN_T1);
+    if_copy_r2(a0_8,IFRN_T1);
     break;
 
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVL_R_T1_T0,REGNUM);
@@ -133,7 +820,7 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
     // here, different from previous.  
     // copy low 4 bytes from T1 to REG and zero anything in REG above those 4 bytes.  
   case IFLO_OPREG_TEMPL_CMOVL_R_T1_T0:
-    if_copy_r4(a0_32,IFRN_T1);
+    if_copy_r4(a0_8,IFRN_T1);
     break; 
 
     /*
@@ -144,43 +831,43 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVW_R_T0,REGNUM);
     // REG = (REG & ~0xffff) | (T0 & 0xffff);
   case IFLO_OPREG_TEMPL_MOVW_R_T0:
-    if_copy_r2(a0_32,IFRN_T0);
+    if_copy_r2(a0_8,IFRN_T0);
     break;
     
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVW_R_T1,REGNUM);
     // REG = (REG & ~0xffff) | (T1 & 0xffff);
   case IFLO_OPREG_TEMPL_MOVW_R_T1:
-    if_copy_r2(a0_32,IFRN_T1);
+    if_copy_r2(a0_8,IFRN_T1);
     break;
     
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVW_R_A0,REGNUM);
     // REG = (REG & ~0xffff) | (A0 & 0xffff);
   case IFLO_OPREG_TEMPL_MOVW_R_A0:
-    if_copy_r2(a0_32,IFRN_A0);
+    if_copy_r2(a0_8,IFRN_A0);
     break;  
 
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVB_R_T0,REGNUM);
     // REG = (REG & ~0xff) | (T0 & 0xff);
   case IFLO_OPREG_TEMPL_MOVB_R_T0:
-    if_copy_r1(a0_32,IFRN_T0);
+    if_copy_r1(a0_8,IFRN_T0);
     break;
     
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_R_T0,REGNUM);
     // REG = (REG & ~0xff00) | ((T0 & 0xff) << 8);
   case IFLO_OPREG_TEMPL_MOVH_R_T0:
-    if_copy_regs_aux(a0_32,1,IFRN_T0,1,1);
+    if_copy_regs_aux(a0_8,1,IFRN_T0,1,1);
     break;
 
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVB_R_T1,REGNUM);
     // REG = (REG & ~0xff) | (T1 & 0xff);
   case IFLO_OPREG_TEMPL_MOVB_R_T1:
-    if_copy_r1(a0_32,IFRN_T1);
+    if_copy_r1(a0_8,IFRN_T1);
     break;
 
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_R_T1,REGNUM);
     // REG = (REG & ~0xff00) | ((T1 & 0xff) << 8);
   case IFLO_OPREG_TEMPL_MOVH_R_T1:
-    if_copy_regs_aux(a0_32,1,IFRN_T1,1,1);
+    if_copy_regs_aux(a0_8,1,IFRN_T1,1,1);
     break;
 
     /*
@@ -460,18 +1147,18 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
 
     // A0 = (uint32_t)*(target_ulong *)((char *)env + PARAM1);
     // NB: if_addr is env+PARAM1
-  case IFLO_ADDR_MOVL_A0_SEG:    
+  case IFLO_MOVL_A0_SEG:    
     // memsuffix is 0 for _raw?  A flying leap
-    if_ldu(0,IFRN_A0,4,a0_64);
+    if_ldu(0, IFRN_A0, 4, fake_base_addr_for_env + a0_64);
     break;
  
     // A0 = (uint32_t)(A0 + *(target_ulong *)((char *)env + PARAM1));
     // NB: if_addr is env+PARAM1
-  case IFLO_ADDR_ADDL_A0_SEG:
+  case IFLO_ADDL_A0_SEG:
     // q1 = *(if_addr)
     if_ldu(0,IFRN_Q1,4,a0_64);
     // a0 += q1
-    if_self_compute_r4(IFRN_A0,IFRN_Q1);
+    if_self_compute_r4(IFRN_A0, fake_base_addr_for_env + IFRN_Q1);
     break;
 
     // A0 = (uint32_t)(A0 + (EAX & 0xff));
@@ -481,6 +1168,7 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
 
     // A0 = A0 & 0xffff;
   case IFLO_ANDL_A0_FFFF:
+    // x86 is little endian so bytes 2 and 3 are higher order ones. 
     if_delete_reg_aux(IFRN_A0,2,2);
     break;
 
@@ -507,118 +1195,86 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
       entry and extracted above.  
     */
     
-    //  iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T0_A0,MEMSUFFIXNUM,A0);
+    //  iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T0_A0,MEMSUFFIXNUM,phys_a0(A0));
     // T0 = *A0, just one byte. A0 is next element in log.
   case IFLO_OPS_MEM_LDUB_T0_A0:
     // first, a copy transfer from address to t0
     if_ldu(a0_8,IFRN_T0,1,a1_64);
-    if (exists_taint(A0_BASE,1,__FILE__,__LINE__))
-      transfer_taint(T0_BASE,1,A0_BASE,1,0,0,"NONE","NONE",-1);
-
     break;
     
-    // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+    // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T0_A0,MEMSUFFIXNUM,phys_a0(A0));
     // ditto, but signed.
   case IFLO_OPS_MEM_LDSB_T0_A0:
-    if_lds(if_memsuffixnum,IFRN_T0,1,if_addr);
-    if(exists_taint(A0_BASE,1,__FILE__,__LINE__))
-    transfer_taint(T0_BASE,1,A0_BASE,1,0,0,"NONE","NONE",-1);
+    if_lds(a0_8,IFRN_T0,1,a1_64);
     break; 
 
-    // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+    // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T0_A0,MEMSUFFIXNUM,phys_a0(A0));
     // T0 = *A0, 2 bytes
   case IFLO_OPS_MEM_LDUW_T0_A0:
-    if_ldu(if_memsuffixnum,IFRN_T0,2,if_addr);
-    if(exists_taint(A0_BASE,2,__FILE__,__LINE__))
-    transfer_taint(T0_BASE,2,A0_BASE,2,0,0,"NONE","NONE",-1);
+    if_ldu(a0_8,IFRN_T0,2,a1_64);
     break;
 
-    // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSW_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+    // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSW_T0_A0,MEMSUFFIXNUM,phys_a0(A0));
     // ditto, but signed.
   case IFLO_OPS_MEM_LDSW_T0_A0:
-    if_lds(if_memsuffixnum,IFRN_T0,2,if_addr);
-    if(exists_taint(A0_BASE,2,__FILE__,__LINE__))
-    transfer_taint(T0_BASE,2,A0_BASE,2,0,0,"NONE","NONE",-1);
+    if_lds(a0_8,IFRN_T0,2,a1_64);
     break;
 
-    // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDL_T0_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+    // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDL_T0_A0,MEMSUFFIXNUM,phys_a0(A0));
     // T0 = *A0, 4 bytes
   case IFLO_OPS_MEM_LDL_T0_A0:
-    if_ldu(if_memsuffixnum,IFRN_T0,4,if_addr);
-    if(exists_taint(A0_BASE,4,__FILE__,__LINE__))
-    transfer_taint(T0_BASE,4,A0_BASE,4,0,0,"NONE","NONE",-1);
+    if_ldu(a0_8,IFRN_T0,4,a1_64);
     break;
 
-    // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+    // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T1_A0,MEMSUFFIXNUM,phys_a0(A0));
     // T1 = *A0, just one byte. A0 is next element in log.
   case IFLO_OPS_MEM_LDUB_T1_A0:
-    if_ldu(if_memsuffixnum,IFRN_T1,1,if_addr);
-    if(exists_taint(A0_BASE,1,__FILE__,__LINE__))
-    transfer_taint(T1_BASE,1,A0_BASE,1,0,0,"NONE","NONE",-1);
+    if_ldu(a0_8,IFRN_T1,1,a1_64);
     break;
 
-    // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));  
+    // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T1_A0,MEMSUFFIXNUM,phys_a0(A0));  
     // ditto, but signed.
   case IFLO_OPS_MEM_LDSB_T1_A0:
-    if_lds(if_memsuffixnum,IFRN_T1,1,if_addr);
-    if(exists_taint(A0_BASE,1,__FILE__,__LINE__))
-    transfer_taint(T1_BASE,1,A0_BASE,1,0,0,"NONE","NONE",-1);
+    if_lds(a0_8,IFRN_T1,1,a1_64);
     break; 
       
-    // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T1_A0,MEMSUFFIXNUM,cpu_get_phys_addr(env,A0));
+    // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T1_A0,MEMSUFFIXNUM,phys_a0(A0));
     // T1 = *A0, 2 bytes
   case IFLO_OPS_MEM_LDUW_T1_A0:
-    if_ldu(if_memsuffixnum,IFRN_T1,2,if_addr);
-    if(exists_taint(A0_BASE,2,__FILE__,__LINE__))
-    transfer_taint(T1_BASE,2,A0_BASE,2,0,0,"NONE","NONE",-1);
+    if_ldu(a0_8,IFRN_T1,2,a1_64);
     break;
 
     // ditto, but signed.
   case IFLO_OPS_MEM_LDSW_T1_A0:
-    if_lds(if_memsuffixnum,IFRN_T1,2,if_addr);
-    if(exists_taint(A0_BASE,2,__FILE__,__LINE__))
-    transfer_taint(T1_BASE,2,A0_BASE,2,0,0,"NONE","NONE",-1);
+    if_lds(a0_8,IFRN_T1,2,a1_64);
     break;
 
     // T1 = *A0, 4 bytes
   case IFLO_OPS_MEM_LDL_T1_A0:
-    if_ldu(if_memsuffixnum,IFRN_T1,4,if_addr);
-    if(exists_taint(A0_BASE,4,__FILE__,__LINE__))
-    transfer_taint(T1_BASE,4,A0_BASE,4,0,0,"NONE","NONE",-1);
+    if_ldu(a0_8,IFRN_T1,4,a1_64);
     break;
 
     // *A0 = T0, one byte
   case IFLO_OPS_MEM_STB_T0_A0:
-   // if_st(if_memsuffixnum,IFRN_T0,1,if_addr);
-    info_flow_copy(if_addr,T0_BASE,1);
+    if_st(a0_8,IFRN_T0,1,a1_64);
     break;
 
     // two bytes.
   case IFLO_OPS_MEM_STW_T0_A0:
-    //if_st(if_memsuffixnum,IFRN_T0,2,if_addr);
-    info_flow_copy(if_addr,T0_BASE,2);
+    if_st(a0_8,IFRN_T0,2,a1_64);
     break;
 
     // all four bytes
   case IFLO_OPS_MEM_STL_T0_A0:
-    if_st(if_memsuffixnum,IFRN_T0,4,if_addr);
+    if_st(a0_8,IFRN_T0,4,a1_64);
     break;
-
-    // *A0 = T1, one byte
-    //  case IFLO_OPS_MEM_STB_T1_A0:
-        //if_st(if_memsuffixnum,IFRN_T1,1);
-   //     info_flow_copy(if_addr,T1_BASE,1);
-   //     break;
-
-    // two bytes.
+    
   case IFLO_OPS_MEM_STW_T1_A0:
-   // if_st(if_memsuffixnum,IFRN_T1,2,if_addr);
-	info_flow_copy(if_addr,T1_BASE,2);
+    if_st(a0_8,IFRN_T1,2,a1_64);
     break;
 
-    // all four bytes
   case IFLO_OPS_MEM_STL_T1_A0:
-    if_st(if_memsuffixnum,IFRN_T1,4,if_addr);
+    if_st(a0_8,IFRN_T1,4,a1_64);
     break;
 
     /*
@@ -629,12 +1285,12 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
     // EIP = T0;
   case IFLO_JMP_T0:
     // check here that EIP isn't tainted?  
-    // copy info from T0 to EIP? 
+    if_copy_r4(IFRN_EIP,IFRN_T0);
     break;
 
-    // raincheck
     // EIP = (uint32_t)PARAM1;
   case IFLO_MOVL_EIP_IM:
+    if_delete_r4(IFRN_EIP);
     break;
 
     /*
@@ -672,6 +1328,9 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
 	...
     } else 
     */
+
+HERE I AM!
+
   case IFLO_CMPXCHG8B_PART1:
     //if_st(0,IFRN_EAX,4,if_addr);
     //if_st(0,IFRN_ECX,4,if_addr+4);
@@ -810,7 +1469,7 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE:
   case IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE:
     {
-      trl_boolean okay = FALSE;
+      uint8_t okay = FALSE;
       if (if_shift == 1) { // DATA_BITS == 16
 	if_delete_r4(IFRN_T0);
 	okay = TRUE;
@@ -1155,19 +1814,19 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
     // raincheck.
     
     // T0 = *(uint32_t *)((char *)env + PARAM1);
-  case IFLO_ADDR_MOVL_T0_ENV:
+  case IFLO_MOVL_T0_ENV:
     // *(uint32_t *)((char *)env + PARAM1) = T0;
-  case IFLO_ADDR_MOVL_ENV_T0:
+  case IFLO_MOVL_ENV_T0:
     // *(uint32_t *)((char *)env + PARAM1) = T1;
-  case IFLO_ADDR_MOVL_ENV_T1:
+  case IFLO_MOVL_ENV_T1:
     // T0 = *(target_ulong *)((char *)env + PARAM1);
-  case IFLO_ADDR_MOVTL_T0_ENV:
+  case IFLO_MOVTL_T0_ENV:
     // *(target_ulong *)((char *)env + PARAM1) = T0;
-  case IFLO_ADDR_MOVTL_ENV_T0:
+  case IFLO_MOVTL_ENV_T0:
     // T1 = *(target_ulong *)((char *)env + PARAM1);
-  case IFLO_ADDR_MOVTL_T1_ENV:
+  case IFLO_MOVTL_T1_ENV:
     // *(target_ulong *)((char *)env + PARAM1) = T1;
-  case IFLO_ADDR_MOVTL_ENV_T1:
+  case IFLO_MOVTL_ENV_T1:
     break;
 
     // raincheck
@@ -1267,15 +1926,12 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
     {
       char alabel[1024];						        
       // construct a new keyboard label for each keycode.
-
             
-      
-
-
+     
       snprintf (alabel, 1024, "key-%s-%x-%x", 
 		if_keyboard_label, if_key_num,if_key_val);
-      push_key_label(alabel);
-      if_key_num ++;      
+      //      push_key_label(alabel);
+      //      if_key_num ++;      
       //      if (debug_at_least_low()) {
 	printf ("IFLO_KEYBOARD_INPUT: if_p_orig=%p val=%x label=%s\n", 
 		if_p_orig, if_key_val, alabel);
@@ -1283,8 +1939,8 @@ void iferret_info_flow_process(iferret_t *iferret,  iferret_op_t *op) {
       info_flow_label(T1_BASE, 1, alabel);
       info_flow_mark_as_possibly_tainted(IFRN_T1);      
       
-      if (if_key_num == 3 && if_key_val == 0x2e) {
-      	foo2 = TRUE;
+      //      if (if_key_num == 3 && if_key_val == 0x2e) {
+      //      	foo2 = TRUE;
 //	if_debug_set_med();
       }
     }

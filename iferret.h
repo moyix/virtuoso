@@ -1,7 +1,12 @@
 #ifndef __IFERRET_H_
 #define __IFERRET_H_
 
-
+#include <stdint.h>
+#include "int_int_hashtable.h"
+#include "int_string_hashtable.h"
+#include "iferret_ops.h"
+#include "int_set.h"
+#include "vslht.h"
 
 typedef enum iferret_mode_enum {
   IFERRET_MODE_RELAXED,

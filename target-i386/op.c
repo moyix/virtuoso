@@ -51,13 +51,14 @@ target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 // translate A0 into a physical address.  
 static inline int phys_a0() {
   int addr;
-
+  /*
   addr = cpu_get_phys_addr(env,A0); 
   if (addr == -1)
     return 0;
   else
     return addr;
-  //  return A0;
+  */
+  return A0;
 }
 
 
@@ -315,7 +316,7 @@ void OPPROTO op_mulb_AL_T0(void)
     unsigned int res;
     res = (uint8_t)EAX * (uint8_t)T0;
 
-    iferret_log_info_flow_op_write_0(IFLO_MULB_A0_T0);
+    iferret_log_info_flow_op_write_0(IFLO_MULB_AL_T0);
 
     EAX = (EAX & ~0xffff) | res;
     CC_DST = res;
@@ -327,7 +328,7 @@ void OPPROTO op_imulb_AL_T0(void)
     int res;
     res = (int8_t)EAX * (int8_t)T0;
 
-    iferret_log_info_flow_op_write_0(IFLO_IMULB_A0_T0);
+    iferret_log_info_flow_op_write_0(IFLO_IMULB_AL_T0);
 
     EAX = (EAX & ~0xffff) | (res & 0xffff);
     CC_DST = res;
@@ -484,7 +485,7 @@ void OPPROTO op_divw_AX_T0(void)
     q &= 0xffff;
     r = (num % den) & 0xffff;
 
-    iferret_log_info_flow_op_write_0(IFLO_IDIVW_AX_T0);
+    iferret_log_info_flow_op_write_0(IFLO_DIVW_AX_T0);
 
     EAX = (EAX & ~0xffff) | q;
     EDX = (EDX & ~0xffff) | r;
