@@ -2901,11 +2901,8 @@ void helper_manage_pid_stuff(void);
 void OPPROTO op_iferret_prologue(void) 
 {
   float f;
-  // NB: This conditional is *expensive* so don't do it unless info_flow compiled in. 
-#ifdef IFERRET_INFO_FLOW
   // check if info flow log is anywhere near overflow
   check_rollup_op();
-#endif
   // write eip of head of this tb
   write_eip_to_iferret_log();
   // manage PID stuff.  

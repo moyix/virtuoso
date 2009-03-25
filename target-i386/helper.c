@@ -4845,7 +4845,7 @@ void iferret_debug_log_rollup() {
 void check_rollup(char *label) { 
   uint32_t remaining;
   remaining = IFERRET_LOG_SIZE - (iferret_log_ptr - iferret_log_base);
-  printf ("label=%s remaining=%d   cushion=%d\n", label, remaining, IFERRET_LOG_CUSHION);
+  //  printf ("label=%s remaining=%d   cushion=%d\n", label, remaining, IFERRET_LOG_CUSHION);
   if (remaining < IFERRET_LOG_CUSHION) {
     uint32_t overflow;
     overflow = IFERRET_LOG_CUSHION - remaining;
@@ -4860,7 +4860,11 @@ void check_rollup(char *label) {
 
 
 void check_rollup_op() {
+#ifdef IFERRET_INFO_FLOW
+  // check if info flow log is anywhere near overflow
   check_rollup("op.c");
+#endif
+
 }
 
 
