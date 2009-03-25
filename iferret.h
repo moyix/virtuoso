@@ -18,6 +18,7 @@ typedef struct opcount {
 
 typedef struct iferret_struct_t {
   iferret_mode_t mode;          // mode -- relaxed / suspicious
+  uint32_t use_mal_set;
   int_string_hashtable_t *pid_commands;     // current set of pids seen, mapped to command strings
   int_set_t *mal_pids;          // current set of malicious pids
   uint32_t eip_at_head_of_tb;   // eip for head of tb currently being executed
