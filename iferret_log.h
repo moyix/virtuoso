@@ -21,9 +21,15 @@
 // First comes physical memory, then registers, then io_buffer, then hd.
 // Define the start of io_buffer to be phys_ram_size + size of registers
 #define IO_BUFFER_BASE_ADDR phys_ram_size + 16*8
-//define the start of hd to be phys_ram_size + size of registers + size of io_buffer
-#define HD_BASE_ADDR IO_BUFFER_BASE_ADDR + 16*512+4
 
+//define the start of hd to be phys_ram_size + size of registers + size of io_buffer
+//#define HD_BASE_ADDR IO_BUFFER_BASE_ADDR + 16*512+4
+
+// nope.  just use some address that is higher than 
+//                    0x800000000000
+// which is the higher than the top we actually observed from qemu. 
+// (from running pmap on qemu whilst it was in flight)
+#define HD_BASE_ADDR 0x1000000000000
 // mapping from register name to number
 #define IFRN_EAX 0
 #define IFRN_ECX 1
@@ -47,7 +53,7 @@
 // we might encounter for a real process by sending them to 
 // page 0.  
 //#define IFRBA(rn) (char *) (((int) &(ifreg[rn])) - ((int) &(ifreg[0])))
-#define IFRBA(rn) ifregaddr[rn]
+//#define IFRBA(rn) ifregaddr[rn]
 
 
 #define IFERRET_OP_MAX_NUM_ARGS 100

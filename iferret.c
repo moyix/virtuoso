@@ -132,6 +132,7 @@ iferret_t *iferret_create() {
   iferret->opcount = (opcount_t *) my_calloc (sizeof (opcount_t) * IFLO_DUMMY_LAST);
   iferret->open_fd_table = int_int_hashtable_new();
   iferret->current_pid = -1;
+  iferret->last_hd_transfer_from = 0;
   return (iferret);
 }
 
@@ -640,6 +641,7 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
   stat(filename, &fs);
   iferret_log_size = fs.st_size;
   fp = fopen(filename, "r");
+  iferret_log_preamble(); 
   n =  fread(iferret_log_base, 1, iferret_log_size, fp);
   fclose(fp);
   printf ("Processing log %s -- %d bytes\n", filename, n);
@@ -727,7 +729,7 @@ int main (int argc, char **argv) {
       for (i=0; i<num_logs; i++) {
         sprintf(filename, "%s-%d", log_prefix, i);
         printf ("pre-process: iteration %d reading log: %s\n",iteration, filename);
-            iferret_log_pre_process(iferret,filename);
+	iferret_log_pre_process(iferret,filename);
         //iferret_log_spit(filename);
       }
       iteration++;

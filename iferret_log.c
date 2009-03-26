@@ -367,18 +367,48 @@ void iferret_log_create() {
   iferret_set_keyboard_label("keyboard_startup");
   iferret_set_network_label("network_startup");
   // set up ifregaddr array.
-  for (i=0; i<16; i++) {
-    // all addresses memory addresses will be on the interval 
-    // 0 .. phys_ram_size-1.  
-    // We'll pretend the registers live starting at phys_ram_size.
-    // and we'll make them 8 bytes just for fun.
-    ifregaddr[i] = (unsigned long long) ( ((uint64_t) phys_ram_size) + i*8);
-    //    printf("Register i=%d is at 0x%x\r\n", i, (unsigned int) ifregaddr[i]);
-  }
-
+#ifndef IFERRET_BACKEND 
+  ifregaddr[IFRN_EAX] = &(EAX);
+  ifregaddr[IFRN_ECX] = &(ECX);
+  ifregaddr[IFRN_EDX] = &(EDX);
+  ifregaddr[IFRN_EBX] = &(EBX);
+  ifregaddr[IFRN_ESP] = &(ESP);
+  ifregaddr[IFRN_EBP] = &(EBP);
+  ifregaddr[IFRN_ESI] = &(ESI);
+  ifregaddr[IFRN_EDI] = &(EDI);
+  ifregaddr[IFRN_T0] = &(T0);
+  ifregaddr[IFRN_T1] = &(T1);
+  ifregaddr[IFRN_A0] = &(A0);
+  ifregaddr[IFRN_Q0] = &(Q0);
+  ifregaddr[IFRN_Q1] = &(Q1);
+  ifregaddr[IFRN_Q2] = &(Q2);
+  ifregaddr[IFRN_Q3] = &(Q3);
+  ifregaddr[IFRN_Q4] = &(Q4);
+#endif
+  iferret_log_preamble();
 }
 
 
+
+#ifndef IFERRET_BACKEND  
+// we are compiling the front-end, i.e the qemu bit.
+// need to save the register base addresses to start of every log.  
+void iferret_log_preamble() {
+  int i;
+  for (i=0; i<=IFRN_Q4; i++) {
+    iferret_log_uint64_t_write(ifregaddr[i]);
+  }
+}
+#else
+// we are compiling the back-end, i.e. the bit that reads the log and analyzes it.
+// need to read the register base addresses from the start of every log.  
+void iferret_log_preamble() {
+  int i;
+  for (i=0; i<=IFRN_Q4; i++) {
+    ifregaddr[i] = iferret_log_uint64_t_read();
+  }
+}
+#endif
 
 
 // save current if log to a file for some reason    
@@ -403,6 +433,7 @@ void iferret_log_write_to_file(char *label) {
 
   // processing complete; ready to write over old log.  
   iferret_log_ptr = iferret_log_base; 
+  iferret_log_preamble();
 
 }
 

@@ -32,6 +32,7 @@ typedef struct iferret_struct_t {
   int_int_hashtable_t *open_fd_table;  // map from (pid,fd) to file info for open files
   vslht *mal_files;            // set of malicious files (written to by a mal pid)
   vslht *read_files;           // set of files read by a malicious pid
+  uint64_t last_hd_transfer_from;  // remember from address from _PART1
 } iferret_t;
 
 

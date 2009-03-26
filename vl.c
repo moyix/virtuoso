@@ -8873,9 +8873,6 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    //RWS we need phys_ram_base for iferret_log_create, so we're inserting here
-    iferret_log_create();
-
 
     bdrv_init();
 
@@ -8976,6 +8973,12 @@ int main(int argc, char **argv)
 
     machine->init(ram_size, vga_ram_size, boot_devices, ds,
                   kernel_filename, kernel_cmdline, initrd_filename, cpu_model);
+
+    //RWS we need phys_ram_base for iferret_log_create, so we're inserting here
+    //TRL we need to do this after we've initialized the machine,
+    // since only then do we know where registers &c are.  
+    iferret_log_create();
+
 
     /* init USB devices */
     if (usb_enabled) {

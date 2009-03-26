@@ -616,13 +616,15 @@ void OPPROTO glue(op_movl_T0_Dshift, SUFFIX)(void)
 // I think T0 is the port and T1 is the data to be tossed out on that port.  
 void OPPROTO glue(glue(op_out, SUFFIX), _T0_T1)(void)
 {
+      
+  glue(cpu_out, SUFFIX)(env, T0, T1 & DATA_MASK);
+
   // apparently this is the port # for hd out.
   if(T0 == 0x01f0){
     //         IFLW_HD_TRANSFER_PART1(IFRBA(IFRN_T1)); 
-    iferret_log_info_flow_op_write_8(IFLO_OPS_TEMPLATE_HD_TRANSFER_PART1,IFRBA(IFRN_T1));
+    // T1 -> ?
+    iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1,T1_BASE);
   }
-      
-  glue(cpu_out, SUFFIX)(env, T0, T1 & DATA_MASK);
 
   // apparently this is the port # for network out.    
   if(T0 == 0xc110){
@@ -642,13 +644,9 @@ void OPPROTO glue(glue(op_out, SUFFIX), _T0_T1)(void)
 
 void OPPROTO glue(glue(op_in, SUFFIX), _T0_T1)(void)
 {
+  T1 = glue(cpu_in, SUFFIX)(env, T0);
   
-  //  IFLW_SHIFT(IN_T0_T1);
-  iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_IN_T0_T1,SHIFT);
-
-    T1 = glue(cpu_in, SUFFIX)(env, T0);
-
-  if(T0 == 0xc110){
+  if (T0 == 0xc110){
 #if SUFFIX_QUOTED == 'b'
     //	IFLW_NETWORK_INPUT_BYTE_T1(T1);	
     iferret_log_info_flow_op_write_4(IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T1,T1);
@@ -660,25 +658,31 @@ void OPPROTO glue(glue(op_in, SUFFIX), _T0_T1)(void)
     iferret_log_info_flow_op_write_4(IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T1,T1);
 #endif	 
   }
-  if(T0 == 0x01f0){
+  else {
+    if (T0 == 0x01f0){
 #if SUFFIX_QUOTED == 'w'
-    //	IFLW_HD_TRANSFER_PART2(IFRBA(IFRN_T1),2);	
-    iferret_log_info_flow_op_write_81(IFLO_OPS_TEMPLATE_HD_TRANSFER_PART2,IFRBA(IFRN_T1),2);
+      //	IFLW_HD_TRANSFER_PART2(IFRBA(IFRN_T1),2);	
+      //  ?? -> T1
+      iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2,T1_BASE,2);
 #elif SUFFIX_QUOTED == 'l'
-    //	IFLW_HD_TRANSFER_PART2(IFRBA(IFRN_T1),4);	
-    iferret_log_info_flow_op_write_81(IFLO_OPS_TEMPLATE_HD_TRANSFER_PART2,IFRBA(IFRN_T1),4);
+      //	IFLW_HD_TRANSFER_PART2(IFRBA(IFRN_T1),4);	
+      iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2,T1_BASE,4);
 #endif	 
-  }
+    }
+    else {
+      //  IFLW_SHIFT(IN_T0_T1);
+      // log this just to be able to delete taint on T1.
+      iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_IN_T0_T1,SHIFT);
+    }
+  }  
  
 }
 
 void OPPROTO glue(glue(op_in, SUFFIX), _DX_T0)(void)
 {
-  //  IFLW_SHIFT(IN_DX_T0);
-  iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_IN_DX_T0,SHIFT);
-
-    T0 = glue(cpu_in, SUFFIX)(env, EDX & 0xffff);
-  if((EDX & 0xffff) == 0xc110){
+  T0 = glue(cpu_in, SUFFIX)(env, EDX & 0xffff);
+  
+  if ((EDX & 0xffff) == 0xc110){
 #if SUFFIX_QUOTED == 'b'
     //	IFLW_NETWORK_INPUT_BYTE_T0(T0);	
     iferret_log_info_flow_op_write_4(IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T0,T0);	
@@ -690,45 +694,56 @@ void OPPROTO glue(glue(op_in, SUFFIX), _DX_T0)(void)
     iferret_log_info_flow_op_write_4(IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T0,T0);	
 #endif	 
   } 
-  if((EDX & 0xffff) == 0x01f0){
+  else {
+    if ((EDX & 0xffff) == 0x01f0){
 #if SUFFIX_QUOTED == 'w'
-    //	IFLW_HD_TRANSFER_PART2(IFRBA(IFRN_T0),2);	
-    iferret_log_info_flow_op_write_81(IFLO_OPS_TEMPLATE_HD_TRANSFER_PART2,IFRBA(IFRN_T0),2);
-    /*
-    my_debug_print (IFRN_T0);
-    my_debug_print (IFRBA(IFRN_T0));
-    */
+      //	IFLW_HD_TRANSFER_PART2(IFRBA(IFRN_T0),2);	
+      iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2,T0_BASE,2);
+      /*
+	my_debug_print (IFRN_T0);
+	my_debug_print (IFRBA(IFRN_T0));
+      */
 #elif SUFFIX_QUOTED == 'l'
-    //  IFLW_HD_TRANSFER_PART2(IFRBA(IFRN_T0),4);	
-    iferret_log_info_flow_op_write_81(IFLO_OPS_TEMPLATE_HD_TRANSFER_PART2,IFRBA(IFRN_T0),4);    
-    /*
-    my_debug_print (IFRN_T0);
-    my_debug_print (IFRBA(IFRN_T0));
-    */
+      //  IFLW_HD_TRANSFER_PART2(T0_BASE,4);	
+      iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2,T0_BASE,4);    
+      /*
+	my_debug_print (IFRN_T0);
+	my_debug_print (IFRBA(IFRN_T0));
+      */
 #endif	 
+    }
+    else {
+      //  IFLW_SHIFT(IN_DX_T0);
+      // basically, we just want to know that T0 got overwritten here. 
+      iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_IN_DX_T0,SHIFT);
+    }
   }
 }
 
 void OPPROTO glue(glue(op_out, SUFFIX), _DX_T0)(void)
 {
-  if((EDX & 0xffff) == 0x01f0){
+  glue(cpu_out, SUFFIX)(env, EDX & 0xffff, T0);
+
+  if ((EDX & 0xffff) == 0x01f0){
     //	IFLW_HD_TRANSFER_PART1(IFRBA(IFRN_T0));	
-    iferret_log_info_flow_op_write_8(IFLO_OPS_TEMPLATE_HD_TRANSFER_PART1,IFRBA(IFRN_T0));    
+    iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1,T0_BASE);    
   }  
-  
-    glue(cpu_out, SUFFIX)(env, EDX & 0xffff, T0);
-  
-  if((EDX & 0xffff) == 0xc110){
+  else {  
+    if ((EDX & 0xffff) == 0xc110){
 #if SUFFIX_QUOTED == 'b'
-    //        IFLW_NETWORK_OUTPUT_BYTE_T0();
-    iferret_log_info_flow_op_write_0(IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T0);     
+      //        IFLW_NETWORK_OUTPUT_BYTE_T0();
+      iferret_log_info_flow_op_write_0(IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T0);     
 #elif SUFFIX_QUOTED == 'w'
-    //        IFLW_NETWORK_OUTPUT_WORD_T0();
-    iferret_log_info_flow_op_write_0(IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T0);     
+      //        IFLW_NETWORK_OUTPUT_WORD_T0();
+      iferret_log_info_flow_op_write_0(IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T0);     
 #elif SUFFIX_QUOTED == 'l'
-    //        IFLW_NETWORK_OUTPUT_LONG_T0();
-    iferret_log_info_flow_op_write_0(IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T0);     
+      //        IFLW_NETWORK_OUTPUT_LONG_T0();
+      iferret_log_info_flow_op_write_0(IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T0);     
 #endif
+    }
+    else {
+      // ??
+    }
   }
 }
 

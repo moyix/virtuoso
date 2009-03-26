@@ -766,7 +766,10 @@ static void ide_sector_read(IDEState *s)
         if (n > s->req_nb_sectors)
             n = s->req_nb_sectors;
 	//        IFLW_HD_TRANSFER(HD_BASE_ADDR + sector_num*512, IO_BUFFER_BASE_ADDR, n*512);
-	iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, HD_BASE_ADDR + sector_num*512, IO_BUFFER_BASE_ADDR, n*512);
+
+	// from HD to IO_BUFFER
+	// (op,from_addr,to_addr,size)
+	iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, HD_BASE_ADDR + sector_num*512, s->io_buffer, n*512);
         ret = bdrv_read(s->bs, sector_num, s->io_buffer, n);
         ide_transfer_start(s, s->io_buffer, 512 * n, ide_sector_read);
         ide_set_irq(s);
@@ -811,7 +814,11 @@ static int dma_buf_rw(BMDMAState *bm, int is_write)
             if (is_write) {
 	      // IFLW_HD_TRANSFER(IO_BUFFER_BASE_ADDR + s->io_buffer_index, bm->cur_prd_addr, l);
 
-	      iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, IO_BUFFER_BASE_ADDR + s->io_buffer_index, bm->cur_prd_addr,  l);
+	      // from IO_BUFFER to physical memory.
+	      // (op,from_addr,to_addr,l)
+	      //	      iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, IO_BUFFER_BASE_ADDR + s->io_buffer_index, bm->cur_prd_addr,  l);
+
+	      // this one should just get handled by cpu_physical_memory_rw...
                 cpu_physical_memory_write(bm->cur_prd_addr,
                                           s->io_buffer + s->io_buffer_index, l);
 		/*
@@ -820,7 +827,13 @@ static int dma_buf_rw(BMDMAState *bm, int is_write)
 		*/
             } else {
 	      // IFLW_HD_TRANSFER(bm->cur_prd_addr, IO_BUFFER_BASE_ADDR + s->io_buffer_index, l);	
-	      iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, bm->cur_prd_addr, IO_BUFFER_BASE_ADDR + s->io_buffer_index, l);	
+	      
+	      // from IO_BUFFER to physical memory
+	      // (op,from_addr,to_addr,l)
+	      //	      iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, bm->cur_prd_addr, IO_BUFFER_BASE_ADDR + s->io_buffer_index, l);	
+
+
+	      // this one should just get handled by cpu_physical_memory_rw...
                 cpu_physical_memory_read(bm->cur_prd_addr,
                                           s->io_buffer + s->io_buffer_index, l);
 		/*
@@ -877,7 +890,9 @@ static void ide_read_dma_cb(void *opaque, int ret)
     printf("aio_read: sector_num=%lld n=%d\n", sector_num, n);
 #endif
     //    IFLW_HD_TRANSFER(HD_BASE_ADDR + sector_num*512, IO_BUFFER_BASE_ADDR, n*512);
-    iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, HD_BASE_ADDR + sector_num*512, IO_BUFFER_BASE_ADDR, n*512);
+
+    // HD -> IO_BUFFER
+    iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, HD_BASE_ADDR + sector_num*512, s->io_buffer, n*512);
    bm->aiocb = bdrv_aio_read(s->bs, sector_num, s->io_buffer, n,
                               ide_read_dma_cb, bm);
 }
@@ -910,7 +925,9 @@ static void ide_sector_write(IDEState *s)
     if (n > s->req_nb_sectors)
         n = s->req_nb_sectors;
     //    IFLW_HD_TRANSFER(IO_BUFFER_BASE_ADDR, HD_BASE_ADDR + sector_num*512, n*512);
-    iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, IO_BUFFER_BASE_ADDR, HD_BASE_ADDR + sector_num*512, n*512);
+
+    // IO_BUFFER -> HD
+    iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, s->io_buffer, HD_BASE_ADDR + sector_num*512, n*512);
   //search_buf_for_pattern((char*)s->io_buffer,n*512);
     ret = bdrv_write(s->bs, sector_num, s->io_buffer, n);
     s->nsector -= n;
@@ -984,7 +1001,10 @@ static void ide_write_dma_cb(void *opaque, int ret)
     printf("aio_write: sector_num=%lld n=%d\n", sector_num, n);
 #endif
     //    IFLW_HD_TRANSFER(IO_BUFFER_BASE_ADDR, HD_BASE_ADDR + sector_num*512, n*512);
-    iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, IO_BUFFER_BASE_ADDR, HD_BASE_ADDR + sector_num*512, n*512);
+
+
+    // IO_BUFFER -> HD
+    iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, s->io_buffer, HD_BASE_ADDR + sector_num*512, n*512);
     bm->aiocb = bdrv_aio_write(s->bs, sector_num, s->io_buffer, n,
                                ide_write_dma_cb, bm);
 }
@@ -2318,7 +2338,10 @@ static void ide_data_writew(void *opaque, uint32_t addr, uint32_t val)
     uint8_t *p;
 
     //    IFLW_HD_TRANSFER_PART2(IO_BUFFER_BASE_ADDR + (s->data_ptr - s->data_ptr_base), 2);
-    iferret_log_info_flow_op_write_84(IFLO_HD_TRANSFER_PART2, IO_BUFFER_BASE_ADDR + (s->data_ptr - s->data_ptr_base), 2);
+
+    // (op,to,size)
+    // ? -> IO_BUFFER 
+    iferret_log_info_flow_op_write_84(IFLO_HD_TRANSFER_PART2, s->io_buffer + (s->data_ptr - s->data_ptr_base), 2);
     p = s->data_ptr;
     *(uint16_t *)p = le16_to_cpu(val);
     p += 2;
@@ -2336,7 +2359,11 @@ static uint32_t ide_data_readw(void *opaque, uint32_t addr)
     uint8_t *p;
     int ret;
     //    IFLW_HD_TRANSFER_PART1(IO_BUFFER_BASE_ADDR + (s->data_ptr - s->data_ptr_base));
-    iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1, IO_BUFFER_BASE_ADDR + (s->data_ptr - s->data_ptr_base));
+
+
+    // (op,from)
+    // IO_BUFFER -> 
+    iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1, s->io_buffer + (s->data_ptr - s->data_ptr_base));
     /*
     printf("IO_BUFF starts at %llu and offset is %u\r\n",IO_BUFFER_BASE_ADDR,s->data_ptr - s->data_ptr_base);
     printf("phys_ram_size is %llu\r\n",(unsigned long long)phys_ram_size);
@@ -2356,7 +2383,9 @@ static void ide_data_writel(void *opaque, uint32_t addr, uint32_t val)
     uint8_t *p;
 
     //    IFLW_HD_TRANSFER_PART2(IO_BUFFER_BASE_ADDR + (s->data_ptr - s->data_ptr_base), 4);
-    iferret_log_info_flow_op_write_84(IFLO_HD_TRANSFER_PART2, IO_BUFFER_BASE_ADDR + (s->data_ptr - s->data_ptr_base), 4);
+
+    // -> IO_BUFFER
+    iferret_log_info_flow_op_write_84(IFLO_HD_TRANSFER_PART2, s->io_buffer + (s->data_ptr - s->data_ptr_base), 4);
     p = s->data_ptr;
     *(uint32_t *)p = le32_to_cpu(val);
     p += 4;
@@ -2372,7 +2401,9 @@ static uint32_t ide_data_readl(void *opaque, uint32_t addr)
     int ret;
 
     //    IFLW_HD_TRANSFER_PART1(IO_BUFFER_BASE_ADDR + (s->data_ptr - s->data_ptr_base));
-    iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1, IO_BUFFER_BASE_ADDR + (s->data_ptr - s->data_ptr_base));
+
+    // IO_BUFFER -> 
+    iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1, s->io_buffer + (s->data_ptr - s->data_ptr_base));
     /*
     printf("IO_BUFF starts at %llu and offset is %u\r\n",IO_BUFFER_BASE_ADDR,s->data_ptr - s->data_ptr_base);
     printf("phys_ram_size is %llu\r\n",(unsigned long long)phys_ram_size);

@@ -51,14 +51,14 @@ target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 // translate A0 into a physical address.  
 static inline int phys_a0() {
   int addr;
-  /*
+
   addr = cpu_get_phys_addr(env,A0); 
   if (addr == -1)
     return 0;
   else
-    return addr;
-  */
-  return A0;
+    return addr + phys_ram_base;
+  
+  //  return A0;
 }
 
 
@@ -1084,7 +1084,7 @@ void OPPROTO op_decq_ECX(void)
 */
 void op_addl_A0_SS(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_ADDL_A0_SS);
+  iferret_log_info_flow_op_write_8(IFLO_ADDL_A0_SS,env->segs[R_SS].base);
 
     A0 = (uint32_t)(A0 + env->segs[R_SS].base);
 }
@@ -1389,8 +1389,7 @@ void OPPROTO op_das(void)
 /* never use it with R_CS */
 void OPPROTO op_movl_seg_T0(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_SEG_T0);
-
+  iferret_log_info_flow_op_write_0(IFLO_MOVL_SEG_T0);
     load_seg(PARAM1, T0);
 }
 
@@ -1448,7 +1447,9 @@ void OPPROTO op_arpl(void)
         /* XXX: emulate bug or 0xff3f0000 oring as in bochs ? */
         T0 = (T0 & ~3) | (T1 & 3);
         T1 = CC_Z;
+	iferret_info_flow_log_op_write(IFLO_ARPL_CASE1);
    } else {
+	iferret_info_flow_log_op_write(IFLO_ARPL_CASE1);
         T1 = 0;
     }
     FORCE_RET();

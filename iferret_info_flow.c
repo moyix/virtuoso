@@ -10,10 +10,25 @@ extern unsigned long long ifregaddr[];
 extern uint64_t safe_address_for_arbitrary_tainting;
 
 
-extern uint64_t fake_base_addr_for_env;
-
 uint32_t if_debug = 0;
 
+
+#define EAX_BASE ifregaddr[IFRN_EAX]
+#define ECX_BASE ifregaddr[IFRN_ECX]
+#define EDX_BASE ifregaddr[IFRN_EDX]
+#define EBX_BASE ifregaddr[IFRN_EBX]
+#define ESP_BASE ifregaddr[IFRN_ESP]
+#define EBP_BASE ifregaddr[IFRN_EBP]
+#define ESI_BASE ifregaddr[IFRN_ESI]
+#define EDI_BASE ifregaddr[IFRN_EDI]
+#define TO_BASE ifregaddr[IFRN_TO]
+#define T1_BASE ifregaddr[IFRN_T1]
+#define A0_BASE ifregaddr[IFRN_A0]
+#define Q0_BASE ifregaddr[IFRN_Q0]
+#define Q1_BASE ifregaddr[IFRN_Q1]
+#define Q2_BASE ifregaddr[IFRN_Q2]
+#define Q3_BASE ifregaddr[IFRN_Q3]
+#define Q4_BASE ifregaddr[IFRN_Q4]
 
 
 char* info_flow_reg_str[16] = {
@@ -152,44 +167,41 @@ uint8_t debug_at_least_omg() {
 }
 
 
-
-
-
 // p is an address that came out of the log.  
 // or it might be a fake address, like a register.
 // decide which and print something approriate. 
 void render_address(unsigned long long p) {
-  if (p == IFRBA(IFRN_EAX)) 
+  if (p == EAX_BASE)
     printf ("&eax");
-  else if (p == IFRBA(IFRN_ECX)) 
+  else if (p == ECX_BASE) 
     printf ("&ecx");
-  else if (p == IFRBA(IFRN_EDX)) 
+  else if (p == EDX_BASE)
     printf ("&edx");
-  else if (p == IFRBA(IFRN_EBX)) 
+  else if (p == EBX_BASE)
     printf ("&ebx");
-  else if (p == IFRBA(IFRN_ESP)) 
+  else if (p == ESP_BASE)
     printf ("&esp");
-  else if (p == IFRBA(IFRN_EBP))
+  else if (p == EBP_BASE)
     printf ("&ebp");
-  else if (p == IFRBA(IFRN_ESI)) 
+  else if (p == ESI_BASE)
     printf ("&esi");
-  else if (p == IFRBA(IFRN_EDI)) 
+  else if (p == EDI_BASE)
     printf ("&edi");
-  else if (p == IFRBA(IFRN_T0)) 
+  else if (p == TO_BASE)
     printf ("&t0");
-  else if (p == IFRBA(IFRN_T1)) 
+  else if (p == T1_BASE)
     printf ("&t1");
-  else if (p == IFRBA(IFRN_A0)) 
+  else if (p == A0_BASE) 
     printf ("&a0");
-  else if (p == IFRBA(IFRN_Q0)) 
+  else if (p == Q0_BASE)
     printf ("&q0");
-  else if (p == IFRBA(IFRN_Q1)) 
+  else if (p == Q1_BASE)
     printf ("&q1");
-  else if (p == IFRBA(IFRN_Q2)) 
+  else if (p == Q2_BASE)
     printf ("&q2");
-  else if (p == IFRBA(IFRN_Q3)) 
+  else if (p == Q3_BASE)
     printf ("&q3");
-  else if (p == IFRBA(IFRN_Q4)) 
+  else if (p == Q4_BASE)
     printf ("&q4");
   else 
     printf ("0x%Lux",p);
@@ -198,14 +210,14 @@ void render_address(unsigned long long p) {
 
 // returns TRUE iff address is *not* to a QEMU temporary register
 uint8_t addr_is_real(unsigned long long p) {
-  if ((p == IFRBA(IFRN_T0))
-      || (p == IFRBA(IFRN_T1)) 
-      || (p == IFRBA(IFRN_A0)) 
-      || (p == IFRBA(IFRN_Q0)) 
-      || (p == IFRBA(IFRN_Q1)) 
-      || (p == IFRBA(IFRN_Q2)) 
-      || (p == IFRBA(IFRN_Q3)) 
-      || (p == IFRBA(IFRN_Q4)))
+  if ((p == T0_BASE)
+      || (p == T1_BASE)
+      || (p == A0_BASE)
+      || (p == Q0_BASE)
+      || (p == Q1_BASE)
+      || (p == Q2_BASE)
+      || (p == Q3_BASE)
+      || (p == Q4_BASE)
     return FALSE;
   else 
     return TRUE;
@@ -356,7 +368,7 @@ inline void if_delete_reg_aux (uint32_t rn, uint32_t o, uint32_t n) {
     if (debug_at_least_med()) 
       printf ("%s possibly tainted\n", info_flow_reg_str[rn]);
     // untaint 
-    info_flow_delete(IFRBA(rn)+o,n);		 
+    info_flow_delete(ifregaddr[rn]+o,n);		 
     if (o==0 && n==4) {
       // if we untainted the whole thing.  take note. 
       info_flow_mark_as_not_possibly_tainted(rn); 
@@ -413,7 +425,7 @@ inline void if_copy_regs_aux (uint32_t rn1, uint32_t o1, uint32_t rn2, uint32_t 
     if (debug_at_least_med()) {
       printf ("%s possibly tainted\n", info_flow_reg_str[rn2]);
     }
-    info_flow_copy(IFRBA(rn1)+o1,IFRBA(rn2)+o2,n);   
+    info_flow_copy(ifregaddr[rn1]+o1,ifregaddr[rn2]+o2,n);   
     info_flow_mark_as_possibly_tainted(rn1); 
   } 
   else { 
@@ -423,7 +435,7 @@ inline void if_copy_regs_aux (uint32_t rn1, uint32_t o1, uint32_t rn2, uint32_t 
     if (o1==0 && o2==0 && n==4 && info_flow_possibly_tainted(rn1)) { 
       // untainted rn1 copied to possibly tainted rn2.  
       // Thus, rn2 not possibly tainted  
-      info_flow_delete(IFRBA(rn1)+o1,n);	
+      info_flow_delete(ifregaddr[rn1]+o1,n);	
       info_flow_mark_as_not_possibly_tainted(rn1);	    
     } 
   }   
@@ -480,7 +492,7 @@ inline void if_compute_regs_aux (uint32_t rn1, uint32_t o1, uint32_t n1,
       printf ("%s possibly tainted\n", info_flow_reg_str[rn2]);
     }
     //  printf("IF_COMPUTE_REGS_AUX(%d,%d,%d,%d,%d,%d)\n", rn1,o1,n1,rn2,o2,n2); 
-    info_flow_compute(IFRBA(rn1)+o1,n1,IFRBA(rn2)+o2,n2); 
+    info_flow_compute(ifregaddr[rn1]+o1,n1,ifregaddr[rn2]+o2,n2); 
     info_flow_mark_as_possibly_tainted(rn1); 
   } 
   else { 
@@ -619,13 +631,13 @@ inline void if_ld(uint32_t msn, uint32_t rn, uint32_t n, uint32_t u, unsigned lo
   if (debug_at_least_med()) {
     printf ("if_ld msn=%d rn=%d n=%d u=%d p=%p\n", msn,rn,n,u,p);
   }
-  info_flow_ld( IFRBA(rn), p, n, u);	
+  info_flow_ld(ifregaddr[rn], p, n, u);	
   // assume rn might now be tainted.  
   info_flow_mark_as_possibly_tainted(rn);
   // check for tainted pointer.
   if (exists_taint(p,4,"NONE",-1)) {
     // tainted pointer.  Any labels on the 4 bytes of p need to get transferred as well.  
-    info_flow_compute(p,4,IFRBA(rn),n);
+    info_flow_compute(p,4,ifregaddr[rn],n);
   }
   if (debug_at_least_med()) {
     check_reg_taint(rn,__FILE__,__LINE__);
@@ -655,7 +667,7 @@ inline void if_st(uint32_t msn, uint32_t rn, uint32_t n, unsigned long long p) {
       printf ("%s possibly tainted\n", info_flow_reg_str[rn]);
     }
     // note: no way to *mark* an address as possibly tainted.  
-    info_flow_st(IFRBA(rn), p, n);	
+    info_flow_st(ifregaddr[rn], p, n);	
   } 
   else {
     if (debug_at_least_med()) 
@@ -976,7 +988,6 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     if_compute_regs_aux(IFRN_Q1,0,4,IFRN_T1,0,2);
     // t0(0..3) = q1(0..3)
     if_copy_r4(IFRN_EAX,IFRN_Q1);    
-
     break;
 
     // res = (int64_t)((int32_t)T0) * (int64_t)((int32_t)T1);
@@ -1148,8 +1159,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // A0 = (uint32_t)*(target_ulong *)((char *)env + PARAM1);
     // NB: if_addr is env+PARAM1
   case IFLO_MOVL_A0_SEG:    
-    // memsuffix is 0 for _raw?  A flying leap
-    if_ldu(0, IFRN_A0, 4, fake_base_addr_for_env + a0_64);
+    if_ldu(0, IFRN_A0,4,a0_64);
     break;
  
     // A0 = (uint32_t)(A0 + *(target_ulong *)((char *)env + PARAM1));
@@ -1158,7 +1168,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // q1 = *(if_addr)
     if_ldu(0,IFRN_Q1,4,a0_64);
     // a0 += q1
-    if_self_compute_r4(IFRN_A0, fake_base_addr_for_env + IFRN_Q1);
+    if_self_compute_r4(IFRN_A0, IFRN_Q1);
     break;
 
     // A0 = (uint32_t)(A0 + (EAX & 0xff));
@@ -1323,35 +1333,25 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     d = ldq(A0);
     if (d == (((uint64_t)EDX << 32) | EAX)) {
         // part_1 corresponds to this branch
+        iferret_log_info_flow_op_write_8(IFLO_CMPXCHG8B_PART1, phys_a0());       
         stq(A0, ((uint64_t)ECX << 32) | EBX);
         eflags |= CC_Z;
 	...
-    } else 
-    */
-
-HERE I AM!
-
-  case IFLO_CMPXCHG8B_PART1:
-    //if_st(0,IFRN_EAX,4,if_addr);
-    //if_st(0,IFRN_ECX,4,if_addr+4);
-    break;
-
-    /*
-    eflags = cc_table[CC_OP].compute_all();
-    d = ldq(A0);
-    if (d == (((uint64_t)EDX << 32) | EAX)) {
-      ...
     } else {
-      // part_2 corresponds to this branch
         EDX = d >> 32;
         EAX = d;
-        eflags &= ~CC_Z;
+	iferret_log_info_flow_op_write_0(IFLO_CMPXCHG8B_PART2);
     }
     */
+
+  case IFLO_CMPXCHG8B_PART1:
+    if_st(0,IFRN_EBX,4,a0_64);
+    if_st(0,IFRN_ECX,4,a0_64+4);
+    break;
+
   case IFLO_CMPXCHG8B_PART2:
-    //if_ldu(0,IFRN_EAX,4,if_addr);
-    // little endian -- higher order word comes 2nd
-    //if_ldu(0,IFRN_EDX,4,if_addr+4);
+    if_ld(0,IFRN_EAX,4,a0_64);
+    if_ld(0,IFRN_EDX,4,a0_64+4);
     break;
 
     // T0 = 0;
@@ -1435,21 +1435,25 @@ HERE I AM!
     // src = (DATA_STYPE)T0;
     // T0 = src >> count;    
   case IFLO_OPS_TEMPLATE_SAR_T0_T1:
-    // wrong.  prolly should use SHIFT to limit spread
+    // NB this is wrong.  prolly should use SHIFT to limit spread
     if_self_compute_r4(IFRN_T0,IFRN_T1);
     break;
 
-    /*
-      Start handling includes of ops_template_mem.h into ops_template.h, 
-      and thus into op.c
-      MEM_WRITE is the parameterization for this include, taking on values 0,1,2 
-      and undefined.
-      Note that this means each of these needs to be parameterized by *both*
-      if_shift and if_mem_write
-    */
+ 
 
-    // blimey. raincheck.  These fiddle with value for T0 and then (if mem_write == 1)
-    // store that value at A0.  Ugh. 
+  case IFLO_OPS_TEMPLATE_ROL_T0_T1_CC:
+  case IFLO_OPS_TEMPLATE_ROR_T0_T1_CC:
+  case IFLO_OPS_TEMPLATE_ROL_T0_T1:
+  case IFLO_OPS_TEMPLATE_ROR_T0_T1:
+  case IFLO_OPS_TEMPLATE_RCL_T0_T1_CC:
+  case IFLO_OPS_TEMPLATE_RCR_T0_T1_CC:
+  case IFLO_OPS_TEMPLATE_SHL_T0_T1_CC:
+  case IFLO_OPS_TEMPLATE_SHR_T0_T1_CC:
+  case IFLO_OPS_TEMPLATE_SAR_T0_T1_CC:
+    if_delete_r4(IFRN_T0);
+    break;
+
+
   case IFLO_OPS_TEMPLATE_ROL_T0_T1_CC_MEMWRITE:
   case IFLO_OPS_TEMPLATE_ROR_T0_T1_CC_MEMWRITE:
   case IFLO_OPS_TEMPLATE_ROL_T0_T1_MEMWRITE:
@@ -1459,79 +1463,111 @@ HERE I AM!
   case IFLO_OPS_TEMPLATE_SHL_T0_T1_CC_MEMWRITE:
   case IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE:
   case IFLO_OPS_TEMPLATE_SAR_T0_T1_CC_MEMWRITE:
-    //    if_delete_r4(IFRN_T0);
-    if (arg[0].val.u8 == 1) {
-      if_st(a0_64,T0_BASE);
+    if_delete_r4(IFRN_T0);
+    if_st(0,IFRN_T0,a1_64);
+    break;
+    
+
+  case IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC:
+  case IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC:
+    // T1 & 0xffff;
+    info_flow_delete(T1_BASE+2,2);
+    // T0 <- strangefunction(T0,T1)
+    if_self_compute(IFRN_T0, IFRN_T1, 4);
     break;
 
   case IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE:
-  case IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE:
   case IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE:
-  case IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE:
-    {
-      uint8_t okay = FALSE;
-      if (if_shift == 1) { // DATA_BITS == 16
-	if_delete_r4(IFRN_T0);
-	okay = TRUE;
-      }
-      else {
-	if (if_shift >= 2) { // DATA_BITS >= 32
-	  if_delete_r4(IFRN_T0);
-	  if_delete_r4(IFRN_T1);
-	  okay = TRUE;
-	}
-      }
-      if (okay == FALSE) {
-	printf ("DATA_BITS < 16 ?\n");
-	assert (1==0);
-      }    
-      break;
-    }
+    // T1 &= 0xffff;
+    info_flow_delete(T1_BASE+2,2);
+    // T0 <- strangefunction(T0,T1)
+    if_self_compute(IFRN_T0, IFRN_T1, 4);
+    // glue(st, MEM_SUFFIX)(A0, T0);
+    if_st(0,IFRN_T0,a1_64);
+    break;
 
-    // raincheck. 
+  case IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC:
+  case IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC:
+    // T1 &= 0xffff
+    // T0 = strangefunction(T0,T1,ECX)
+    if_self_compute(IFRN_T0, IFRN_T1, 4);
+    if_self_compute(IFRN_T0, IFRN_ECX, 4);
+    break;
+
+  case IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE:
+  case IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE:
+    // T1 &= 0xffff
+    // T0 = strangefunction(T0,T1,ECX)
+    if_self_compute_r4(IFRN_T0, IFRN_T1);
+    if_self_compute_r4(IFRN_T0, IFRN_ECX);
+    // glue(st, MEM_SUFFIX)(A0, T0);
+    if_st(0,IFRN_T0,a1_64);
+    break;
+
+  case IFLO_OPS_TEMPLATE_ADC_T0_T1_CC:
+  case IFLO_OPS_TEMPLATE_SBB_T0_T1_CC:
+    // T0 = T0 + T1 + cf;
+    if_self_compute_r4(IFRN_T0, IFRN_T1);
+    break;
+
   case IFLO_OPS_TEMPLATE_ADC_T0_T1_CC_MEMWRITE:
   case IFLO_OPS_TEMPLATE_SBB_T0_T1_CC_MEMWRITE:
-  case IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE:
-    if_delete_r4(IFRN_T0);
+    // T0 = T0 + T1 + cf;
+    if_self_compute_r4(IFRN_T0, IFRN_T1);
+    // glue(st, MEM_SUFFIX)(A0, T0);
+    if_st(0,IFRN_T0,a1_64);
     break;
-    
+
+  case IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC:
+    // T0 = T1;
+    if_copy_r4(IFRN_T0, IFRN_T1);
+    break;
+
+  case IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE:
+    // T0 = T1;
+    if_copy_r4(IFRN_T0, IFRN_T1);
+    // glue(st, MEM_SUFFIX)(A0, T0);
+    if_st(0,IFRN_T0,a1_64);
+    break;
+
+  case IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_CASE2:
+    // EAX = (EAX & ~DATA_MASK) | (T0 & DATA_MASK);
+    if_self_compute_r4(IFRN_EAX, IFRN_T0);
+    break;
+
+
     /*
       Done handling includes of ops_template_mem.h into ops_template.h
     */
 
-    /*
-      first, all of these have
-      (use Q1 for count)
-      Q1 = T1 & SHIFT_MAX
-      T1 = T0 >> Q1;
-      
-      next, they differentiate 
-      BTS: T0 |= (((target_long)1) << Q1);
-      BTR: T0 &= ~(((target_long)1) << Q1);
-      BTC: T0 ^= (((target_long)1) << Q1);
-     */
-  case IFLO_SHIFT_BTS_T0_T1_CC:
-  case IFLO_SHIFT_BTR_T0_T1_CC:
-  case IFLO_SHIFT_BTC_T0_T1_CC:
-    // Q1 = T1 & SHIFT_MASK
-    if_delete_r4(IFRN_Q1);
-    if_compute_r4(IFRN_Q1,IFRN_T1);
-    // T1 = T0 >> Q1;
-    if_delete_r4(IFRN_T1);
-    if_compute_r4(IFRN_T1,IFRN_T0);
-    if_compute_r4(IFRN_T1,IFRN_Q1);
-    // T0 computed from itself and Q1.
-    if_self_compute_r4(IFRN_T0,IFRN_Q1);
+    // note, all have same gross info-flow behaviour.
+    // specifics shown are for 
+  case IFLO_OPS_TEMPLATE_BTS_T0_T1_CC:
+  case IFLO_OPS_TEMPLATE_BTR_T0_T1_CC:
+  case IFLO_OPS_TEMPLATE_BTC_T0_T1_CC:
+    // count = T1 & SHIFT_MASK;
+    // T1 = T0 >> count;
+    // T0 |= (((target_long)1) << count);
+    if_self_compute_r4(IFRN_T1, IFRN_T0);
     break;
-
-    // A0 += ((DATA_STYPE)T1 >> (3 + SHIFT)) << SHIFT;
-  case IFLO_SHIFT_ADD_BIT_A0_T1:
+ 
+  case IFLO_OPS_TEMPLATE_ADD_BIT_A0_T1:
+   // A0 += ((DATA_STYPE)T1 >> (3 + SHIFT)) << SHIFT;
     if_self_compute_r4(IFRN_A0,IFRN_T1);
     break;
 
     // weird shit.
-  case IFLO_SHIFT_BSF_T0_CC:
-  case IFLO_SHIFT_BSR_T0_CC:
+    //    res = T0 & DATA_MASK;
+    //    if (res != 0) {
+    //    count = 0;
+    //    while ((res & 1) == 0) {
+    //        count++;
+    //        res >>= 1;
+    //    }
+    //    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BSF_T0_CC,SHIFT);
+    //    T1 = count;
+  case IFLO_OPS_TEMPLATE_BSF_T0_CC:
+  case IFLO_OPS_TEMPLATE_BSR_T0_CC:
     if_delete_r4(IFRN_T1);
     if_compute_r4(IFRN_T1,IFRN_T0);
     break;
@@ -1539,19 +1575,107 @@ HERE I AM!
     // raincheck. 
     // DF is "direction flag" 
     // T0 = DF << SHIFT;    
-  case IFLO_SHIFT_MOVL_T0_DSHIFT:
+  case IFLO_OPS_TEMPLATE_MOVL_T0_DSHIFT:
     if_delete_r4(IFRN_T0);
     break;
     
-  case IFLO_SHIFT_IN_T0_T1:
-    // port i/o 
-    // I think this is handled elsewhere...
-    //    if_delete_r4(IFRN_T1);
+    
+  case IFLO_OPS_TEMPLATE_HD_TRANSFER_PART1:
+    // (from)
+    // save the from address?
+    iferret->last_hd_transfer_from = a0_64;
     break;
 
+  case IFLO_OPS_TEMPLATE_HD_TRANSFER_PART2:
+    // (to,size)
+    // make use of saved from address.  
+    if (iferret->last_hd_transfer_from != 0) {
+      info_flow_copy(a0_64, iferret->last_hd_transfer_from, a1_32);
+    }
+    break;
+
+  case IFLO_OPS_TEMPLATE_HD_TRANSFER:
+    // (from,to,size)
+    // NB: from could be HD or io buffer and to could be either.
+    info_flow_copy(a1_64,a0_64,a2_32);
+    break;
+
+
+    // network output.  what do we do?
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T1:
+    if (exists_taint(T1_BASE, 1, "NONE", -1)) {
+      squeal_about_exfiltration(T1_BASE,1);
+    }
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T1:
+    if (exists_taint(T1_BASE, 2, "NONE", -1)) {
+      squeal_about_exfiltration(T1_BASE,2);
+    }
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T1:
+    if (exists_taint(T1_BASE, 4, "NONE", -1)) {
+      squeal_about_exfiltration(T1_BASE,4);
+    }
+    break;
+    
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T0:
+    if (exists_taint(T0_BASE, 1, "NONE", -1)) {
+      squeal_about_exfiltration(T0_BASE,1);
+    }
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T0:
+    if (exists_taint(T0_BASE, 2, "NONE", -1)) {
+      squeal_about_exfiltration(T0_BASE,2);
+    }
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T0:
+    if (exists_taint(T0_BASE, 4, "NONE", -1)) {
+      squeal_about_exfiltration(T0_BASE,4);
+    }
+    break;
+        
+
+    // network input.  add labels...  
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T0:
+    info_flow_label(T0_BASE, 1, "NETWORK");
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_WORD_T0:
+    info_flow_label(T0_BASE, 2, "NETWORK");
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T0:
+    info_flow_label(T0_BASE, 4, "NETWORK");
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T1:
+    info_flow_label(T1_BASE, 1, "NETWORK");
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_WORD_T1:
+    info_flow_label(T1_BASE, 2, "NETWORK");
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T1:
+    info_flow_label(T1_BASE, 4, "NETWORK");
+    break;
+
+
+
+
+  case IFLO_SHIFT_IN_T0_T1:
+    // port i/o 
+    // specific cases handled elsewhere (network, hd, e.g.)
+    if_delete_r4(IFRN_T1);
+    break;
+    
   case IFLO_SHIFT_IN_DX_T0:
     // again, port i/o
-    //    if_delete_r4(IFRN_T0);
+    if_delete_r4(IFRN_T0);    
     break;
 
     /*
@@ -1653,6 +1777,9 @@ HERE I AM!
 
     // A0 = (uint32_t)(A0 + env->segs[R_SS].base);
   case IFLO_ADDL_A0_SS:
+    info_flow_compute(a0_64,4,A0_BASE,4);
+    break;
+
     // A0 = (uint32_t)(A0 - 2);
   case IFLO_SUBL_A0_2:
     // A0 = (uint32_t)(A0 - 4);
@@ -1737,6 +1864,9 @@ HERE I AM!
     // segment handling stuff
   case IFLO_MOVL_SEG_T0:
   case IFLO_MOVL_SEG_T0_VM:
+    break;
+
+    // T0 = env->segs[PARAM1].selector;
   case IFLO_MOVL_T0_SEG:
     if_delete_r4(IFRN_T0);
     break;
@@ -1744,8 +1874,13 @@ HERE I AM!
     // rainchek
   case IFLO_LSL:
     // load segment limit
+    //    T1 = limit;
+    if_delete_r4(IFRN_T1);
+    break;
+
   case IFLO_LAR:
     // load access rights byte
+    //    T1 = e2 & 0x00f0ff00;
     if_delete_r4(IFRN_T1);
     break;
 
@@ -1755,9 +1890,12 @@ HERE I AM!
       op_verw
     */
 
-    // raincheck
-  case IFLO_ARPL:
-    if_delete_r4(IFRN_T0);
+  case IFLO_ARPL_CASE_1:
+    if_self_compute_r4(IFRN_T0, IFRN_T1);
+    if_delete_r4(IFRN_T1);
+    break;
+
+  case IFLO_ARPL_CASE_2:
     if_delete_r4(IFRN_T1);
     break;
 
@@ -1808,25 +1946,40 @@ HERE I AM!
     /*
       NB:using memsufix=_raw here?
     */
-
-    // TRL 0806.  I *think* this all has fairly esoteric use.
-    // these aren't run-of-the-mill ld/st.  Like ld/st global descriptor table addr. 
-    // raincheck.
     
     // T0 = *(uint32_t *)((char *)env + PARAM1);
   case IFLO_MOVL_T0_ENV:
+    if_ld(0, IFRN_T0, 4, a0_64);
+    break;
+
     // *(uint32_t *)((char *)env + PARAM1) = T0;
   case IFLO_MOVL_ENV_T0:
+    if_st(0, IFRN_T0, 4, a0_64);
+    break;
+
     // *(uint32_t *)((char *)env + PARAM1) = T1;
   case IFLO_MOVL_ENV_T1:
+    if_st(0, IFRN_T1, 4, a0_64);
+    break;
+
     // T0 = *(target_ulong *)((char *)env + PARAM1);
   case IFLO_MOVTL_T0_ENV:
+    if_ld(0, IFRN_T0, 4, a0_64);
+    break;
+
     // *(target_ulong *)((char *)env + PARAM1) = T0;
   case IFLO_MOVTL_ENV_T0:
+    if_st(0, IFRN_T0, 4, a0_64);
+    break;
+
     // T1 = *(target_ulong *)((char *)env + PARAM1);
   case IFLO_MOVTL_T1_ENV:
+    if_ld(0, IFRN_T1, 4, a0_64);
+    break;
+
     // *(target_ulong *)((char *)env + PARAM1) = T1;
   case IFLO_MOVTL_ENV_T1:
+    if_st(0, IFRN_T1, a0_64);
     break;
 
     // raincheck
@@ -2085,7 +2238,7 @@ HERE I AM!
 	break;
     case IFLO_CMPXCHG_T0_T1_EAX_CC_CASE3:
 //	printf("we saw CMPXCHG_T0_T1_EAX_CASE3\r\n");
-//	info_flow_compute(IFRBA(IFRN_EAX), 4, T0_BASE, 4);
+//	info_flow_compute(EAX_BASE, 4, T0_BASE, 4);
 	break;
 
     case IFLO_SAVE_REG:

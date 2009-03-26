@@ -1802,7 +1802,7 @@ void helper_cmpxchg8b(void)
     if (d == (((uint64_t)EDX << 32) | EAX)) {
 
       //      IFLW(CMPXCHG8B_PART1);
-      iferret_log_info_flow_op_write_0(IFLO_CMPXCHG8B_PART1);
+      iferret_log_info_flow_op_write_8(IFLO_CMPXCHG8B_PART1, phys_a0());
 
         stq(A0, ((uint64_t)ECX << 32) | EBX);
 	// NB: we'll expect this stq to resolve to some cpu-all.h stX_p thingey.
@@ -1814,7 +1814,7 @@ void helper_cmpxchg8b(void)
         EAX = d;
 
 	//	IFLW(CMPXCHG8B_PART2);	
-	iferret_log_info_flow_op_write_0(IFLO_CMPXCHG8B_PART2);
+	iferret_log_info_flow_op_write_8(IFLO_CMPXCHG8B_PART2,phys_a0());
 
 	// no addr necessary here -- we are just setting EDX/EAX to the 64bits that 
 	// we loaded from addr A0.  Right?

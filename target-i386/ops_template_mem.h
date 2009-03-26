@@ -184,7 +184,7 @@ void OPPROTO glue(glue(op_ror, MEM_SUFFIX), _T0_T1_cc)(void)
         T0 &= DATA_MASK;
         T0 = (T0 >> count) | (T0 << (DATA_BITS - count));
 #ifdef MEM_WRITE
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_CC_MEMRITE,SHIFT,phys_a0());
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROR_T0_T1_CC_MEMWRITE,SHIFT,phys_a0());
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_ROR_T0_T1_CC,SHIFT);
@@ -210,7 +210,7 @@ void OPPROTO glue(glue(op_rol, MEM_SUFFIX), _T0_T1)(void)
         T0 &= DATA_MASK;
         T0 = (T0 << count) | (T0 >> (DATA_BITS - count));
 #ifdef MEM_WRITE
-	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_MEMRITE,SHIFT,phys_a0());
+	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_ROL_T0_T1_MEMWRITE,SHIFT,phys_a0());
         glue(st, MEM_SUFFIX)(A0, T0);
 #else
 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_ROL_T0_T1,SHIFT);
