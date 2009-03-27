@@ -47,7 +47,9 @@
 #define IFRN_Q2 12
 #define IFRN_Q3 13
 #define IFRN_Q4 14
+#define IFRN_EIP 15
 
+#define EIP_BASE ifregaddr[IFRN_EIP]
 #define EAX_BASE ifregaddr[IFRN_EAX]
 #define ECX_BASE ifregaddr[IFRN_ECX]
 #define EDX_BASE ifregaddr[IFRN_EDX]

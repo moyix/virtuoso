@@ -1399,7 +1399,7 @@ void OPPROTO op_movl_seg_T0_vm(void)
     int selector;
     SegmentCache *sc;
 
-    iferret_log_info_flow_op_write_0(IFLO_SEG_T0_VM);
+    iferret_log_info_flow_op_write_0(IFLO_MOVL_SEG_T0_VM);
 
     selector = T0 & 0xffff;
     /* env->segs[] access */
@@ -1445,9 +1445,9 @@ void OPPROTO op_arpl(void)
     /* XXX: emulate bug or 0xff3f0000 oring as in bochs ? */
     T0 = (T0 & ~3) | (T1 & 3);
     T1 = CC_Z;
-    iferret_log_info_flow_op_write_0(IFLO_ARPL_CASE1);
+    iferret_log_info_flow_op_write_0(IFLO_ARPL_CASE_1);
   } else {
-    iferret_log_info_flow_op_write_0(IFLO_ARPL_CASE1);
+    iferret_log_info_flow_op_write_0(IFLO_ARPL_CASE_2);
     T1 = 0;
   }
   FORCE_RET();
@@ -1463,7 +1463,7 @@ void OPPROTO op_arpl_update(void)
 /* T0: segment, T1:eip */
 void OPPROTO op_ljmp_protected_T0_T1(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_PROTECTED_T0_T1);
+  iferret_log_info_flow_op_write_0(IFLO_LJMP_PROTECTED_T0_T1);
 
     helper_ljmp_protected_T0_T1(PARAM1);
 }

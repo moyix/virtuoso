@@ -74,6 +74,11 @@ uint8_t if_reg_taint[16] = {
 
 struct timeval last_time;
 
+
+void squeal_about_exfiltration() {
+  printf ("exfiltration\n");
+}
+
 char *if_reg_str(int if_regnum) {
   return (info_flow_reg_str[if_regnum]);
 }
@@ -187,7 +192,7 @@ void render_address(unsigned long long p) {
     printf ("&esi");
   else if (p == EDI_BASE)
     printf ("&edi");
-  else if (p == TO_BASE)
+  else if (p == T0_BASE)
     printf ("&t0");
   else if (p == T1_BASE)
     printf ("&t1");
@@ -217,7 +222,7 @@ uint8_t addr_is_real(unsigned long long p) {
       || (p == Q1_BASE)
       || (p == Q2_BASE)
       || (p == Q3_BASE)
-      || (p == Q4_BASE)
+      || (p == Q4_BASE))
     return FALSE;
   else 
     return TRUE;
@@ -379,9 +384,11 @@ inline void if_delete_reg_aux (uint32_t rn, uint32_t o, uint32_t n) {
       printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn]);
     }
   }
+  /*
   if (debug_at_least_med()) {
     check_reg_taint(rn,__FILE__,__LINE__);
   }
+  */
 }
 
 
@@ -415,8 +422,8 @@ inline void if_delete_r1(uint32_t rn) {
 inline void if_copy_regs_aux (uint32_t rn1, uint32_t o1, uint32_t rn2, uint32_t o2, uint32_t n) {
   //  assert (rn1 != UNINITIALIZED && rn2 != UNINITIALIZED);	
   if (debug_at_least_med()) {
-    check_reg_taint(rn1,__FILE__,__LINE__);
-    check_reg_taint(rn2,__FILE__,__LINE__);
+    //    check_reg_taint(rn1,__FILE__,__LINE__);
+    //    check_reg_taint(rn2,__FILE__,__LINE__);
     printf ("  if_copy_regs_aux (r1=%s o1=%d) (r2=%s o2=%d) n=%d\n",
 	    info_flow_reg_str[rn1], o1, 
 	    info_flow_reg_str[rn2], o2, n);
@@ -440,8 +447,8 @@ inline void if_copy_regs_aux (uint32_t rn1, uint32_t o1, uint32_t rn2, uint32_t 
     } 
   }   
   if (debug_at_least_med()) {
-    check_reg_taint(rn1,__FILE__,__LINE__);
-    check_reg_taint(rn2,__FILE__,__LINE__);
+    //    check_reg_taint(rn1,__FILE__,__LINE__);
+    //    check_reg_taint(rn2,__FILE__,__LINE__);
   }
 }
 
@@ -479,8 +486,8 @@ inline void if_compute_regs_aux (uint32_t rn1, uint32_t o1, uint32_t n1,
 				 uint32_t rn2, uint32_t o2, uint32_t n2) {
   //  assert (rn1 != UNINITIALIZED && rn2 != UNINITIALIZED);	
   if (debug_at_least_med()) {
-    check_reg_taint(rn1,__FILE__,__LINE__);
-    check_reg_taint(rn2,__FILE__,__LINE__);
+    //    check_reg_taint(rn1,__FILE__,__LINE__);
+    //    check_reg_taint(rn2,__FILE__,__LINE__);
   }
   if (debug_at_least_med()) {
     printf ("  if_compute_regs_aux (r1=%s o1=%d n1=%d) (r2=%s o2=%d n2=%d)\n",
@@ -510,8 +517,8 @@ inline void if_compute_regs_aux (uint32_t rn1, uint32_t o1, uint32_t n1,
     */
   }
   if (debug_at_least_med()) {
-    check_reg_taint(rn1,__FILE__,__LINE__);
-    check_reg_taint(rn2,__FILE__,__LINE__);
+    //    check_reg_taint(rn1,__FILE__,__LINE__);
+    //    check_reg_taint(rn2,__FILE__,__LINE__);
   }
 }
 
@@ -626,7 +633,7 @@ inline void if_ld(uint32_t msn, uint32_t rn, uint32_t n, uint32_t u, unsigned lo
   //  assert (rn != UNINITIALIZED); 
   //  assert (p != (char *) UNINITIALIZED);	
   if (debug_at_least_med()) {
-    check_reg_taint(rn,__FILE__,__LINE__);
+    //    check_reg_taint(rn,__FILE__,__LINE__);
   }
   if (debug_at_least_med()) {
     printf ("if_ld msn=%d rn=%d n=%d u=%d p=%p\n", msn,rn,n,u,p);
@@ -640,7 +647,7 @@ inline void if_ld(uint32_t msn, uint32_t rn, uint32_t n, uint32_t u, unsigned lo
     info_flow_compute(p,4,ifregaddr[rn],n);
   }
   if (debug_at_least_med()) {
-    check_reg_taint(rn,__FILE__,__LINE__);
+    //    check_reg_taint(rn,__FILE__,__LINE__);
   }
 }
 
@@ -659,7 +666,7 @@ inline void if_lds(uint32_t msn, uint32_t rn, uint32_t n, unsigned long long p) 
 // msn is memory suffix number. 
 inline void if_st(uint32_t msn, uint32_t rn, uint32_t n, unsigned long long p) {
   if (debug_at_least_med()) {
-    check_reg_taint(rn,__FILE__,__LINE__);
+    //    check_reg_taint(rn,__FILE__,__LINE__);
   }
   if (info_flow_possibly_tainted(rn)) {		
     if (debug_at_least_med()) {
@@ -674,7 +681,7 @@ inline void if_st(uint32_t msn, uint32_t rn, uint32_t n, unsigned long long p) {
       printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn]);
   }
   if (debug_at_least_med()) {
-    check_reg_taint(rn,__FILE__,__LINE__);
+    //    check_reg_taint(rn,__FILE__,__LINE__);
   }
 }
 
@@ -1350,8 +1357,8 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     break;
 
   case IFLO_CMPXCHG8B_PART2:
-    if_ld(0,IFRN_EAX,4,a0_64);
-    if_ld(0,IFRN_EDX,4,a0_64+4);
+    if_ldu(0,IFRN_EAX,4,a0_64);
+    if_ldu(0,IFRN_EDX,4,a0_64+4);
     break;
 
     // T0 = 0;
@@ -1464,7 +1471,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE:
   case IFLO_OPS_TEMPLATE_SAR_T0_T1_CC_MEMWRITE:
     if_delete_r4(IFRN_T0);
-    if_st(0,IFRN_T0,a1_64);
+    if_st(0,IFRN_T0,4,a1_64);
     break;
     
 
@@ -1473,7 +1480,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // T1 & 0xffff;
     info_flow_delete(T1_BASE+2,2);
     // T0 <- strangefunction(T0,T1)
-    if_self_compute(IFRN_T0, IFRN_T1, 4);
+    if_self_compute_r4(IFRN_T0, IFRN_T1);
     break;
 
   case IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE:
@@ -1481,17 +1488,17 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // T1 &= 0xffff;
     info_flow_delete(T1_BASE+2,2);
     // T0 <- strangefunction(T0,T1)
-    if_self_compute(IFRN_T0, IFRN_T1, 4);
+    if_self_compute_r4(IFRN_T0, IFRN_T1);
     // glue(st, MEM_SUFFIX)(A0, T0);
-    if_st(0,IFRN_T0,a1_64);
+    if_st(0,IFRN_T0,4,a1_64);
     break;
 
   case IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC:
   case IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC:
     // T1 &= 0xffff
     // T0 = strangefunction(T0,T1,ECX)
-    if_self_compute(IFRN_T0, IFRN_T1, 4);
-    if_self_compute(IFRN_T0, IFRN_ECX, 4);
+    if_self_compute_r4(IFRN_T0, IFRN_T1);
+    if_self_compute_r4(IFRN_T0, IFRN_ECX);
     break;
 
   case IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE:
@@ -1501,7 +1508,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     if_self_compute_r4(IFRN_T0, IFRN_T1);
     if_self_compute_r4(IFRN_T0, IFRN_ECX);
     // glue(st, MEM_SUFFIX)(A0, T0);
-    if_st(0,IFRN_T0,a1_64);
+    if_st(0,IFRN_T0,4,a1_64);
     break;
 
   case IFLO_OPS_TEMPLATE_ADC_T0_T1_CC:
@@ -1515,7 +1522,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // T0 = T0 + T1 + cf;
     if_self_compute_r4(IFRN_T0, IFRN_T1);
     // glue(st, MEM_SUFFIX)(A0, T0);
-    if_st(0,IFRN_T0,a1_64);
+    if_st(0,IFRN_T0,4,a1_64);
     break;
 
   case IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC:
@@ -1527,7 +1534,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // T0 = T1;
     if_copy_r4(IFRN_T0, IFRN_T1);
     // glue(st, MEM_SUFFIX)(A0, T0);
-    if_st(0,IFRN_T0,a1_64);
+    if_st(0,IFRN_T0,4,a1_64);
     break;
 
   case IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_CASE2:
@@ -1580,13 +1587,13 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     break;
     
     
-  case IFLO_OPS_TEMPLATE_HD_TRANSFER_PART1:
+  case IFLO_HD_TRANSFER_PART1:
     // (from)
     // save the from address?
     iferret->last_hd_transfer_from = a0_64;
     break;
 
-  case IFLO_OPS_TEMPLATE_HD_TRANSFER_PART2:
+  case IFLO_HD_TRANSFER_PART2:
     // (to,size)
     // make use of saved from address.  
     if (iferret->last_hd_transfer_from != 0) {
@@ -1594,7 +1601,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     }
     break;
 
-  case IFLO_OPS_TEMPLATE_HD_TRANSFER:
+  case IFLO_HD_TRANSFER:
     // (from,to,size)
     // NB: from could be HD or io buffer and to could be either.
     info_flow_copy(a1_64,a0_64,a2_32);
@@ -1667,13 +1674,13 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
 
 
 
-  case IFLO_SHIFT_IN_T0_T1:
+  case IFLO_OPS_TEMPLATE_IN_T0_T1: 
     // port i/o 
     // specific cases handled elsewhere (network, hd, e.g.)
     if_delete_r4(IFRN_T1);
     break;
     
-  case IFLO_SHIFT_IN_DX_T0:
+  case IFLO_OPS_TEMPLATE_IN_DX_T0:
     // again, port i/o
     if_delete_r4(IFRN_T0);    
     break;
@@ -1949,7 +1956,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     
     // T0 = *(uint32_t *)((char *)env + PARAM1);
   case IFLO_MOVL_T0_ENV:
-    if_ld(0, IFRN_T0, 4, a0_64);
+    if_ldu(0, IFRN_T0, 4, a0_64);
     break;
 
     // *(uint32_t *)((char *)env + PARAM1) = T0;
@@ -1964,7 +1971,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
 
     // T0 = *(target_ulong *)((char *)env + PARAM1);
   case IFLO_MOVTL_T0_ENV:
-    if_ld(0, IFRN_T0, 4, a0_64);
+    if_ldu(0, IFRN_T0, 4, a0_64);
     break;
 
     // *(target_ulong *)((char *)env + PARAM1) = T0;
@@ -1974,12 +1981,12 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
 
     // T1 = *(target_ulong *)((char *)env + PARAM1);
   case IFLO_MOVTL_T1_ENV:
-    if_ld(0, IFRN_T1, 4, a0_64);
+    if_ldu(0, IFRN_T1, 4, a0_64);
     break;
 
     // *(target_ulong *)((char *)env + PARAM1) = T1;
   case IFLO_MOVTL_ENV_T1:
-    if_st(0, IFRN_T1, a0_64);
+    if_st(0, IFRN_T1, 4, a0_64);
     break;
 
     // raincheck
@@ -2081,15 +2088,21 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
       // construct a new keyboard label for each keycode.
             
      
+      /*
       snprintf (alabel, 1024, "key-%s-%x-%x", 
 		if_keyboard_label, if_key_num,if_key_val);
+      */
       //      push_key_label(alabel);
       //      if_key_num ++;      
       //      if (debug_at_least_low()) {
+
+      /*
 	printf ("IFLO_KEYBOARD_INPUT: if_p_orig=%p val=%x label=%s\n", 
 		if_p_orig, if_key_val, alabel);
+      */
 	//      }
-      info_flow_label(T1_BASE, 1, alabel);
+	//      info_flow_label(T1_BASE, 1, alabel);
+	info_flow_label(T1_BASE, 1, "KEYBOARD");
       info_flow_mark_as_possibly_tainted(IFRN_T1);      
       
       //      if (if_key_num == 3 && if_key_val == 0x2e) {
@@ -2098,173 +2111,15 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     }
     break;
     
-  case IFLO_TLB_FILL:
-    if(debug_at_least_low())
-      printf("We hit a tlb fill!\r\n");
-    break;
-    
-  case  IFLO_SAVE_ENV:
-    if(debug_at_least_low())
-      printf("SAVE_ENV called outside loop\r\n");
-    if_save_env_called = TRUE;
-    break;
-    
-  case IFLO_RESTORE_ENV:
-    if(debug_at_least_low())
-      printf("RESTORE_ENV called outside loop\r\n");
-    if(!if_save_env_called_previous){
-      if(debug_at_least_low())
-	printf("YIPES, a restore with no save\r\n");
-    }
-    break;
-    
-  case IFLO_NEW_KEYBOARD_LABEL:
-    // ??? 
-    break;
-       
-  case IFLO_NEW_NETWORK_LABEL:
-    // ???
-    // no need to do anything; it already happened
-    break;    
-
-  case IFLO_NETWORK_INPUT_BYTE_T0:
-    if (debug_at_least_low()) {
-      printf ("IFLO_NETWORK_INPUT_BYTE_T0: if_p_orig=%p val=%x",  
-	      if_p_orig, if_byte_val);
-    }
-    info_flow_label(T0_BASE, 1, if_network_label);
-    info_flow_mark_as_possibly_tainted(IFRN_T0);
-    break;
-
-  case IFLO_NETWORK_INPUT_WORD_T0:
-    if (debug_at_least_low()) {
-      printf ("IFLO_NETWORK_INPUT_WORD_T0: if_p_orig=%p val=%x",  
-	      if_p_orig, if_word_val);
-    }
-    info_flow_label(T0_BASE, 2, if_network_label);
-    info_flow_mark_as_possibly_tainted(IFRN_T0);
-    break;
-
-  case IFLO_NETWORK_INPUT_LONG_T0:
-    if (debug_at_least_low()) {
-      printf ("IFLO_NETWORK_INPUT_LONG_T0: if_p_orig=%p val=%x",  
-	      if_p_orig, if_long_val);
-    }
-    info_flow_label(T0_BASE, 4, if_network_label);
-    info_flow_mark_as_possibly_tainted(IFRN_T0);
-    break;
-
-  case IFLO_NETWORK_INPUT_BYTE_T1:
-    if (debug_at_least_low()) {
-      printf ("IFLO_NETWORK_INPUT_BYTE_T1: if_p_orig=%p val=%x",  
-	      if_p_orig, if_byte_val);
-    }
-    info_flow_label(T1_BASE, 1, if_network_label);
-    info_flow_mark_as_possibly_tainted(IFRN_T1);
-    break;
-
-  case IFLO_NETWORK_INPUT_WORD_T1:
-    if (debug_at_least_low()) {
-      printf ("IFLO_NETWORK_INPUT_WORD_T1: if_p_orig=%p val=%x",  
-	      if_p_orig, if_word_val);
-    }
-    info_flow_label(T1_BASE, 2, if_network_label);
-    info_flow_mark_as_possibly_tainted(IFRN_T1);
-    break;
-
-  case IFLO_NETWORK_INPUT_LONG_T1:
-    if (debug_at_least_low()) {
-      printf ("IFLO_NETWORK_INPUT_LONG_T1: if_p_orig=%p val=%x",  
-	      if_p_orig, if_long_val);
-    }
-    info_flow_label(T1_BASE, 4, if_network_label);
-    info_flow_mark_as_possibly_tainted(IFRN_T1);
-    break;
-
-  case IFLO_NETWORK_OUTPUT_BYTE_T0:
-    if(exists_taint(T0_BASE,1,__FILE__,__LINE__))
-      printf("DANGER! Exfiltrating taint!\r\n");
-    break;
-    
-  case IFLO_NETWORK_OUTPUT_WORD_T0:
-    if(exists_taint(T0_BASE,2,__FILE__,__LINE__))
-      printf("DANGER! Exfiltrating taint!\r\n");
-    break;
-
-  case IFLO_NETWORK_OUTPUT_LONG_T0:
-    if(exists_taint(T0_BASE,4,__FILE__,__LINE__))
-      printf("DANGER! Exfiltrating taint!\r\n");
-    break;
-
-  case IFLO_NETWORK_OUTPUT_BYTE_T1:
-    if(exists_taint(T1_BASE,1,__FILE__,__LINE__))
-      printf("DANGER! Exfiltrating taint!\r\n");
-    break;
-
-  case IFLO_NETWORK_OUTPUT_WORD_T1:
-    if(exists_taint(T1_BASE,2,__FILE__,__LINE__))
-      printf("DANGER! Exfiltrating taint!\r\n");
-    break;
-
-  case IFLO_NETWORK_OUTPUT_LONG_T1:
-    if(exists_taint(T1_BASE,4,__FILE__,__LINE__))
-      printf("DANGER! Exfiltrating taint!\r\n");
-    break;
-
-  case IFLO_HD_TRANSFER:
-    if (debug_at_least_low()) {
-      printf ("IFLO_HD_TRANSFER: if_p_orig=%p to=%lld from=%lld size=%d\r\n",  
-	      if_p_orig, if_to_val, if_from_val,if_size_val);
-    }
-    if(exists_taint(if_from_val,if_size_val,__FILE__,__LINE__))
-      printf("WOO HOO, we're tainted!!!\r\n");
-    info_flow_copy(if_to_val, if_from_val, if_size_val);
-    break;
-
-  case IFLO_HD_TRANSFER_PART1:
-    if (debug_at_least_low()) {
-      printf ("IFLO_HD_TRANSFER_PART1: if_from_val=%lld\r\n",if_from_val);
-    }
-    break;
-
-  case IFLO_HD_TRANSFER_PART2:
-    if (debug_at_least_low()) {
-      printf ("IFLO_HD_TRANSFER_PART2: if_p_orig=%p to=%lld from=%lld size=%d\r\n",  
-	      if_p_orig, if_to_val, if_from_val,if_size_val);
-    }
-    if(exists_taint(if_from_val,if_size_val,__FILE__,__LINE__))
-      printf("WOO HOO, we're tainted!!!\r\n");
-    info_flow_copy(if_to_val, if_from_val, if_size_val);
-    break;
-
-  case IFLO_X86_INSN:
-    printf("Yar, we hit the mark #%d...\r\n",if_long_val); 
-    spit_taint();
-    break;
-
-  case IFLO_CMPXCHG_T0_T1_EAX_CC_CASE1:
-    //	printf("we saw CMPXCHG_T0_T1_EAX_CASE1\r\n");
-    //	info_flow_copy(T0_BASE, T1_BASE, 4);
-    break;
-
-  case IFLO_CMPXCHG_T0_T1_EAX_CC_CASE2:
-    //	printf("we saw CMPXCHG_T0_T1_EAX_CASE2\r\n");
-    //	info_flow_copy(if_addr, T0_BASE, 4);
-    break;
-    
-  case IFLO_CMPXCHG_T0_T1_EAX_CC_CASE3:
-    //	printf("we saw CMPXCHG_T0_T1_EAX_CASE3\r\n");
-    //	info_flow_compute(EAX_BASE, 4, T0_BASE, 4);
-    break;
-    
+    /*    
   case IFLO_SAVE_REG:
     printf("We're saving regnum#%d to addr 0x%08x\r\n",a0_32,if_addr);
     break;
-    
+    */
     
     // iferret_log_info_flow_op_write_8844(IFLO_CPU_PHYSICAL_MEMORY_RW, addr, buf, len, is_write);
   case IFLO_CPU_PHYSICAL_MEMORY_RW:
-    if (a3_4 == 1) {
+    if (a3_32 == 1) {
       // this is a write.  a0 is dest.  a1 is src. 
       info_flow_copy(a1_64, a0_64, a2_32);
     }
@@ -2277,5 +2132,5 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
 
 
   }
-  return (if_p); 
+
 }

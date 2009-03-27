@@ -44,7 +44,7 @@ void iferret_open_fd_add(iferret_t *iferret, int pid, int fd, char *filename,
     exit(1);
   }
   // finally add ptr to open fd data to pid/fd table 
-  int_int_hashtable_add(ofd_table, fd, (uint32_t) ofd_info);
+  int_int_hashtable_add(ofd_table, fd, (uint64_t) ofd_info);
 }
 
 

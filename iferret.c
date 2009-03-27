@@ -691,6 +691,11 @@ int compcounts(const void *poc1, const void *poc2) {
 }
 
 
+void * GlobalTaintGraph = NULL;
+void* GlobalReverseMap = NULL;
+
+
+
 
 int main (int argc, char **argv) {
   char *log_prefix, filename[1024];
@@ -703,6 +708,10 @@ int main (int argc, char **argv) {
     printf ("Usage: iferret ramsize(MB) hdsize(GB) log_prefix num_logs\n");
     exit(1);
   }
+
+  GlobalTaintGraph = init_taint();
+  GlobalReverseMap = init_reversemap_taint();
+
   ram = atoi(argv[1]);
   phys_ram_size = ram * MB + BIOS_MEM + VIDEO_MEM;  
   fake_base_addr_for_env = phys_ram_size + atoi(argv[2]) * GB + A_BUNCH_OF_SLOP;

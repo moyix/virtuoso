@@ -41,6 +41,7 @@ extern unsigned int phys_ram_size;
 
 uint32_t iferret_max_overflow = 0;
 
+uint64_t FAKE_EIP;
 uint64_t FAKE_EAX;
 uint64_t FAKE_ECX;
 uint64_t FAKE_EDX;
@@ -408,6 +409,7 @@ void iferret_log_create() {
   iferret_set_network_label("network_startup");
   // set up ifregaddr array.
 #ifndef IFERRET_BACKEND 
+  ifregaddr[IFRN_EIP] = (uint64_t) &(FAKE_EIP);
   ifregaddr[IFRN_EAX] = (uint64_t) &(FAKE_EAX);
   ifregaddr[IFRN_ECX] = (uint64_t) &(FAKE_ECX);
   ifregaddr[IFRN_EDX] = (uint64_t) &(FAKE_EDX);

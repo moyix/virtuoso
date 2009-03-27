@@ -1924,7 +1924,7 @@ void loglog_compute(unsigned long long p1, unsigned long long p2, uint32_t n1, u
 
 /*
   These should be the only functions that call the taint library
-*/
+if_self*/
 
 
 // check that an if_reg_taint flag is in agreement with the taint graph
