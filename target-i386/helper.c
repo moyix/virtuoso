@@ -29,6 +29,23 @@
 #include "iferret_syscall.h"
 #include "int_set.h"
 
+// from helper2.c
+target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
+
+
+// translate A0 into a physical address.  
+static inline uint64_t phys_a0() {
+  int addr;
+
+  addr = cpu_get_phys_addr(env,A0); 
+  if (addr == -1)
+    return 0;
+  else
+    return (uint64_t) (phys_ram_base + addr);
+  
+  //  return A0;
+}
+
 
 
 //void exit(int status);
@@ -4782,7 +4799,7 @@ void write_eip_to_iferret_log() {
   uint32_t addr;
   addr = cpu_get_phys_addr(env,EIP);
   if (addr != -1) {
-    iferret_log_op_write_4(IFLO_TB_HEAD_EIP, addr);
+    iferret_log_op_write_4(IFLO_TB_HEAD_EIP, (uint64_t) (phys_ram_base + addr));
   }
 #endif // IFERRET_PHYS_EIP
 }
@@ -4823,6 +4840,9 @@ void write_spawn_to_iferret_log() {
   //  printf ("%d spawned %d\n", parent_pid, current_pid);
 #endif
 }
+
+
+void iferret_get_current_pid_uid();
 
 
 void helper_manage_pid_stuff() {

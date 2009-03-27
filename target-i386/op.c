@@ -49,14 +49,14 @@ target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 
 
 // translate A0 into a physical address.  
-static inline int phys_a0() {
+static inline uint64_t phys_a0() {
   int addr;
 
   addr = cpu_get_phys_addr(env,A0); 
   if (addr == -1)
     return 0;
   else
-    return addr + phys_ram_base;
+    return (uint64_t) (phys_ram_base + addr);
   
   //  return A0;
 }
@@ -1441,18 +1441,16 @@ void OPPROTO op_verw(void)
 
 void OPPROTO op_arpl(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_ARPL);
-
-    if ((T0 & 3) < (T1 & 3)) {
-        /* XXX: emulate bug or 0xff3f0000 oring as in bochs ? */
-        T0 = (T0 & ~3) | (T1 & 3);
-        T1 = CC_Z;
-	iferret_info_flow_log_op_write(IFLO_ARPL_CASE1);
-   } else {
-	iferret_info_flow_log_op_write(IFLO_ARPL_CASE1);
-        T1 = 0;
-    }
-    FORCE_RET();
+  if ((T0 & 3) < (T1 & 3)) {
+    /* XXX: emulate bug or 0xff3f0000 oring as in bochs ? */
+    T0 = (T0 & ~3) | (T1 & 3);
+    T1 = CC_Z;
+    iferret_log_info_flow_op_write_0(IFLO_ARPL_CASE1);
+  } else {
+    iferret_log_info_flow_op_write_0(IFLO_ARPL_CASE1);
+    T1 = 0;
+  }
+  FORCE_RET();
 }
 
 void OPPROTO op_arpl_update(void)
@@ -2893,7 +2891,7 @@ void OPPROTO op_invlpga(void)
     helper_invlpga();
 }
 
-
+void check_rollup_op(void);
 void write_eip_to_iferret_log(void);
 void helper_manage_pid_stuff(void);
 
@@ -2902,7 +2900,6 @@ void helper_manage_pid_stuff(void);
 // inside helper.c and involves global variables.
 void OPPROTO op_iferret_prologue(void) 
 {
-  float f;
   // check if info flow log is anywhere near overflow
   check_rollup_op();
   // write eip of head of this tb

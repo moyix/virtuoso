@@ -88,6 +88,10 @@ register target_ulong EDI asm(AREG11);
 #define reg_EDI
 #endif
 
+
+
+
+
 #endif /* ! (TARGET_LONG_BITS > HOST_LONG_BITS) */
 
 #define A0 T2

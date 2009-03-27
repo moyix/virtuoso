@@ -13,6 +13,7 @@
 #include "target-i386/iferret_log_arg_fmt.h"
 #include "vslht.h"
 
+
 // turn info-flow logging on or off
 uint8_t iferret_info_flow_on = 0;
 
@@ -33,12 +34,29 @@ char* iferret_network_label=NULL;
 uint8_t iferret_network_label_changed = 0;
 
 // we'll be using these as "addresses" for registers
-unsigned long long ifregaddr[16];
+uint64_t ifregaddr[16];
 
 
 extern unsigned int phys_ram_size;
 
 uint32_t iferret_max_overflow = 0;
+
+uint64_t FAKE_EAX;
+uint64_t FAKE_ECX;
+uint64_t FAKE_EDX;
+uint64_t FAKE_EBX;
+uint64_t FAKE_ESP;
+uint64_t FAKE_EBP;
+uint64_t FAKE_ESI;
+uint64_t FAKE_EDI;
+uint64_t FAKE_T0;
+uint64_t FAKE_T1;
+uint64_t FAKE_A0;
+uint64_t FAKE_Q0;
+uint64_t FAKE_Q1;
+uint64_t FAKE_Q2;
+uint64_t FAKE_Q3;
+uint64_t FAKE_Q4;
 
 
 
@@ -360,34 +378,6 @@ void iferret_set_network_label(const char *label) {
   iferret_network_label_changed = 1;
 }
 
-void iferret_log_create() {
-  int i;
-  // initial info flow log allocation.
-  iferret_log_ptr = iferret_log_base = (char *) calloc (IFERRET_LOG_SIZE,1);
-  iferret_set_keyboard_label("keyboard_startup");
-  iferret_set_network_label("network_startup");
-  // set up ifregaddr array.
-#ifndef IFERRET_BACKEND 
-  ifregaddr[IFRN_EAX] = &(EAX);
-  ifregaddr[IFRN_ECX] = &(ECX);
-  ifregaddr[IFRN_EDX] = &(EDX);
-  ifregaddr[IFRN_EBX] = &(EBX);
-  ifregaddr[IFRN_ESP] = &(ESP);
-  ifregaddr[IFRN_EBP] = &(EBP);
-  ifregaddr[IFRN_ESI] = &(ESI);
-  ifregaddr[IFRN_EDI] = &(EDI);
-  ifregaddr[IFRN_T0] = &(T0);
-  ifregaddr[IFRN_T1] = &(T1);
-  ifregaddr[IFRN_A0] = &(A0);
-  ifregaddr[IFRN_Q0] = &(Q0);
-  ifregaddr[IFRN_Q1] = &(Q1);
-  ifregaddr[IFRN_Q2] = &(Q2);
-  ifregaddr[IFRN_Q3] = &(Q3);
-  ifregaddr[IFRN_Q4] = &(Q4);
-#endif
-  iferret_log_preamble();
-}
-
 
 
 #ifndef IFERRET_BACKEND  
@@ -409,6 +399,35 @@ void iferret_log_preamble() {
   }
 }
 #endif
+
+
+void iferret_log_create() {
+  // initial info flow log allocation.
+  iferret_log_ptr = iferret_log_base = (char *) calloc (IFERRET_LOG_SIZE,1);
+  iferret_set_keyboard_label("keyboard_startup");
+  iferret_set_network_label("network_startup");
+  // set up ifregaddr array.
+#ifndef IFERRET_BACKEND 
+  ifregaddr[IFRN_EAX] = (uint64_t) &(FAKE_EAX);
+  ifregaddr[IFRN_ECX] = (uint64_t) &(FAKE_ECX);
+  ifregaddr[IFRN_EDX] = (uint64_t) &(FAKE_EDX);
+  ifregaddr[IFRN_EBX] = (uint64_t) &(FAKE_EBX);
+  ifregaddr[IFRN_ESP] = (uint64_t) &(FAKE_ESP);
+  ifregaddr[IFRN_EBP] = (uint64_t) &(FAKE_EBP);
+  ifregaddr[IFRN_ESI] = (uint64_t) &(FAKE_ESI);
+  ifregaddr[IFRN_EDI] = (uint64_t) &(FAKE_EDI);
+  ifregaddr[IFRN_T0] =  (uint64_t) &(FAKE_T0);
+  ifregaddr[IFRN_T1] =  (uint64_t) &(FAKE_T1);
+  ifregaddr[IFRN_A0] =  (uint64_t) &(FAKE_A0);
+  ifregaddr[IFRN_Q0] =  (uint64_t) &(FAKE_Q0);
+  ifregaddr[IFRN_Q1] =  (uint64_t) &(FAKE_Q1);
+  ifregaddr[IFRN_Q2] =  (uint64_t) &(FAKE_Q2);
+  ifregaddr[IFRN_Q3] =  (uint64_t) &(FAKE_Q3);
+  ifregaddr[IFRN_Q4] =  (uint64_t) &(FAKE_Q4);
+#endif
+  iferret_log_preamble();
+}
+
 
 
 // save current if log to a file for some reason    

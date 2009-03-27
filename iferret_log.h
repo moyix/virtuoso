@@ -48,6 +48,24 @@
 #define IFRN_Q3 13
 #define IFRN_Q4 14
 
+#define EAX_BASE ifregaddr[IFRN_EAX]
+#define ECX_BASE ifregaddr[IFRN_ECX]
+#define EDX_BASE ifregaddr[IFRN_EDX]
+#define EBX_BASE ifregaddr[IFRN_EBX]
+#define ESP_BASE ifregaddr[IFRN_ESP]
+#define EBP_BASE ifregaddr[IFRN_EBP]
+#define ESI_BASE ifregaddr[IFRN_ESI]
+#define EDI_BASE ifregaddr[IFRN_EDI]
+#define T0_BASE ifregaddr[IFRN_T0]
+#define T1_BASE ifregaddr[IFRN_T1]
+#define A0_BASE ifregaddr[IFRN_A0]
+#define Q0_BASE ifregaddr[IFRN_Q0]
+#define Q1_BASE ifregaddr[IFRN_Q1]
+#define Q2_BASE ifregaddr[IFRN_Q2]
+#define Q3_BASE ifregaddr[IFRN_Q3]
+#define Q4_BASE ifregaddr[IFRN_Q4]
+
+
 // address of first byte of register with number rn
 // NB: trying to make these addresses orthogonal to any that 
 // we might encounter for a real process by sending them to 

@@ -133,6 +133,7 @@ void OPPROTO glue(glue(op_ldq, MEMSUFFIX), _env_A0)(void)
 {
     uint64_t *p;
     p = (uint64_t *)((char *)env + PARAM1);
+    iferret_log_info_flow_op_write_188(IFLO_OPS_MEM_LDQ_ENV_A0,MEMSUFFIXNUM, (uint64_t) p, phys_a0());
     *p = glue(ldq, MEMSUFFIX)(A0);
 }
 
@@ -140,6 +141,7 @@ void OPPROTO glue(glue(op_stq, MEMSUFFIX), _env_A0)(void)
 {
     uint64_t *p;
     p = (uint64_t *)((char *)env + PARAM1);
+    iferret_log_info_flow_op_write_188(IFLO_OPS_MEM_STQ_ENV_A0,MEMSUFFIXNUM, (uint64_t) p, phys_a0());
     glue(stq, MEMSUFFIX)(A0, *p);
     FORCE_RET();
 }
@@ -148,6 +150,7 @@ void OPPROTO glue(glue(op_ldo, MEMSUFFIX), _env_A0)(void)
 {
     XMMReg *p;
     p = (XMMReg *)((char *)env + PARAM1);
+    iferret_log_info_flow_op_write_188(IFLO_OPS_MEM_LDO_ENV_A0,MEMSUFFIXNUM, (uint64_t) p, phys_a0());
     p->XMM_Q(0) = glue(ldq, MEMSUFFIX)(A0);
     p->XMM_Q(1) = glue(ldq, MEMSUFFIX)(A0 + 8);
 }
@@ -156,6 +159,7 @@ void OPPROTO glue(glue(op_sto, MEMSUFFIX), _env_A0)(void)
 {
     XMMReg *p;
     p = (XMMReg *)((char *)env + PARAM1);
+    iferret_log_info_flow_op_write_188(IFLO_OPS_MEM_STO_ENV_A0,MEMSUFFIXNUM, (uint64_t) p, phys_a0());
     glue(stq, MEMSUFFIX)(A0, p->XMM_Q(0));
     glue(stq, MEMSUFFIX)(A0 + 8, p->XMM_Q(1));
     FORCE_RET();

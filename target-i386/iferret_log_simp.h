@@ -154,6 +154,77 @@ static inline void iferret_log_sysret_op_write_18(
 #endif
 }
 
+static inline void iferret_log_op_write_188(
+  iferret_log_op_enum_t op_num,
+  uint8_t a1,
+  uint64_t a2,
+  uint64_t a3)
+{
+  iferret_log_op_write_prologue(op_num);
+  iferret_log_write_1(a1);
+  iferret_log_write_8(a2);
+  iferret_log_write_8(a3);
+}
+
+static inline void iferret_log_info_flow_op_write_188(
+  iferret_log_op_enum_t op_num,
+  uint8_t a1,
+  uint64_t a2,
+  uint64_t a3)
+{
+#ifdef IFERRET_INFO_FLOW 
+  iferret_log_op_write_prologue(op_num);
+  iferret_log_write_1(a1);
+  iferret_log_write_8(a2);
+  iferret_log_write_8(a3);
+#endif
+}
+
+static inline void iferret_log_socketcall_op_write_188(
+  iferret_syscall_t *sc,
+  iferret_log_op_enum_t op_num,
+  uint8_t a1,
+  uint64_t a2,
+  uint64_t a3)
+{
+#ifdef IFERRET_SYSCALL 
+  iferret_log_op_write_prologue(op_num);
+  iferret_log_syscall_commoner(sc);
+  iferret_log_write_1(a1);
+  iferret_log_write_8(a2);
+  iferret_log_write_8(a3);
+#endif
+}
+
+static inline void iferret_log_syscall_op_write_188(
+  iferret_syscall_t *sc,
+  uint8_t a1,
+  uint64_t a2,
+  uint64_t a3)
+{
+#ifdef IFERRET_SYSCALL 
+  iferret_log_op_write_prologue(sc->op_num);
+  iferret_log_syscall_commoner(sc);
+  iferret_log_write_1(a1);
+  iferret_log_write_8(a2);
+  iferret_log_write_8(a3);
+#endif
+}
+
+static inline void iferret_log_sysret_op_write_188(
+  iferret_log_op_enum_t op_num,
+  uint8_t a1,
+  uint64_t a2,
+  uint64_t a3)
+{
+#ifdef IFERRET_SYSCALL 
+  iferret_log_op_write_prologue(op_num);
+  iferret_log_write_1(a1);
+  iferret_log_write_8(a2);
+  iferret_log_write_8(a3);
+#endif
+}
+
 static inline void iferret_log_op_write_4(
   iferret_log_op_enum_t op_num,
   uint32_t a1)
@@ -1911,6 +1982,87 @@ static inline void iferret_log_sysret_op_write_884(
   iferret_log_write_8(a1);
   iferret_log_write_8(a2);
   iferret_log_write_4(a3);
+#endif
+}
+
+static inline void iferret_log_op_write_8844(
+  iferret_log_op_enum_t op_num,
+  uint64_t a1,
+  uint64_t a2,
+  uint32_t a3,
+  uint32_t a4)
+{
+  iferret_log_op_write_prologue(op_num);
+  iferret_log_write_8(a1);
+  iferret_log_write_8(a2);
+  iferret_log_write_4(a3);
+  iferret_log_write_4(a4);
+}
+
+static inline void iferret_log_info_flow_op_write_8844(
+  iferret_log_op_enum_t op_num,
+  uint64_t a1,
+  uint64_t a2,
+  uint32_t a3,
+  uint32_t a4)
+{
+#ifdef IFERRET_INFO_FLOW 
+  iferret_log_op_write_prologue(op_num);
+  iferret_log_write_8(a1);
+  iferret_log_write_8(a2);
+  iferret_log_write_4(a3);
+  iferret_log_write_4(a4);
+#endif
+}
+
+static inline void iferret_log_socketcall_op_write_8844(
+  iferret_syscall_t *sc,
+  iferret_log_op_enum_t op_num,
+  uint64_t a1,
+  uint64_t a2,
+  uint32_t a3,
+  uint32_t a4)
+{
+#ifdef IFERRET_SYSCALL 
+  iferret_log_op_write_prologue(op_num);
+  iferret_log_syscall_commoner(sc);
+  iferret_log_write_8(a1);
+  iferret_log_write_8(a2);
+  iferret_log_write_4(a3);
+  iferret_log_write_4(a4);
+#endif
+}
+
+static inline void iferret_log_syscall_op_write_8844(
+  iferret_syscall_t *sc,
+  uint64_t a1,
+  uint64_t a2,
+  uint32_t a3,
+  uint32_t a4)
+{
+#ifdef IFERRET_SYSCALL 
+  iferret_log_op_write_prologue(sc->op_num);
+  iferret_log_syscall_commoner(sc);
+  iferret_log_write_8(a1);
+  iferret_log_write_8(a2);
+  iferret_log_write_4(a3);
+  iferret_log_write_4(a4);
+#endif
+}
+
+static inline void iferret_log_sysret_op_write_8844(
+  iferret_log_op_enum_t op_num,
+  uint64_t a1,
+  uint64_t a2,
+  uint32_t a3,
+  uint32_t a4)
+{
+#ifdef IFERRET_SYSCALL 
+  iferret_log_op_write_prologue(op_num);
+  iferret_log_write_8(a1);
+  iferret_log_write_8(a2);
+  iferret_log_write_4(a3);
+  iferret_log_write_4(a4);
 #endif
 }
 

@@ -7,7 +7,7 @@ QEMUDIR=$(HOME)/hg/iferret-logging-new
 INCDIRS = -I . -I $(TAINTDIR)/common -I $(QEMUDIR) -I $(QEMUDIR)/target-i386 
 LIBDIRS = -L$(TAINTDIR)/qaint/lib
 LIBS = -lqaint
-CFLAGS= -g $(INCDIRS) $(LIBDIR)
+CFLAGS= -g $(INCDIRS) $(LIBDIR) -DIFERRET_BACKEND
 
 OBJS = iferret.o iferret_info_flow.o iferret_open_fd.o iferret_log.o iferret_syscall_stack.o iferret_op_str.o int_set.o int_string_hashtable.o int_int_hashtable.o vslht.o
 SRCS = $(OBJS,.o=.c) 

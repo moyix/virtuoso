@@ -95,6 +95,14 @@ uint8_t *phys_ram_top;
 uint8_t *phys_ram_dirty;
 static ram_addr_t phys_ram_alloc_offset = 0;
 
+
+
+uint64_t ifregaddr[16];
+
+
+
+
+
 CPUState *first_cpu;
 /* current CPU in the current thread. It is only valid inside
    cpu_exec() */
@@ -2573,7 +2581,7 @@ void cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
     unsigned long pd;
     PhysPageDesc *p;
 
-    iferret_log_info_flow_op_write_8844(IFLO_CPU_PHYSICAL_MEMORY_RW, addr, buf, len, is_write);
+    iferret_log_info_flow_op_write_8844(IFLO_CPU_PHYSICAL_MEMORY_RW, addr, (uint64_t) buf, len, is_write);
 
     while (len > 0) {
         page = addr & TARGET_PAGE_MASK;
@@ -2614,7 +2622,7 @@ void cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
                 /* RAM case */
                 ptr = phys_ram_base + addr1;
                 //		IFLW_CPU_WRITE_ADDR((ptr - (unsigned long) phys_ram_base));
-		iferret_log_info_flow_op_write_8(IFLO_CPU_WRITE_ADDR,ptr);
+		//		iferret_log_info_flow_op_write_8(IFLO_CPU_WRITE_ADDR,ptr);
                 memcpy(ptr, buf, l);
                 if (!cpu_physical_memory_is_dirty(addr1)) {
                     /* invalidate code */
@@ -2651,7 +2659,7 @@ void cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
 	      addr1 =  (pd & TARGET_PAGE_MASK) + (addr & ~TARGET_PAGE_MASK);
 	      ptr = phys_ram_base + addr1;
 	      //		IFLW_CPU_READ_ADDR((ptr - phys_ram_base));
-	      iferret_log_info_flow_op_write_8(IFLO_CPU_READ_ADDR, ptr);
+	      //	      iferret_log_info_flow_op_write_8(IFLO_CPU_READ_ADDR, ptr);
 	      memcpy(buf, ptr, l);
             }
         }

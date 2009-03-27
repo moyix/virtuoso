@@ -323,7 +323,9 @@ static uint32_t kbd_read_data(void *opaque, uint32_t addr)
 	iferret_keyboard_label_changed = 0;
 	//	printf ("iferret_new_keybaord_label [%s]\n", iferret_keyboard_label);
 	fflush(stdout);
+
 	iferret_log_info_flow_op_write_s(IFLO_NEW_KEYBOARD_LABEL, iferret_keyboard_label);
+
 	//	IFLW(NEW_KEYBOARD_LABEL);
 /* 	l = strlen(iferret_keyboard_label); */
 /* 	if (l>=IFERRET_MAX_KEYBOARD_LABEL_LEN) */
@@ -334,6 +336,7 @@ static uint32_t kbd_read_data(void *opaque, uint32_t addr)
 /* 	} */
       }
       //      IFLW_KEYBOARD_INPUT(rv);
+
       iferret_log_info_flow_op_write_4(IFLO_KEYBOARD_INPUT, rv);
     }
 

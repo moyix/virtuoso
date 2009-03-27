@@ -5,7 +5,7 @@
 #include "taint.h"
 
 
-extern unsigned long long ifregaddr[];
+extern uint64_t ifregaddr[];
 
 extern uint64_t safe_address_for_arbitrary_tainting;
 
@@ -2095,155 +2095,187 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
       //      if (if_key_num == 3 && if_key_val == 0x2e) {
       //      	foo2 = TRUE;
 //	if_debug_set_med();
-      }
     }
     break;
-
+    
   case IFLO_TLB_FILL:
-	if(debug_at_least_low())
-	printf("We hit a tlb fill!\r\n");
-	break;
+    if(debug_at_least_low())
+      printf("We hit a tlb fill!\r\n");
+    break;
+    
   case  IFLO_SAVE_ENV:
-	if(debug_at_least_low())
-         printf("SAVE_ENV called outside loop\r\n");
-	 if_save_env_called = TRUE;
-	 break;
-   case IFLO_RESTORE_ENV:
-	if(debug_at_least_low())
-        printf("RESTORE_ENV called outside loop\r\n");
-	if(!if_save_env_called_previous){
-		if(debug_at_least_low())
-		printf("YIPES, a restore with no save\r\n");
-	}
-	break;
-
+    if(debug_at_least_low())
+      printf("SAVE_ENV called outside loop\r\n");
+    if_save_env_called = TRUE;
+    break;
+    
+  case IFLO_RESTORE_ENV:
+    if(debug_at_least_low())
+      printf("RESTORE_ENV called outside loop\r\n");
+    if(!if_save_env_called_previous){
+      if(debug_at_least_low())
+	printf("YIPES, a restore with no save\r\n");
+    }
+    break;
+    
   case IFLO_NEW_KEYBOARD_LABEL:
-    {
-      // no need to do anything; it already happened
-      break;
-    }
-  
+    // ??? 
+    break;
+       
   case IFLO_NEW_NETWORK_LABEL:
-    {
-      // no need to do anything; it already happened
-      break;
+    // ???
+    // no need to do anything; it already happened
+    break;    
+
+  case IFLO_NETWORK_INPUT_BYTE_T0:
+    if (debug_at_least_low()) {
+      printf ("IFLO_NETWORK_INPUT_BYTE_T0: if_p_orig=%p val=%x",  
+	      if_p_orig, if_byte_val);
     }
+    info_flow_label(T0_BASE, 1, if_network_label);
+    info_flow_mark_as_possibly_tainted(IFRN_T0);
+    break;
 
- case IFLO_NETWORK_INPUT_BYTE_T0:
-      if (debug_at_least_low()) {
-	printf ("IFLO_NETWORK_INPUT_BYTE_T0: if_p_orig=%p val=%x",  
-		if_p_orig, if_byte_val);
-        }
-	info_flow_label(T0_BASE, 1, if_network_label);
-        info_flow_mark_as_possibly_tainted(IFRN_T0);
-  	break;
   case IFLO_NETWORK_INPUT_WORD_T0:
-      if (debug_at_least_low()) {
-	printf ("IFLO_NETWORK_INPUT_WORD_T0: if_p_orig=%p val=%x",  
-		if_p_orig, if_word_val);
-        }
-	info_flow_label(T0_BASE, 2, if_network_label);
-        info_flow_mark_as_possibly_tainted(IFRN_T0);
-  	break;
-  case IFLO_NETWORK_INPUT_LONG_T0:
-      if (debug_at_least_low()) {
-	printf ("IFLO_NETWORK_INPUT_LONG_T0: if_p_orig=%p val=%x",  
-		if_p_orig, if_long_val);
-        }
-	info_flow_label(T0_BASE, 4, if_network_label);
-        info_flow_mark_as_possibly_tainted(IFRN_T0);
-  	break;
-  case IFLO_NETWORK_INPUT_BYTE_T1:
-      if (debug_at_least_low()) {
-	printf ("IFLO_NETWORK_INPUT_BYTE_T1: if_p_orig=%p val=%x",  
-		if_p_orig, if_byte_val);
-        }
-	info_flow_label(T1_BASE, 1, if_network_label);
-        info_flow_mark_as_possibly_tainted(IFRN_T1);
-  	break;
-  case IFLO_NETWORK_INPUT_WORD_T1:
-      if (debug_at_least_low()) {
-	printf ("IFLO_NETWORK_INPUT_WORD_T1: if_p_orig=%p val=%x",  
-		if_p_orig, if_word_val);
-        }
-	info_flow_label(T1_BASE, 2, if_network_label);
-        info_flow_mark_as_possibly_tainted(IFRN_T1);
-  	break;
-  case IFLO_NETWORK_INPUT_LONG_T1:
-      if (debug_at_least_low()) {
-	printf ("IFLO_NETWORK_INPUT_LONG_T1: if_p_orig=%p val=%x",  
-		if_p_orig, if_long_val);
-        }
-	info_flow_label(T1_BASE, 4, if_network_label);
-        info_flow_mark_as_possibly_tainted(IFRN_T1);
-  	break;
- case IFLO_NETWORK_OUTPUT_BYTE_T0:
-    if(exists_taint(T0_BASE,1,__FILE__,__LINE__))
-	printf("DANGER! Exfiltrating taint!\r\n");
+    if (debug_at_least_low()) {
+      printf ("IFLO_NETWORK_INPUT_WORD_T0: if_p_orig=%p val=%x",  
+	      if_p_orig, if_word_val);
+    }
+    info_flow_label(T0_BASE, 2, if_network_label);
+    info_flow_mark_as_possibly_tainted(IFRN_T0);
     break;
- case IFLO_NETWORK_OUTPUT_WORD_T0:
-    if(exists_taint(T0_BASE,2,__FILE__,__LINE__))
-	printf("DANGER! Exfiltrating taint!\r\n");
-    break;
- case IFLO_NETWORK_OUTPUT_LONG_T0:
-    if(exists_taint(T0_BASE,4,__FILE__,__LINE__))
-	printf("DANGER! Exfiltrating taint!\r\n");
-    break;
- case IFLO_NETWORK_OUTPUT_BYTE_T1:
-    if(exists_taint(T1_BASE,1,__FILE__,__LINE__))
-	printf("DANGER! Exfiltrating taint!\r\n");
-    break;
- case IFLO_NETWORK_OUTPUT_WORD_T1:
-    if(exists_taint(T1_BASE,2,__FILE__,__LINE__))
-	printf("DANGER! Exfiltrating taint!\r\n");
-    break;
- case IFLO_NETWORK_OUTPUT_LONG_T1:
-    if(exists_taint(T1_BASE,4,__FILE__,__LINE__))
-	printf("DANGER! Exfiltrating taint!\r\n");
-    break;
-  case IFLO_HD_TRANSFER:
-      if (debug_at_least_low()) {
-	printf ("IFLO_HD_TRANSFER: if_p_orig=%p to=%lld from=%lld size=%d\r\n",  
-		if_p_orig, if_to_val, if_from_val,if_size_val);
-        }
-        if(exists_taint(if_from_val,if_size_val,__FILE__,__LINE__))
-		printf("WOO HOO, we're tainted!!!\r\n");
-    	info_flow_copy(if_to_val, if_from_val, if_size_val);
-   	break;
-  case IFLO_HD_TRANSFER_PART1:
-      if (debug_at_least_low()) {
-	printf ("IFLO_HD_TRANSFER_PART1: if_from_val=%lld\r\n",if_from_val);
-        }
-   	break;
-  case IFLO_HD_TRANSFER_PART2:
-      if (debug_at_least_low()) {
-	printf ("IFLO_HD_TRANSFER_PART2: if_p_orig=%p to=%lld from=%lld size=%d\r\n",  
-		if_p_orig, if_to_val, if_from_val,if_size_val);
-        }
-        if(exists_taint(if_from_val,if_size_val,__FILE__,__LINE__))
-		printf("WOO HOO, we're tainted!!!\r\n");
-    	info_flow_copy(if_to_val, if_from_val, if_size_val);
-   	break;
-    case IFLO_X86_INSN:
-	printf("Yar, we hit the mark #%d...\r\n",if_long_val); 
-	spit_taint();
-	break;
-    case IFLO_CMPXCHG_T0_T1_EAX_CC_CASE1:
-//	printf("we saw CMPXCHG_T0_T1_EAX_CASE1\r\n");
-//	info_flow_copy(T0_BASE, T1_BASE, 4);
-	break;
-    case IFLO_CMPXCHG_T0_T1_EAX_CC_CASE2:
-//	printf("we saw CMPXCHG_T0_T1_EAX_CASE2\r\n");
-//	info_flow_copy(if_addr, T0_BASE, 4);
-	break;
-    case IFLO_CMPXCHG_T0_T1_EAX_CC_CASE3:
-//	printf("we saw CMPXCHG_T0_T1_EAX_CASE3\r\n");
-//	info_flow_compute(EAX_BASE, 4, T0_BASE, 4);
-	break;
 
-    case IFLO_SAVE_REG:
-	printf("We're saving regnum#%d to addr 0x%08x\r\n",a0_32,if_addr);
-        break;
+  case IFLO_NETWORK_INPUT_LONG_T0:
+    if (debug_at_least_low()) {
+      printf ("IFLO_NETWORK_INPUT_LONG_T0: if_p_orig=%p val=%x",  
+	      if_p_orig, if_long_val);
+    }
+    info_flow_label(T0_BASE, 4, if_network_label);
+    info_flow_mark_as_possibly_tainted(IFRN_T0);
+    break;
+
+  case IFLO_NETWORK_INPUT_BYTE_T1:
+    if (debug_at_least_low()) {
+      printf ("IFLO_NETWORK_INPUT_BYTE_T1: if_p_orig=%p val=%x",  
+	      if_p_orig, if_byte_val);
+    }
+    info_flow_label(T1_BASE, 1, if_network_label);
+    info_flow_mark_as_possibly_tainted(IFRN_T1);
+    break;
+
+  case IFLO_NETWORK_INPUT_WORD_T1:
+    if (debug_at_least_low()) {
+      printf ("IFLO_NETWORK_INPUT_WORD_T1: if_p_orig=%p val=%x",  
+	      if_p_orig, if_word_val);
+    }
+    info_flow_label(T1_BASE, 2, if_network_label);
+    info_flow_mark_as_possibly_tainted(IFRN_T1);
+    break;
+
+  case IFLO_NETWORK_INPUT_LONG_T1:
+    if (debug_at_least_low()) {
+      printf ("IFLO_NETWORK_INPUT_LONG_T1: if_p_orig=%p val=%x",  
+	      if_p_orig, if_long_val);
+    }
+    info_flow_label(T1_BASE, 4, if_network_label);
+    info_flow_mark_as_possibly_tainted(IFRN_T1);
+    break;
+
+  case IFLO_NETWORK_OUTPUT_BYTE_T0:
+    if(exists_taint(T0_BASE,1,__FILE__,__LINE__))
+      printf("DANGER! Exfiltrating taint!\r\n");
+    break;
+    
+  case IFLO_NETWORK_OUTPUT_WORD_T0:
+    if(exists_taint(T0_BASE,2,__FILE__,__LINE__))
+      printf("DANGER! Exfiltrating taint!\r\n");
+    break;
+
+  case IFLO_NETWORK_OUTPUT_LONG_T0:
+    if(exists_taint(T0_BASE,4,__FILE__,__LINE__))
+      printf("DANGER! Exfiltrating taint!\r\n");
+    break;
+
+  case IFLO_NETWORK_OUTPUT_BYTE_T1:
+    if(exists_taint(T1_BASE,1,__FILE__,__LINE__))
+      printf("DANGER! Exfiltrating taint!\r\n");
+    break;
+
+  case IFLO_NETWORK_OUTPUT_WORD_T1:
+    if(exists_taint(T1_BASE,2,__FILE__,__LINE__))
+      printf("DANGER! Exfiltrating taint!\r\n");
+    break;
+
+  case IFLO_NETWORK_OUTPUT_LONG_T1:
+    if(exists_taint(T1_BASE,4,__FILE__,__LINE__))
+      printf("DANGER! Exfiltrating taint!\r\n");
+    break;
+
+  case IFLO_HD_TRANSFER:
+    if (debug_at_least_low()) {
+      printf ("IFLO_HD_TRANSFER: if_p_orig=%p to=%lld from=%lld size=%d\r\n",  
+	      if_p_orig, if_to_val, if_from_val,if_size_val);
+    }
+    if(exists_taint(if_from_val,if_size_val,__FILE__,__LINE__))
+      printf("WOO HOO, we're tainted!!!\r\n");
+    info_flow_copy(if_to_val, if_from_val, if_size_val);
+    break;
+
+  case IFLO_HD_TRANSFER_PART1:
+    if (debug_at_least_low()) {
+      printf ("IFLO_HD_TRANSFER_PART1: if_from_val=%lld\r\n",if_from_val);
+    }
+    break;
+
+  case IFLO_HD_TRANSFER_PART2:
+    if (debug_at_least_low()) {
+      printf ("IFLO_HD_TRANSFER_PART2: if_p_orig=%p to=%lld from=%lld size=%d\r\n",  
+	      if_p_orig, if_to_val, if_from_val,if_size_val);
+    }
+    if(exists_taint(if_from_val,if_size_val,__FILE__,__LINE__))
+      printf("WOO HOO, we're tainted!!!\r\n");
+    info_flow_copy(if_to_val, if_from_val, if_size_val);
+    break;
+
+  case IFLO_X86_INSN:
+    printf("Yar, we hit the mark #%d...\r\n",if_long_val); 
+    spit_taint();
+    break;
+
+  case IFLO_CMPXCHG_T0_T1_EAX_CC_CASE1:
+    //	printf("we saw CMPXCHG_T0_T1_EAX_CASE1\r\n");
+    //	info_flow_copy(T0_BASE, T1_BASE, 4);
+    break;
+
+  case IFLO_CMPXCHG_T0_T1_EAX_CC_CASE2:
+    //	printf("we saw CMPXCHG_T0_T1_EAX_CASE2\r\n");
+    //	info_flow_copy(if_addr, T0_BASE, 4);
+    break;
+    
+  case IFLO_CMPXCHG_T0_T1_EAX_CC_CASE3:
+    //	printf("we saw CMPXCHG_T0_T1_EAX_CASE3\r\n");
+    //	info_flow_compute(EAX_BASE, 4, T0_BASE, 4);
+    break;
+    
+  case IFLO_SAVE_REG:
+    printf("We're saving regnum#%d to addr 0x%08x\r\n",a0_32,if_addr);
+    break;
+    
+    
+    // iferret_log_info_flow_op_write_8844(IFLO_CPU_PHYSICAL_MEMORY_RW, addr, buf, len, is_write);
+  case IFLO_CPU_PHYSICAL_MEMORY_RW:
+    if (a3_4 == 1) {
+      // this is a write.  a0 is dest.  a1 is src. 
+      info_flow_copy(a1_64, a0_64, a2_32);
+    }
+    else {
+      // this is a read.  a0 is source. a1 is dest.  
+      info_flow_copy(a0_64, a1_64, a2_32);		     
+    }
+    break;
+
+
+
   }
   return (if_p); 
 }
