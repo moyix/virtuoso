@@ -56,7 +56,7 @@ static inline uint64_t phys_a0() {
   if (addr == -1)
     return 0;
   else
-    return (uint64_t) (phys_ram_base + addr);
+    return (uint64_t) addr;
   
   //  return A0;
 }

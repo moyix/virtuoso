@@ -1,5 +1,5 @@
 include config.mak
-# include ../config.iferret
+include ../config.iferret
 
 TARGET_BASE_ARCH:=$(TARGET_ARCH)
 ifeq ($(TARGET_ARCH), x86_64)
@@ -37,7 +37,7 @@ ifndef TARGET_ABI_DIR
 endif
 CPPFLAGS+=-I$(SRC_PATH)/linux-user -I$(SRC_PATH)/linux-user/$(TARGET_ABI_DIR)
 endif
-BASE_CFLAGS=
+BASE_CFLAGS=$(IFERRET_CFLAGS)
 BASE_LDFLAGS=
 #CFLAGS+=-Werror
 LIBS=
@@ -99,7 +99,7 @@ endif
 
 # We require -O2 to avoid the stack setup prologue in EXIT_TB
 #OP_CFLAGS := -Wall -O2 -g -fno-strict-aliasing -I$(TAINT_DIR)
-OP_CFLAGS := -Wall -O2 -g -fno-strict-aliasing $(IFERRET_POUND_DS)
+OP_CFLAGS := -Wall -O2 -g -fno-strict-aliasing $(IFERRET_POUND_DS)  $(IFERRET_CFLAGS)
 
 # cc-option
 # Usage: OP_CFLAGS+=$(call cc-option, -falign-functions=0, -malign-functions=0)
@@ -119,7 +119,7 @@ OP_CFLAGS+=$(call cc-option, -fno-section-anchors, "")
 
 ifeq ($(ARCH),i386)
 HELPER_CFLAGS+=-fomit-frame-pointer
-OP_CFLAGS+=-mpreferred-stack-boundary=2 -fomit-frame-pointer
+OP_CFLAGS+=-mpreferred-stack-boundary=2 -fomit-frame-pointer $(IFERRET_CFLAGS)
 ifdef TARGET_GPROF
 USE_I386_LD=y
 endif

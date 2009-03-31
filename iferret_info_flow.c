@@ -175,7 +175,7 @@ uint8_t debug_at_least_omg() {
 // p is an address that came out of the log.  
 // or it might be a fake address, like a register.
 // decide which and print something approriate. 
-void render_address(unsigned long long p) {
+void render_address(uint64_t p) {
   if (p == EAX_BASE)
     printf ("&eax");
   else if (p == ECX_BASE) 
@@ -214,7 +214,7 @@ void render_address(unsigned long long p) {
 
 
 // returns TRUE iff address is *not* to a QEMU temporary register
-uint8_t addr_is_real(unsigned long long p) {
+uint8_t addr_is_real(uint64_t p) {
   if ((p == T0_BASE)
       || (p == T1_BASE)
       || (p == A0_BASE)
@@ -260,18 +260,19 @@ inline uint8_t info_flow_not_possibly_tainted (uint8_t if_regnum) {
 
 
 
-inline uint64_t ctull(unsigned long long p) {
+inline uint64_t ctull(uint64_t p) {
   return (uint64_t) p;
 }
 
 
-inline uint64_t wctull(unsigned long long p) {
+/*
+inline uint64_t wctull(uint64_t p) {
   uint64_t lp;
   //  char key[9];
 
   lp = ctull(p);
 
-  /*
+
   memset (key,0,16);
   key[0] = (lp & 0xFF00000000000000) >> 56;
   key[1] = (lp & 0x00FF000000000000) >> 48;
@@ -286,43 +287,23 @@ inline uint64_t wctull(unsigned long long p) {
   if (tmh == NULL) 
     tmh = vslht_new();
   vslht_add(tmh, key, 1);
-  */
+
 
   return (lp);
 }
+*/
 
-
-// delete info-flow for (p,p+n-1)
-inline void info_flow_delete(unsigned long long p, size_t n) {
-  delete_taint(wctull(p),n,"NONE",-1);
-}
-
-
-// copy of (p2,p2+n-1) to (p1,p1+n-1)
-inline void info_flow_copy(unsigned long long p1,unsigned long long p2, size_t n) {
-  transfer_taint(wctull(p1),n,wctull(p2),n,1,1,"NONE","NONE",-1);
-}
-
-
-// a non-obliting compute transfer.
-// from (p2,p2+n2-1) to (p1,p1+n1-1)
-inline void info_flow_compute(unsigned long long p1, size_t n1, unsigned long long p2, size_t n2) {
-  transfer_taint(wctull(p1),n1,wctull(p2),n2,0,0,"NONE","NONE",-1);
-}
-
-
-inline void info_flow_label(unsigned long long p, size_t n, char *label) {
-  label_taint(wctull(p),n,label,"NONE",-1);
-}
 
 
 // we want to *add* this label to the current set. 
-inline void info_flow_add_label(unsigned long long p, size_t n, char *label) {
+/*
+inline void info_flow_add_label(uint64_t p, size_t n, char *label) {
   // label an extent somewhere in never-never land.
   label_taint(safe_address_for_arbitrary_tainting, n, label, "NONE", -1);
   // execute a compute transfer from that to the extent we got as an arg.
   info_flow_compute(safe_address_for_arbitrary_tainting, n, p, n);
 }
+*/
 
 
 ///////////////////////////////////////////////////////////
@@ -337,7 +318,7 @@ inline void info_flow_add_label(unsigned long long p, size_t n, char *label) {
    n<4 we zero out higher-order bytes of the register at p1.  
    otherwise we sign-extend
 */
-inline void info_flow_ld(unsigned long long p1, unsigned long long p2, size_t n, uint8_t u) {
+inline void info_flow_ld(uint64_t p1, uint64_t p2, size_t n, uint8_t u) {
 
   // NB: you are IGNORING u which is wrong!  
   //  if (if_debug == TRUE) 
@@ -355,7 +336,7 @@ inline void info_flow_ld(unsigned long long p1, unsigned long long p2, size_t n,
 
 // p1 is address of some info-flow register (fake address).
 // store the low n bytes of that register at location p2.  
-inline void info_flow_st(unsigned long long p1, unsigned long long p2, size_t n) {
+inline void info_flow_st(uint64_t p1, uint64_t p2, size_t n) {
   //  if (if_debug == TRUE) 
   //    printf ("info_flow_st %p %p %d\n", p1, p2, n);
   info_flow_ld(p2,p1,n,TRUE);
@@ -628,10 +609,12 @@ inline void if_inc_r4(uint32_t rn) {
   1 _kernel
   2 _user
 */
-inline void if_ld(uint32_t msn, uint32_t rn, uint32_t n, uint32_t u, unsigned long long p) { 
+inline void if_ld(uint32_t msn, uint32_t rn, uint32_t n, uint32_t u, uint64_t p) { 
   //  assert (msn != UNINITIALIZED); 
   //  assert (rn != UNINITIALIZED); 
   //  assert (p != (char *) UNINITIALIZED);	
+  if (p == 0)
+    return;
   if (debug_at_least_med()) {
     //    check_reg_taint(rn,__FILE__,__LINE__);
   }
@@ -652,19 +635,22 @@ inline void if_ld(uint32_t msn, uint32_t rn, uint32_t n, uint32_t u, unsigned lo
 }
 
 
-inline void if_ldu(uint32_t msn, uint32_t rn, uint32_t n, unsigned long long p) {
+inline void if_ldu(uint32_t msn, uint32_t rn, uint32_t n, uint64_t p) {
   if_ld(msn,rn,n,TRUE,p);
 }
 
 
-inline void if_lds(uint32_t msn, uint32_t rn, uint32_t n, unsigned long long p) {
+inline void if_lds(uint32_t msn, uint32_t rn, uint32_t n, uint64_t p) {
   if_ld(msn,rn,n,FALSE,p);
 }
 
 
 // store low n bytes of register r at location p. 
 // msn is memory suffix number. 
-inline void if_st(uint32_t msn, uint32_t rn, uint32_t n, unsigned long long p) {
+inline void if_st(uint32_t msn, uint32_t rn, uint32_t n, uint64_t p) {
+  if (p == 0) 
+    return;
+
   if (debug_at_least_med()) {
     //    check_reg_taint(rn,__FILE__,__LINE__);
   }
@@ -1335,21 +1321,20 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
 
     */
 
-    /*
-    eflags = cc_table[CC_OP].compute_all();
-    d = ldq(A0);
-    if (d == (((uint64_t)EDX << 32) | EAX)) {
-        // part_1 corresponds to this branch
-        iferret_log_info_flow_op_write_8(IFLO_CMPXCHG8B_PART1, phys_a0());       
-        stq(A0, ((uint64_t)ECX << 32) | EBX);
-        eflags |= CC_Z;
-	...
-    } else {
-        EDX = d >> 32;
-        EAX = d;
-	iferret_log_info_flow_op_write_0(IFLO_CMPXCHG8B_PART2);
-    }
-    */
+    
+    //    eflags = cc_table[CC_OP].compute_all();
+    //    d = ldq(A0);
+    //    if (d == (((uint64_t)EDX << 32) | EAX)) {
+    // // part_1 corresponds to this branch
+    //        iferret_log_info_flow_op_write_8(IFLO_CMPXCHG8B_PART1, phys_a0());       
+    //        stq(A0, ((uint64_t)ECX << 32) | EBX);
+    //        eflags |= CC_Z;
+    //	...
+    //    } else {
+    //        EDX = d >> 32;
+    //        EAX = d;
+    //	iferret_log_info_flow_op_write_0(IFLO_CMPXCHG8B_PART2);
+    //    }
 
   case IFLO_CMPXCHG8B_PART1:
     if_st(0,IFRN_EBX,4,a0_64);
@@ -1597,6 +1582,12 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // (to,size)
     // make use of saved from address.  
     if (iferret->last_hd_transfer_from != 0) {
+      if (exists_taint(iferret->last_hd_transfer_from, a1_32, "foo", -1)) {
+	printf ("IFLO_HD_TRANSFER_PART2 from tainted:\n");
+      }
+      if (exists_taint(a0_64, a1_32, "foo", -1)) {
+	printf ("IFLO_HD_TRANSFER_PART2 to tainted:\n");
+      }		  
       info_flow_copy(a0_64, iferret->last_hd_transfer_from, a1_32);
     }
     break;
@@ -1605,6 +1596,12 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // (from,to,size)
     // NB: from could be HD or io buffer and to could be either.
     info_flow_copy(a1_64,a0_64,a2_32);
+    if (exists_taint(a1_64, a1_32, "foo", -1)) {
+      printf ("IFLO_HD_TRANSFER from tainted:\n");
+    }
+    if (exists_taint(a0_64, a1_32, "foo", -1)) {
+      printf ("IFLO_HD_TRANSFER to tainted:\n");
+    }		  
     break;
 
 

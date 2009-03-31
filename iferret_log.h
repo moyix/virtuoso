@@ -30,6 +30,7 @@
 // which is the higher than the top we actually observed from qemu. 
 // (from running pmap on qemu whilst it was in flight)
 #define HD_BASE_ADDR 0x1000000000000
+
 // mapping from register name to number
 #define IFRN_EAX 0
 #define IFRN_ECX 1

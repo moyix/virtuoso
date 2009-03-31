@@ -30,6 +30,8 @@
 #define TRUE 1
 #define FALSE 0
 
+#define OP_POS_CIRC_BUFF_SIZE 10
+
 unsigned int phys_ram_size;
 unsigned long long ifregaddr[16];
 
@@ -47,14 +49,13 @@ uint64_t safe_address_for_arbitrary_tainting;
 
 
 typedef struct op_pos_struct {
+  uint32_t opnum;
   char *start;
   char *end;
 } op_pos_t;
 
 typedef struct op_pos_arr_struct {
   op_pos_t *pos; 
-  int size;
-  int next;
 } op_pos_arr_t;
 
 
@@ -78,16 +79,11 @@ void *my_calloc(size_t n) {
 }
 
 
-void op_hex_dump(int i) {
-  unsigned char *p1, *p2, *p;
+void op_hex_dump_aux(uint32_t opnum, unsigned char *p1, unsigned char *p2, char *label) {
+  unsigned char *p;
   int j;
 
-  if (i > op_pos_arr->next) {
-    return;
-  }
-  p1 = op_pos_arr->pos[i].start;
-  p2 = op_pos_arr->pos[i].end;
-  printf ("\ni=%d %p..%p \n", i,p1,p2);
+  printf ("%s %s size=%d %p..%p \n", label, iferret_op_num_to_str(opnum), p2-p1+1, p1, p2);
   j=0;
   for (p=p1; p<=p2; p++) {
     if (p!=p1) {
@@ -107,6 +103,22 @@ void op_hex_dump(int i) {
     j++;
   }
   printf ("\n");
+}
+
+
+
+void op_hex_dump(int i) {
+  unsigned char *p1, *p2, *p;
+  int j;
+  uint32_t opnum;
+  char buff[256];
+  
+
+  opnum = op_pos_arr->pos[i].opnum;
+  p1 = op_pos_arr->pos[i].start;
+  p2 = op_pos_arr->pos[i].end;
+  snprintf (buff, 256, "i=%d", i);
+  op_hex_dump_aux(opnum,p1,p2,buff);
 }
 
 
@@ -241,27 +253,33 @@ void iferret_close_file(iferret_t *iferret, char *command, int pid, int fd) {
 
 
 void iferret_read_file(iferret_t *iferret, int pid, char *command, 
-		       int fd, uint32_t buf, uint32_t count, int retval) {
+		       int fd, uint64_t p, uint32_t count, int retval) {
   if (iferret_open_fd_mem(iferret, pid, fd)) {
     char *filename;
+    char label[256];
     filename = (iferret_open_fd_find(iferret, pid, fd))->filename; 
     // this is a file for which we saw the open
-    printf ("pid %d [%s] read %d of %d bytes from file [%s]\n", 
-	    pid, command, retval, count, filename);
+    printf ("pid %d [%s] read %d of %d bytes from file [%s] p=0x%p\n", 
+	    pid, command, retval, count, filename, p);
     vslht_add(iferret->read_files, filename, 1);
+    snprintf (label, 256, "pid-%d-%s-read-%s", pid, command, filename);
+    info_flow_label(p, count, label);
   }
 }
 
 
 void iferret_write_file(iferret_t *iferret, int pid, char *command, 
-			int fd, uint32_t buf, uint32_t count, int retval) {
+			int fd, uint64_t p, uint32_t count, int retval) {
   if (iferret_open_fd_mem(iferret, pid, fd)) {
     char *filename;
+    char label[256];
     filename = (iferret_open_fd_find(iferret, pid, fd))->filename; 
     // this is a file for which we saw the open
-    printf ("pid %d [%s] wrote %d of %d bytes from file [%s]\n", 
-	    pid, command, retval, count, filename);
+    printf ("pid %d [%s] wrote %d of %d bytes from file [%s] p=0x%p\n", 
+	    pid, command, retval, count, filename, p);
     vslht_add(iferret->mal_files, filename, 1);
+    snprintf (label, 256, "pid-%d-%s-write-%s", pid, command, filename);
+    info_flow_label(p, count, label);
   }
 }
 
@@ -427,17 +445,23 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op, int p
     if(!pre_process)
     {
       char *clone_command;
-      clone_command = int_string_hashtable_find(iferret->pid_commands, retval);
-      printf ("pid %d [%s] cloned %d [%s]\n", 
-  	    syscall->pid, 
-	    command,
-	    retval,
-	    clone_command);
+      if (int_string_hashtable_mem(iferret->pid_commands, retval)) {
+	clone_command = int_string_hashtable_find(iferret->pid_commands, retval);
+      }
+      else {
+	clone_command = "Unknown";
+      }
 
+      printf ("pid %d [%s] cloned %d [%s]\n", 
+	      syscall->pid, 
+	      command,
+	      retval,
+	      clone_command);
+      
       printf ("digraph a%d [label=\"%d %s\"]\n", syscall->pid, syscall->pid, command);
       printf ("digraph a%d [label=\"%d %s\"]\n", retval, retval, clone_command);
       printf ("digraph a%d -> a%d\n", syscall->pid, retval);
-    }else{
+    } else {
       iferret_add_mal_pid(iferret, retval);
     }
   }
@@ -573,6 +597,39 @@ void iferret_op_process(iferret_t *iferret, iferret_op_t *op, int pre_process) {
   }
 }
 
+
+
+
+int compcounts(const void *poc1, const void *poc2) {
+  opcount_t oc1, oc2;
+
+  oc1 = *((opcount_t *) poc1);
+  oc2 = *((opcount_t *) poc2);
+
+  if (oc1.count > oc2.count) return +1;
+  if (oc1.count < oc2.count) return -1;
+  return 0;
+}
+
+
+
+// op stats
+void iferret_stats (iferret_t *iferret) {
+  int i;
+  
+  printf ("\nOp histogram\n");
+  qsort (iferret->opcount, IFLO_DUMMY_LAST, sizeof(opcount_t), compcounts);
+  for (i=0; i<IFLO_DUMMY_LAST; i++) {
+    if (iferret->opcount[i].count > 0) {
+      printf ("%d %s \n", 
+	      iferret->opcount[i].count, 
+	      iferret_op_num_to_str(iferret->opcount[i].op_num));
+    }
+  }
+}
+
+
+
 void iferret_log_pre_process (iferret_t *iferret, char *filename){
   struct stat fs;
   uint32_t i, n, iferret_log_size;
@@ -609,7 +666,7 @@ void iferret_log_pre_process (iferret_t *iferret, char *filename){
        {
          int j;
          for (j=10; j>=0; j--) {
-           op_hex_dump(i);
+	   //           op_hex_dump(i);
          }
        }
        exit(1);
@@ -630,7 +687,7 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
 
   if (op_pos_arr == NULL) {
     op_pos_arr = (op_pos_arr_t *) my_malloc (sizeof(op_pos_arr_t));
-    op_pos_arr->pos = (op_pos_t *) my_malloc(sizeof (op_pos_t) * IFERRET_LOG_SIZE);
+    op_pos_arr->pos = (op_pos_t *) my_malloc(sizeof (op_pos_t) * OP_POS_CIRC_BUFF_SIZE);
   }
 
   op.syscall = &syscall;
@@ -641,12 +698,13 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
   stat(filename, &fs);
   iferret_log_size = fs.st_size;
   fp = fopen(filename, "r");
-  iferret_log_preamble(); 
-  n =  fread(iferret_log_base, 1, iferret_log_size, fp);
+  n = fread(iferret_log_base, 1, iferret_log_size, fp);
+  iferret_log_ptr = iferret_log_base;
   fclose(fp);
   printf ("Processing log %s -- %d bytes\n", filename, n);
-  iferret_log_ptr = iferret_log_base;
-
+  
+  // sets up ifregaddr &c
+  iferret_log_preamble(); 
   // process each op in the log, in sequence
   i=0;
   while (iferret_log_ptr < iferret_log_base + iferret_log_size) {
@@ -659,19 +717,24 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
     //        printf ("%d op=%d %s\n", i, op.num, iferret_op_num_to_str(op.num));
     if ((iferret_log_sentinel_check()) == 0) {
       printf ("sentinel failed at op %d\n", i);
+      printf ("%d op=%d %s\n", i, op.num, iferret_op_num_to_str(op.num));
+      printf ("%.2f percent of log\n", 100 * ((float) (iferret_log_ptr - iferret_log_base)) / n);
       { 
 	int j;
-	for (j=10; j>=0; j--) {
-	  op_hex_dump(i);
+	for (j=10; j>=1; j--) {
+	  printf ("i-%d=%d ", j, i-j);
+	  op_hex_dump((i-j) % OP_POS_CIRC_BUFF_SIZE);
 	}
+	op_hex_dump_aux(op.num, op_start, iferret_log_ptr, "current");
       }
+      iferret_stats(iferret);
       exit(1);
     }
     iferret_log_op_args_read(&op);
     iferret_op_process(iferret,&op,FALSE);
-    op_pos_arr->pos[i].start = op_start;
-    op_pos_arr->pos[i].end = iferret_log_ptr-1;
-    op_pos_arr->next = i+1;
+    op_pos_arr->pos[i%OP_POS_CIRC_BUFF_SIZE].opnum = op.num;
+    op_pos_arr->pos[i%OP_POS_CIRC_BUFF_SIZE].start = op_start;
+    op_pos_arr->pos[i%OP_POS_CIRC_BUFF_SIZE].end = iferret_log_ptr-1;
     //    op_hex_dump(i);
     i++;
   }
@@ -679,20 +742,8 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
 }
 
 
-int compcounts(const void *poc1, const void *poc2) {
-  opcount_t oc1, oc2;
-
-  oc1 = *((opcount_t *) poc1);
-  oc2 = *((opcount_t *) poc2);
-
-  if (oc1.count > oc2.count) return +1;
-  if (oc1.count < oc2.count) return -1;
-  return 0;
-}
-
-
-void * GlobalTaintGraph = NULL;
-void* GlobalReverseMap = NULL;
+void *GlobalTaintGraph = NULL;
+void *GlobalReverseMap = NULL;
 
 
 
@@ -704,7 +755,7 @@ int main (int argc, char **argv) {
   int mal_pid_count; 
   int_set_t* temp_mal_pids;
 
-  if (argc != 6) {
+  if (argc != 5) {
     printf ("Usage: iferret ramsize(MB) hdsize(GB) log_prefix num_logs\n");
     exit(1);
   }
@@ -714,16 +765,16 @@ int main (int argc, char **argv) {
 
   ram = atoi(argv[1]);
   phys_ram_size = ram * MB + BIOS_MEM + VIDEO_MEM;  
-  fake_base_addr_for_env = phys_ram_size + atoi(argv[2]) * GB + A_BUNCH_OF_SLOP;
-  safe_address_for_arbitrary_tainting = fake_base_addr_for_env + A_BUNCH_OF_SLOP;
-  log_prefix = argv[3];
-  num_logs = atoi(argv[4]);
+  //  fake_base_addr_for_env = phys_ram_size + atoi(argv[2]) * GB + A_BUNCH_OF_SLOP;
+  //  safe_address_for_arbitrary_tainting = fake_base_addr_for_env + A_BUNCH_OF_SLOP;
+  log_prefix = argv[2];
+  num_logs = atoi(argv[3]);
   
   printf ("ram is %d MB, giving total mem of %d\n", ram, phys_ram_size);
 
   iferret_log_create();
   iferret = iferret_create();
-  iferret->use_mal_set = atoi(argv[5]);
+  iferret->use_mal_set = atoi(argv[4]);
   // this is the seed.  Somehow, we knew this was the pid to follow.
   if (iferret->use_mal_set) {
     iferret_add_mal_pid(iferret, iferret->use_mal_set);
@@ -738,7 +789,7 @@ int main (int argc, char **argv) {
       for (i=0; i<num_logs; i++) {
         sprintf(filename, "%s-%d", log_prefix, i);
         printf ("pre-process: iteration %d reading log: %s\n",iteration, filename);
-	iferret_log_pre_process(iferret,filename);
+	iferret_log_process(iferret,filename);
         //iferret_log_spit(filename);
       }
       iteration++;
@@ -796,15 +847,6 @@ int main (int argc, char **argv) {
     free(filename);
   }
 
-  // op stats
-  printf ("\nOp histogram\n");
-  qsort (iferret->opcount, IFLO_DUMMY_LAST, sizeof(opcount_t), compcounts);
-  for (i=0; i<IFLO_DUMMY_LAST; i++) {
-    if (iferret->opcount[i].count > 0) {
-      printf ("%d %s \n", 
-	      iferret->opcount[i].count, 
-		iferret_op_num_to_str(iferret->opcount[i].op_num));
-    }
-  }
+  iferret_stats(iferret);
 
 }

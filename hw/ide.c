@@ -2343,7 +2343,7 @@ static void ide_data_writew(void *opaque, uint32_t addr, uint32_t val)
 
     // (op,to,size)
     // ? -> IO_BUFFER 
-    iferret_log_info_flow_op_write_84(IFLO_HD_TRANSFER_PART2, (uint64_t) s->io_buffer + (s->data_ptr - s->data_ptr_base), 2);
+    iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2, (uint64_t) s->io_buffer + (s->data_ptr - s->data_ptr_base), 2);
     p = s->data_ptr;
     *(uint16_t *)p = le16_to_cpu(val);
     p += 2;
@@ -2387,7 +2387,7 @@ static void ide_data_writel(void *opaque, uint32_t addr, uint32_t val)
     //    IFLW_HD_TRANSFER_PART2(IO_BUFFER_BASE_ADDR + (s->data_ptr - s->data_ptr_base), 4);
 
     // -> IO_BUFFER
-    iferret_log_info_flow_op_write_84(IFLO_HD_TRANSFER_PART2, (uint64_t) s->io_buffer + (s->data_ptr - s->data_ptr_base), 4);
+    iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2, (uint64_t) s->io_buffer + (s->data_ptr - s->data_ptr_base), 4);
     p = s->data_ptr;
     *(uint32_t *)p = le32_to_cpu(val);
     p += 4;

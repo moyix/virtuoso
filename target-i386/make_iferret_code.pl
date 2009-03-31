@@ -3,12 +3,16 @@
 
 use strict;
 
+unless (exists $ENV{'IFERRET_DIR'}) {
+    die "IFERRET_DIR env variable not available.\n";
+}
+
 # set of types used to represent a string as a syscall arg.
-my %syscallStringTypes = ('char *',
-			  'char __user *',
-			  'const char *',
-			  'const char __user *',
-			  'unsigned char __user *');
+my %syscallStringTypes = ('char *' => 1,
+			  'char __user *' => 1,
+			  'const char *' => 1,
+			  'const char __user *' => 1,
+			  'unsigned char __user *' => 1);
 
 # arg 1 of a syscall is EBX, arg 2 is ECX, etc.  
 # after 6, it gets complicated.
@@ -29,9 +33,7 @@ my %iferret_fmts;
     my @syscall;
     my $num = 0; 
     while (my $line = <F>) {
-	if ($line =~ /mmap/) {
-	    print "foo\n";
-	}
+	# a single line, i..e a single prototype
 	chomp $line;
 	print "line = $line\n";
 	my @foo = split ' ', $line;
@@ -50,12 +52,13 @@ my %iferret_fmts;
 	    $syscall[$call_num]{noargs} = 1;
 	    $syscall[$call_num]{format} = "0";
 	    print "syscall $call_num is missing\n";
+	    next;
 	}
-	elsif ($rest =~ /([^\(\) ]+)\s*\((.+)\);/) {
+	if ($rest =~ /([^\(\) ]+)\s*\((.+)\);/) {
 	    # we have a prototype 
 	    my $nameandtype = $1;
 	    my $inside = $2;
-	    # get rid of de-refs 
+	    # if return type is pointer, get rid of that crap
 	    $nameandtype =~ s/\*/ /g;
 	    my @foo = split ' ', $nameandtype;
 	    my $name = pop @foo;
@@ -63,11 +66,13 @@ my %iferret_fmts;
 	    $syscall[$call_num]{name} = $name;
 	    # examine the protoype args
 	    if ($inside eq "void") {
+		# no args
 		$syscall[$call_num]{noargs} = 1;
 		print "syscall $call_num has no args\n";
 		$syscall[$call_num]{format} = "0";
 	    }
 	    else {
+		# one or more args
 		$syscall[$call_num]{args} = ();
 		$inside =~ s/\*/\* /g;
 		my @args = split ',', $inside;
@@ -97,12 +102,18 @@ my %iferret_fmts;
 			# it's a string
 			push @{$syscall[$call_num]{args}}, "s";
 			$format .= "s";
-			print "is a string\n";
+			print "$arg is a string\n";
 		    }
+		    elsif ($argType =~ /\*/) {
+			# some kind of pointer. 
+			push @{$syscall[$call_num]{args}}, "p";
+			$format .= "p";
+			print "$arg is a pointer of some kind\n";	
+		    }		
 		    else {
 			push @{$syscall[$call_num]{args}}, "4";
 			$format .= "4";
-			print "is a 4-byte int\n";
+			print "$arg is a 4-byte int\n";
 		    }
 		}
 		print "format is $format\n";
@@ -156,15 +167,19 @@ my %iferret_fmts;
 #	my $filename = "none";
 	foreach my $line (@lines) {
 	    
+	    if ($line =~ /IFLO_HD_TRANSFER_PART2/) {
+		print "foo\n";
+	    }
+
 	    chomp $line;
 	    # skip commented lines (c++ style)
 	    if ($line =~ /^(\s*)\/\//) {
 		next;
 	    }
 
-	    if ($line =~ /IFLO_HD_TRANSFER/) {
-		print "foo\n";
-	    }
+#	    if ($line =~ /IFLO_HD_TRANSFER/) {
+#		print "foo\n";
+#	    }
 	    if ($line =~ /iferret_log_info_flow_op_write/
 		|| $line =~ /iferret_log_syscall_op_write/
 		|| $line =~ /iferret_log_sysret_op_write/
@@ -781,13 +796,35 @@ sub add_op() {
 
     my @rest = split ',', $args;
     # remember all the files we saw this in.
-    $rhOps->{$opname}{files}{$filename} = ();
+    unless (exists     $rhOps->{$opname}{files}{$filename}) {
+	$rhOps->{$opname}{files}{$filename} = ();
+    }
     # and foreach, collect all lines used to write this op
     push @{$rhOps->{$opname}{files}{$filename}}, $line;
     
     # create or update format string for this op by examining args.
-#    print "$opname $filename\n";
-    my $newFmt;   
+    print "$opname $filename $line $fmt\n";
+    if (exists $rhOps->{$opname}{format}) {
+	my $fmt2 = $rhOps->{$opname}{format};
+	if ($fmt ne $fmt2) {
+	    print "Disagreeing formats for $opname $fmt $fmt2\n";
+	    print "This: $fmt from $filename $line\n";
+	    print "others:\n";
+	    foreach my $filename2 (keys %{$rhOps->{$opname}{files}}) {
+		print "  file: $filename2: \n";
+		    foreach my $line2 (@{$rhOps->{$opname}{files}{$filename2}}) {
+			print "    line: $line2\n";
+		}
+	    }
+	    die;
+	}
+	else {
+	    print "$fmt same as $fmt2\n";
+	}
+    }
+
+    
+
 #    if (!exists $rhOps->{$opname}{format}) {
 #	$newFmt = &create_op_format($opname, \@rest);
 #    }
@@ -798,7 +835,8 @@ sub add_op() {
     print "2 op is $opname. \n";
     print "$filename\n";
     print "$line\n";
-#    $rhOps->{$opname}{format} = &merge_formats ($fmt, $newFmt);
+
+
     $rhOps->{$opname}{format} = $fmt;
 }
 

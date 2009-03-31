@@ -151,17 +151,11 @@ char *iferret_log_arg_format[] = {
 // -->   iferret_log_info_flow_op_write_0(IFLO_CLTS);
   "0",
   // 29 
-// ./iferret_info_flow.c
-
-// -->         iferret_log_info_flow_op_write_8(IFLO_CMPXCHG8B_PART1, phys_a0());       
 // ./target-i386/helper.c
 
 // -->       iferret_log_info_flow_op_write_8(IFLO_CMPXCHG8B_PART1, phys_a0());
   "8",
   // 30 
-// ./iferret_info_flow.c
-
-// --> 	iferret_log_info_flow_op_write_0(IFLO_CMPXCHG8B_PART2);
 // ./target-i386/helper.c
 
 // --> 	iferret_log_info_flow_op_write_8(IFLO_CMPXCHG8B_PART2,phys_a0());
@@ -229,23 +223,32 @@ char *iferret_log_arg_format[] = {
   // 43 
 // ./hw/ide.c
 
+// --> 	iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, HD_BASE_ADDR + sector_num*512, (uint64_t) s->io_buffer, n*512);
 // -->     iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, (uint64_t) s->io_buffer, HD_BASE_ADDR + sector_num*512, n*512);
+// -->     iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, (uint64_t) s->io_buffer, HD_BASE_ADDR + sector_num*512, n*512);
+// -->     iferret_log_info_flow_op_write_884(IFLO_HD_TRANSFER, HD_BASE_ADDR + sector_num*512, (uint64_t) s->io_buffer, n*512);
   "884",
   // 44 
 // ./hw/ide.c
 
 // -->     iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1, (uint64_t) s->io_buffer + (s->data_ptr - s->data_ptr_base));
+// -->     iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1, (uint64_t) s->io_buffer + (s->data_ptr - s->data_ptr_base));
 // ./target-i386/ops_template.h
 
 // -->     iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1,T0_BASE);    
+// -->     iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1,T1_BASE);
   "8",
   // 45 
 // ./hw/ide.c
 
-// -->     iferret_log_info_flow_op_write_84(IFLO_HD_TRANSFER_PART2, (uint64_t) s->io_buffer + (s->data_ptr - s->data_ptr_base), 4);
+// -->     iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2, (uint64_t) s->io_buffer + (s->data_ptr - s->data_ptr_base), 2);
+// -->     iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2, (uint64_t) s->io_buffer + (s->data_ptr - s->data_ptr_base), 4);
 // ./target-i386/ops_template.h
 
+// -->       iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2,T0_BASE,2);
 // -->       iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2,T0_BASE,4);    
+// -->       iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2,T1_BASE,2);
+// -->       iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2,T1_BASE,4);
   "81",
   // 46 
 // ./target-i386/op.c
@@ -1046,20 +1049,24 @@ char *iferret_log_arg_format[] = {
 // ./target-i386/ops_template_mem.h
 
 // --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC,SHIFT);
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC,SHIFT);
   "1",
   // 206 
 // ./target-i386/ops_template_mem.h
 
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE,SHIFT,phys_a0());
 // --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 207 
 // ./target-i386/ops_template_mem.h
 
 // -->     iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC,SHIFT);
+// -->     iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC,SHIFT);
   "1",
   // 208 
 // ./target-i386/ops_template_mem.h
 
+// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE,SHIFT,phys_a0());
 // -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 209 
@@ -1081,20 +1088,24 @@ char *iferret_log_arg_format[] = {
 // ./target-i386/ops_template_mem.h
 
 // --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC,SHIFT);
+// --> 	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC,SHIFT);
   "1",
   // 213 
 // ./target-i386/ops_template_mem.h
 
+// --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE,SHIFT,phys_a0());
 // --> 	iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 214 
 // ./target-i386/ops_template_mem.h
 
 // -->     iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC,SHIFT);
+// -->     iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC,SHIFT);
   "1",
   // 215 
 // ./target-i386/ops_template_mem.h
 
+// -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,phys_a0());
 // -->     iferret_log_info_flow_op_write_18(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,phys_a0());
   "18",
   // 216 
@@ -1145,7 +1156,14 @@ char *iferret_log_arg_format[] = {
   // 225 
 // ./target-i386/helper.c
 
+// --> 	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EAX);
+// --> 	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EBP);
+// --> 	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EBX);
+// --> 	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,ECX);
 // --> 	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EDI);
+// --> 	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EDX);
+// --> 	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,ESI);
+// --> 	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,ESP);
   "4",
   // 226 
 // ./target-i386/op.c
@@ -1266,10 +1284,10 @@ char *iferret_log_arg_format[] = {
   "0",
   // 251 
 // syscall # 3// 3 ssize_t sys_read(unsigned int fd, char __user *buf, size_t count);
-  "444",
+  "4p4",
   // 252 
 // syscall # 4// 4 ssize_t sys_write(unsigned int fd, const char __user *buf, size_t count);
-  "444",
+  "4p4",
   // 253 
 // syscall # 5// 5 long sys_open(const char __user *filename, int flags, int mode);
   "s44",
@@ -1278,7 +1296,7 @@ char *iferret_log_arg_format[] = {
   "4",
   // 255 
 // syscall # 7// 7 long sys_waitpid(pid_t pid, int __user *stat_addr, int options);
-  "444",
+  "4p4",
   // 256 
 // syscall # 8// 8 long sys_creat(const char __user *pathname, int mode);    
   "s4",
@@ -1290,13 +1308,13 @@ char *iferret_log_arg_format[] = {
   "s",
   // 259 
 // syscall # 11// 11 int execve(const char *filename, char *const argv[], char *const envp[]);
-  "s44",
+  "spp",
   // 260 
 // syscall # 12// 12 long sys_chdir(const char __user *filename);
   "s",
   // 261 
 // syscall # 13// 13 long sys_time(time_t __user *tloc);
-  "4",
+  "p",
   // 262 
 // syscall # 14// 14 long sys_mknod(const char __user *filename, int mode, unsigned dev);
   "s44",
@@ -1311,7 +1329,7 @@ char *iferret_log_arg_format[] = {
   "0",
   // 266 
 // syscall # 18// 18 int stat(const char *path, struct stat *buf);
-  "s4",
+  "sp",
   // 267 
 // syscall # 19// 19 off_t sys_lseek(unsigned int fd, off_t offset, unsigned int origin);
   "444",
@@ -1320,7 +1338,7 @@ char *iferret_log_arg_format[] = {
   "0",
   // 269 
 // syscall # 21// 21 long sys_mount(char __user *dev_name, char __user *dir_name, char __user *type, unsigned long flags, void __user *data);
-  "sss44",
+  "sss4p",
   // 270 
 // syscall # 22// 22 long sys_umount(char __user *name, int flags);
   "s4",
@@ -1332,7 +1350,7 @@ char *iferret_log_arg_format[] = {
   "0",
   // 273 
 // syscall # 25// 25 long sys_stime(time_t __user *tptr);
-  "4",
+  "p",
   // 274 
 // syscall # 26// 26 long sys_ptrace(long request, long pid, long addr, long data);
   "4444",
@@ -1347,7 +1365,7 @@ char *iferret_log_arg_format[] = {
   "0",
   // 278 
 // syscall # 30// 30 long sys_utime(char __user *filename, struct utimbuf __user *times);
-  "s4",
+  "sp",
   // 279 
 // syscall # 31// 31 missing sys_stty
   "0",
@@ -1386,7 +1404,7 @@ char *iferret_log_arg_format[] = {
   "4",
   // 291 
 // syscall # 43// 43 long sys_times(struct tms __user *tbuf);
-  "4",
+  "p",
   // 292 
 // syscall # 44// 44 missing sys_prof
   "0",
@@ -1443,7 +1461,7 @@ char *iferret_log_arg_format[] = {
   "s",
   // 310 
 // syscall # 62// 62 long sys_ustat(unsigned dev, struct ustat __user *ubuf);
-  "44",
+  "4p",
   // 311 
 // syscall # 63// 63 long sys_dup2(unsigned int oldfd, unsigned int newfd);
   "44",
@@ -1476,43 +1494,43 @@ char *iferret_log_arg_format[] = {
   "0",
   // 321 
 // syscall # 73// 73 long sys_sigpending(old_sigset_t __user *set);
-  "4",
+  "p",
   // 322 
 // syscall # 74// 74 long sys_sethostname(char __user *name, int len);
   "s4",
   // 323 
 // syscall # 75// 75 long sys_setrlimit(unsigned int resource, struct rlimit __user *rlim);
-  "44",
+  "4p",
   // 324 
 // syscall # 76// 76 long sys_getrlimit(unsigned int resource, struct rlimit __user *rlim);
-  "44",
+  "4p",
   // 325 
 // syscall # 77// 77 long sys_getrusage(int who, struct rusage __user *ru);
-  "44",
+  "4p",
   // 326 
 // syscall # 78// 78 long sys_gettimeofday(struct timeval __user *tv, struct timezone __user *tz);
-  "44",
+  "pp",
   // 327 
 // syscall # 79// 79 long sys_settimeofday(struct timeval __user *tv, struct timezone __user *tz);
-  "44",
+  "pp",
   // 328 
 // syscall # 80// 80 long sys_getgroups(int gidsetsize, gid_t __user *grouplist);
-  "44",
+  "4p",
   // 329 
 // syscall # 81// 81 long sys_setgroups(int gidsetsize, gid_t __user *grouplist);
-  "44",
+  "4p",
   // 330 
 // syscall # 82// 82 long sys_select(int n, fd_set __user *inp, fd_set __user *outp, fd_set __user *exp, struct timeval __user *tvp);
-  "44444",
+  "4pppp",
   // 331 
 // syscall # 83// 83 long sys_symlink(const char __user *old, const char __user *new);
   "ss",
   // 332 
 // syscall # 84// 84 int oldlstat(const char *path, struct stat *buf);
-  "s4",
+  "sp",
   // 333 
 // syscall # 85// 85 long sys_readlink(const char __user *path, char __user *buf, int bufsiz);
-  "s44",
+  "sp4",
   // 334 
 // syscall # 86// 86 long sys_uselib(const char __user *library);
   "s",
@@ -1521,13 +1539,13 @@ char *iferret_log_arg_format[] = {
   "s4",
   // 336 
 // syscall # 88// 88 long sys_reboot(int magic1, int magic2, unsigned int cmd, void __user *arg);    
-  "4444",
+  "444p",
   // 337 
 // syscall # 89// 89 int readdir(unsigned int fd, struct dirent *dirp, unsigned int count);
-  "444",
+  "4p4",
   // 338 
 // syscall # 90// 90 void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
-  "444444",
+  "p44444",
   // 339 
 // syscall # 91// 91 long sys_munmap(unsigned long addr, size_t len);
   "44",
@@ -1554,10 +1572,10 @@ char *iferret_log_arg_format[] = {
   "0",
   // 347 
 // syscall # 99// 99 long sys_statfs(const char __user * path, struct statfs __user *buf);
-  "s4",
+  "sp",
   // 348 
 // syscall # 100// 100 long sys_fstatfs(unsigned int fd, struct statfs __user *buf);
-  "44",
+  "4p",
   // 349 
 // syscall # 101// 101 long sys_ioperm(unsigned long from, unsigned long num, int on);
   "444",
@@ -1565,25 +1583,25 @@ char *iferret_log_arg_format[] = {
   "0",
   // 351 
 // syscall # 103// 103 long sys_syslog(int type, char __user *buf, int len);
-  "444",
+  "4p4",
   // 352 
 // syscall # 104// 104 long sys_setitimer(int which,  struct itimerval __user *value, struct itimerval __user *ovalue);
-  "444",
+  "4pp",
   // 353 
 // syscall # 105// 105 long sys_getitimer(int which, struct itimerval __user *value);
-  "44",
+  "4p",
   // 354 
 // syscall # 106// 106 long sys_stat(char __user *filename, struct __old_kernel_stat __user *statbuf);
-  "s4",
+  "sp",
   // 355 
 // syscall # 107// 107 long sys_lstat(char __user *filename, struct __old_kernel_stat __user *statbuf);
-  "s4",
+  "sp",
   // 356 
 // syscall # 108// 108 long sys_fstat(unsigned int fd, struct __old_kernel_stat __user *statbuf);
-  "44",
+  "4p",
   // 357 
 // syscall # 109// 109 int old_uname(struct utsname *buf);
-  "4",
+  "p",
   // 358 
 // syscall # 110// 110 int iopl(int level);
   "4",
@@ -1595,19 +1613,19 @@ char *iferret_log_arg_format[] = {
   "0",
   // 361 
 // syscall # 113// 113 int vm86old(struct vm86_struct *info);
-  "4",
+  "p",
   // 362 
 // syscall # 114// 114 long sys_wait4(pid_t pid, int __user *stat_addr, int options, struct rusage __user *ru);
-  "4444",
+  "4p4p",
   // 363 
 // syscall # 115// 115 long sys_swapoff(const char __user *specialfile);
   "s",
   // 364 
 // syscall # 116// 116 long sys_sysinfo(struct sysinfo __user *info);
-  "4",
+  "p",
   // 365 
 // syscall # 117// 117 int ipc(unsigned int call, int first, int second, int third, void *ptr, long fifth);
-  "444444",
+  "4444p4",
   // 366 
 // syscall # 118// 118 long sys_fsync(unsigned int fd);
   "4",
@@ -1616,31 +1634,31 @@ char *iferret_log_arg_format[] = {
   "4",
   // 368 
 // syscall # 120// 120 int clone(int (*fn)(void *), void *child_stack, int flags, void *arg, ...);
-  "44444",
+  "pp4p4",
   // 369 
 // syscall # 121// 121 long sys_setdomainname(char __user *name, int len);
   "s4",
   // 370 
 // syscall # 122// 122 int uname(struct utsname *buf);
-  "4",
+  "p",
   // 371 
 // syscall # 123// 123 int modify_ldt(int func, void *ptr, unsigned long bytecount);
-  "444",
+  "4p4",
   // 372 
 // syscall # 124// 124 long sys_adjtimex(struct timex __user *txc_p);
-  "4",
+  "p",
   // 373 
 // syscall # 125// 125 long sys_mprotect(unsigned long start, size_t len, unsigned long prot);
   "444",
   // 374 
 // syscall # 126// 126 long sys_sigprocmask(int how, old_sigset_t __user *set, old_sigset_t __user *oset);
-  "444",
+  "4pp",
   // 375 
 // syscall # 127// 127 missing sys_create_module 
   "0",
   // 376 
 // syscall # 128// 128 long sys_init_module(void __user *umod, unsigned long len, const char __user *uargs);
-  "44s",
+  "p4s",
   // 377 
 // syscall # 129// 129 long sys_delete_module(const char __user *name_user, unsigned int flags);
   "s4",
@@ -1649,7 +1667,7 @@ char *iferret_log_arg_format[] = {
   "0",
   // 379 
 // syscall # 131// 131 long sys_quotactl(unsigned int cmd, const char __user *special, qid_t id, void __user *addr);
-  "4s44",
+  "4s4p",
   // 380 
 // syscall # 132// 132 long sys_getpgid(pid_t pid);
   "4",
@@ -1679,7 +1697,7 @@ char *iferret_log_arg_format[] = {
   "0",
   // 389 
 // syscall # 141// 141 long sys_getdents(unsigned int fd, struct linux_dirent __user *dirent, unsigned int count);
-  "444",
+  "4p4",
   // 390 
 // syscall # 142// 142 missing sys__newselect 
   "0",
@@ -1691,10 +1709,10 @@ char *iferret_log_arg_format[] = {
   "444",
   // 393 
 // syscall # 145// 145 ssize_t sys_readv(unsigned long fd, const struct iovec __user *vec, unsigned long vlen);
-  "444",
+  "4p4",
   // 394 
 // syscall # 146// 146 ssize_t sys_writev(unsigned long fd, const struct iovec __user *vec, unsigned long vlen);
-  "444",
+  "4p4",
   // 395 
 // syscall # 147// 147 long sys_getsid(pid_t pid);
   "4",
@@ -1718,13 +1736,13 @@ char *iferret_log_arg_format[] = {
   "0",
   // 402 
 // syscall # 154// 154 long sys_sched_setparam(pid_t pid, struct sched_param __user *param);
-  "44",
+  "4p",
   // 403 
 // syscall # 155// 155 long sys_sched_getparam(pid_t pid, struct sched_param __user *param);
-  "44",
+  "4p",
   // 404 
 // syscall # 156// 156 long sys_sched_setscheduler(pid_t pid, int policy, struct sched_param __user *param);
-  "444",
+  "44p",
   // 405 
 // syscall # 157// 157 long sys_sched_getscheduler(pid_t pid);
   "4",
@@ -1739,10 +1757,10 @@ char *iferret_log_arg_format[] = {
   "4",
   // 409 
 // syscall # 161// 161 long sys_sched_rr_get_interval(pid_t pid, struct timespec __user *interval);
-  "44",
+  "4p",
   // 410 
 // syscall # 162// 162 long sys_nanosleep(struct timespec __user *rqtp, struct timespec __user *rmtp);
-  "44",
+  "pp",
   // 411 
 // syscall # 163// 163 unsigned long sys_mremap(unsigned long addr, unsigned long old_len, unsigned long new_len, unsigned long flags, unsigned long new_addr);
   "44444",
@@ -1751,7 +1769,7 @@ char *iferret_log_arg_format[] = {
   "444",
   // 413 
 // syscall # 165// 165 long sys_getresuid16(old_uid_t __user *ruid, old_uid_t __user *euid, old_uid_t __user *suid);
-  "444",
+  "ppp",
   // 414 
 // syscall # 166// 166 missing sys_vm86 
   "0",
@@ -1760,16 +1778,16 @@ char *iferret_log_arg_format[] = {
   "0",
   // 416 
 // syscall # 168// 168 long sys_poll(struct pollfd __user *ufds, unsigned int nfds, long timeout);
-  "444",
+  "p44",
   // 417 
 // syscall # 169// 169 long sys_nfsservctl(int cmd, struct nfsctl_arg __user *arg, void __user *res);
-  "444",
+  "4pp",
   // 418 
 // syscall # 170// 170 int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
   "444",
   // 419 
 // syscall # 171// 171 long sys_getresgid(gid_t __user *rgid, gid_t __user *egid, gid_t __user *sgid);
-  "444",
+  "ppp",
   // 420 
 // syscall # 172// 172 long sys_prctl(int option, unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5);
   "44444",
@@ -1778,34 +1796,34 @@ char *iferret_log_arg_format[] = {
   "4",
   // 422 
 // syscall # 174// 174 int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);
-  "444",
+  "4pp",
   // 423 
 // syscall # 175// 175 int sys_rt_sigprocmask(int how, sigset_t __user *set, sigset_t __user *oset, size_t sigsetsize);
-  "4444",
+  "4pp4",
   // 424 
 // syscall # 176// 176 long sys_rt_sigpending(sigset_t __user *set, size_t sigsetsize);
-  "44",
+  "p4",
   // 425 
 // syscall # 177// 177 long sys_rt_sigtimedwait(const sigset_t __user *uthese, siginfo_t __user *uinfo, const struct timespec __user *uts, size_t sigsetsize);
-  "4444",
+  "ppp4",
   // 426 
 // syscall # 178// 178 long sys_rt_sigqueueinfo(int pid, int sig, siginfo_t __user *uinfo);
-  "444",
+  "44p",
   // 427 
 // syscall # 179// 179 int sigsuspend(const sigset_t *mask);
-  "4",
+  "p",
   // 428 
 // syscall # 180// 180 ssize_t sys_pread64(unsigned int fd, char __user *buf, size_t count, loff_t pos);
-  "4444",
+  "4p44",
   // 429 
 // syscall # 181// 181 ssize_t sys_pwrite64(unsigned int fd, const char __user *buf, size_t count, loff_t pos);
-  "4444",
+  "4p44",
   // 430 
 // syscall # 182// 182 long sys_chown(const char __user *filename, uid_t user, gid_t group);
   "s44",
   // 431 
 // syscall # 183// 183 long sys_getcwd(char __user *buf, unsigned long size);
-  "44",
+  "p4",
   // 432 
 // syscall # 184// 184 long sys_capget(cap_user_header_t header, cap_user_data_t dataptr);
   "44",
@@ -1814,10 +1832,10 @@ char *iferret_log_arg_format[] = {
   "44",
   // 434 
 // syscall # 186// 186 int sigaltstack(const stack_t *ss, stack_t *oss);
-  "44",
+  "pp",
   // 435 
 // syscall # 187// 187 ssize_t sys_sendfile(int out_fd, int in_fd, off_t __user *offset, size_t count);
-  "4444",
+  "44p4",
   // 436 
 // syscall # 188// 188 missing sys_getpmsg 
   "0",
@@ -1829,10 +1847,10 @@ char *iferret_log_arg_format[] = {
   "0",
   // 439 
 // syscall # 191// 191 int getrlimit(int resource, struct rlimit *rlim);
-  "44",
+  "4p",
   // 440 
 // syscall # 192// 192 void *mmap2(void *addr, size_t length, int prot, int flags, int fd, off_t pgoffset);
-  "444444",
+  "p44444",
   // 441 
 // syscall # 193// 193 long sys_truncate64(const char __user *path, loff_t length);
   "s4",
@@ -1841,13 +1859,13 @@ char *iferret_log_arg_format[] = {
   "44",
   // 443 
 // syscall # 195// 195 long sys_stat64(char __user *filename, struct stat64 __user *statbuf);
-  "s4",
+  "sp",
   // 444 
 // syscall # 196// 196 long sys_lstat64(char __user *filename, struct stat64 __user *statbuf);
-  "s4",
+  "sp",
   // 445 
 // syscall # 197// 197 long sys_fstat64(unsigned long fd, struct stat64 __user *statbuf);
-  "44",
+  "4p",
   // 446 
 // syscall # 198// 198 int lchown(const char *path, uid_t owner, gid_t group);
   "s44",
@@ -1874,7 +1892,7 @@ char *iferret_log_arg_format[] = {
   "44",
   // 454 
 // syscall # 206// 206 int setgroups(size_t size, const gid_t *list);
-  "44",
+  "4p",
   // 455 
 // syscall # 207// 207 int fchown(int fd, uid_t owner, gid_t group);
   "444",
@@ -1883,13 +1901,13 @@ char *iferret_log_arg_format[] = {
   "444",
   // 457 
 // syscall # 209// 209 int getresuid(uid_t *ruid, uid_t *euid, uid_t *suid);
-  "444",
+  "ppp",
   // 458 
 // syscall # 210// 210 int setresgid32(gid_t rgid, gid_t egid, gid_t sgid);
   "444",
   // 459 
 // syscall # 211// 211 int getresgid(gid_t *rgid, gid_t *egid, gid_t *sgid);
-  "444",
+  "ppp",
   // 460 
 // syscall # 212// 212 int chown(const char *path, uid_t owner, gid_t group);
   "s44",
@@ -1916,7 +1934,7 @@ char *iferret_log_arg_format[] = {
   "444",
   // 468 
 // syscall # 220// 220 long sys_getdents64(4(unsigned int fd, struct linux_dirent64 __user *dirent, unsigned int count);
-  "444",
+  "4p4",
   // 469 
 // syscall # 221// 221 long sys_fcntl64(unsigned int fd, unsigned int cmd, unsigned long arg);
   "444",
@@ -1932,22 +1950,22 @@ char *iferret_log_arg_format[] = {
   "444",
   // 474 
 // syscall # 226// 226 long sys_setxattr(const char __user *path, const char __user *name, const void __user *value, size_t size, int flags);
-  "ss444",
+  "ssp44",
   // 475 
 // syscall # 227// 227 long sys_lsetxattr(const char __user *path, const char __user *name, const void __user *value, size_t size, int flags);
-  "ss444",
+  "ssp44",
   // 476 
 // syscall # 228// 228 long sys_fsetxattr(int fd, const char __user *name, const void __user *value, size_t size, int flags);
-  "4s444",
+  "4sp44",
   // 477 
 // syscall # 229// 229 ssize_t sys_getxattr(const char __user *path, const char __user *name, void __user *value, size_t size);
-  "ss44",
+  "ssp4",
   // 478 
 // syscall # 230// 230 ssize_t sys_lgetxattr(const char __user *path, const char __user *name, void __user *value, size_t size);
-  "ss44",
+  "ssp4",
   // 479 
 // syscall # 231// 231 ssize_t sys_fgetxattr(int fd, const char __user *name, void __user *value, size_t size);
-  "4s44",
+  "4sp4",
   // 480 
 // syscall # 232// 232 ssize_t sys_listxattr(const char __user *path, char __user *list, size_t size);
   "ss4",
@@ -1971,37 +1989,37 @@ char *iferret_log_arg_format[] = {
   "44",
   // 487 
 // syscall # 239// 239 ssize_t sys_sendfile64(int out_fd, int in_fd, loff_t __user *offset, size_t count);
-  "4444",
+  "44p4",
   // 488 
 // syscall # 240// 240 long sys_futex(u32 __user *uaddr, int op, u32 val, struct timespec __user *utime, u32 __user *uaddr2, u32 val3);
-  "444444",
+  "p44pp4",
   // 489 
 // syscall # 241// 241 long sys_sched_setaffinity(pid_t pid, unsigned int len, unsigned long __user *user_mask_ptr);
-  "444",
+  "44p",
   // 490 
 // syscall # 242// 242 long sys_sched_getaffinity(pid_t pid, unsigned int len, unsigned long __user *user_mask_ptr);
-  "444",
+  "44p",
   // 491 
 // syscall # 243// 243 int set_thread_area(struct user_desc *u_info);
-  "4",
+  "p",
   // 492 
 // syscall # 244// 244 int get_thread_area(struct user_desc *u_info);
-  "4",
+  "p",
   // 493 
 // syscall # 245// 245 int sys_io_setup(unsigned nr_reqs, aio_context_t __user *ctx);
-  "44",
+  "4p",
   // 494 
 // syscall # 246// 246 long sys_io_destroy(aio_context_t ctx);
   "4",
   // 495 
 // syscall # 247// 247 long sys_io_getevents(aio_context_t ctx_id, long min_nr,long nr, struct io_event __user *events, struct timespec __user *timeout);
-  "44444",
+  "444pp",
   // 496 
 // syscall # 248// 248 long sys_io_submit(aio_context_t, long, struct iocb __user * __user *);
-  "444",
+  "44p",
   // 497 
 // syscall # 249// 249 long sys_io_cancel(aio_context_t ctx_id, struct iocb __user *iocb, struct io_event __user *result);
-  "444",
+  "4pp",
   // 498 
 // syscall # 250// 250 int sys_fadvise64(int fd, loff_t offset, size_t len, int advice); 
   "4444",
@@ -2012,31 +2030,31 @@ char *iferret_log_arg_format[] = {
   "4",
   // 501 
 // syscall # 253// 253 long sys_lookup_dcookie(u64 cookie64, char __user *buf, size_t len);
-  "444",
+  "4p4",
   // 502 
 // syscall # 254// 254 long sys_epoll_create(int size);
   "4",
   // 503 
 // syscall # 255// 255 long sys_epoll_ctl(int epfd, int op, int fd, struct epoll_event __user *event);
-  "4444",
+  "444p",
   // 504 
 // syscall # 256// 256 long sys_epoll_wait(int epfd, struct epoll_event __user *events, int maxevents, int timeout);
-  "4444",
+  "4p44",
   // 505 
 // syscall # 257// 257 long sys_remap_file_pages(unsigned long start, unsigned long size, unsigned long prot, unsigned long pgoff, unsigned long flags);
   "44444",
   // 506 
 // syscall # 258// 258 long sys_set_tid_address(int __user *tidptr);
-  "4",
+  "p",
   // 507 
 // syscall # 259// 259 long sys_timer_create(clockid_t which_clock, struct sigevent __user *timer_event_spec, timer_t __user * created_timer_id);
-  "444",
+  "4pp",
   // 508 
 // syscall # 260// 260 long sys_timer_settime(timer_t timer_id, int flags, const struct itimerspec __user *new_setting, struct itimerspec __user *old_setting);
-  "4444",
+  "44pp",
   // 509 
 // syscall # 261// 261 long sys_timer_gettime(timer_t timer_id, struct itimerspec __user *setting);
-  "44",
+  "4p",
   // 510 
 // syscall # 262// 262 missing sys_timer_getoverrun
   "0",
@@ -2045,28 +2063,28 @@ char *iferret_log_arg_format[] = {
   "4",
   // 512 
 // syscall # 264// 264 long sys_clock_settime(clockid_t which_clock, const struct timespec __user *tp);
-  "44",
+  "4p",
   // 513 
 // syscall # 265// 265 long sys_clock_gettime(clockid_t which_clock, struct timespec __user *tp);
-  "44",
+  "4p",
   // 514 
 // syscall # 266// 266 long sys_clock_getres(clockid_t which_clock, struct timespec __user *tp);
-  "44",
+  "4p",
   // 515 
 // syscall # 267// 267 long sys_clock_nanosleep(clockid_t which_clock, int flags, const struct timespec __user *rqtp, struct timespec __user *rmtp);
-  "4444",
+  "44pp",
   // 516 
 // syscall # 268// 268 long sys_statfs64(const char __user *path, size_t sz, struct statfs64 __user *buf);
-  "s44",
+  "s4p",
   // 517 
 // syscall # 269// 269 long sys_fstatfs64(unsigned int fd, size_t sz, struct statfs64 __user *buf);
-  "444",
+  "44p",
   // 518 
 // syscall # 270// 270 long sys_tgkill(int tgid, int pid, int sig);
   "444",
   // 519 
 // syscall # 271// 271 long sys_utimes(char __user *filename, struct timeval __user *utimes);
-  "s4",
+  "sp",
   // 520 
 // syscall # 272// 272 long sys_fadvise64_64(int fd, loff_t offset, loff_t len, int advice);
   "4444",
@@ -2075,43 +2093,43 @@ char *iferret_log_arg_format[] = {
   "0",
   // 522 
 // syscall # 274// 274 long sys_mbind(unsigned long start, unsigned long len, unsigned long mode, unsigned long __user *nmask, unsigned long maxnode, unsigned flags);
-  "444444",
+  "444p44",
   // 523 
 // syscall # 275// 275 long sys_get_mempolicy(int __user *policy, unsigned long __user *nmask, unsigned long maxnode, unsigned long addr, unsigned long flags);
-  "44444",
+  "pp444",
   // 524 
 // syscall # 276// 276 long sys_set_mempolicy(int mode, unsigned long __user *nmask, unsigned long maxnode);
-  "444",
+  "4p4",
   // 525 
 // syscall # 277// 277 long sys_mq_open(const char __user *name, int oflag, mode_t mode,  struct mq_attr __user *attr);
-  "s444",
+  "s44p",
   // 526 
 // syscall # 278// 278 long sys_mq_unlink(const char __user *name);
   "s",
   // 527 
 // syscall # 279// 279 long sys_mq_timedsend(mqd_t mqdes, const char __user *msg_ptr, size_t msg_len, unsigned int msg_prio, const struct timespec __user *abs_timeout);
-  "4s444",
+  "4s44p",
   // 528 
 // syscall # 280// 280 ssize_t sys_mq_timedreceive(mqd_t mqdes, char __user *msg_ptr,  size_t msg_len, unsigned int __user *msg_prio, const struct timespec __user *abs_timeout);
-  "4s444",
+  "4s4pp",
   // 529 
 // syscall # 281// 281 long sys_mq_notify(mqd_t mqdes, const struct sigevent __user *notification);
-  "44",
+  "4p",
   // 530 
 // syscall # 282// 282 long sys_mq_getsetattr(mqd_t mqdes, const struct mq_attr __user *mqstat, struct mq_attr __user *omqstat);
-  "444",
+  "4pp",
   // 531 
 // syscall # 283// 283 long sys_kexec_load(unsigned long entry, unsigned long nr_segments, struct kexec_segment __user *segments, unsigned long flags);
-  "4444",
+  "44p4",
   // 532 
 // syscall # 284// 284 long sys_waitid(int which, pid_t pid, struct siginfo __user *infop, int options, struct rusage __user *ru);
-  "44444",
+  "44p4p",
   // 533 
 // syscall # 285// 285 missing sys_setaltroot 
   "0",
   // 534 
 // syscall # 286// 286 long sys_add_key(const char __user *_type, const char __user *_description, const void __user *_payload, size_t plen, key_serial_t destringid);
-  "ss444",
+  "ssp44",
   // 535 
 // syscall # 287// 287 long sys_request_key(const char __user *_type, const char __user *_description, const char __user *_callout_info, key_serial_t destringid);
   "sss4",
@@ -2135,7 +2153,7 @@ char *iferret_log_arg_format[] = {
   "44",
   // 542 
 // syscall # 294// 294 long sys_migrate_pages(pid_t pid, unsigned long maxnode, const unsigned long __user *from, const unsigned long __user *to); 
-  "4444",
+  "44pp",
   // 543 
 // syscall # 295// 295 long sys_openat(int dfd, const char __user *filename, int flags, int mode);
   "4s44",
@@ -2150,10 +2168,10 @@ char *iferret_log_arg_format[] = {
   "4s444",
   // 547 
 // syscall # 299// 299 long sys_futimesat(int dfd, char __user *filename, struct timeval __user *utimes);
-  "4s4",
+  "4sp",
   // 548 
 // syscall # 300// 300 long sys_fstatat64(int dfd, char __user *filename, struct stat64 __user *statbuf, int flag);
-  "4s44",
+  "4sp4",
   // 549 
 // syscall # 301// 301 long sys_unlinkat(int dfd, const char __user * pathname, int flag);
   "4s4",
@@ -2168,7 +2186,7 @@ char *iferret_log_arg_format[] = {
   "s4s",
   // 553 
 // syscall # 305// 305 long sys_readlinkat(int dfd, const char __user *path, char __user *buf, int bufsiz);
-  "4s44",
+  "4sp4",
   // 554 
 // syscall # 306// 306 long sys_fchmodat(int dfd, const char __user * filename, mode_t mode);
   "4s4",
@@ -2177,22 +2195,22 @@ char *iferret_log_arg_format[] = {
   "4s4",
   // 556 
 // syscall # 308// 308 int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, const struct timespec *timeout, const sigset_t *sigmask);
-  "444444",
+  "4ppppp",
   // 557 
 // syscall # 309// 309 int ppoll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, const sigset_t *sigmask);
-  "4444",
+  "p4pp",
   // 558 
 // syscall # 310// 310 long sys_unshare(unsigned long unshare_flags);
   "4",
   // 559 
 // syscall # 311// 311 long sys_set_robust_list(struct robust_list_head __user *head, size_t len);
-  "44",
+  "p4",
   // 560 
 // syscall # 312// 312 long sys_get_robust_list(int pid, struct robust_list_head __user * __user *head_ptr, size_t __user *len_ptr);
-  "444",
+  "4pp",
   // 561 
 // syscall # 313// 313 long sys_splice(int fd_in, loff_t __user *off_in, int fd_out, loff_t __user *off_out, size_t len, unsigned int flags);
-  "444444",
+  "4p4p44",
   // 562 
 // syscall # 314// 314 long sys_sync_file_range(int fd, loff_t offset, loff_t nbytes, unsigned int flags);
   "4444",
@@ -2201,22 +2219,22 @@ char *iferret_log_arg_format[] = {
   "4444",
   // 564 
 // syscall # 316// 316 long sys_vmsplice(int fd, const struct iovec __user *iov, unsigned long nr_segs, unsigned int flags);
-  "4444",
+  "4p44",
   // 565 
 // syscall # 317// 317 long sys_move_pages(pid_t pid, unsigned long nr_pages, const void __user * __user *pages, const int __user *nodes, int __user *status, int flags);
-  "444444",
+  "44ppp4",
   // 566 
 // syscall # 318// 318 long sys_getcpu(unsigned __user *cpu, unsigned __user *node,  struct getcpu_cache __user *cache);
-  "444",
+  "ppp",
   // 567 
 // syscall # 319// 319 long sys_epoll_wait_another(int epfd, struct epoll_event __user *events, int maxevents, int timeout);
-  "4444",
+  "4p44",
   // 568 
 // syscall # 320// 320 long sys_utimensat(int dfd, char __user *filename, struct timespec __user *utimes, int flags);
-  "4s44",
+  "4sp4",
   // 569 
 // syscall # 321// 321 long sys_signalfd(int ufd, sigset_t __user *user_mask, size_t sizemask);
-  "444",
+  "4p4",
   // 570 
 // syscall # 322// 322 long sys_timerfd_create(int clockid, int flags);
   "44",
@@ -2228,13 +2246,13 @@ char *iferret_log_arg_format[] = {
   "4444",
   // 573 
 // syscall # 325// 325 long sys_timerfd_settime(int ufd, int flags, const struct itimerspec __user *utmr, struct itimerspec __user *otmr);
-  "4444",
+  "44pp",
   // 574 
 // syscall # 326// 326 long sys_timerfd_gettime(int ufd, struct itimerspec __user *otmr); 
-  "44",
+  "4p",
   // 575 
 // syscall # 327// 327 long sys_signalfd4(int ufd, sigset_t __user *user_mask, size_t sizemask, int flags);
-  "4444",
+  "4p44",
   // 576 
 // syscall # 328// 328 long sys_eventfd2(unsigned int count, int flags);
   "44",

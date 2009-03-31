@@ -401,7 +401,7 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
 	iferret_log_sysret_op_write_44444(IFLO_IRET, pid, eip_for_callsite, another_eip, element.syscall.eax, EAX);
       }
       else {
-	iferret_log_sysret_op_write_44444(IFLO_SYSEXIT_RET, pid, eip_for_callsite,another_eip, element.syscall.eax, EAX);
+	iferret_log_sysret_op_write_44444(IFLO_SYSEXIT_RET, pid, eip_for_callsite, another_eip, element.syscall.eax, EAX);
       }
       if (element.syscall.eax == 120) {
 	//	printf ("came back from a clone.  %d spawned %d \n", element.syscall.pid, EAX);

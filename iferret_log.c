@@ -386,6 +386,7 @@ void iferret_set_network_label(const char *label) {
 // need to save the register base addresses to start of every log.  
 void iferret_log_preamble() {
   int i;
+  iferret_log_uint64_t_write(phys_ram_base);
   for (i=0; i<=IFRN_Q4; i++) {
     iferret_log_uint64_t_write(ifregaddr[i]);
   }
@@ -395,6 +396,7 @@ void iferret_log_preamble() {
 // need to read the register base addresses from the start of every log.  
 void iferret_log_preamble() {
   int i;
+  phys_ram_base = iferret_log_uint64_t_read();
   for (i=0; i<=IFRN_Q4; i++) {
     ifregaddr[i] = iferret_log_uint64_t_read();
   }
@@ -426,8 +428,8 @@ void iferret_log_create() {
   ifregaddr[IFRN_Q2] =  (uint64_t) &(FAKE_Q2);
   ifregaddr[IFRN_Q3] =  (uint64_t) &(FAKE_Q3);
   ifregaddr[IFRN_Q4] =  (uint64_t) &(FAKE_Q4);
-#endif
   iferret_log_preamble();
+#endif
 }
 
 

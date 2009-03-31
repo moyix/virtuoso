@@ -460,14 +460,14 @@ static void switch_tss(int tss_selector,
 /*         IFLW_SAVE_REG(IFRN_EDI); */
 
 
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EAX);
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,ECX);
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EDX);
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EBX);
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,ESP);
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EBP);
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,ESI);
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,EDI);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_EAX);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_ECX);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_EDX);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_EBX);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_ESP);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_EBP);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_ESI);
+	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_EDI);
 
         for(i = 0; i < 6; i++)
             stw_kernel(env->tr.base + (0x48 + i * 4), env->segs[i].selector);
@@ -1831,7 +1831,7 @@ void helper_cmpxchg8b(void)
         EAX = d;
 
 	//	IFLW(CMPXCHG8B_PART2);	
-	iferret_log_info_flow_op_write_8(IFLO_CMPXCHG8B_PART2,phys_a0());
+	iferret_log_info_flow_op_write_8(IFLO_CMPXCHG8B_PART2, phys_a0());
 
 	// no addr necessary here -- we are just setting EDX/EAX to the 64bits that 
 	// we loaded from addr A0.  Right?
@@ -4799,7 +4799,7 @@ void write_eip_to_iferret_log() {
   uint32_t addr;
   addr = cpu_get_phys_addr(env,EIP);
   if (addr != -1) {
-    iferret_log_op_write_4(IFLO_TB_HEAD_EIP, (uint64_t) (phys_ram_base + addr));
+    iferret_log_op_write_4(IFLO_TB_HEAD_EIP, addr);
   }
 #endif // IFERRET_PHYS_EIP
 }

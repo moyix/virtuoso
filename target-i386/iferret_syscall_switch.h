@@ -12,10 +12,10 @@ case 2: // 2 2 pid_t fork(void);
 iferret_log_syscall_op_write_0(scp);
 break; 
 case 3: // 3 3 ssize_t sys_read(unsigned int fd, char __user *buf, size_t count);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4p4(scp,EBX,ECX,EDX);
 break; 
 case 4: // 4 4 ssize_t sys_write(unsigned int fd, const char __user *buf, size_t count);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4p4(scp,EBX,ECX,EDX);
 break; 
 case 5: // 5 5 long sys_open(const char __user *filename, int flags, int mode);
 if (copy_string(str1, EBX)) { 
@@ -26,7 +26,7 @@ case 6: // 6 6 long sys_close(unsigned int fd);
 iferret_log_syscall_op_write_4(scp,EBX);
 break; 
 case 7: // 7 7 long sys_waitpid(pid_t pid, int __user *stat_addr, int options);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4p4(scp,EBX,ECX,EDX);
 break; 
 case 8: // 8 8 long sys_creat(const char __user *pathname, int mode);    
 if (copy_string(str1, EBX)) { 
@@ -47,7 +47,7 @@ iferret_log_syscall_op_write_s(scp,str1);
 break; 
 case 11: // 11 11 int execve(const char *filename, char *const argv[], char *const envp[]);
 if (copy_string(str1, EBX)) { 
-iferret_log_syscall_op_write_s44(scp,str1,ECX,EDX);
+iferret_log_syscall_op_write_spp(scp,str1,ECX,EDX);
 }
 break; 
 case 12: // 12 12 long sys_chdir(const char __user *filename);
@@ -56,7 +56,7 @@ iferret_log_syscall_op_write_s(scp,str1);
 }
 break; 
 case 13: // 13 13 long sys_time(time_t __user *tloc);
-iferret_log_syscall_op_write_4(scp,EBX);
+iferret_log_syscall_op_write_p(scp,EBX);
 break; 
 case 14: // 14 14 long sys_mknod(const char __user *filename, int mode, unsigned dev);
 if (copy_string(str1, EBX)) { 
@@ -78,7 +78,7 @@ iferret_log_syscall_op_write_0(scp);
 break; 
 case 18: // 18 18 int stat(const char *path, struct stat *buf);
 if (copy_string(str1, EBX)) { 
-iferret_log_syscall_op_write_s4(scp,str1,ECX);
+iferret_log_syscall_op_write_sp(scp,str1,ECX);
 }
 break; 
 case 19: // 19 19 off_t sys_lseek(unsigned int fd, off_t offset, unsigned int origin);
@@ -91,7 +91,7 @@ case 21: // 21 21 long sys_mount(char __user *dev_name, char __user *dir_name, c
 if (copy_string(str1, EBX)) { 
 if (copy_string(str2, ECX)) { 
 if (copy_string(str3, EDX)) { 
-iferret_log_syscall_op_write_sss44(scp,str1,str2,str3,ESI,EDI);
+iferret_log_syscall_op_write_sss4p(scp,str1,str2,str3,ESI,EDI);
 }
 }
 }
@@ -108,7 +108,7 @@ case 24: // 24 24 long sys_getuid(void);
 iferret_log_syscall_op_write_0(scp);
 break; 
 case 25: // 25 25 long sys_stime(time_t __user *tptr);
-iferret_log_syscall_op_write_4(scp,EBX);
+iferret_log_syscall_op_write_p(scp,EBX);
 break; 
 case 26: // 26 26 long sys_ptrace(long request, long pid, long addr, long data);
 iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
@@ -124,7 +124,7 @@ iferret_log_syscall_op_write_0(scp);
 break; 
 case 30: // 30 30 long sys_utime(char __user *filename, struct utimbuf __user *times);
 if (copy_string(str1, EBX)) { 
-iferret_log_syscall_op_write_s4(scp,str1,ECX);
+iferret_log_syscall_op_write_sp(scp,str1,ECX);
 }
 break; 
 case 31: // 31 31 missing sys_stty
@@ -174,7 +174,7 @@ case 42: // 42 42 int pipe(int pipefd[2]);
 iferret_log_syscall_op_write_4(scp,EBX);
 break; 
 case 43: // 43 43 long sys_times(struct tms __user *tbuf);
-iferret_log_syscall_op_write_4(scp,EBX);
+iferret_log_syscall_op_write_p(scp,EBX);
 break; 
 case 44: // 44 44 missing sys_prof
 iferret_log_syscall_op_write_0(scp);
@@ -237,7 +237,7 @@ iferret_log_syscall_op_write_s(scp,str1);
 }
 break; 
 case 62: // 62 62 long sys_ustat(unsigned dev, struct ustat __user *ubuf);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 63: // 63 63 long sys_dup2(unsigned int oldfd, unsigned int newfd);
 iferret_log_syscall_op_write_44(scp,EBX,ECX);
@@ -270,7 +270,7 @@ case 72: // 72 72 missing sys_sigsuspend
 iferret_log_syscall_op_write_0(scp);
 break; 
 case 73: // 73 73 long sys_sigpending(old_sigset_t __user *set);
-iferret_log_syscall_op_write_4(scp,EBX);
+iferret_log_syscall_op_write_p(scp,EBX);
 break; 
 case 74: // 74 74 long sys_sethostname(char __user *name, int len);
 if (copy_string(str1, EBX)) { 
@@ -278,28 +278,28 @@ iferret_log_syscall_op_write_s4(scp,str1,ECX);
 }
 break; 
 case 75: // 75 75 long sys_setrlimit(unsigned int resource, struct rlimit __user *rlim);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 76: // 76 76 long sys_getrlimit(unsigned int resource, struct rlimit __user *rlim);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 77: // 77 77 long sys_getrusage(int who, struct rusage __user *ru);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 78: // 78 78 long sys_gettimeofday(struct timeval __user *tv, struct timezone __user *tz);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_pp(scp,EBX,ECX);
 break; 
 case 79: // 79 79 long sys_settimeofday(struct timeval __user *tv, struct timezone __user *tz);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_pp(scp,EBX,ECX);
 break; 
 case 80: // 80 80 long sys_getgroups(int gidsetsize, gid_t __user *grouplist);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 81: // 81 81 long sys_setgroups(int gidsetsize, gid_t __user *grouplist);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 82: // 82 82 long sys_select(int n, fd_set __user *inp, fd_set __user *outp, fd_set __user *exp, struct timeval __user *tvp);
-iferret_log_syscall_op_write_44444(scp,EBX,ECX,EDX,ESI,EDI);
+iferret_log_syscall_op_write_4pppp(scp,EBX,ECX,EDX,ESI,EDI);
 break; 
 case 83: // 83 83 long sys_symlink(const char __user *old, const char __user *new);
 if (copy_string(str1, EBX)) { 
@@ -310,12 +310,12 @@ iferret_log_syscall_op_write_ss(scp,str1,str2);
 break; 
 case 84: // 84 84 int oldlstat(const char *path, struct stat *buf);
 if (copy_string(str1, EBX)) { 
-iferret_log_syscall_op_write_s4(scp,str1,ECX);
+iferret_log_syscall_op_write_sp(scp,str1,ECX);
 }
 break; 
 case 85: // 85 85 long sys_readlink(const char __user *path, char __user *buf, int bufsiz);
 if (copy_string(str1, EBX)) { 
-iferret_log_syscall_op_write_s44(scp,str1,ECX,EDX);
+iferret_log_syscall_op_write_sp4(scp,str1,ECX,EDX);
 }
 break; 
 case 86: // 86 86 long sys_uselib(const char __user *library);
@@ -329,13 +329,13 @@ iferret_log_syscall_op_write_s4(scp,str1,ECX);
 }
 break; 
 case 88: // 88 88 long sys_reboot(int magic1, int magic2, unsigned int cmd, void __user *arg);    
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_444p(scp,EBX,ECX,EDX,ESI);
 break; 
 case 89: // 89 89 int readdir(unsigned int fd, struct dirent *dirp, unsigned int count);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4p4(scp,EBX,ECX,EDX);
 break; 
 case 90: // 90 90 void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
-iferret_log_syscall_op_write_444444(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+iferret_log_syscall_op_write_p44444(scp,EBX,ECX,EDX,ESI,EDI,EBP);
 break; 
 case 91: // 91 91 long sys_munmap(unsigned long addr, size_t len);
 iferret_log_syscall_op_write_44(scp,EBX,ECX);
@@ -365,39 +365,39 @@ iferret_log_syscall_op_write_0(scp);
 break; 
 case 99: // 99 99 long sys_statfs(const char __user * path, struct statfs __user *buf);
 if (copy_string(str1, EBX)) { 
-iferret_log_syscall_op_write_s4(scp,str1,ECX);
+iferret_log_syscall_op_write_sp(scp,str1,ECX);
 }
 break; 
 case 100: // 100 100 long sys_fstatfs(unsigned int fd, struct statfs __user *buf);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 101: // 101 101 long sys_ioperm(unsigned long from, unsigned long num, int on);
 iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
 break; 
 case 103: // 103 103 long sys_syslog(int type, char __user *buf, int len);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4p4(scp,EBX,ECX,EDX);
 break; 
 case 104: // 104 104 long sys_setitimer(int which,  struct itimerval __user *value, struct itimerval __user *ovalue);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4pp(scp,EBX,ECX,EDX);
 break; 
 case 105: // 105 105 long sys_getitimer(int which, struct itimerval __user *value);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 106: // 106 106 long sys_stat(char __user *filename, struct __old_kernel_stat __user *statbuf);
 if (copy_string(str1, EBX)) { 
-iferret_log_syscall_op_write_s4(scp,str1,ECX);
+iferret_log_syscall_op_write_sp(scp,str1,ECX);
 }
 break; 
 case 107: // 107 107 long sys_lstat(char __user *filename, struct __old_kernel_stat __user *statbuf);
 if (copy_string(str1, EBX)) { 
-iferret_log_syscall_op_write_s4(scp,str1,ECX);
+iferret_log_syscall_op_write_sp(scp,str1,ECX);
 }
 break; 
 case 108: // 108 108 long sys_fstat(unsigned int fd, struct __old_kernel_stat __user *statbuf);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 109: // 109 109 int old_uname(struct utsname *buf);
-iferret_log_syscall_op_write_4(scp,EBX);
+iferret_log_syscall_op_write_p(scp,EBX);
 break; 
 case 110: // 110 110 int iopl(int level);
 iferret_log_syscall_op_write_4(scp,EBX);
@@ -409,10 +409,10 @@ case 112: // 112 112 int idle(void);
 iferret_log_syscall_op_write_0(scp);
 break; 
 case 113: // 113 113 int vm86old(struct vm86_struct *info);
-iferret_log_syscall_op_write_4(scp,EBX);
+iferret_log_syscall_op_write_p(scp,EBX);
 break; 
 case 114: // 114 114 long sys_wait4(pid_t pid, int __user *stat_addr, int options, struct rusage __user *ru);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_4p4p(scp,EBX,ECX,EDX,ESI);
 break; 
 case 115: // 115 115 long sys_swapoff(const char __user *specialfile);
 if (copy_string(str1, EBX)) { 
@@ -420,10 +420,10 @@ iferret_log_syscall_op_write_s(scp,str1);
 }
 break; 
 case 116: // 116 116 long sys_sysinfo(struct sysinfo __user *info);
-iferret_log_syscall_op_write_4(scp,EBX);
+iferret_log_syscall_op_write_p(scp,EBX);
 break; 
 case 117: // 117 117 int ipc(unsigned int call, int first, int second, int third, void *ptr, long fifth);
-iferret_log_syscall_op_write_444444(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+iferret_log_syscall_op_write_4444p4(scp,EBX,ECX,EDX,ESI,EDI,EBP);
 break; 
 case 118: // 118 118 long sys_fsync(unsigned int fd);
 iferret_log_syscall_op_write_4(scp,EBX);
@@ -432,7 +432,7 @@ case 119: // 119 119 int sigreturn(unsigned long __unused);
 iferret_log_syscall_op_write_4(scp,EBX);
 break; 
 case 120: // 120 120 int clone(int (*fn)(void *), void *child_stack, int flags, void *arg, ...);
-iferret_log_syscall_op_write_44444(scp,EBX,ECX,EDX,ESI,EDI);
+iferret_log_syscall_op_write_pp4p4(scp,EBX,ECX,EDX,ESI,EDI);
 break; 
 case 121: // 121 121 long sys_setdomainname(char __user *name, int len);
 if (copy_string(str1, EBX)) { 
@@ -440,26 +440,26 @@ iferret_log_syscall_op_write_s4(scp,str1,ECX);
 }
 break; 
 case 122: // 122 122 int uname(struct utsname *buf);
-iferret_log_syscall_op_write_4(scp,EBX);
+iferret_log_syscall_op_write_p(scp,EBX);
 break; 
 case 123: // 123 123 int modify_ldt(int func, void *ptr, unsigned long bytecount);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4p4(scp,EBX,ECX,EDX);
 break; 
 case 124: // 124 124 long sys_adjtimex(struct timex __user *txc_p);
-iferret_log_syscall_op_write_4(scp,EBX);
+iferret_log_syscall_op_write_p(scp,EBX);
 break; 
 case 125: // 125 125 long sys_mprotect(unsigned long start, size_t len, unsigned long prot);
 iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
 break; 
 case 126: // 126 126 long sys_sigprocmask(int how, old_sigset_t __user *set, old_sigset_t __user *oset);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4pp(scp,EBX,ECX,EDX);
 break; 
 case 127: // 127 127 missing sys_create_module 
 iferret_log_syscall_op_write_0(scp);
 break; 
 case 128: // 128 128 long sys_init_module(void __user *umod, unsigned long len, const char __user *uargs);
 if (copy_string(str1, EDX)) { 
-iferret_log_syscall_op_write_44s(scp,EBX,ECX,str1);
+iferret_log_syscall_op_write_p4s(scp,EBX,ECX,str1);
 }
 break; 
 case 129: // 129 129 long sys_delete_module(const char __user *name_user, unsigned int flags);
@@ -472,7 +472,7 @@ iferret_log_syscall_op_write_0(scp);
 break; 
 case 131: // 131 131 long sys_quotactl(unsigned int cmd, const char __user *special, qid_t id, void __user *addr);
 if (copy_string(str1, ECX)) { 
-iferret_log_syscall_op_write_4s44(scp,EBX,str1,EDX,ESI);
+iferret_log_syscall_op_write_4s4p(scp,EBX,str1,EDX,ESI);
 }
 break; 
 case 132: // 132 132 long sys_getpgid(pid_t pid);
@@ -503,7 +503,7 @@ case 140: // 140 140 missing sys__llseek
 iferret_log_syscall_op_write_0(scp);
 break; 
 case 141: // 141 141 long sys_getdents(unsigned int fd, struct linux_dirent __user *dirent, unsigned int count);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4p4(scp,EBX,ECX,EDX);
 break; 
 case 142: // 142 142 missing sys__newselect 
 iferret_log_syscall_op_write_0(scp);
@@ -515,10 +515,10 @@ case 144: // 144 144 long sys_msync(unsigned long start, size_t len, int flags);
 iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
 break; 
 case 145: // 145 145 ssize_t sys_readv(unsigned long fd, const struct iovec __user *vec, unsigned long vlen);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4p4(scp,EBX,ECX,EDX);
 break; 
 case 146: // 146 146 ssize_t sys_writev(unsigned long fd, const struct iovec __user *vec, unsigned long vlen);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4p4(scp,EBX,ECX,EDX);
 break; 
 case 147: // 147 147 long sys_getsid(pid_t pid);
 iferret_log_syscall_op_write_4(scp,EBX);
@@ -542,13 +542,13 @@ case 153: // 153 153 long sys_munlockall(void);
 iferret_log_syscall_op_write_0(scp);
 break; 
 case 154: // 154 154 long sys_sched_setparam(pid_t pid, struct sched_param __user *param);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 155: // 155 155 long sys_sched_getparam(pid_t pid, struct sched_param __user *param);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 156: // 156 156 long sys_sched_setscheduler(pid_t pid, int policy, struct sched_param __user *param);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_44p(scp,EBX,ECX,EDX);
 break; 
 case 157: // 157 157 long sys_sched_getscheduler(pid_t pid);
 iferret_log_syscall_op_write_4(scp,EBX);
@@ -563,10 +563,10 @@ case 160: // 160 160 long sys_sched_get_priority_min(int policy);
 iferret_log_syscall_op_write_4(scp,EBX);
 break; 
 case 161: // 161 161 long sys_sched_rr_get_interval(pid_t pid, struct timespec __user *interval);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 162: // 162 162 long sys_nanosleep(struct timespec __user *rqtp, struct timespec __user *rmtp);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_pp(scp,EBX,ECX);
 break; 
 case 163: // 163 163 unsigned long sys_mremap(unsigned long addr, unsigned long old_len, unsigned long new_len, unsigned long flags, unsigned long new_addr);
 iferret_log_syscall_op_write_44444(scp,EBX,ECX,EDX,ESI,EDI);
@@ -575,7 +575,7 @@ case 164: // 164 164 long sys_setresuid(uid_t ruid, uid_t euid, uid_t suid);
 iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
 break; 
 case 165: // 165 165 long sys_getresuid16(old_uid_t __user *ruid, old_uid_t __user *euid, old_uid_t __user *suid);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_ppp(scp,EBX,ECX,EDX);
 break; 
 case 166: // 166 166 missing sys_vm86 
 iferret_log_syscall_op_write_0(scp);
@@ -584,16 +584,16 @@ case 167: // 167 167 missing sys_query_module
 iferret_log_syscall_op_write_0(scp);
 break; 
 case 168: // 168 168 long sys_poll(struct pollfd __user *ufds, unsigned int nfds, long timeout);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_p44(scp,EBX,ECX,EDX);
 break; 
 case 169: // 169 169 long sys_nfsservctl(int cmd, struct nfsctl_arg __user *arg, void __user *res);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4pp(scp,EBX,ECX,EDX);
 break; 
 case 170: // 170 170 int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
 break; 
 case 171: // 171 171 long sys_getresgid(gid_t __user *rgid, gid_t __user *egid, gid_t __user *sgid);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_ppp(scp,EBX,ECX,EDX);
 break; 
 case 172: // 172 172 long sys_prctl(int option, unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5);
 iferret_log_syscall_op_write_44444(scp,EBX,ECX,EDX,ESI,EDI);
@@ -602,28 +602,28 @@ case 173: // 173 173 int rt_sigreturn(unsigned long __unused);
 iferret_log_syscall_op_write_4(scp,EBX);
 break; 
 case 174: // 174 174 int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4pp(scp,EBX,ECX,EDX);
 break; 
 case 175: // 175 175 int sys_rt_sigprocmask(int how, sigset_t __user *set, sigset_t __user *oset, size_t sigsetsize);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_4pp4(scp,EBX,ECX,EDX,ESI);
 break; 
 case 176: // 176 176 long sys_rt_sigpending(sigset_t __user *set, size_t sigsetsize);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_p4(scp,EBX,ECX);
 break; 
 case 177: // 177 177 long sys_rt_sigtimedwait(const sigset_t __user *uthese, siginfo_t __user *uinfo, const struct timespec __user *uts, size_t sigsetsize);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_ppp4(scp,EBX,ECX,EDX,ESI);
 break; 
 case 178: // 178 178 long sys_rt_sigqueueinfo(int pid, int sig, siginfo_t __user *uinfo);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_44p(scp,EBX,ECX,EDX);
 break; 
 case 179: // 179 179 int sigsuspend(const sigset_t *mask);
-iferret_log_syscall_op_write_4(scp,EBX);
+iferret_log_syscall_op_write_p(scp,EBX);
 break; 
 case 180: // 180 180 ssize_t sys_pread64(unsigned int fd, char __user *buf, size_t count, loff_t pos);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_4p44(scp,EBX,ECX,EDX,ESI);
 break; 
 case 181: // 181 181 ssize_t sys_pwrite64(unsigned int fd, const char __user *buf, size_t count, loff_t pos);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_4p44(scp,EBX,ECX,EDX,ESI);
 break; 
 case 182: // 182 182 long sys_chown(const char __user *filename, uid_t user, gid_t group);
 if (copy_string(str1, EBX)) { 
@@ -631,7 +631,7 @@ iferret_log_syscall_op_write_s44(scp,str1,ECX,EDX);
 }
 break; 
 case 183: // 183 183 long sys_getcwd(char __user *buf, unsigned long size);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_p4(scp,EBX,ECX);
 break; 
 case 184: // 184 184 long sys_capget(cap_user_header_t header, cap_user_data_t dataptr);
 iferret_log_syscall_op_write_44(scp,EBX,ECX);
@@ -640,10 +640,10 @@ case 185: // 185 185 long sys_capset(cap_user_header_t header, const cap_user_da
 iferret_log_syscall_op_write_44(scp,EBX,ECX);
 break; 
 case 186: // 186 186 int sigaltstack(const stack_t *ss, stack_t *oss);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_pp(scp,EBX,ECX);
 break; 
 case 187: // 187 187 ssize_t sys_sendfile(int out_fd, int in_fd, off_t __user *offset, size_t count);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_44p4(scp,EBX,ECX,EDX,ESI);
 break; 
 case 188: // 188 188 missing sys_getpmsg 
 iferret_log_syscall_op_write_0(scp);
@@ -655,10 +655,10 @@ case 190: // 190 190 pid_t vfork(void);
 iferret_log_syscall_op_write_0(scp);
 break; 
 case 191: // 191 191 int getrlimit(int resource, struct rlimit *rlim);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 192: // 192 192 void *mmap2(void *addr, size_t length, int prot, int flags, int fd, off_t pgoffset);
-iferret_log_syscall_op_write_444444(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+iferret_log_syscall_op_write_p44444(scp,EBX,ECX,EDX,ESI,EDI,EBP);
 break; 
 case 193: // 193 193 long sys_truncate64(const char __user *path, loff_t length);
 if (copy_string(str1, EBX)) { 
@@ -670,16 +670,16 @@ iferret_log_syscall_op_write_44(scp,EBX,ECX);
 break; 
 case 195: // 195 195 long sys_stat64(char __user *filename, struct stat64 __user *statbuf);
 if (copy_string(str1, EBX)) { 
-iferret_log_syscall_op_write_s4(scp,str1,ECX);
+iferret_log_syscall_op_write_sp(scp,str1,ECX);
 }
 break; 
 case 196: // 196 196 long sys_lstat64(char __user *filename, struct stat64 __user *statbuf);
 if (copy_string(str1, EBX)) { 
-iferret_log_syscall_op_write_s4(scp,str1,ECX);
+iferret_log_syscall_op_write_sp(scp,str1,ECX);
 }
 break; 
 case 197: // 197 197 long sys_fstat64(unsigned long fd, struct stat64 __user *statbuf);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 198: // 198 198 int lchown(const char *path, uid_t owner, gid_t group);
 if (copy_string(str1, EBX)) { 
@@ -708,7 +708,7 @@ case 205: // 205 205 int getgroups(int size, gid_t list[]);
 iferret_log_syscall_op_write_44(scp,EBX,ECX);
 break; 
 case 206: // 206 206 int setgroups(size_t size, const gid_t *list);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 207: // 207 207 int fchown(int fd, uid_t owner, gid_t group);
 iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
@@ -717,13 +717,13 @@ case 208: // 208 208 int setresuid(uid_t ruid, uid_t euid, uid_t suid);
 iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
 break; 
 case 209: // 209 209 int getresuid(uid_t *ruid, uid_t *euid, uid_t *suid);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_ppp(scp,EBX,ECX,EDX);
 break; 
 case 210: // 210 210 int setresgid32(gid_t rgid, gid_t egid, gid_t sgid);
 iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
 break; 
 case 211: // 211 211 int getresgid(gid_t *rgid, gid_t *egid, gid_t *sgid);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_ppp(scp,EBX,ECX,EDX);
 break; 
 case 212: // 212 212 int chown(const char *path, uid_t owner, gid_t group);
 if (copy_string(str1, EBX)) { 
@@ -758,7 +758,7 @@ case 219: // 219 219 long sys_madvise(unsigned long start, size_t len, int behav
 iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
 break; 
 case 220: // 220 220 long sys_getdents64(4(unsigned int fd, struct linux_dirent64 __user *dirent, unsigned int count);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4p4(scp,EBX,ECX,EDX);
 break; 
 case 221: // 221 221 long sys_fcntl64(unsigned int fd, unsigned int cmd, unsigned long arg);
 iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
@@ -772,39 +772,39 @@ break;
 case 226: // 226 226 long sys_setxattr(const char __user *path, const char __user *name, const void __user *value, size_t size, int flags);
 if (copy_string(str1, EBX)) { 
 if (copy_string(str2, ECX)) { 
-iferret_log_syscall_op_write_ss444(scp,str1,str2,EDX,ESI,EDI);
+iferret_log_syscall_op_write_ssp44(scp,str1,str2,EDX,ESI,EDI);
 }
 }
 break; 
 case 227: // 227 227 long sys_lsetxattr(const char __user *path, const char __user *name, const void __user *value, size_t size, int flags);
 if (copy_string(str1, EBX)) { 
 if (copy_string(str2, ECX)) { 
-iferret_log_syscall_op_write_ss444(scp,str1,str2,EDX,ESI,EDI);
+iferret_log_syscall_op_write_ssp44(scp,str1,str2,EDX,ESI,EDI);
 }
 }
 break; 
 case 228: // 228 228 long sys_fsetxattr(int fd, const char __user *name, const void __user *value, size_t size, int flags);
 if (copy_string(str1, ECX)) { 
-iferret_log_syscall_op_write_4s444(scp,EBX,str1,EDX,ESI,EDI);
+iferret_log_syscall_op_write_4sp44(scp,EBX,str1,EDX,ESI,EDI);
 }
 break; 
 case 229: // 229 229 ssize_t sys_getxattr(const char __user *path, const char __user *name, void __user *value, size_t size);
 if (copy_string(str1, EBX)) { 
 if (copy_string(str2, ECX)) { 
-iferret_log_syscall_op_write_ss44(scp,str1,str2,EDX,ESI);
+iferret_log_syscall_op_write_ssp4(scp,str1,str2,EDX,ESI);
 }
 }
 break; 
 case 230: // 230 230 ssize_t sys_lgetxattr(const char __user *path, const char __user *name, void __user *value, size_t size);
 if (copy_string(str1, EBX)) { 
 if (copy_string(str2, ECX)) { 
-iferret_log_syscall_op_write_ss44(scp,str1,str2,EDX,ESI);
+iferret_log_syscall_op_write_ssp4(scp,str1,str2,EDX,ESI);
 }
 }
 break; 
 case 231: // 231 231 ssize_t sys_fgetxattr(int fd, const char __user *name, void __user *value, size_t size);
 if (copy_string(str1, ECX)) { 
-iferret_log_syscall_op_write_4s44(scp,EBX,str1,EDX,ESI);
+iferret_log_syscall_op_write_4sp4(scp,EBX,str1,EDX,ESI);
 }
 break; 
 case 232: // 232 232 ssize_t sys_listxattr(const char __user *path, char __user *list, size_t size);
@@ -849,37 +849,37 @@ case 238: // 238 238 long sys_tkill(int pid, int sig);
 iferret_log_syscall_op_write_44(scp,EBX,ECX);
 break; 
 case 239: // 239 239 ssize_t sys_sendfile64(int out_fd, int in_fd, loff_t __user *offset, size_t count);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_44p4(scp,EBX,ECX,EDX,ESI);
 break; 
 case 240: // 240 240 long sys_futex(u32 __user *uaddr, int op, u32 val, struct timespec __user *utime, u32 __user *uaddr2, u32 val3);
-iferret_log_syscall_op_write_444444(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+iferret_log_syscall_op_write_p44pp4(scp,EBX,ECX,EDX,ESI,EDI,EBP);
 break; 
 case 241: // 241 241 long sys_sched_setaffinity(pid_t pid, unsigned int len, unsigned long __user *user_mask_ptr);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_44p(scp,EBX,ECX,EDX);
 break; 
 case 242: // 242 242 long sys_sched_getaffinity(pid_t pid, unsigned int len, unsigned long __user *user_mask_ptr);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_44p(scp,EBX,ECX,EDX);
 break; 
 case 243: // 243 243 int set_thread_area(struct user_desc *u_info);
-iferret_log_syscall_op_write_4(scp,EBX);
+iferret_log_syscall_op_write_p(scp,EBX);
 break; 
 case 244: // 244 244 int get_thread_area(struct user_desc *u_info);
-iferret_log_syscall_op_write_4(scp,EBX);
+iferret_log_syscall_op_write_p(scp,EBX);
 break; 
 case 245: // 245 245 int sys_io_setup(unsigned nr_reqs, aio_context_t __user *ctx);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 246: // 246 246 long sys_io_destroy(aio_context_t ctx);
 iferret_log_syscall_op_write_4(scp,EBX);
 break; 
 case 247: // 247 247 long sys_io_getevents(aio_context_t ctx_id, long min_nr,long nr, struct io_event __user *events, struct timespec __user *timeout);
-iferret_log_syscall_op_write_44444(scp,EBX,ECX,EDX,ESI,EDI);
+iferret_log_syscall_op_write_444pp(scp,EBX,ECX,EDX,ESI,EDI);
 break; 
 case 248: // 248 248 long sys_io_submit(aio_context_t, long, struct iocb __user * __user *);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_44p(scp,EBX,ECX,EDX);
 break; 
 case 249: // 249 249 long sys_io_cancel(aio_context_t ctx_id, struct iocb __user *iocb, struct io_event __user *result);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4pp(scp,EBX,ECX,EDX);
 break; 
 case 250: // 250 250 int sys_fadvise64(int fd, loff_t offset, size_t len, int advice); 
 iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
@@ -888,31 +888,31 @@ case 252: // 252 252 void sys_exit_group(int error_code);
 iferret_log_syscall_op_write_4(scp,EBX);
 break; 
 case 253: // 253 253 long sys_lookup_dcookie(u64 cookie64, char __user *buf, size_t len);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4p4(scp,EBX,ECX,EDX);
 break; 
 case 254: // 254 254 long sys_epoll_create(int size);
 iferret_log_syscall_op_write_4(scp,EBX);
 break; 
 case 255: // 255 255 long sys_epoll_ctl(int epfd, int op, int fd, struct epoll_event __user *event);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_444p(scp,EBX,ECX,EDX,ESI);
 break; 
 case 256: // 256 256 long sys_epoll_wait(int epfd, struct epoll_event __user *events, int maxevents, int timeout);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_4p44(scp,EBX,ECX,EDX,ESI);
 break; 
 case 257: // 257 257 long sys_remap_file_pages(unsigned long start, unsigned long size, unsigned long prot, unsigned long pgoff, unsigned long flags);
 iferret_log_syscall_op_write_44444(scp,EBX,ECX,EDX,ESI,EDI);
 break; 
 case 258: // 258 258 long sys_set_tid_address(int __user *tidptr);
-iferret_log_syscall_op_write_4(scp,EBX);
+iferret_log_syscall_op_write_p(scp,EBX);
 break; 
 case 259: // 259 259 long sys_timer_create(clockid_t which_clock, struct sigevent __user *timer_event_spec, timer_t __user * created_timer_id);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4pp(scp,EBX,ECX,EDX);
 break; 
 case 260: // 260 260 long sys_timer_settime(timer_t timer_id, int flags, const struct itimerspec __user *new_setting, struct itimerspec __user *old_setting);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_44pp(scp,EBX,ECX,EDX,ESI);
 break; 
 case 261: // 261 261 long sys_timer_gettime(timer_t timer_id, struct itimerspec __user *setting);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 262: // 262 262 missing sys_timer_getoverrun
 iferret_log_syscall_op_write_0(scp);
@@ -921,31 +921,31 @@ case 263: // 263 263 long sys_timer_delete(timer_t timer_id);
 iferret_log_syscall_op_write_4(scp,EBX);
 break; 
 case 264: // 264 264 long sys_clock_settime(clockid_t which_clock, const struct timespec __user *tp);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 265: // 265 265 long sys_clock_gettime(clockid_t which_clock, struct timespec __user *tp);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 266: // 266 266 long sys_clock_getres(clockid_t which_clock, struct timespec __user *tp);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 267: // 267 267 long sys_clock_nanosleep(clockid_t which_clock, int flags, const struct timespec __user *rqtp, struct timespec __user *rmtp);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_44pp(scp,EBX,ECX,EDX,ESI);
 break; 
 case 268: // 268 268 long sys_statfs64(const char __user *path, size_t sz, struct statfs64 __user *buf);
 if (copy_string(str1, EBX)) { 
-iferret_log_syscall_op_write_s44(scp,str1,ECX,EDX);
+iferret_log_syscall_op_write_s4p(scp,str1,ECX,EDX);
 }
 break; 
 case 269: // 269 269 long sys_fstatfs64(unsigned int fd, size_t sz, struct statfs64 __user *buf);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_44p(scp,EBX,ECX,EDX);
 break; 
 case 270: // 270 270 long sys_tgkill(int tgid, int pid, int sig);
 iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
 break; 
 case 271: // 271 271 long sys_utimes(char __user *filename, struct timeval __user *utimes);
 if (copy_string(str1, EBX)) { 
-iferret_log_syscall_op_write_s4(scp,str1,ECX);
+iferret_log_syscall_op_write_sp(scp,str1,ECX);
 }
 break; 
 case 272: // 272 272 long sys_fadvise64_64(int fd, loff_t offset, loff_t len, int advice);
@@ -955,17 +955,17 @@ case 273: // 273 273 missing sys_vserver
 iferret_log_syscall_op_write_0(scp);
 break; 
 case 274: // 274 274 long sys_mbind(unsigned long start, unsigned long len, unsigned long mode, unsigned long __user *nmask, unsigned long maxnode, unsigned flags);
-iferret_log_syscall_op_write_444444(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+iferret_log_syscall_op_write_444p44(scp,EBX,ECX,EDX,ESI,EDI,EBP);
 break; 
 case 275: // 275 275 long sys_get_mempolicy(int __user *policy, unsigned long __user *nmask, unsigned long maxnode, unsigned long addr, unsigned long flags);
-iferret_log_syscall_op_write_44444(scp,EBX,ECX,EDX,ESI,EDI);
+iferret_log_syscall_op_write_pp444(scp,EBX,ECX,EDX,ESI,EDI);
 break; 
 case 276: // 276 276 long sys_set_mempolicy(int mode, unsigned long __user *nmask, unsigned long maxnode);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4p4(scp,EBX,ECX,EDX);
 break; 
 case 277: // 277 277 long sys_mq_open(const char __user *name, int oflag, mode_t mode,  struct mq_attr __user *attr);
 if (copy_string(str1, EBX)) { 
-iferret_log_syscall_op_write_s444(scp,str1,ECX,EDX,ESI);
+iferret_log_syscall_op_write_s44p(scp,str1,ECX,EDX,ESI);
 }
 break; 
 case 278: // 278 278 long sys_mq_unlink(const char __user *name);
@@ -975,25 +975,25 @@ iferret_log_syscall_op_write_s(scp,str1);
 break; 
 case 279: // 279 279 long sys_mq_timedsend(mqd_t mqdes, const char __user *msg_ptr, size_t msg_len, unsigned int msg_prio, const struct timespec __user *abs_timeout);
 if (copy_string(str1, ECX)) { 
-iferret_log_syscall_op_write_4s444(scp,EBX,str1,EDX,ESI,EDI);
+iferret_log_syscall_op_write_4s44p(scp,EBX,str1,EDX,ESI,EDI);
 }
 break; 
 case 280: // 280 280 ssize_t sys_mq_timedreceive(mqd_t mqdes, char __user *msg_ptr,  size_t msg_len, unsigned int __user *msg_prio, const struct timespec __user *abs_timeout);
 if (copy_string(str1, ECX)) { 
-iferret_log_syscall_op_write_4s444(scp,EBX,str1,EDX,ESI,EDI);
+iferret_log_syscall_op_write_4s4pp(scp,EBX,str1,EDX,ESI,EDI);
 }
 break; 
 case 281: // 281 281 long sys_mq_notify(mqd_t mqdes, const struct sigevent __user *notification);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 282: // 282 282 long sys_mq_getsetattr(mqd_t mqdes, const struct mq_attr __user *mqstat, struct mq_attr __user *omqstat);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4pp(scp,EBX,ECX,EDX);
 break; 
 case 283: // 283 283 long sys_kexec_load(unsigned long entry, unsigned long nr_segments, struct kexec_segment __user *segments, unsigned long flags);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_44p4(scp,EBX,ECX,EDX,ESI);
 break; 
 case 284: // 284 284 long sys_waitid(int which, pid_t pid, struct siginfo __user *infop, int options, struct rusage __user *ru);
-iferret_log_syscall_op_write_44444(scp,EBX,ECX,EDX,ESI,EDI);
+iferret_log_syscall_op_write_44p4p(scp,EBX,ECX,EDX,ESI,EDI);
 break; 
 case 285: // 285 285 missing sys_setaltroot 
 iferret_log_syscall_op_write_0(scp);
@@ -1001,7 +1001,7 @@ break;
 case 286: // 286 286 long sys_add_key(const char __user *_type, const char __user *_description, const void __user *_payload, size_t plen, key_serial_t destringid);
 if (copy_string(str1, EBX)) { 
 if (copy_string(str2, ECX)) { 
-iferret_log_syscall_op_write_ss444(scp,str1,str2,EDX,ESI,EDI);
+iferret_log_syscall_op_write_ssp44(scp,str1,str2,EDX,ESI,EDI);
 }
 }
 break; 
@@ -1035,7 +1035,7 @@ case 293: // 293 293 long sys_inotify_rm_watch(int fd, u32 wd);
 iferret_log_syscall_op_write_44(scp,EBX,ECX);
 break; 
 case 294: // 294 294 long sys_migrate_pages(pid_t pid, unsigned long maxnode, const unsigned long __user *from, const unsigned long __user *to); 
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_44pp(scp,EBX,ECX,EDX,ESI);
 break; 
 case 295: // 295 295 long sys_openat(int dfd, const char __user *filename, int flags, int mode);
 if (copy_string(str1, ECX)) { 
@@ -1059,12 +1059,12 @@ iferret_log_syscall_op_write_4s444(scp,EBX,str1,EDX,ESI,EDI);
 break; 
 case 299: // 299 299 long sys_futimesat(int dfd, char __user *filename, struct timeval __user *utimes);
 if (copy_string(str1, ECX)) { 
-iferret_log_syscall_op_write_4s4(scp,EBX,str1,EDX);
+iferret_log_syscall_op_write_4sp(scp,EBX,str1,EDX);
 }
 break; 
 case 300: // 300 300 long sys_fstatat64(int dfd, char __user *filename, struct stat64 __user *statbuf, int flag);
 if (copy_string(str1, ECX)) { 
-iferret_log_syscall_op_write_4s44(scp,EBX,str1,EDX,ESI);
+iferret_log_syscall_op_write_4sp4(scp,EBX,str1,EDX,ESI);
 }
 break; 
 case 301: // 301 301 long sys_unlinkat(int dfd, const char __user * pathname, int flag);
@@ -1095,7 +1095,7 @@ iferret_log_syscall_op_write_s4s(scp,str1,ECX,str2);
 break; 
 case 305: // 305 305 long sys_readlinkat(int dfd, const char __user *path, char __user *buf, int bufsiz);
 if (copy_string(str1, ECX)) { 
-iferret_log_syscall_op_write_4s44(scp,EBX,str1,EDX,ESI);
+iferret_log_syscall_op_write_4sp4(scp,EBX,str1,EDX,ESI);
 }
 break; 
 case 306: // 306 306 long sys_fchmodat(int dfd, const char __user * filename, mode_t mode);
@@ -1109,22 +1109,22 @@ iferret_log_syscall_op_write_4s4(scp,EBX,str1,EDX);
 }
 break; 
 case 308: // 308 308 int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, const struct timespec *timeout, const sigset_t *sigmask);
-iferret_log_syscall_op_write_444444(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+iferret_log_syscall_op_write_4ppppp(scp,EBX,ECX,EDX,ESI,EDI,EBP);
 break; 
 case 309: // 309 309 int ppoll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, const sigset_t *sigmask);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_p4pp(scp,EBX,ECX,EDX,ESI);
 break; 
 case 310: // 310 310 long sys_unshare(unsigned long unshare_flags);
 iferret_log_syscall_op_write_4(scp,EBX);
 break; 
 case 311: // 311 311 long sys_set_robust_list(struct robust_list_head __user *head, size_t len);
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_p4(scp,EBX,ECX);
 break; 
 case 312: // 312 312 long sys_get_robust_list(int pid, struct robust_list_head __user * __user *head_ptr, size_t __user *len_ptr);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4pp(scp,EBX,ECX,EDX);
 break; 
 case 313: // 313 313 long sys_splice(int fd_in, loff_t __user *off_in, int fd_out, loff_t __user *off_out, size_t len, unsigned int flags);
-iferret_log_syscall_op_write_444444(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+iferret_log_syscall_op_write_4p4p44(scp,EBX,ECX,EDX,ESI,EDI,EBP);
 break; 
 case 314: // 314 314 long sys_sync_file_range(int fd, loff_t offset, loff_t nbytes, unsigned int flags);
 iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
@@ -1133,24 +1133,24 @@ case 315: // 315 315 long sys_tee(int fdin, int fdout, size_t len, unsigned int 
 iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
 break; 
 case 316: // 316 316 long sys_vmsplice(int fd, const struct iovec __user *iov, unsigned long nr_segs, unsigned int flags);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_4p44(scp,EBX,ECX,EDX,ESI);
 break; 
 case 317: // 317 317 long sys_move_pages(pid_t pid, unsigned long nr_pages, const void __user * __user *pages, const int __user *nodes, int __user *status, int flags);
-iferret_log_syscall_op_write_444444(scp,EBX,ECX,EDX,ESI,EDI,EBP);
+iferret_log_syscall_op_write_44ppp4(scp,EBX,ECX,EDX,ESI,EDI,EBP);
 break; 
 case 318: // 318 318 long sys_getcpu(unsigned __user *cpu, unsigned __user *node,  struct getcpu_cache __user *cache);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_ppp(scp,EBX,ECX,EDX);
 break; 
 case 319: // 319 319 long sys_epoll_wait_another(int epfd, struct epoll_event __user *events, int maxevents, int timeout);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_4p44(scp,EBX,ECX,EDX,ESI);
 break; 
 case 320: // 320 320 long sys_utimensat(int dfd, char __user *filename, struct timespec __user *utimes, int flags);
 if (copy_string(str1, ECX)) { 
-iferret_log_syscall_op_write_4s44(scp,EBX,str1,EDX,ESI);
+iferret_log_syscall_op_write_4sp4(scp,EBX,str1,EDX,ESI);
 }
 break; 
 case 321: // 321 321 long sys_signalfd(int ufd, sigset_t __user *user_mask, size_t sizemask);
-iferret_log_syscall_op_write_444(scp,EBX,ECX,EDX);
+iferret_log_syscall_op_write_4p4(scp,EBX,ECX,EDX);
 break; 
 case 322: // 322 322 long sys_timerfd_create(int clockid, int flags);
 iferret_log_syscall_op_write_44(scp,EBX,ECX);
@@ -1162,13 +1162,13 @@ case 324: // 324 324 long sys_fallocate(int fd, int mode, loff_t offset, loff_t 
 iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
 break; 
 case 325: // 325 325 long sys_timerfd_settime(int ufd, int flags, const struct itimerspec __user *utmr, struct itimerspec __user *otmr);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_44pp(scp,EBX,ECX,EDX,ESI);
 break; 
 case 326: // 326 326 long sys_timerfd_gettime(int ufd, struct itimerspec __user *otmr); 
-iferret_log_syscall_op_write_44(scp,EBX,ECX);
+iferret_log_syscall_op_write_4p(scp,EBX,ECX);
 break; 
 case 327: // 327 327 long sys_signalfd4(int ufd, sigset_t __user *user_mask, size_t sizemask, int flags);
-iferret_log_syscall_op_write_4444(scp,EBX,ECX,EDX,ESI);
+iferret_log_syscall_op_write_4p44(scp,EBX,ECX,EDX,ESI);
 break; 
 case 328: // 328 328 long sys_eventfd2(unsigned int count, int flags);
 iferret_log_syscall_op_write_44(scp,EBX,ECX);
