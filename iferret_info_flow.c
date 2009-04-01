@@ -601,6 +601,8 @@ inline void if_inc_r4(uint32_t rn) {
 
 /*
   load n bytes into register r from location p.
+// NB: p assumed to be in physical address space of guest,
+// i.e. 0 is first byte and 512* 1MB is last byte of a 512 MB system.  
   u is a uint8_t: True means it's an unsigned ld, False requires sign-extension
   note, location, p, is really if_addr, which we've already extracted from log.
   msn is memory suffix number.  To my peril, currently ignoring it... 
@@ -613,6 +615,7 @@ inline void if_ld(uint32_t msn, uint32_t rn, uint32_t n, uint32_t u, uint64_t p)
   //  assert (msn != UNINITIALIZED); 
   //  assert (rn != UNINITIALIZED); 
   //  assert (p != (char *) UNINITIALIZED);	
+  p += phys_ram_base;
   if (p == 0)
     return;
   if (debug_at_least_med()) {
@@ -646,10 +649,14 @@ inline void if_lds(uint32_t msn, uint32_t rn, uint32_t n, uint64_t p) {
 
 
 // store low n bytes of register r at location p. 
+// NB: p assumed to be in physical address space of guest,
+// i.e. 0 is first byte and 512* 1MB is last byte of a 512 MB system.  
 // msn is memory suffix number. 
 inline void if_st(uint32_t msn, uint32_t rn, uint32_t n, uint64_t p) {
   if (p == 0) 
     return;
+  
+  p += phys_ram_base
 
   if (debug_at_least_med()) {
     //    check_reg_taint(rn,__FILE__,__LINE__);
@@ -1152,7 +1159,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // A0 = (uint32_t)*(target_ulong *)((char *)env + PARAM1);
     // NB: if_addr is env+PARAM1
   case IFLO_MOVL_A0_SEG:    
-    if_ldu(0, IFRN_A0,4,a0_64);
+    if_ldu(0,IFRN_A0,4,a0_64);
     break;
  
     // A0 = (uint32_t)(A0 + *(target_ulong *)((char *)env + PARAM1));
@@ -2116,17 +2123,18 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     
     // iferret_log_info_flow_op_write_8844(IFLO_CPU_PHYSICAL_MEMORY_RW, addr, buf, len, is_write);
   case IFLO_CPU_PHYSICAL_MEMORY_RW:
+
+    // a0 is a physical address in the guest, thus it is 32 bits.
+    // a1 is a vitrual address in qemu's space.  thus it is 64 bits. 
     if (a3_32 == 1) {
-      // this is a write.  a0 is dest.  a1 is src. 
-      info_flow_copy(a1_64, a0_64, a2_32);
+      // this is a write. a0 is dest, a1 is src.
+      info_flow_copy(phys_ram_base + a0_32, a1_64, a2_32);
     }
     else {
       // this is a read.  a0 is source. a1 is dest.  
-      info_flow_copy(a0_64, a1_64, a2_32);		     
+      info_flow_copy(a1_64, phys_ram_base + a0_32, a2_32);		     
     }
     break;
-
-
 
   }
 
