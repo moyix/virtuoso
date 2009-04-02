@@ -69,6 +69,15 @@ static inline int current_pid_valid() {
 }
 
 
+static inline uint32_t phys_addr(uint32_t addr) {
+  addr = cpu_get_phys_addr(env,A0); 
+  if (addr == -1)
+    return 0;
+  else
+    return (addr); 
+}
+
+
 
 // current_task is pointer to vm physical memory at which linux task structure is
 // located. 
@@ -83,7 +92,7 @@ static inline void copy_task_struct_slot(target_ulong current_task, uint32_t slo
   bzero(dest,slot_size);
   paddr = cpu_get_phys_addr(env, current_task + slot_offset);
   if (paddr != -1) {
-    cpu_physical_memory_read(paddr, dest, slot_size);
+    iferret_cpu_physical_memory_read(paddr, dest, slot_size);
   }
 }
 
@@ -95,7 +104,7 @@ static inline void copy_task_struct_slot(target_ulong current_task, uint32_t slo
 static inline void copy_string_phys(char *tempbuf, target_phys_addr_t physaddr, uint32_t len) {
   assert (len > 0);
   bzero(tempbuf, len);
-  cpu_physical_memory_read((unsigned long) physaddr, tempbuf, len-1);
+  iferret_cpu_physical_memory_read((unsigned long) physaddr, tempbuf, len-1);
 }
 
 
@@ -123,7 +132,7 @@ static inline target_ulong get_task_struct_ptr (target_ulong current_esp) {
     // read 4 bytes our of physical memory starting from phys addr paddr
     // and deposit them in current_task, which contains, therefore
     // a virtual address.
-     cpu_physical_memory_read(paddr, (char *) &current_task, 4);
+     iferret_cpu_physical_memory_read(paddr, (char *) &current_task, 4);
      return (current_task);
   }
   //  assert (paddr != -1);
@@ -186,7 +195,7 @@ static inline uint32_t get_uint32_t_phys(uint32_t virt_addr) {
   uint32_t retval;
   paddr = cpu_get_phys_addr(env, virt_addr);
   if (paddr!=-1) {
-    cpu_physical_memory_read((unsigned long) paddr, (char*) &retval, sizeof(uint32_t));
+    iferret_cpu_physical_memory_read((unsigned long) paddr, (char*) &retval, sizeof(uint32_t));
   }    
   return(retval);
 }
@@ -373,7 +382,7 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
     is_sysenter = 1;
   }
   if (paddr!=-1) {
-    cpu_physical_memory_read(paddr, (char *) &eip_for_callsite, 4);    
+    iferret_cpu_physical_memory_read(paddr, (char *) &eip_for_callsite, 4);    
     // find corresponding call to do_interrupt or sys_enter that preceded this return
     /*
     printf ("looking for syscall is_iret=%d pid=%d eip_for_callsite=%x ", 

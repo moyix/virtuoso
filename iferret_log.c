@@ -38,6 +38,8 @@ uint64_t ifregaddr[16];
 
 
 extern unsigned int phys_ram_size;
+extern uint8_t *phys_ram_base;
+
 
 uint32_t iferret_max_overflow = 0;
 
@@ -386,7 +388,7 @@ void iferret_set_network_label(const char *label) {
 // need to save the register base addresses to start of every log.  
 void iferret_log_preamble() {
   int i;
-  iferret_log_uint64_t_write(phys_ram_base);
+  iferret_log_uint64_t_write((uint64_t) phys_ram_base);
   for (i=0; i<=IFRN_Q4; i++) {
     iferret_log_uint64_t_write(ifregaddr[i]);
   }
@@ -396,7 +398,7 @@ void iferret_log_preamble() {
 // need to read the register base addresses from the start of every log.  
 void iferret_log_preamble() {
   int i;
-  phys_ram_base = iferret_log_uint64_t_read();
+  phys_ram_base = (char *) iferret_log_uint64_t_read();
   for (i=0; i<=IFRN_Q4; i++) {
     ifregaddr[i] = iferret_log_uint64_t_read();
   }

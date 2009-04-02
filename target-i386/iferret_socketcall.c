@@ -35,7 +35,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
       paddr = cpu_get_phys_addr(env, ECX);
       if (paddr!=-1)       {
 	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+	iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 	ptr = (int*) tempbuf;
 	family = *ptr++; type =*ptr++; protocol = *ptr++;
 	iferret_log_socketcall_op_write_444(scp,IFLO_SYS_SOCKETCALL_SOCKET,family,type,protocol);
@@ -52,14 +52,14 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
       if (paddr!=-1)       {
 	target_ulong sap_addr;
 	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+	iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 	ptr = (int*) tempbuf;
 	fd = *ptr++;
 	sap_addr = (target_ulong) *ptr++; 
 	len= *ptr++;
 	paddr = cpu_get_phys_addr(env, sap_addr);
 	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the args
+	iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the args
 	//bptr = (unsigned char*)&sa.sin_addr.s_addr;
 	bptr = tempbuf;
 	b0=*bptr++; 
@@ -131,14 +131,14 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
       if (paddr!=-1)       {
 	target_ulong sap_addr;
 	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+	iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 	ptr = (int*) tempbuf;
 	fd = *ptr++; 
 	sap_addr = *ptr++; 
 	len = *ptr++;
 	paddr = cpu_get_phys_addr(env, (target_ulong) sap_addr);
 	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the args
+	iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the args
 	bptr = tempbuf;
 	b0=*bptr++; b1=*bptr++; b2=*bptr++; b3=*bptr++;
 	b4=*bptr++; b5=*bptr++; b6=*bptr++; b7=*bptr++;
@@ -171,7 +171,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
     paddr = cpu_get_phys_addr(env, ECX);
     if (paddr!=-1) {
       bzero(tempbuf, 120);
-      cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+      iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
       //   fprintf(logfile,"socket %d", *(int*) tempbuf);
       iferret_log_socketcall_op_write_4(scp,IFLO_SYS_SOCKETCALL_LISTEN,*((int*) tempbuf));
     }
@@ -182,7 +182,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
     paddr = cpu_get_phys_addr(env, ECX);
     if (paddr!=-1) {
       bzero(tempbuf, 120);
-      cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+      iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
       //   fprintf(logfile,"socket %d", *(int*) tempbuf);
       iferret_log_socketcall_op_write_4(scp,IFLO_SYS_SOCKETCALL_ACCEPT,*(int*) tempbuf); 
     }
@@ -193,7 +193,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
     paddr = cpu_get_phys_addr(env, ECX);
     if (paddr!=-1) {
       bzero(tempbuf, 120);
-      cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+      iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
       //   fprintf(logfile,"socket %d", *(int*) tempbuf);
       iferret_log_socketcall_op_write_4(scp,IFLO_SYS_SOCKETCALL_GETSOCKNAME,*(int*) tempbuf); 
     }
@@ -204,7 +204,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
     paddr = cpu_get_phys_addr(env, ECX);
     if (paddr!=-1) {
       bzero(tempbuf, 120);
-      cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+      iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
       //   fprintf(logfile,"socket %d", *(int*) tempbuf);
       iferret_log_socketcall_op_write_4(scp,IFLO_SYS_SOCKETCALL_GETPEERNAME,*(int*) tempbuf); 
     }
@@ -218,7 +218,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
       paddr = cpu_get_phys_addr(env, ECX);
       if (paddr!=-1)       {
 	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+	iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 	ptr = (int *) tempbuf;
 	domain =*ptr++; 
 	type=*ptr++; 
@@ -239,13 +239,13 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
       paddr = cpu_get_phys_addr(env, ECX);
       if (paddr!=-1)       {
 	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+	iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 	ptr = (int*) tempbuf;
 	fd = *ptr++; msg=*ptr++; len= *ptr++;
 	//   fprintf(logfile,"socket %d ", fd);            
 	bzero(tempbuf, 120);
 	paddr = cpu_get_phys_addr(env, msg);
-	cpu_physical_memory_read(paddr, tempbuf, 30); 
+	iferret_cpu_physical_memory_read(paddr, tempbuf, 30); 
 	for (i=0; i<30; i++)
 	  if (iscntrl(tempbuf[i])) tempbuf[i]='.';
 	//   fprintf(logfile,"(%s)(%d)", tempbuf, len);
@@ -263,7 +263,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
       paddr = cpu_get_phys_addr(env, ECX);
       if (paddr!=-1)       {
 	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+	iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 	ptr = (int*) tempbuf;
 	fd = *ptr++; msg=*ptr++; len= *ptr;
 	//   fprintf(logfile,"socket %d, msg 0x%08x\n", fd, msg);
@@ -281,7 +281,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
       if (paddr!=-1)       {
 	target_ulong sap_addr;
 	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+	iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 	ptr = (int*) tempbuf;
 	fd =  *ptr++; 
 	msg = *ptr++;
@@ -291,7 +291,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
 	//   fprintf(logfile,"socket %d --> ", fd);
 	bzero(tempbuf, 120);
 	paddr = cpu_get_phys_addr(env, sap_addr);
-	cpu_physical_memory_read(paddr, tempbuf, 120); 
+	iferret_cpu_physical_memory_read(paddr, tempbuf, 120); 
 	bptr = tempbuf;
 	b0=*bptr++; b1=*bptr++; b2=*bptr++; b3=*bptr++;
 	b4=*bptr++; b5=*bptr++; b6=*bptr++; b7=*bptr++;
@@ -316,7 +316,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
 	/*
 	bzero(tempbuf, 120);
 	paddr = cpu_get_phys_addr(env, msg);
-	cpu_physical_memory_read(paddr, tempbuf, 30); 
+	iferret_cpu_physical_memory_read(paddr, tempbuf, 30); 
 	for (i=0; i<30; i++)
 	  if (iscntrl(tempbuf[i])) tempbuf[i]='.';
 	*/
@@ -333,7 +333,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
       paddr = cpu_get_phys_addr(env, ECX);
       if (paddr!=-1)       {
 	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+	iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 	ptr = (int*) tempbuf;
 	fd = *ptr++; 
 	//   fprintf(logfile,"socket %d  ", fd);
@@ -351,7 +351,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
       paddr = cpu_get_phys_addr(env, ECX);
       if (paddr!=-1)       {
 	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+	iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 	ptr = (int*) tempbuf;
 	fd = *ptr++; 
 	iferret_log_socketcall_op_write_44(scp,IFLO_SYS_SOCKETCALL_SHUTDOWN,fd,*ptr);
@@ -376,7 +376,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
       paddr = cpu_get_phys_addr(env, ECX);
       if (paddr!=-1)       {
 	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+	iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 	ptr = (int*) tempbuf;
 	fd = *ptr++; level=*ptr++; option=*ptr++;
 	//   fprintf(logfile,"socket %d; level %d; option %d", 
@@ -394,7 +394,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
       paddr = cpu_get_phys_addr(env, ECX);
       if (paddr!=-1)       {
 	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+	iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 	ptr = (int*) tempbuf;
 	fd = *ptr++; level=*ptr++; option=*ptr++;
 	//   fprintf(logfile,"socket %d; level %d; option %d", fd, level, option);
@@ -411,7 +411,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
       paddr = cpu_get_phys_addr(env, ECX);
       if (paddr!=-1)       {
 	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+	iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 	ptr = (int*) tempbuf;
 	fd = *ptr++; 
 	//   fprintf(logfile,"socket %d", fd);
@@ -428,7 +428,7 @@ void iferret_log_socketcall(iferret_syscall_t *scp) {
       paddr = cpu_get_phys_addr(env, ECX);
       if (paddr!=-1)       {
 	bzero(tempbuf, 120);
-	cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+	iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 	ptr = (int*) tempbuf;
 	fd = *ptr++; 
 	//   fprintf(logfile,"socket %d", fd);

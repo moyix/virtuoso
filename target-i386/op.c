@@ -28,7 +28,7 @@
 #include "iferret_log.h"
 
 
-#define PTR_TO_ADDR(ptr) (unsigned long long) ((unsigned long) ptr)
+#define PTR_TO_ADDR(ptr) ((uint64_t) ptr)
 
 
 void my_debug_print(unsigned long long value){

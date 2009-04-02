@@ -33,19 +33,20 @@
 target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 
 
-// translate A0 into a physical address.  
-static inline uint64_t phys_a0() {
-  int addr;
-
+// addr is a 32-bit address.  
+static inline uint32_t phys_addr(uint32_t addr) {
   addr = cpu_get_phys_addr(env,A0); 
   if (addr == -1)
     return 0;
   else
-    return (uint64_t) (phys_ram_base + addr);
-  
-  //  return A0;
+    return (addr); 
 }
 
+
+// translate A0 into a physical address.  
+static inline uint32_t phys_a0() {
+  return (phys_addr(A0));
+}
 
 
 //void exit(int status);
@@ -170,7 +171,7 @@ void iferret_spit_stack(target_ulong addr, char *label) {
   for (i=0; i<51; i++){
     paddr = cpu_get_phys_addr(env, addr+4*i);
     if (paddr!=-1) {
-      cpu_physical_memory_read(paddr, (char *) &stack_val, 4);
+      iferret_cpu_physical_memory_read(paddr, (char *) &stack_val, 4);
     }
     if (stack_val != 0)
       printf("%d: 0x%08x\n",i,stack_val);
@@ -1819,7 +1820,7 @@ void helper_cmpxchg8b(void)
     if (d == (((uint64_t)EDX << 32) | EAX)) {
 
       //      IFLW(CMPXCHG8B_PART1);
-      iferret_log_info_flow_op_write_8(IFLO_CMPXCHG8B_PART1, phys_a0());
+      iferret_log_info_flow_op_write_4(IFLO_CMPXCHG8B_PART1, phys_a0());
 
         stq(A0, ((uint64_t)ECX << 32) | EBX);
 	// NB: we'll expect this stq to resolve to some cpu-all.h stX_p thingey.
@@ -1831,7 +1832,7 @@ void helper_cmpxchg8b(void)
         EAX = d;
 
 	//	IFLW(CMPXCHG8B_PART2);	
-	iferret_log_info_flow_op_write_8(IFLO_CMPXCHG8B_PART2, phys_a0());
+	iferret_log_info_flow_op_write_4(IFLO_CMPXCHG8B_PART2, phys_a0());
 
 	// no addr necessary here -- we are just setting EDX/EAX to the 64bits that 
 	// we loaded from addr A0.  Right?
@@ -2926,7 +2927,7 @@ void helper_sysenter(void)
     uint32_t eip_for_callsite;
     paddr = cpu_get_phys_addr(env, saved_esp+4*3);
     if (paddr!=-1) {
-      cpu_physical_memory_read(paddr, (char *) &eip_for_callsite, 4);
+      iferret_cpu_physical_memory_read(paddr, (char *) &eip_for_callsite, 4);
     } else {
       exit(1);
     }

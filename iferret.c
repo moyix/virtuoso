@@ -33,6 +33,8 @@
 #define OP_POS_CIRC_BUFF_SIZE 10
 
 unsigned int phys_ram_size;
+uint64_t phys_ram_base;
+
 unsigned long long ifregaddr[16];
 
 

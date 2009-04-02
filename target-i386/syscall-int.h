@@ -16,7 +16,7 @@
 			current_task = ESP & (~8191UL);
 			paddr = cpu_get_phys_page_debug(env, current_task); 
 			if (paddr!=-1) {
-				cpu_physical_memory_read(paddr, &current_task, 4);
+				iferret_cpu_physical_memory_read(paddr, &current_task, 4);
 			}
 			pid = 0;
 			//paddr = cpu_get_phys_page_debug(env, current_task+0x7c); // rh8.0
@@ -25,7 +25,7 @@
 			//paddr = cpu_get_phys_page_debug(env, current_task+156);  //fc5
 			paddr = cpu_get_phys_page_debug(env, current_task+204); // Ubuntu 2.6.24-19-generic 
 			if (paddr!=-1) {
-				cpu_physical_memory_read(paddr, &pid, 4);
+				iferret_cpu_physical_memory_read(paddr, &pid, 4);
 			}
 			bzero(command, 120);
 			//paddr = cpu_get_phys_page_debug(env, current_task+0x23e); // task_struct->comm redhat 8.0
@@ -34,11 +34,11 @@
 			//paddr = cpu_get_phys_page_debug(env, current_task+432); // fc5
 			paddr = cpu_get_phys_page_debug(env, current_task+461); // task_struct->comm ubuntu 2.6.24-19-generic
 			if (paddr!=-1) {
-				 cpu_physical_memory_read(paddr, command, 16);
+				 iferret_cpu_physical_memory_read(paddr, command, 16);
 				 // fprintf(logfile,"PID %3d (%16s)", pid, command);
 			}
 //		paddr = cpu_get_phys_page_debug(env, current_task); 
-//		 cpu_physical_memory_read(paddr, tsbuf, 1000);
+//		 iferret_cpu_physical_memory_read(paddr, tsbuf, 1000);
 //		fprintf(logfile,"\n task_struct: 0x%08x \n",*(int*)tsbuf);
 /*		for(i=0;i<1000;i++){
 			if(!(i%16))
@@ -57,7 +57,7 @@
 		#ifdef IS_SYSENTER
 		 paddr = cpu_get_phys_page_debug(env, saved_esp+4*3);
                  if (paddr!=-1) {
-                       cpu_physical_memory_read(paddr, &stack_val, 4);
+                       iferret_cpu_physical_memory_read(paddr, &stack_val, 4);
                  }
 		old_syscall_num = add_element(pid,stack_val,EAX);
 		fprintf(logfile,"Storing EIP:0x%08x\n", stack_val);
@@ -76,7 +76,7 @@
 		#ifdef IS_SYSENTER
 		 paddr = cpu_get_phys_page_debug(env, saved_esp+4*3);
                  if (paddr!=-1) {
-                       cpu_physical_memory_read(paddr, &stack_val, 4);
+                       iferret_cpu_physical_memory_read(paddr, &stack_val, 4);
                  }else{
 			printf("paddr is -1, oops!\n");	
 			exit(1);
@@ -118,7 +118,7 @@
 
 				    bzero(tempbuf, 120);
 				    if (EDX>0 && EDX <= 30) size = EDX; 
-                        	    cpu_physical_memory_read(paddr, tempbuf, size); 
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, size); 
  	                            for (i=0; i<size; i++)
                                         if (iscntrl(tempbuf[i])) tempbuf[i]='.';
 				    fprintf(logfile,"(%s)(%d)\n", tempbuf, EDX);
@@ -131,7 +131,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_open      5]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 119); //-> get the file name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 119); //-> get the file name
 				    fprintf(logfile,"%s; flags %d\n", tempbuf, ECX);
 		    		} 
 				break;
@@ -148,7 +148,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_creat     8]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				    fprintf(logfile,"%s (mode %d)\n", tempbuf, ECX);
 		    		} 
 				break;
@@ -158,13 +158,13 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_link      9]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				    fprintf(logfile,"%s -> ", tempbuf);
 
  	                   	    paddr = cpu_get_phys_page_debug(env, ECX);
 		        	    if (paddr!=-1)	{
 					bzero(tempbuf, 120);
-					cpu_physical_memory_read(paddr, tempbuf, 120); 
+					iferret_cpu_physical_memory_read(paddr, tempbuf, 120); 
 					fprintf(logfile,"%s\n", tempbuf);
    				    }
 		    		} 
@@ -175,14 +175,14 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_unlink   10]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				    fprintf(logfile,"%s\n", tempbuf);
 				}
 				break;
                     	case 11: // sys_execve
 
                     		paddr = cpu_get_phys_page_debug(env, ECX);
-                        	cpu_physical_memory_read(paddr, &argvp, 4);  // The first argument
+                        	iferret_cpu_physical_memory_read(paddr, &argvp, 4);  // The first argument
 
 				if (argvp) {
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
@@ -193,13 +193,13 @@
 				while (argvp) {
 				    bzero(command, 120);
                     		    paddr = cpu_get_phys_page_debug(env, argvp);
-                        	    cpu_physical_memory_read(paddr, command, 120);  // The first argument
+                        	    iferret_cpu_physical_memory_read(paddr, command, 120);  // The first argument
 				    fprintf(logfile,"%s ", command);
 				    pid++;
 				    if (pid >12) break;
                     		    //paddr = cpu_get_phys_page_debug(env, argvp);
                     		    paddr = cpu_get_phys_page_debug(env, ECX+pid*4);
-                        	    cpu_physical_memory_read(paddr, &argvp, 4);  // The first argument
+                        	    iferret_cpu_physical_memory_read(paddr, &argvp, 4);  // The first argument
 				}
 				//fprintf(logfile,"(size %d)\n", pid);
 				if (pid) fprintf(logfile,"\n");
@@ -210,7 +210,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_chdir    12]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
 				    fprintf(logfile,"%s\n", tempbuf);
 		    		} 
 				break;
@@ -223,7 +223,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_mknod    14]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
 				    fprintf(logfile,"%s (mode %d, dev_t %d)\n", tempbuf, ECX, EDX);
 		    		} 
 				break;
@@ -233,7 +233,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_chmod    15]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
 				    fprintf(logfile,"%s (mode %d)\n", tempbuf, ECX);
 		    		} 
 				break;
@@ -243,7 +243,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_lchown   16]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
 				    fprintf(logfile,"%s (uid %d, gid %d)\n", tempbuf, ECX, EDX);
 		    		} 
 				break;
@@ -256,7 +256,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_stat     18]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
 				    fprintf(logfile,"%s\n", tempbuf);
 		    		} 
 				break;
@@ -273,13 +273,13 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_mount    21]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				    fprintf(logfile,"%s -> ", tempbuf);
 
  	                   	    paddr = cpu_get_phys_page_debug(env, ECX);
 		        	    if (paddr!=-1)	{
 					bzero(tempbuf, 120);
-					cpu_physical_memory_read(paddr, tempbuf, 120); 
+					iferret_cpu_physical_memory_read(paddr, tempbuf, 120); 
 					fprintf(logfile,"%s\n", tempbuf);
    				    }
 		    		} 
@@ -290,7 +290,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_oldumoun 22]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
 				    fprintf(logfile,"%s\n", tempbuf);
 		    		} 
 				break;
@@ -317,7 +317,7 @@
                                     fprintf(logfile,"PID %3d (%16s)", pid, command);
                                     fprintf(logfile,"[sys_fsta     28]: ");
                                     bzero(tempbuf, 120);
-                                    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                                    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
                                     fprintf(logfile,"%s\n", tempbuf);
                                 }
 
@@ -332,7 +332,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_utime    30]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
 				    fprintf(logfile,"%s (times  0x%08x)\n", tempbuf, ECX);
 		    		} 
                     	case 31 : // sys_ni_syscall
@@ -348,7 +348,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_access    33]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
 				    fprintf(logfile,"%s (mode %d)\n", tempbuf, ECX);
 		    		} 
                     	case 34 : // sys_nice
@@ -370,13 +370,13 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_rename   38]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				    fprintf(logfile,"%s -> ", tempbuf);
 
  	                   	    paddr = cpu_get_phys_page_debug(env, ECX);
 		        	    if (paddr!=-1)	{
 					bzero(tempbuf, 120);
-					cpu_physical_memory_read(paddr, tempbuf, 120); 
+					iferret_cpu_physical_memory_read(paddr, tempbuf, 120); 
 					fprintf(logfile,"%s\n", tempbuf);
    				    }
 		    		} 
@@ -387,7 +387,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_mkdir    39]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				    fprintf(logfile,"%s (mode %d)\n", tempbuf, ECX);
 
 		    		} 
@@ -398,7 +398,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_rmdir    40]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				    fprintf(logfile,"%s\n", tempbuf);
 
 		    		} 
@@ -445,7 +445,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_acct     51]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				    fprintf(logfile,"%s\n", tempbuf);
 
 		    		} 
@@ -456,7 +456,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_umount2  52]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
 				    fprintf(logfile,"%s\n", tempbuf);
 
 		    		} 
@@ -493,7 +493,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_chroot   61]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
 				    fprintf(logfile,"%s\n", tempbuf);
 				}
                                 break;
@@ -539,7 +539,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_sethostn 74]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
 				    fprintf(logfile,"%s\n", tempbuf);
 				}
                                 break;
@@ -574,7 +574,7 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					fprintf(logfile, "readfds");
 				        bzero(tempbuf, 120);
-                        	        cpu_physical_memory_read(paddr, tempbuf, EBX*4); //-> get the fdset 
+                        	        iferret_cpu_physical_memory_read(paddr, tempbuf, EBX*4); //-> get the fdset 
 					i=0; ptr = (int*)tempbuf; fd = *ptr++;
 					while (fd ) {
 					    fprintf(logfile, " %d", fd);
@@ -587,7 +587,7 @@
                     			paddr = cpu_get_phys_page_debug(env, EDX);
 					fprintf(logfile, "writefds");
 				        bzero(tempbuf, 120);
-                        	        cpu_physical_memory_read(paddr, tempbuf, EBX*4); //-> get the fdset 
+                        	        iferret_cpu_physical_memory_read(paddr, tempbuf, EBX*4); //-> get the fdset 
 					i=0; ptr = (int*)tempbuf; fd = *ptr++;
 					while (fd ) {
 					    fprintf(logfile, " %d", fd);
@@ -606,13 +606,13 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_symlink  83]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				    fprintf(logfile,"%s -> ", tempbuf);
 
  	                   	    paddr = cpu_get_phys_page_debug(env, ECX);
 		        	    if (paddr!=-1)	{
 					bzero(tempbuf, 120);
-					cpu_physical_memory_read(paddr, tempbuf, 120); 
+					iferret_cpu_physical_memory_read(paddr, tempbuf, 120); 
 					fprintf(logfile,"%s\n", tempbuf);
    				    }
 		    		} 
@@ -623,7 +623,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_oldlstat 84]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				    fprintf(logfile,"%s\n", tempbuf);
    				}
                                 break;
@@ -633,7 +633,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_readlink 85]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the link name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the link name
 				    fprintf(logfile,"%s\n", tempbuf);
    				}
                                 break;
@@ -643,7 +643,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_uselib   86]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the lib name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the lib name
 				    fprintf(logfile,"%s\n", tempbuf);
    				}
                                 break;
@@ -653,7 +653,7 @@
 				    fprintf(logfile,"PID %3d (%16s)", pid, command);
 				    fprintf(logfile,"[sys_swapon   87]: ");
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				    fprintf(logfile,"%s\n", tempbuf);
    				}
                                 break;
@@ -670,7 +670,7 @@
                     		paddr = cpu_get_phys_page_debug(env, EBX);
 		        	if (paddr!=-1)	{
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 24); //-> get the file name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 24); //-> get the file name
 				    ptr = (int *)tempbuf;
 				    addr = *ptr++;
 				    len = *ptr++;
@@ -687,7 +687,7 @@
                                 fprintf(logfile,"PID %3d (%16s)[sys_truncate 92]: ", pid, command);
                     		paddr = cpu_get_phys_page_debug(env, EBX);
 				bzero(tempbuf, 120);
-                        	cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the link name
+                        	iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the link name
 				fprintf(logfile,"file %s; length %d\n", tempbuf, ECX);
                                 break;
                         case 93 : // sys_ftruncate
@@ -713,7 +713,7 @@
                     		paddr = cpu_get_phys_page_debug(env, EBX);
 		        	if (paddr!=-1)	{
 				    bzero(tempbuf, 120);
-                        	    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				    fprintf(logfile,"file %s\n", tempbuf);
 				}
                                 break;
@@ -732,7 +732,7 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    ptr = (int*) tempbuf;
 					    family = *ptr++; type =*ptr++; protocol = *ptr++;
 					    fprintf(logfile,"family %2d; type %d; protocol %d\n", family, type, protocol);
@@ -751,12 +751,12 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    ptr = (int*) tempbuf;
 					    fd = *ptr++; sap=*ptr++; len= *ptr++;
                     			    paddr = cpu_get_phys_page_debug(env, sap);
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the args
 					    //bptr = (unsigned char*)&sa.sin_addr.s_addr;
 					    bptr = tempbuf;
 					    b0=*bptr++; b1=*bptr++; b2=*bptr++; b3=*bptr++;
@@ -800,12 +800,12 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    ptr = (int*) tempbuf;
 					    fd = *ptr++; sap=*ptr++; len= *ptr++;
                     			    paddr = cpu_get_phys_page_debug(env, sap);
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the args
 
 					    bptr = tempbuf;
 					    b0=*bptr++; b1=*bptr++; b2=*bptr++; b3=*bptr++;
@@ -829,7 +829,7 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    fprintf(logfile,"socket %d", *(int*) tempbuf);
 					}
 					fprintf(logfile,"\n");
@@ -839,7 +839,7 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    fprintf(logfile,"socket %d", *(int*) tempbuf);
 					}
 					fprintf(logfile,"\n");
@@ -850,7 +850,7 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    fprintf(logfile,"socket %d", *(int*) tempbuf);
 					}
 					fprintf(logfile,"\n");
@@ -861,7 +861,7 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    fprintf(logfile,"socket %d", *(int*) tempbuf);
 					}
 					fprintf(logfile,"\n");
@@ -873,7 +873,7 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    ptr = (int *) tempbuf;
 				  	    domain =*ptr++; type=*ptr++; protocol=*ptr++; socket_vector=*ptr++;
 					    fprintf(logfile,"domain %d; type %d; protocol %d\n", *(int*) tempbuf);
@@ -889,14 +889,14 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    ptr = (int*) tempbuf;
 					    fd = *ptr++; msg=*ptr++; len= *ptr++;
 					    fprintf(logfile,"socket %d ", fd);
 
 					    bzero(tempbuf, 120);
                     			    paddr = cpu_get_phys_page_debug(env, msg);
-					    cpu_physical_memory_read(paddr, tempbuf, 30); 
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, 30); 
 					    for (i=0; i<30; i++)
 						if (iscntrl(tempbuf[i])) tempbuf[i]='.';
 					    fprintf(logfile,"(%s)(%d)", tempbuf, len);
@@ -915,7 +915,7 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    ptr = (int*) tempbuf;
 					    fd = *ptr++; msg=*ptr++; len= *ptr;
 					    fprintf(logfile,"socket %d, msg 0x%08x\n", fd, msg);
@@ -932,14 +932,14 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    ptr = (int*) tempbuf;
 					    fd = *ptr++; msg=*ptr++; len= *ptr++; ptr++; sap=(struct sockaddr_in *)*ptr;
 					    fprintf(logfile,"socket %d --> ", fd);
 
 					    bzero(tempbuf, 120);
                     			    paddr = cpu_get_phys_page_debug(env, sap);
-					    cpu_physical_memory_read(paddr, tempbuf, 120); 
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); 
 					    bptr = tempbuf;
 					    b0=*bptr++; b1=*bptr++; b2=*bptr++; b3=*bptr++;
 					    b4=*bptr++; b5=*bptr++; b6=*bptr++; b7=*bptr++;
@@ -956,7 +956,7 @@
 
 					    bzero(tempbuf, 120);
                     			    paddr = cpu_get_phys_page_debug(env, msg);
-					    cpu_physical_memory_read(paddr, tempbuf, 30); 
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, 30); 
 					    for (i=0; i<30; i++)
 						if (iscntrl(tempbuf[i])) tempbuf[i]='.';
 					    fprintf(logfile," (%s)(%d)", tempbuf, len);
@@ -974,7 +974,7 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    ptr = (int*) tempbuf;
 					    fd = *ptr++; 
 					    fprintf(logfile,"socket %d  ", fd);
@@ -991,7 +991,7 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    ptr = (int*) tempbuf;
 					    fd = *ptr++; 
 					    if (*ptr == 0 )
@@ -1012,7 +1012,7 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    ptr = (int*) tempbuf;
 					    fd = *ptr++; level=*ptr++; option=*ptr++;
 					    fprintf(logfile,"socket %d; level %d; option %d", fd, level, option);
@@ -1028,7 +1028,7 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    ptr = (int*) tempbuf;
 					    fd = *ptr++; level=*ptr++; option=*ptr++;
 					    fprintf(logfile,"socket %d; level %d; option %d", fd, level, option);
@@ -1044,7 +1044,7 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    ptr = (int*) tempbuf;
 					    fd = *ptr++; 
 					    fprintf(logfile,"socket %d", fd);
@@ -1060,7 +1060,7 @@
                     			paddr = cpu_get_phys_page_debug(env, ECX);
 					if (paddr!=-1)	{
 					    bzero(tempbuf, 120);
-					    cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
+					    iferret_cpu_physical_memory_read(paddr, tempbuf, nargs[EBX] ); //-> get the args
 					    ptr = (int*) tempbuf;
 					    fd = *ptr++; 
 					    fprintf(logfile,"socket %d", fd);
@@ -1077,7 +1077,7 @@
                                 fprintf(logfile,"PID %3d (%16s)[sys_syslog  103]: \n", pid, command);
 				bzero(tempbuf, 120);
 				if (EDX>0 && EDX <= 30) size = EDX; 
-                        	cpu_physical_memory_read(paddr, tempbuf, size); 
+                        	iferret_cpu_physical_memory_read(paddr, tempbuf, size); 
  	                        for (i=0; i<size; i++)
                                 	if (iscntrl(tempbuf[i])) tempbuf[i]='.';
 				fprintf(logfile,"(%s)(%d)\n", tempbuf, EDX);
@@ -1094,14 +1094,14 @@
                                 fprintf(logfile,"PID %3d (%16s)[sys_stat    106]: ", pid, command);
                                 paddr = cpu_get_phys_page_debug(env, EBX);
                                 bzero(tempbuf, 120);
-                                cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                                iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
                                 fprintf(logfile,"%s \n", tempbuf);
                                 break;
                         case 107 : // sys_lstat
                                 fprintf(logfile,"PID %3d (%16s)[sys_lstat   107]: ", pid, command);
                                 paddr = cpu_get_phys_page_debug(env, EBX);
                                 bzero(tempbuf, 120);
-                                cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                                iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
                                 fprintf(logfile,"%s \n", tempbuf);
                                 break;
                         case 108 : // sys_fstat
@@ -1129,7 +1129,7 @@
                                 fprintf(logfile,"PID %3d (%16s)[sys_swapoff 115]: ", pid, command);
                     		paddr = cpu_get_phys_page_debug(env, EBX);
 				bzero(tempbuf, 120);
-                        	cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				fprintf(logfile,"%s\n", tempbuf);
                                 break;
                         case 116 : // sys_sysinfo
@@ -1172,7 +1172,7 @@
                                 fprintf(logfile,"PID %3d (%16s)[sys_setdoma 121]\n", pid, command);
                     		paddr = cpu_get_phys_page_debug(env, EBX);
 				bzero(tempbuf, 120);
-                        	cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				fprintf(logfile,"%s\n", tempbuf);
                                 break;
                         case 122 : // sys_uname
@@ -1195,21 +1195,21 @@
                                 fprintf(logfile,"PID %3d (%16s)[sys_crt_mod 127]: module ", pid, command);
                     		paddr = cpu_get_phys_page_debug(env, EBX);
 				bzero(tempbuf, 120);
-                        	cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				fprintf(logfile,"%s\n", tempbuf);
                                 break;
                         case 128 : // sys_init_module
                                 fprintf(logfile,"PID %3d (%16s)[sys_ini_mod 128]: module ", pid, command);
                     		paddr = cpu_get_phys_page_debug(env, EBX);
 				bzero(tempbuf, 120);
-                        	cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				fprintf(logfile,"%s\n", tempbuf);
                                 break;
                         case 129 : // sys_delete_module
                                 fprintf(logfile,"PID %3d (%16s)[sys_del_mod 129]: module", pid, command);
                     		paddr = cpu_get_phys_page_debug(env, EBX);
 				bzero(tempbuf, 120);
-                        	cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				fprintf(logfile,"%s\n", tempbuf);
                                 break;
                         case 130 : // sys_get_kernel_syms
@@ -1260,7 +1260,7 @@
 				if (EDX>0) {
 				    paddr = cpu_get_phys_page_debug(env, ECX);
 				    bzero(tempbuf, 120);
-				    cpu_physical_memory_read(paddr, tempbuf, EDX*sizeof(struct iovec)); //-> get the iov list
+				    iferret_cpu_physical_memory_read(paddr, tempbuf, EDX*sizeof(struct iovec)); //-> get the iov list
 				    iovp = (struct iov*) tempbuf;
 				    for(i=0; i<EDX; i++, iovp++) {
 				    	fprintf(logfile," iov[%d].base 0x%08x len %d;", i, iovp->iov_base, iovp->iov_len);
@@ -1270,7 +1270,7 @@
 				    if (iovp->iov_len > 30) len = 30;	
 				    	else len = iovp->iov_len;
 				    bzero(tempbuf, 120); 
-				    cpu_physical_memory_read(paddr, tempbuf, len); //-> get the iov list
+				    iferret_cpu_physical_memory_read(paddr, tempbuf, len); //-> get the iov list
 				    for (i=0; i<30; i++)
 					if (iscntrl(tempbuf[i])) tempbuf[i]='.';
 				    fprintf(logfile," iov[0] (%s)\n", tempbuf);
@@ -1340,7 +1340,7 @@
                                 fprintf(logfile,"PID %3d (%16s)[sys_query_m 167]: module ", pid, command);
                     		paddr = cpu_get_phys_page_debug(env, EBX);
 				bzero(tempbuf, 120);
-                        	cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the mod name
+                        	iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the mod name
 				fprintf(logfile,"%s\n", tempbuf);
                                 break;
                         case 168 : // sys_poll
@@ -1350,7 +1350,7 @@
 				if (ECX>0) {
 				    paddr = cpu_get_phys_page_debug(env, EBX);
 				    bzero(tempbuf, 120);
-				    cpu_physical_memory_read(paddr, tempbuf, ECX*sizeof(struct pollfd)); 
+				    iferret_cpu_physical_memory_read(paddr, tempbuf, ECX*sizeof(struct pollfd)); 
 				    iovp = (struct pollfd*) tempbuf;
 				    for(i=0; i<ECX; i++, iovp++) {
 				    	fprintf(logfile," fds[%d].fd %d (events %d);", i, iovp->fd, iovp->events);
@@ -1404,7 +1404,7 @@
                                 fprintf(logfile,"PID %3d (%16s)[sys_chown   182]\n", pid, command);
                     		paddr = cpu_get_phys_page_debug(env, EBX);
 				bzero(tempbuf, 120);
-                        	cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				fprintf(logfile,"%s (uid %d, gid %d)\n", tempbuf, ECX, EDX);
                                 break;
                         case 183 : // sys_getcwd
@@ -1441,7 +1441,7 @@
                                 fprintf(logfile,"PID %3d (%16s)[sys_trunc64 193]\n", pid, command);
                     		paddr = cpu_get_phys_page_debug(env, EBX);
 				bzero(tempbuf, 120);
-                        	cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the link name
+                        	iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the link name
 				fprintf(logfile,"file %s; length %d\n", tempbuf, ECX);
                                 break;
                         case 194 : // sys_ftruncate64
@@ -1454,7 +1454,7 @@
                                     fprintf(logfile,"PID %3d (%16s)", pid, command);
                                     fprintf(logfile,"[sys_stat64  195]: ");
                                     bzero(tempbuf, 120);
-                                    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                                    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
                                     fprintf(logfile,"%s \n", tempbuf);
                                 }
                                 break;
@@ -1464,7 +1464,7 @@
                                     fprintf(logfile,"PID %3d (%16s)", pid, command);
                                     fprintf(logfile,"[sys_lstat64 196]: ");
                                     bzero(tempbuf, 120);
-                                    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                                    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
                                     fprintf(logfile,"%s \n", tempbuf);
                                 }
                                 break;
@@ -1475,7 +1475,7 @@
                                     fprintf(logfile,"PID %3d (%16s)", pid, command);
                                     fprintf(logfile,"[sys_fstat64 108]: ");
                                     bzero(tempbuf, 120);
-                                    cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
+                                    iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the dir name
                                     fprintf(logfile,"%s \n", tempbuf);
                                 }
 
@@ -1484,7 +1484,7 @@
                                 fprintf(logfile,"PID %3d (%16s)[sys_lchow32 198]\n", pid, command);
                     		paddr = cpu_get_phys_page_debug(env, EBX);
 				bzero(tempbuf, 120);
-                        	cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				fprintf(logfile,"%s (uid %d, gid %d)\n", tempbuf, ECX, EDX);
                                 break;
                         case 199 : // sys_getuid32
@@ -1530,7 +1530,7 @@
                                 fprintf(logfile,"PID %3d (%16s)[sys_chown32 212]: ", pid, command);
                     		paddr = cpu_get_phys_page_debug(env, EBX);
 				bzero(tempbuf, 120);
-                        	cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				fprintf(logfile,"%s (uid %d, gid %d)\n", tempbuf, ECX, EDX);
                                 break;
                         case 213 : // sys_setuid32
@@ -1549,7 +1549,7 @@
                                 fprintf(logfile,"PID %3d (%16s)[sys_pivot_r 217]: ", pid, command);
                     		paddr = cpu_get_phys_page_debug(env, EBX);
 				bzero(tempbuf, 120);
-                        	cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
+                        	iferret_cpu_physical_memory_read(paddr, tempbuf, 120); //-> get the file name
 				fprintf(logfile,"%s\n", tempbuf);
                                 break;
                         case 218 : // sys_mincore

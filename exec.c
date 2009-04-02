@@ -2571,8 +2571,8 @@ void cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
 
 #else
 
-void cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
-                            int len, int is_write)
+void iferret_cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
+				    int len, int is_write, uint8_t iferret_log)
 {
     int l, io_index;
     uint8_t *ptr;
@@ -2581,9 +2581,11 @@ void cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
     unsigned long pd;
     PhysPageDesc *p;
 
-    // NB: addr is assumed to be 32-bit address in guest.  
-    // buf, on the other hand, is a 64-address in the host.  
-    iferret_log_info_flow_op_write_4844(IFLO_CPU_PHYSICAL_MEMORY_RW, addr, (uint64_t) buf, len, is_write);
+    if (iferret_log) {
+      // NB: addr is assumed to be 32-bit address in guest.  
+      // buf, on the other hand, is a 64-address in the host.  
+      iferret_log_info_flow_op_write_4844(IFLO_CPU_PHYSICAL_MEMORY_RW, addr, (uint64_t) buf, len, is_write);
+    }
 
     while (len > 0) {
         page = addr & TARGET_PAGE_MASK;
@@ -2670,6 +2672,16 @@ void cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
         addr += l;
     }
 }
+
+
+
+void cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
+			    int len, int is_write) {
+  iferret_cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
+				 int len, int is_write, 1);
+}
+
+
 
 /* used for ROM loading : can write in RAM and ROM */
 void cpu_physical_memory_write_rom(target_phys_addr_t addr,

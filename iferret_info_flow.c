@@ -7,8 +7,8 @@
 
 extern uint64_t ifregaddr[];
 
-extern uint64_t safe_address_for_arbitrary_tainting;
-
+// extern uint64_t safe_address_for_arbitrary_tainting;
+extern uint64_t phys_ram_base;
 
 uint32_t if_debug = 0;
 
@@ -656,7 +656,7 @@ inline void if_st(uint32_t msn, uint32_t rn, uint32_t n, uint64_t p) {
   if (p == 0) 
     return;
   
-  p += phys_ram_base
+  p += phys_ram_base;
 
   if (debug_at_least_med()) {
     //    check_reg_taint(rn,__FILE__,__LINE__);
@@ -1209,82 +1209,82 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // T0 = *A0, just one byte. A0 is next element in log.
   case IFLO_OPS_MEM_LDUB_T0_A0:
     // first, a copy transfer from address to t0
-    if_ldu(a0_8,IFRN_T0,1,a1_64);
+    if_ldu(a0_8,IFRN_T0,1,phys_ram_base+a1_32);
     break;
     
     // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T0_A0,MEMSUFFIXNUM,phys_a0(A0));
     // ditto, but signed.
   case IFLO_OPS_MEM_LDSB_T0_A0:
-    if_lds(a0_8,IFRN_T0,1,a1_64);
+    if_lds(a0_8,IFRN_T0,1,phys_ram_base+a1_32);
     break; 
 
     // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T0_A0,MEMSUFFIXNUM,phys_a0(A0));
     // T0 = *A0, 2 bytes
   case IFLO_OPS_MEM_LDUW_T0_A0:
-    if_ldu(a0_8,IFRN_T0,2,a1_64);
+    if_ldu(a0_8,IFRN_T0,2,phys_ram_base+a1_32);
     break;
 
     // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSW_T0_A0,MEMSUFFIXNUM,phys_a0(A0));
     // ditto, but signed.
   case IFLO_OPS_MEM_LDSW_T0_A0:
-    if_lds(a0_8,IFRN_T0,2,a1_64);
+    if_lds(a0_8,IFRN_T0,2,phys_ram_base+a1_32);
     break;
 
     // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDL_T0_A0,MEMSUFFIXNUM,phys_a0(A0));
     // T0 = *A0, 4 bytes
   case IFLO_OPS_MEM_LDL_T0_A0:
-    if_ldu(a0_8,IFRN_T0,4,a1_64);
+    if_ldu(a0_8,IFRN_T0,4,phys_ram_base+a1_32);
     break;
 
     // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T1_A0,MEMSUFFIXNUM,phys_a0(A0));
     // T1 = *A0, just one byte. A0 is next element in log.
   case IFLO_OPS_MEM_LDUB_T1_A0:
-    if_ldu(a0_8,IFRN_T1,1,a1_64);
+    if_ldu(a0_8,IFRN_T1,1,phys_ram_base+a1_32);
     break;
 
     // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T1_A0,MEMSUFFIXNUM,phys_a0(A0));  
     // ditto, but signed.
   case IFLO_OPS_MEM_LDSB_T1_A0:
-    if_lds(a0_8,IFRN_T1,1,a1_64);
+    if_lds(a0_8,IFRN_T1,1,phys_ram_base+a1_32);
     break; 
       
     // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T1_A0,MEMSUFFIXNUM,phys_a0(A0));
     // T1 = *A0, 2 bytes
   case IFLO_OPS_MEM_LDUW_T1_A0:
-    if_ldu(a0_8,IFRN_T1,2,a1_64);
+    if_ldu(a0_8,IFRN_T1,2,phys_ram_base+a1_32);
     break;
 
     // ditto, but signed.
   case IFLO_OPS_MEM_LDSW_T1_A0:
-    if_lds(a0_8,IFRN_T1,2,a1_64);
+    if_lds(a0_8,IFRN_T1,2,phys_ram_base+a1_32);
     break;
 
     // T1 = *A0, 4 bytes
   case IFLO_OPS_MEM_LDL_T1_A0:
-    if_ldu(a0_8,IFRN_T1,4,a1_64);
+    if_ldu(a0_8,IFRN_T1,4,phys_ram_base+a1_32);
     break;
 
     // *A0 = T0, one byte
   case IFLO_OPS_MEM_STB_T0_A0:
-    if_st(a0_8,IFRN_T0,1,a1_64);
+    if_st(a0_8,IFRN_T0,1,phys_ram_base+a1_32);
     break;
 
     // two bytes.
   case IFLO_OPS_MEM_STW_T0_A0:
-    if_st(a0_8,IFRN_T0,2,a1_64);
+    if_st(a0_8,IFRN_T0,2,phys_ram_base+a1_32);
     break;
 
     // all four bytes
   case IFLO_OPS_MEM_STL_T0_A0:
-    if_st(a0_8,IFRN_T0,4,a1_64);
+    if_st(a0_8,IFRN_T0,4,phys_ram_base+a1_32);
     break;
     
   case IFLO_OPS_MEM_STW_T1_A0:
-    if_st(a0_8,IFRN_T1,2,a1_64);
+    if_st(a0_8,IFRN_T1,2,phys_ram_base+a1_32);
     break;
 
   case IFLO_OPS_MEM_STL_T1_A0:
-    if_st(a0_8,IFRN_T1,4,a1_64);
+    if_st(a0_8,IFRN_T1,4,phys_ram_base+a1_32);
     break;
 
     /*
@@ -1344,13 +1344,13 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     //    }
 
   case IFLO_CMPXCHG8B_PART1:
-    if_st(0,IFRN_EBX,4,a0_64);
-    if_st(0,IFRN_ECX,4,a0_64+4);
+    if_st(0,IFRN_EBX,4,phys_ram_base+a0_32);
+    if_st(0,IFRN_ECX,4,phys_ram_base+a0_32+4);
     break;
 
   case IFLO_CMPXCHG8B_PART2:
-    if_ldu(0,IFRN_EAX,4,a0_64);
-    if_ldu(0,IFRN_EDX,4,a0_64+4);
+    if_ldu(0,IFRN_EAX,4,phys_ram_base+a0_32);
+    if_ldu(0,IFRN_EDX,4,phys_ram_base+a0_32+4);
     break;
 
     // T0 = 0;
@@ -1463,7 +1463,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE:
   case IFLO_OPS_TEMPLATE_SAR_T0_T1_CC_MEMWRITE:
     if_delete_r4(IFRN_T0);
-    if_st(0,IFRN_T0,4,a1_64);
+    if_st(0,IFRN_T0,4,phys_ram_base+a1_32);
     break;
     
 
@@ -1482,7 +1482,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // T0 <- strangefunction(T0,T1)
     if_self_compute_r4(IFRN_T0, IFRN_T1);
     // glue(st, MEM_SUFFIX)(A0, T0);
-    if_st(0,IFRN_T0,4,a1_64);
+    if_st(0,IFRN_T0,4,phys_ram_base+a1_32);
     break;
 
   case IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC:
@@ -1500,7 +1500,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     if_self_compute_r4(IFRN_T0, IFRN_T1);
     if_self_compute_r4(IFRN_T0, IFRN_ECX);
     // glue(st, MEM_SUFFIX)(A0, T0);
-    if_st(0,IFRN_T0,4,a1_64);
+    if_st(0,IFRN_T0,4,phys_ram_base+a1_32);
     break;
 
   case IFLO_OPS_TEMPLATE_ADC_T0_T1_CC:
@@ -1514,7 +1514,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // T0 = T0 + T1 + cf;
     if_self_compute_r4(IFRN_T0, IFRN_T1);
     // glue(st, MEM_SUFFIX)(A0, T0);
-    if_st(0,IFRN_T0,4,a1_64);
+    if_st(0,IFRN_T0,4,phys_ram_base+a1_32);
     break;
 
   case IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC:
@@ -1526,7 +1526,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // T0 = T1;
     if_copy_r4(IFRN_T0, IFRN_T1);
     // glue(st, MEM_SUFFIX)(A0, T0);
-    if_st(0,IFRN_T0,4,a1_64);
+    if_st(0,IFRN_T0,4,phys_ram_base+a1_32);
     break;
 
   case IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_CASE2:
@@ -1586,7 +1586,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     break;
 
   case IFLO_HD_TRANSFER_PART2:
-    // (to,size)
+    // (to,size): (a0_64,a1_32)
     // make use of saved from address.  
     if (iferret->last_hd_transfer_from != 0) {
       if (exists_taint(iferret->last_hd_transfer_from, a1_32, "foo", -1)) {
@@ -1600,7 +1600,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     break;
 
   case IFLO_HD_TRANSFER:
-    // (from,to,size)
+    // (from,to,size): (a0_64,a1_64,a2_32)
     // NB: from could be HD or io buffer and to could be either.
     info_flow_copy(a1_64,a0_64,a2_32);
     if (exists_taint(a1_64, a1_32, "foo", -1)) {
@@ -2123,7 +2123,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     
     // iferret_log_info_flow_op_write_8844(IFLO_CPU_PHYSICAL_MEMORY_RW, addr, buf, len, is_write);
   case IFLO_CPU_PHYSICAL_MEMORY_RW:
-
+    // (addr,buf,len,iswrite) : (a0_32,a1_64,a2_32,a3_32)
     // a0 is a physical address in the guest, thus it is 32 bits.
     // a1 is a vitrual address in qemu's space.  thus it is 64 bits. 
     if (a3_32 == 1) {

@@ -863,13 +863,26 @@ void cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
 static inline void cpu_physical_memory_read(target_phys_addr_t addr,
                                             uint8_t *buf, int len)
 {
-    cpu_physical_memory_rw(addr, buf, len, 0);
+  iferret_cpu_physical_memory_rw(addr, buf, len, 0, 1);
 }
 static inline void cpu_physical_memory_write(target_phys_addr_t addr,
                                              const uint8_t *buf, int len)
 {
-    cpu_physical_memory_rw(addr, (uint8_t *)buf, len, 1);
+  iferret_cpu_physical_memory_rw(addr, (uint8_t *)buf, len, 1, 1);
 }
+
+static inline void iferret_cpu_physical_memory_read(target_phys_addr_t addr,
+						    uint8_t *buf, int len)
+{
+  iferret_cpu_physical_memory_rw(addr, buf, len, 0, 0);
+}
+static inline void iferret_cpu_physical_memory_write(target_phys_addr_t addr,
+						     const uint8_t *buf, int len)
+{
+  cpu_physical_memory_rw(addr, (uint8_t *)buf, len, 1, 0);
+}
+
+
 uint32_t ldub_phys(target_phys_addr_t addr);
 uint32_t lduw_phys(target_phys_addr_t addr);
 uint32_t ldl_phys(target_phys_addr_t addr);

@@ -302,7 +302,20 @@ static inline void iferret_log_syscall_common(iferret_syscall_t *sc, va_list op_
   iferret_log_op_args_write(sc->op_num, op_args);
 }  
 
+/*
+extern char *env;
+extern uint
+uint32_t cpu_get_phys_addr(char *env, uint32_t addr);
 
+// addr is a 32-bit address.  
+static inline uint32_t phys_addr(uint32_t addr) {
+  addr = cpu_get_phys_addr(env,A0); 
+  if (addr == -1)
+    return 0;
+  else
+    return (addr); 
+}
+*/
 
 // simple logging ops come from here, auto-generated via make-iferret-code.pl
 // 
