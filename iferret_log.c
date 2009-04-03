@@ -300,6 +300,7 @@ void iferret_log_op_args_read(iferret_op_t *op) {
       op->num_args++;
       break;
     case '4':     // a 4-byte unsigned int
+    case 'p':     // a guest ptr (32-bit) 
       op->arg[i].type = IFLAT_UI32;
       op->arg[i].val.u32 = iferret_log_uint32_t_read();
       op->num_args++;

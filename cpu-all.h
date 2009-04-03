@@ -860,6 +860,10 @@ CPUReadMemoryFunc **cpu_get_io_memory_read(int io_index);
 
 void cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
                             int len, int is_write);
+
+void iferret_cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
+				    int len, int is_write, uint8_t log);
+
 static inline void cpu_physical_memory_read(target_phys_addr_t addr,
                                             uint8_t *buf, int len)
 {
@@ -879,7 +883,7 @@ static inline void iferret_cpu_physical_memory_read(target_phys_addr_t addr,
 static inline void iferret_cpu_physical_memory_write(target_phys_addr_t addr,
 						     const uint8_t *buf, int len)
 {
-  cpu_physical_memory_rw(addr, (uint8_t *)buf, len, 1, 0);
+  iferret_cpu_physical_memory_rw(addr, (uint8_t *)buf, len, 1, 0);
 }
 
 

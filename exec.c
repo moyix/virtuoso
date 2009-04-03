@@ -2677,8 +2677,7 @@ void iferret_cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
 
 void cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
 			    int len, int is_write) {
-  iferret_cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
-				 int len, int is_write, 1);
+  iferret_cpu_physical_memory_rw(addr, buf, len, is_write, 1);
 }
 
 

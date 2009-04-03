@@ -33,6 +33,11 @@ typedef struct iferret_struct_t {
   vslht *mal_files;            // set of malicious files (written to by a mal pid)
   vslht *read_files;           // set of files read by a malicious pid
   uint64_t last_hd_transfer_from;  // remember from address from _PART1
+  //  uint32_t phys_ram_size = 0;
+  char *log_prefix;
+  uint32_t num_logs;
+  uint8_t info_flow;
+  uint8_t preprocess;
 } iferret_t;
 
 
