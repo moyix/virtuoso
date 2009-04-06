@@ -28,6 +28,7 @@ typedef struct iferret_struct_t {
   int_set_t *mal_pids;          // current set of malicious pids
   uint32_t eip_at_head_of_tb;   // eip for head of tb currently being executed
   int current_pid;
+  int current_uid;
   opcount_t *opcount;           // counts for ops encounters
   int_int_hashtable_t *open_fd_table;  // map from (pid,fd) to file info for open files
   vslht *mal_files;            // set of malicious files (written to by a mal pid)

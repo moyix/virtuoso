@@ -14,6 +14,25 @@ int_set_t *int_set_new() {
   return set;
 }
 
+
+void int_set_clear(int_set_t *is) {
+  vslht_clear(is->table);
+}
+
+
+int_set_t *int_set_copy(int_set_t *is) {
+  int_set_t *set;
+  set = int_set_new();
+  vslht_copy(is->table, set->table);
+  return (set);
+}
+
+
+void int_set_free(int_set_t *is) {
+  vslht_free(is->table);
+  free(is);
+}
+
 // given a char that is 0..9 a..f hex digit, 
 // return an int 0..15
 static inline uint8_t charhex(char c) {

@@ -37,6 +37,7 @@
 
 int tb_invalidated_flag;
 
+uint8_t iferret_says_flush = 1;
 
 void check_rollup(char *label);
 
@@ -170,7 +171,8 @@ static TranslationBlock *tb_find_slow(target_ulong pc,
  not_found:
     /* if no translated code available, then translate it now */
     tb = tb_alloc(pc);
-    if (!tb) {
+    if (!tb || iferret_says_flush==1) {
+      iferret_says_flush = 0;
         /* flush must be done */
         tb_flush(env);
         /* cannot fail at this point */

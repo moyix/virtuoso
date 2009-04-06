@@ -27,7 +27,7 @@ void vslht_add (vslht *h, char *k, uint64_t v);
 void vslht_remove (vslht *h, char *k);
 uint32_t vslht_mem(vslht *h, char *k);
 uint64_t vslht_find (vslht *h, char *k);
-void vslht_copy (vslht *h1, vslht *h2);
+void vslht_copy (vslht *src, vslht *dest);
 char **vslht_key_set (vslht *h);
 uint32_t vslht_size(vslht *h);
 uint32_t vslht_occ(vslht *h);

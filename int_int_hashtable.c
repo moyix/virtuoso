@@ -17,6 +17,16 @@ int_int_hashtable_t *int_int_hashtable_new() {
   return hashtable;
 }
 
+void int_int_hashtable_clear(int_int_hashtable_t *iiht) {
+  vslht_clear(iiht->table);
+}
+
+void int_int_hashtable_free(int_int_hashtable_t *iiht) {
+  vslht_free(iiht->table);
+  free(iiht);
+}
+
+
 static inline uint8_t hex_digit(uint32_t x, uint32_t p) {
   x = (x & (0xf << (p*4))) >> (p*4);
   if (x < 10) return (x + '0');

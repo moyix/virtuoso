@@ -20,6 +20,24 @@ int_string_hashtable_t *int_string_hashtable_new() {
   return hashtable;
 }
 
+
+void int_string_hashtable_clear(int_string_hashtable_t *isht) {
+  vslht_clear(isht->table);
+}
+
+
+void int_string_hashtable_free(int_string_hashtable_t *isht) {
+  int i;
+  vslht_free(isht->table);
+  for (i=0; i<isht->max_num_strings; i++) {
+    if (isht->string[i] != NULL) 
+      free(isht->string[i]);
+  }
+  free(isht->string);
+  free(isht);
+}
+
+
 static inline uint8_t hex_digit(uint32_t x, uint32_t p) {
   x = (x & (0xf << (p*4))) >> (p*4);
   if (x < 10) return (x + '0');

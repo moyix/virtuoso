@@ -8,6 +8,8 @@ typedef struct int_int_hashtable_t_struct {
 } int_int_hashtable_t;
 
 int_int_hashtable_t *int_int_hashtable_new(void);
+void int_int_hashtable_clear(int_int_hashtable_t *iiht);
+void int_int_hashtable_free(int_int_hashtable_t *iiht);
 void int_int_hashtable_add(int_int_hashtable_t *ishe, uint32_t key, uint64_t val);
 void int_int_hashtable_remove(int_int_hashtable_t *ish, uint32_t key);
 uint8_t int_int_hashtable_mem(int_int_hashtable_t *ish, uint32_t key);
