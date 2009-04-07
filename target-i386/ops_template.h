@@ -623,7 +623,8 @@ void OPPROTO glue(glue(op_out, SUFFIX), _T0_T1)(void)
   if(T0 == 0x01f0){
     //         IFLW_HD_TRANSFER_PART1(IFRBA(IFRN_T1)); 
     // T1 -> ?
-    iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1,T1_BASE);
+    iferret_log_info_flow_op_write_0(IFLO_HD_TRANSFER_PART1_T1_BASE);
+    //    printf ("IFLO_HD_TRANSFER_PART1_T1_BASE\n");
   }
 
   // apparently this is the port # for network out.    
@@ -726,7 +727,8 @@ void OPPROTO glue(glue(op_out, SUFFIX), _DX_T0)(void)
 
   if ((EDX & 0xffff) == 0x01f0){
     //	IFLW_HD_TRANSFER_PART1(IFRBA(IFRN_T0));	
-    iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1,T0_BASE);    
+    iferret_log_info_flow_op_write_0(IFLO_HD_TRANSFER_PART1_T0_BASE);    
+    //    printf ("IFLO_HD_TRANSFER_PART1_T0_BASE\n");
   }  
   else {  
     if ((EDX & 0xffff) == 0xc110){

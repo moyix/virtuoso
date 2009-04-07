@@ -69,14 +69,15 @@ static inline int current_pid_valid() {
 }
 
 
+/*
 static inline uint32_t phys_addr(uint32_t addr) {
-  addr = cpu_get_phys_addr(env,A0); 
+  addr = cpu_get_phys_addr(env,addr); 
   if (addr == -1)
     return 0;
   else
     return (addr); 
 }
-
+*/
 
 
 // current_task is pointer to vm physical memory at which linux task structure is
@@ -316,8 +317,15 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
       return;
     }
     
+    /*
+    if (scp->op_num == IFLO_SYS_SYS_READ) {
+      printf ("its a read.\n");
+      if ((phys_addr(ECX)) == 0) {
+	printf ("phys_addr(ECX) returned 0, i.e. %d  -- so we are to write to an address that's not mapped? \n", phys_addr(ECX));
+      }
+    }
+    */    
 
-    
     
     // fprintf(logfile, "PID: %d, stack size:%d\n",pid,get_stack_size(pid));
     

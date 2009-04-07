@@ -722,6 +722,9 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   a3_64 = arg[3].val.u64;
   a4_64 = arg[4].val.u64;
 
+
+
+
   switch (op->num) {
 
     /* 
@@ -1578,7 +1581,17 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     if_delete_r4(IFRN_T0);
     break;
     
+
+  case IFLO_HD_TRANSFER_PART1_T0_BASE:
+    iferret->last_hd_transfer_from = T0_BASE;
+    break;
     
+
+  case IFLO_HD_TRANSFER_PART1_T1_BASE:
+    iferret->last_hd_transfer_from = T1_BASE;
+    break;
+    
+
   case IFLO_HD_TRANSFER_PART1:
     // (from)
     // save the from address?
@@ -1597,6 +1610,8 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
       }		  
       info_flow_copy(a0_64, iferret->last_hd_transfer_from, a1_32);
     }
+    printf ("info flow op: IFLO_HD_TRANSFER P12 %p -> %p num=%d\n", 
+	    iferret->last_hd_transfer_from, a0_64, a1_32);
     break;
 
   case IFLO_HD_TRANSFER:
@@ -1609,6 +1624,8 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     if (exists_taint(a0_64, a1_32, "foo", -1)) {
       printf ("IFLO_HD_TRANSFER to tainted:\n");
     }		  
+    printf ("info flow op: IFLO_HD_TRANSFER %p -> %p num=%d\n", 
+	    a0_64, a1_64, a2_32);
     break;
 
 

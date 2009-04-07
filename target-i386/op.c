@@ -48,6 +48,7 @@ static inline target_long lshift(target_long x, int n)
 target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 
 
+/*
 // translate A0 into a physical address.  
 static inline uint64_t phys_a0() {
   int addr;
@@ -60,8 +61,7 @@ static inline uint64_t phys_a0() {
   
   //  return A0;
 }
-
-
+*/
 
 
 /* we define the various pieces of code used by the JIT */

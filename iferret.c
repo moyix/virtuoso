@@ -49,6 +49,8 @@ uint64_t fake_base_addr_for_env;
 // this is used as a scratch space for info-flow.  really.
 uint64_t safe_address_for_arbitrary_tainting;
 
+uint8_t something_got_labeled = 0;
+
 
 typedef struct op_pos_struct {
   uint32_t opnum;
@@ -301,11 +303,15 @@ void iferret_read_file(iferret_t *iferret, int pid, char *command,
     char label[256];
     filename = (iferret_open_fd_find(iferret, pid, fd))->filename; 
     // this is a file for which we saw the open
-    printf ("pid %d [%s] read %d of %d bytes from file [%s] p=0x%p\n", 
+    printf ("pid %d [%s] read %d of %d bytes from file [%s] p=%p\n", 
 	    pid, command, retval, count, filename, p);
     vslht_add(iferret->read_files, filename, 1);
-    snprintf (label, 256, "pid-%d-%s-read-%s", pid, command, filename);
-    info_flow_label(p, count, label);
+    if (iferret->info_flow && retval>0) {
+      snprintf (label, 256, "pid-%d-%s-read-%s", pid, command, filename);
+      printf ("assigning info-flow label %s\n", label);
+      info_flow_label(p, count, label);
+      something_got_labeled = 1;
+    }
   }
 }
 
@@ -317,12 +323,14 @@ void iferret_write_file(iferret_t *iferret, int pid, char *command,
     char label[256];
     filename = (iferret_open_fd_find(iferret, pid, fd))->filename; 
     // this is a file for which we saw the open
-    printf ("pid %d [%s] wrote %d of %d bytes from file [%s] p=0x%p\n", 
+    printf ("pid %d [%s] wrote %d of %d bytes to file [%s] p=%p\n", 
 	    pid, command, retval, count, filename, p);
     vslht_add(iferret->mal_files, filename, 1);
-    if (iferret->info_flow) {
+    if (iferret->info_flow && retval>0) {
       snprintf (label, 256, "pid-%d-%s-write-%s", pid, command, filename);
+      printf ("assigning info-flow label %s\n", label);
       info_flow_label(p, count, label);
+      something_got_labeled = 1;
     }
   }
 }
@@ -349,6 +357,17 @@ void iferret_writev_file(iferret_t *iferret, int pid, char *command, int fd)  {
 	    pid, command, fd, filename);
     vslht_add(iferret->mal_files, filename, 1);
   }
+}
+
+void iferret_mmap2(iferret_t *iferret, uint32_t pid, char *command,
+		   uint32_t start, uint32_t length, uint32_t prot, 
+		   uint32_t flags, uint32_t fd, uint32_t offset) {
+
+  //  filename = (iferret_open_fd_find(iferret, pid, fd))->filename; 
+  
+  printf ("pid=%d command=[%s] mmap2 called with fd = %d\n", pid, command, fd);
+  
+
 }
 
 
@@ -606,6 +625,55 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
 			  command,
 			  syscall->arg[0].val.u32); // the file descriptor
     }
+    break;
+
+  case IFLO_SYS_MMAP2: 
+    /*
+      "p44444"
+
+      void *mmap(void *start, size_t length, int prot, int flags,
+                 int fd, off_t offset);
+
+      mmap() creates a new mapping in the virtual address space of the calling process.  
+      The starting address for the new mapping is specified in start.  The length argument 
+      specifies the length of the mapping.
+
+      If start is NULL, then the kernel chooses the address at which to create the mapping; 
+      this is the most portable method of creating a new mapping.  If start is not NULL, 
+      then the kernel takes it as a hint about where to place the mapping; on Linux, the 
+      mapping will be created at the next higher page boundary.  The address of the new 
+      mapping is returned as the result of the call.
+
+      The contents of a file mapping (as opposed to an anonymous mapping; see MAP_ANONYMOUS 
+      below), are initialized using length bytes starting at offset offset in the file (or 
+      other object) referred to by the file descriptor fd.  offset must be a multiple of the 
+      page size as returned by sysconf(_SC_PAGE_SIZE).
+
+      The prot argument describes the desired memory protection of the mapping (and must not 
+      conflict with the open mode of the file).  It is either PROT_NONE or the bitwise OR of 
+      one or more of the following flags:
+
+      The mmap2() system call operates in exactly the same way as mmap(2), except that the 
+      final argument specifies the offset into the file in 4096-byte units (instead of bytes, 
+      as is done by mmap(2)).  This enables applications that use a 32-bit off_t to map large 
+      files (up to 2^44 bytes).
+    */
+    
+    iferret_mmap2(iferret,
+		 syscall->pid,
+		 command,
+		 syscall->arg[0].val.u32,
+		 syscall->arg[1].val.u32,
+		 syscall->arg[2].val.u32,
+		 syscall->arg[3].val.u32,
+		 syscall->arg[4].val.u32,
+		 syscall->arg[5].val.u32);
+    
+    break;
+  
+  
+
+
   default:
     break;
   }  
@@ -626,12 +694,37 @@ void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {
     iferret->current_uid = op->arg[0].val.u32;
     return;
   }
+  if (op->num == IFLO_TB_HEAD_EIP) {
+    if (exists_taint(op->arg[0].val.u32,4,"FOO",-1)) {
+      printf ("Executing code with an info-flow label\n");
+    }
+  }
+
   /*
   if (iferret->current_pid != 0) {
     printf ("pid = %d\n", iferret->current_pid);
   }
   */
-  if (iferret_is_pid_mal(iferret, iferret->current_pid)) {
+
+  /*
+      if (op->num == IFLO_HD_TRANSFER_PART1 
+	  || op->num == IFLO_HD_TRANSFER_PART2
+	  || op->num == IFLO_HD_TRANSFER) {
+	printf ("op = %s  pid = %d  ", iferret_op_num_to_str(op->num), iferret->current_pid);
+	if (int_string_hashtable_mem(iferret->pid_commands,iferret->current_pid)) {
+	  char *s;
+	  // we've already seen this pid -- check if command string has changed.
+	  s = int_string_hashtable_find(iferret->pid_commands,iferret->current_pid);
+	  printf ("command = [%s]\n", s);
+	}
+	else {
+	  printf ("command = [?]\n");
+	}
+      }
+  */
+
+
+  //  if (iferret_is_pid_mal(iferret, iferret->current_pid)) {
     if (op->num > IFLO_SYS_CALLS_START) {
       iferret_process_syscall(iferret,op);
       return;
@@ -642,10 +735,12 @@ void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {
       return;
     }
     if (op->num < IFLO_SYS_CALLS_START && 
-	iferret->preprocess == FALSE && iferret->info_flow==TRUE) {
+	iferret->preprocess == FALSE && iferret->info_flow==TRUE
+	&& something_got_labeled) {
+
       iferret_info_flow_process_op(iferret,op);
     }
-  }
+    //  }
 }
 
 
@@ -743,7 +838,11 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
     op_pos_arr->pos[i%OP_POS_CIRC_BUFF_SIZE].end = iferret_log_ptr-1;
     //    op_hex_dump(i);
     i++;
+    if ((i%100000) == 0) {
+      printf ("%d bytes tainted.\n", how_many_bytes_are_tainted());
+    }
   }
+  printf ("%d bytes tainted.\n", how_many_bytes_are_tainted());
 
 }
 
@@ -907,3 +1006,4 @@ int main (int argc, char **argv) {
   iferret_stats(iferret);
 
 }
+ 

@@ -1204,8 +1204,9 @@ target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr) {
     paddr = (pte & TARGET_PAGE_MASK) + page_offset;
     return paddr;
   }
-  else 
+  else {
     return -1;
+  }
 }
 
 #endif /* !CONFIG_USER_ONLY */

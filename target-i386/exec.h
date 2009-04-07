@@ -607,3 +607,21 @@ static inline int cpu_halted(CPUState *env) {
     return EXCP_HALTED;
 }
 
+
+// from helper2.c
+target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
+
+
+static inline uint32_t phys_addr(uint32_t addr) {
+  addr = cpu_get_phys_addr(env,addr); 
+  if (addr == -1)
+    return 0;
+  else
+    return (addr); 
+}
+
+
+// translate A0 into a physical address.  
+static inline uint64_t phys_a0() {
+  return (phys_addr(A0));
+}
