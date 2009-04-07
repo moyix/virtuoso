@@ -35,7 +35,7 @@ target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 
 // addr is a 32-bit address.  
 static inline uint32_t phys_addr(uint32_t addr) {
-  addr = cpu_get_phys_addr(env,A0); 
+  addr = cpu_get_phys_addr(env,addr); 
   if (addr == -1)
     return 0;
   else
