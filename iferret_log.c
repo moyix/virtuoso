@@ -390,9 +390,23 @@ void iferret_set_network_label(const char *label) {
 void iferret_log_preamble() {
   int i;
   iferret_log_uint64_t_write((uint64_t) phys_ram_base);
-  for (i=0; i<=IFRN_Q4; i++) {
-    iferret_log_uint64_t_write(ifregaddr[i]);
-  }
+  iferret_log_uint64_t_write(ifregaddr[IFRN_EAX]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_ECX]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_EDX]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_EBX]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_ESP]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_EBP]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_ESI]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_EDI]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_EIP]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_T0]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_T1]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_A0]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_Q0]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_Q1]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_Q2]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_Q3]);
+  iferret_log_uint64_t_write(ifregaddr[IFRN_Q4]);
 }
 #else
 // we are compiling the back-end, i.e. the bit that reads the log and analyzes it.
@@ -400,9 +414,23 @@ void iferret_log_preamble() {
 void iferret_log_preamble() {
   int i;
   phys_ram_base = (char *) iferret_log_uint64_t_read();
-  for (i=0; i<=IFRN_Q4; i++) {
-    ifregaddr[i] = iferret_log_uint64_t_read();
-  }
+  ifregaddr[IFRN_EAX] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_ECX] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_EDX] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_EBX] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_ESP] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_EBP] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_ESI] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_EDI] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_EIP] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_T0] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_T1] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_A0] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_Q0] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_Q1] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_Q2] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_Q3] = iferret_log_uint64_t_read();
+  ifregaddr[IFRN_Q4] = iferret_log_uint64_t_read();
 }
 #endif
 

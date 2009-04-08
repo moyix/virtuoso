@@ -245,6 +245,9 @@ static int event_pending = 1;
 // resides in iferret_log.c
 extern uint8_t iferret_info_flow_on;
 
+extern uint64_t ifregaddr[16];
+
+
 #define TFR(expr) do { if ((expr) != -1) break; } while (errno == EINTR)
 
 /***********************************************************/
@@ -9041,6 +9044,25 @@ int main(int argc, char **argv)
 
 	close(fd);
     }
+
+    printf ("EIP_BASE = %p\n", (char *) EIP_BASE);
+    printf ("EAX_BASE = %p\n", (char *) EAX_BASE);
+    printf ("ECX_BASE = %p\n", (char *) ECX_BASE);
+    printf ("EDX_BASE = %p\n", (char *) EDX_BASE);
+    printf ("EBX_BASE = %p\n", (char *) EBX_BASE);
+    printf ("ESP_BASE = %p\n", (char *) ESP_BASE);
+    printf ("EBP_BASE = %p\n", (char *) EBP_BASE);
+    printf ("ESI_BASE = %p\n", (char *) ESI_BASE);
+    printf ("EDI_BASE = %p\n", (char *) EDI_BASE);
+    printf ("T0_BASE = %p\n", (char *) T0_BASE);
+    printf ("T1_BASE = %p\n", (char *) T1_BASE);
+    printf ("A0_BASE = %p\n", (char *) A0_BASE);
+    printf ("Q0_BASE = %p\n", (char *) Q0_BASE);
+    printf ("Q1_BASE = %p\n", (char *) Q1_BASE);
+    printf ("Q2_BASE = %p\n", (char *) Q2_BASE);
+    printf ("Q3_BASE = %p\n", (char *) Q3_BASE);
+
+
 
     main_loop();
     quit_timers();

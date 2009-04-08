@@ -57,6 +57,9 @@
 #endif
 
 
+//#define HD_PORT 0x1f0
+#define HD_PORT 0x170
+
 /* #ifndef IFLW_WRAPPER */
 /* #error "Why is IFLW_WRAPPER not defined?" */
 /* #endif */
@@ -616,11 +619,8 @@ void OPPROTO glue(op_movl_T0_Dshift, SUFFIX)(void)
 // I think T0 is the port and T1 is the data to be tossed out on that port.  
 void OPPROTO glue(glue(op_out, SUFFIX), _T0_T1)(void)
 {
-      
-  glue(cpu_out, SUFFIX)(env, T0, T1 & DATA_MASK);
-
   // apparently this is the port # for hd out.
-  if(T0 == 0x01f0){
+  if(T0 == HD_PORT){
     //         IFLW_HD_TRANSFER_PART1(IFRBA(IFRN_T1)); 
     // T1 -> ?
     iferret_log_info_flow_op_write_0(IFLO_HD_TRANSFER_PART1_T1_BASE);
@@ -640,13 +640,13 @@ void OPPROTO glue(glue(op_out, SUFFIX), _T0_T1)(void)
     iferret_log_info_flow_op_write_0(IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T1); 
 #endif	 
   }
+
+  glue(cpu_out, SUFFIX)(env, T0, T1 & DATA_MASK);
   
 }
 
 void OPPROTO glue(glue(op_in, SUFFIX), _T0_T1)(void)
 {
-  T1 = glue(cpu_in, SUFFIX)(env, T0);
-  
   if (T0 == 0xc110){
 #if SUFFIX_QUOTED == 'b'
     //	IFLW_NETWORK_INPUT_BYTE_T1(T1);	
@@ -660,7 +660,7 @@ void OPPROTO glue(glue(op_in, SUFFIX), _T0_T1)(void)
 #endif	 
   }
   else {
-    if (T0 == 0x01f0){
+    if (T0 == HD_PORT){
 #if SUFFIX_QUOTED == 'w'
       //	IFLW_HD_TRANSFER_PART2(IFRBA(IFRN_T1),2);	
       //  ?? -> T1
@@ -676,13 +676,13 @@ void OPPROTO glue(glue(op_in, SUFFIX), _T0_T1)(void)
       iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_IN_T0_T1,SHIFT);
     }
   }  
- 
+
+  T1 = glue(cpu_in, SUFFIX)(env, T0);
+  
 }
 
 void OPPROTO glue(glue(op_in, SUFFIX), _DX_T0)(void)
 {
-  T0 = glue(cpu_in, SUFFIX)(env, EDX & 0xffff);
-  
   if ((EDX & 0xffff) == 0xc110){
 #if SUFFIX_QUOTED == 'b'
     //	IFLW_NETWORK_INPUT_BYTE_T0(T0);	
@@ -696,7 +696,7 @@ void OPPROTO glue(glue(op_in, SUFFIX), _DX_T0)(void)
 #endif	 
   } 
   else {
-    if ((EDX & 0xffff) == 0x01f0){
+    if ((EDX & 0xffff) == HD_PORT){
 #if SUFFIX_QUOTED == 'w'
       //	IFLW_HD_TRANSFER_PART2(IFRBA(IFRN_T0),2);	
       iferret_log_info_flow_op_write_81(IFLO_HD_TRANSFER_PART2,T0_BASE,2);
@@ -719,13 +719,15 @@ void OPPROTO glue(glue(op_in, SUFFIX), _DX_T0)(void)
       iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_IN_DX_T0,SHIFT);
     }
   }
+
+  T0 = glue(cpu_in, SUFFIX)(env, EDX & 0xffff);
+  
 }
 
 void OPPROTO glue(glue(op_out, SUFFIX), _DX_T0)(void)
 {
-  glue(cpu_out, SUFFIX)(env, EDX & 0xffff, T0);
 
-  if ((EDX & 0xffff) == 0x01f0){
+  if ((EDX & 0xffff) == HD_PORT){
     //	IFLW_HD_TRANSFER_PART1(IFRBA(IFRN_T0));	
     iferret_log_info_flow_op_write_0(IFLO_HD_TRANSFER_PART1_T0_BASE);    
     //    printf ("IFLO_HD_TRANSFER_PART1_T0_BASE\n");
@@ -747,6 +749,8 @@ void OPPROTO glue(glue(op_out, SUFFIX), _DX_T0)(void)
       // ??
     }
   }
+
+  glue(cpu_out, SUFFIX)(env, EDX & 0xffff, T0);
 }
 
 void OPPROTO glue(glue(op_check_io, SUFFIX), _T0)(void)

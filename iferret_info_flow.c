@@ -624,6 +624,11 @@ inline void if_ld(uint32_t msn, uint32_t rn, uint32_t n, uint32_t u, uint64_t p)
   if (debug_at_least_med()) {
     printf ("if_ld msn=%d rn=%d n=%d u=%d p=%p\n", msn,rn,n,u,p);
   }
+  /*
+    if (exists_taint(p,n,"foo",-1)) {
+      printf ("loading tainted data.\n");
+    }
+  */
   info_flow_ld(ifregaddr[rn], p, n, u);	
   // assume rn might now be tainted.  
   info_flow_mark_as_possibly_tainted(rn);
@@ -681,10 +686,38 @@ inline void if_st(uint32_t msn, uint32_t rn, uint32_t n, uint64_t p) {
 
 
 
+#define assert_args_0(op) \
+  assert(op->num_args == 0);
 
+#define assert_args_1(op) \
+  assert(op->num_args == 1 && op->arg[0].type ==  IFLAT_UI8);
 
+#define assert_args_4(op) \
+  assert(op->num_args == 1 && op->arg[0].type ==  IFLAT_UI32);
 
+#define assert_args_8(op) \
+  assert (op->num_args == 1 && op->arg[0].type == IFLAT_UI64);
 
+#define assert_args_14(op) \
+  assert (op->num_args == 2 && op->arg[0].type == IFLAT_UI8 \
+	  && op->arg[1].type == IFLAT_UI32);
+
+#define assert_args_81(op) \
+  assert (op->num_args == 2 && op->arg[0].type == IFLAT_UI64  \
+	  && op->arg[1].type == IFLAT_UI8);
+
+#define assert_args_884(op) \
+  assert (op->num_args == 3 \
+	  && op->arg[0].type == IFLAT_UI64 \
+	  && op->arg[1].type == IFLAT_UI64 \
+	  && op->arg[2].type == IFLAT_UI32);
+
+#define assert_args_4844(op) \
+  assert (op->num_args == 4 \
+	  && op->arg[0].type == IFLAT_UI32 \
+	  && op->arg[1].type == IFLAT_UI64 \
+	  && op->arg[2].type == IFLAT_UI32 \
+	  && op->arg[3].type == IFLAT_UI32);
 
 
 
@@ -743,6 +776,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // A0 = (uint32_t)REG; 
   case IFLO_OPREG_TEMPL_MOVL_A0_R:  
     // dest,src
+    assert_args_1(op);
     if_copy_r4(IFRN_A0,a0_8);
     break;
 
@@ -758,6 +792,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_ADDL_A0_R_S3,REGNUM);
     // A0 = (uint32_t)(A0 + (REG << 3));
   case IFLO_OPREG_TEMPL_ADDL_A0_R_S3:
+    assert_args_1(op);
     if_self_compute_r4(IFRN_A0,a0_8);
     break;
 
@@ -773,18 +808,21 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_T0_R,REGNUM);
     // T0 = REG;
   case IFLO_OPREG_TEMPL_MOVL_T0_R:
+    assert_args_1(op);
     if_copy_r4(IFRN_T0,a0_8);
     break;
     
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_T1_R,REGNUM);
     // T1 = REG;
   case IFLO_OPREG_TEMPL_MOVL_T1_R:
+    assert_args_1(op);
     if_copy_r4(IFRN_T1,a0_8);
     break;
 
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_T0_R,REGNUM);
     // T0 = REG >> 8;
   case IFLO_OPREG_TEMPL_MOVH_T0_R:
+    assert_args_1(op);
     if_delete_r4(IFRN_T0);
     if_compute_r4(IFRN_T0,a0_8);
     break;
@@ -792,6 +830,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_T1_R,REGNUM);
     // T1 = REG >> 8;
   case IFLO_OPREG_TEMPL_MOVH_T1_R:
+    assert_args_1(op);
     if_delete_r4(IFRN_T1);
     if_compute_r4(IFRN_T1,a0_8);
     break;
@@ -799,18 +838,21 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_R_T0,REGNUM);
     // REG = (uint32_t)T0;
   case IFLO_OPREG_TEMPL_MOVL_R_T0:
+    assert_args_1(op);
     if_copy_r4(a0_8,IFRN_T0);
     break;
     
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_R_T1,REGNUM);
     // REG = (uint32_t)T1;
   case IFLO_OPREG_TEMPL_MOVL_R_T1:
+    assert_args_1(op);
     if_copy_r4(a0_8,IFRN_T1);
     break;
     
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVL_R_A0,REGNUM);
     // REG = (uint32_t)A0;
   case IFLO_OPREG_TEMPL_MOVL_R_A0:
+    assert_args_1(op);
     if_copy_r4(a0_8,IFRN_A0);
     break;
 
@@ -826,6 +868,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // REG = (REG & ~0xffff) | (T1 & 0xffff);
     // here, copy low 2 bytes from T1 to REG and leave top 24 bytes of REG alone.
   case IFLO_OPREG_TEMPL_CMOVW_R_T1_T0:
+    assert_args_1(op);
     if_copy_r2(a0_8,IFRN_T1);
     break;
 
@@ -835,6 +878,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // here, different from previous.  
     // copy low 4 bytes from T1 to REG and zero anything in REG above those 4 bytes.  
   case IFLO_OPREG_TEMPL_CMOVL_R_T1_T0:
+    assert_args_1(op);
     if_copy_r4(a0_8,IFRN_T1);
     break; 
 
@@ -846,42 +890,49 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVW_R_T0,REGNUM);
     // REG = (REG & ~0xffff) | (T0 & 0xffff);
   case IFLO_OPREG_TEMPL_MOVW_R_T0:
+    assert_args_1(op);
     if_copy_r2(a0_8,IFRN_T0);
     break;
     
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVW_R_T1,REGNUM);
     // REG = (REG & ~0xffff) | (T1 & 0xffff);
   case IFLO_OPREG_TEMPL_MOVW_R_T1:
+    assert_args_1(op);
     if_copy_r2(a0_8,IFRN_T1);
     break;
     
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVW_R_A0,REGNUM);
     // REG = (REG & ~0xffff) | (A0 & 0xffff);
   case IFLO_OPREG_TEMPL_MOVW_R_A0:
+    assert_args_1(op);
     if_copy_r2(a0_8,IFRN_A0);
     break;  
 
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVB_R_T0,REGNUM);
     // REG = (REG & ~0xff) | (T0 & 0xff);
   case IFLO_OPREG_TEMPL_MOVB_R_T0:
+    assert_args_1(op);
     if_copy_r1(a0_8,IFRN_T0);
     break;
     
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_R_T0,REGNUM);
     // REG = (REG & ~0xff00) | ((T0 & 0xff) << 8);
   case IFLO_OPREG_TEMPL_MOVH_R_T0:
+    assert_args_1(op);
     if_copy_regs_aux(a0_8,1,IFRN_T0,1,1);
     break;
 
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVB_R_T1,REGNUM);
     // REG = (REG & ~0xff) | (T1 & 0xff);
   case IFLO_OPREG_TEMPL_MOVB_R_T1:
+    assert_args_1(op);
     if_copy_r1(a0_8,IFRN_T1);
     break;
 
     // iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_MOVH_R_T1,REGNUM);
     // REG = (REG & ~0xff00) | ((T1 & 0xff) << 8);
   case IFLO_OPREG_TEMPL_MOVH_R_T1:
+    assert_args_1(op);
     if_copy_regs_aux(a0_8,1,IFRN_T1,1,1);
     break;
 
@@ -904,6 +955,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_SUBL_T0_T1:
     // T0 ^= T1;
   case IFLO_XORL_T0_T1:
+    assert_args_0(op);
     if_self_compute_r4(IFRN_T0,IFRN_T1);
     break;
 
@@ -918,6 +970,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // T0 = bswap32(T0);
   case IFLO_BSWAPL_T0:
     // helper_bswapq_T0();
+    assert_args_0(op);
     if_inc_r4(IFRN_T0);
     break;
 
@@ -935,6 +988,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_MULB_AL_T0:
   case IFLO_IMULB_AL_T0:
     // q1(0..1) der (eax(0),t0(0))
+    assert_args_0(op);
     if_delete_r4(IFRN_Q1);
     if_compute_regs_aux(IFRN_Q1,0,2,IFRN_EAX,0,1);
     if_compute_regs_aux(IFRN_Q1,0,2,IFRN_T0,0,1);
@@ -949,6 +1003,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_MULW_AX_T0:
   case IFLO_IMULW_AX_T0:
     // q1(0..3) der (eax(0..1),t0(0..1))
+    assert_args_0(op);
     if_delete_r4(IFRN_Q1);
     if_compute_regs_aux(IFRN_Q1,0,4,IFRN_EAX,0,2);
     if_compute_regs_aux(IFRN_Q1,0,4,IFRN_T0,0,2);
@@ -969,6 +1024,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_MULL_EAX_T0:
   case IFLO_IMULL_EAX_T0:
     // q1(0..3) der (eax(0..3),t0(0..3))
+    assert_args_0(op);
     if_delete_r4(IFRN_Q1);
     if_compute_r4(IFRN_Q1,IFRN_EAX);
     if_compute_r4(IFRN_Q1,IFRN_T0);
@@ -986,6 +1042,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // T0 = res;
   case IFLO_IMULW_T0_T1:
     // q1(0..2) der (t0(0..1),t1(0..1))
+    assert_args_0(op);
     if_delete_r4(IFRN_Q1);
     if_compute_regs_aux(IFRN_Q1,0,4,IFRN_T0,0,2);
     if_compute_regs_aux(IFRN_Q1,0,4,IFRN_T1,0,2);
@@ -997,6 +1054,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // T0 = res;
   case IFLO_IMULL_T0_T1:
     // okay, we're screwed here.  looks like T0 *has* to be 64-bit?
+    assert_args_0(op);
     if_delete_r4(IFRN_T0);
     break;
 
@@ -1025,6 +1083,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_DIVB_AL_T0:
   case IFLO_IDIVB_AL_T0:
     // q1(0..1) = eax(0..1)         num
+    assert_args_0(op);
     if_copy_r2(IFRN_Q1,IFRN_EAX);
     // q2(0) = t0(0)                den
     if_copy_r1(IFRN_Q2,IFRN_T0);
@@ -1059,6 +1118,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_DIVW_AX_T0:
   case IFLO_IDIVW_AX_T0:
     // q1(0..1) = eax(0..1)               num
+    assert_args_0(op);
     if_copy_r2(IFRN_Q1,IFRN_EAX);         
     // q1(2..3) = edx(0..1)               
     if_copy_regs_aux(IFRN_Q1,2,IFRN_EDX,0,2);
@@ -1100,6 +1160,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_IDIVL_EAX_T0:
     // Once again, we are in some trouble.
     // num & den & T0 need to be 64-bit...
+    assert_args_0(op);
     if_delete_r4(IFRN_EAX);
     if_delete_r4(IFRN_EDX);
     break;
@@ -1115,6 +1176,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_MOVL_T0_IMU:
     // T0 = (int32_t)PARAM1;
   case IFLO_MOVL_T0_IM:
+    assert_args_0(op);
     if_delete_r4(IFRN_T0);
     break;
 
@@ -1124,11 +1186,13 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_ANDL_T0_FFFF:
     //  T0 = T0 & PARAM1;
   case IFLO_ANDL_T0_IM:
+    assert_args_0(op);
     if_inc_r4(IFRN_T0);
     break;
 
     // T0 = T1;
   case IFLO_MOVL_T0_T1:
+    assert_args_0(op);
     if_copy_r4(IFRN_T0,IFRN_T1);
     break;
 
@@ -1136,32 +1200,38 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_MOVL_T1_IMU:
     // T1 = (int32_t)PARAM1;
   case IFLO_MOVL_T1_IM:
+    assert_args_0(op);
     if_delete_r4(IFRN_T1);
     break;
 
     // T1 += PARAM1;
   case IFLO_ADDL_T1_IM:
+    assert_args_0(op);
     if_inc_r4(IFRN_T1);
     break;
 
     // T1 = A0;
   case IFLO_MOVL_T1_A0:
+    assert_args_0(op);
     if_copy_r4(IFRN_T1,IFRN_A0);
     break; 
 
     // A0 = (uint32_t)PARAM1;
   case IFLO_MOVL_A0_IM:
+    assert_args_0(op);
     if_delete_r4(IFRN_A0);
     break;
 
     // A0 = (uint32_t)(A0 + PARAM1);
   case IFLO_ADDL_A0_IM:
+    assert_args_0(op);
     if_inc_r4(IFRN_A0);
     break;
 
     // A0 = (uint32_t)*(target_ulong *)((char *)env + PARAM1);
     // NB: if_addr is env+PARAM1
   case IFLO_MOVL_A0_SEG:    
+    assert_args_8(op);
     if_ldu(0,IFRN_A0,4,a0_64);
     break;
  
@@ -1169,6 +1239,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // NB: if_addr is env+PARAM1
   case IFLO_ADDL_A0_SEG:
     // q1 = *(if_addr)
+    assert_args_8(op);
     if_ldu(0,IFRN_Q1,4,a0_64);
     // a0 += q1
     if_self_compute_r4(IFRN_A0, IFRN_Q1);
@@ -1176,12 +1247,14 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
 
     // A0 = (uint32_t)(A0 + (EAX & 0xff));
   case IFLO_ADDL_A0_AL:
+    assert_args_0(op);
     if_self_compute_r4(IFRN_A0,IFRN_EAX);
     break;
 
     // A0 = A0 & 0xffff;
   case IFLO_ANDL_A0_FFFF:
     // x86 is little endian so bytes 2 and 3 are higher order ones. 
+    assert_args_0(op);
     if_delete_reg_aux(IFRN_A0,2,2);
     break;
 
@@ -1212,82 +1285,98 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // T0 = *A0, just one byte. A0 is next element in log.
   case IFLO_OPS_MEM_LDUB_T0_A0:
     // first, a copy transfer from address to t0
-    if_ldu(a0_8,IFRN_T0,1,phys_ram_base+a1_32);
+    assert_args_14(op);
+    assert_args_14(op);
+    if_ldu(a0_8,IFRN_T0,1,a1_32);
     break;
     
     // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T0_A0,MEMSUFFIXNUM,phys_a0(A0));
     // ditto, but signed.
   case IFLO_OPS_MEM_LDSB_T0_A0:
-    if_lds(a0_8,IFRN_T0,1,phys_ram_base+a1_32);
+    assert_args_14(op);
+    if_lds(a0_8,IFRN_T0,1,a1_32);
     break; 
 
     // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T0_A0,MEMSUFFIXNUM,phys_a0(A0));
     // T0 = *A0, 2 bytes
   case IFLO_OPS_MEM_LDUW_T0_A0:
-    if_ldu(a0_8,IFRN_T0,2,phys_ram_base+a1_32);
+    assert_args_14(op);
+    if_ldu(a0_8,IFRN_T0,2,a1_32);
     break;
 
     // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSW_T0_A0,MEMSUFFIXNUM,phys_a0(A0));
     // ditto, but signed.
   case IFLO_OPS_MEM_LDSW_T0_A0:
-    if_lds(a0_8,IFRN_T0,2,phys_ram_base+a1_32);
+    assert_args_14(op);
+    if_lds(a0_8,IFRN_T0,2,a1_32);
     break;
 
     // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDL_T0_A0,MEMSUFFIXNUM,phys_a0(A0));
     // T0 = *A0, 4 bytes
   case IFLO_OPS_MEM_LDL_T0_A0:
-    if_ldu(a0_8,IFRN_T0,4,phys_ram_base+a1_32);
+    assert_args_14(op);
+    if_ldu(a0_8,IFRN_T0,4,a1_32);
     break;
 
     // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUB_T1_A0,MEMSUFFIXNUM,phys_a0(A0));
     // T1 = *A0, just one byte. A0 is next element in log.
   case IFLO_OPS_MEM_LDUB_T1_A0:
-    if_ldu(a0_8,IFRN_T1,1,phys_ram_base+a1_32);
+    assert_args_14(op);
+    if_ldu(a0_8,IFRN_T1,1,a1_32);
     break;
 
     // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDSB_T1_A0,MEMSUFFIXNUM,phys_a0(A0));  
     // ditto, but signed.
   case IFLO_OPS_MEM_LDSB_T1_A0:
-    if_lds(a0_8,IFRN_T1,1,phys_ram_base+a1_32);
+    assert_args_14(op);
+    if_lds(a0_8,IFRN_T1,1,a1_32);
     break; 
       
     // iferret_log_info_flow_op_write_18(IFLO_OPS_MEM_LDUW_T1_A0,MEMSUFFIXNUM,phys_a0(A0));
     // T1 = *A0, 2 bytes
   case IFLO_OPS_MEM_LDUW_T1_A0:
-    if_ldu(a0_8,IFRN_T1,2,phys_ram_base+a1_32);
+    assert_args_14(op);
+    if_ldu(a0_8,IFRN_T1,2,a1_32);
     break;
 
     // ditto, but signed.
   case IFLO_OPS_MEM_LDSW_T1_A0:
-    if_lds(a0_8,IFRN_T1,2,phys_ram_base+a1_32);
+    assert_args_14(op);
+    if_lds(a0_8,IFRN_T1,2,a1_32);
     break;
 
     // T1 = *A0, 4 bytes
   case IFLO_OPS_MEM_LDL_T1_A0:
-    if_ldu(a0_8,IFRN_T1,4,phys_ram_base+a1_32);
+    assert_args_14(op);
+    if_ldu(a0_8,IFRN_T1,4,a1_32);
     break;
 
     // *A0 = T0, one byte
   case IFLO_OPS_MEM_STB_T0_A0:
-    if_st(a0_8,IFRN_T0,1,phys_ram_base+a1_32);
+    assert_args_14(op);
+    if_st(a0_8,IFRN_T0,1,a1_32);
     break;
 
     // two bytes.
   case IFLO_OPS_MEM_STW_T0_A0:
-    if_st(a0_8,IFRN_T0,2,phys_ram_base+a1_32);
+    assert_args_14(op);
+    if_st(a0_8,IFRN_T0,2,a1_32);
     break;
 
     // all four bytes
   case IFLO_OPS_MEM_STL_T0_A0:
-    if_st(a0_8,IFRN_T0,4,phys_ram_base+a1_32);
+    assert_args_14(op);
+    if_st(a0_8,IFRN_T0,4,a1_32);
     break;
     
   case IFLO_OPS_MEM_STW_T1_A0:
-    if_st(a0_8,IFRN_T1,2,phys_ram_base+a1_32);
+    assert_args_14(op);
+    if_st(a0_8,IFRN_T1,2,a1_32);
     break;
 
   case IFLO_OPS_MEM_STL_T1_A0:
-    if_st(a0_8,IFRN_T1,4,phys_ram_base+a1_32);
+    assert_args_14(op);
+    if_st(a0_8,IFRN_T1,4,a1_32);
     break;
 
     /*
@@ -1298,11 +1387,13 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // EIP = T0;
   case IFLO_JMP_T0:
     // check here that EIP isn't tainted?  
+    assert_args_0(op);
     if_copy_r4(IFRN_EIP,IFRN_T0);
     break;
 
     // EIP = (uint32_t)PARAM1;
   case IFLO_MOVL_EIP_IM:
+    assert_args_0(op);
     if_delete_r4(IFRN_EIP);
     break;
 
@@ -1336,7 +1427,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     //    d = ldq(A0);
     //    if (d == (((uint64_t)EDX << 32) | EAX)) {
     // // part_1 corresponds to this branch
-    //        iferret_log_info_flow_op_write_8(IFLO_CMPXCHG8B_PART1, phys_a0());       
+    //        iferret_log_info_flow_op_write_4(IFLO_CMPXCHG8B_PART1, phys_a0());       
     //        stq(A0, ((uint64_t)ECX << 32) | EBX);
     //        eflags |= CC_Z;
     //	...
@@ -1347,17 +1438,20 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     //    }
 
   case IFLO_CMPXCHG8B_PART1:
-    if_st(0,IFRN_EBX,4,phys_ram_base+a0_32);
-    if_st(0,IFRN_ECX,4,phys_ram_base+a0_32+4);
+    assert_args_4(op);
+    if_st(0,IFRN_EBX,4,a0_32);
+    if_st(0,IFRN_ECX,4,a0_32+4);
     break;
 
   case IFLO_CMPXCHG8B_PART2:
-    if_ldu(0,IFRN_EAX,4,phys_ram_base+a0_32);
-    if_ldu(0,IFRN_EDX,4,phys_ram_base+a0_32+4);
+    assert_args_4(op);
+    if_ldu(0,IFRN_EAX,4,a0_32);
+    if_ldu(0,IFRN_EDX,4,a0_32+4);
     break;
 
     // T0 = 0;
   case IFLO_MOVL_T0_0:
+    assert_args_0(op);
     if_delete_r4(IFRN_T0);
     break;
 
@@ -1420,141 +1514,8 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // T0 = lshift(CC_DST, -(DATA_BITS - 1)) & 1;
   case IFLO_OPS_TEMPLATE_SETS_T0_SUB:
     // T0 = ((DATA_STYPE)src1 < (DATA_STYPE)src2);
-  case IFLO_OPS_TEMPLATE_SETL_T0_SUB:
-    // T0 = ((DATA_STYPE)src1 <= (DATA_STYPE)src2);
-  case IFLO_OPS_TEMPLATE_SETLE_T0_SUB:
-    if_delete_r4(IFRN_T0);
-    break;
-
-    // count = T1 & SHIFT1_MASK;
-    // T0 = T0 << count;
-  case IFLO_OPS_TEMPLATE_SHL_T0_T1:
-    // count = T1 & SHIFT1_MASK;
-    // T0 &= DATA_MASK;
-    // T0 = T0 >> count;
-  case IFLO_OPS_TEMPLATE_SHR_T0_T1:
-    // count = T1 & SHIFT1_MASK;
-    // src = (DATA_STYPE)T0;
-    // T0 = src >> count;    
-  case IFLO_OPS_TEMPLATE_SAR_T0_T1:
-    // NB this is wrong.  prolly should use SHIFT to limit spread
-    if_self_compute_r4(IFRN_T0,IFRN_T1);
-    break;
-
- 
-
-  case IFLO_OPS_TEMPLATE_ROL_T0_T1_CC:
-  case IFLO_OPS_TEMPLATE_ROR_T0_T1_CC:
-  case IFLO_OPS_TEMPLATE_ROL_T0_T1:
-  case IFLO_OPS_TEMPLATE_ROR_T0_T1:
-  case IFLO_OPS_TEMPLATE_RCL_T0_T1_CC:
-  case IFLO_OPS_TEMPLATE_RCR_T0_T1_CC:
-  case IFLO_OPS_TEMPLATE_SHL_T0_T1_CC:
-  case IFLO_OPS_TEMPLATE_SHR_T0_T1_CC:
-  case IFLO_OPS_TEMPLATE_SAR_T0_T1_CC:
-    if_delete_r4(IFRN_T0);
-    break;
-
-
-  case IFLO_OPS_TEMPLATE_ROL_T0_T1_CC_MEMWRITE:
-  case IFLO_OPS_TEMPLATE_ROR_T0_T1_CC_MEMWRITE:
-  case IFLO_OPS_TEMPLATE_ROL_T0_T1_MEMWRITE:
-  case IFLO_OPS_TEMPLATE_ROR_T0_T1_MEMWRITE:
-  case IFLO_OPS_TEMPLATE_RCL_T0_T1_CC_MEMWRITE:
-  case IFLO_OPS_TEMPLATE_RCR_T0_T1_CC_MEMWRITE:
-  case IFLO_OPS_TEMPLATE_SHL_T0_T1_CC_MEMWRITE:
-  case IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE:
-  case IFLO_OPS_TEMPLATE_SAR_T0_T1_CC_MEMWRITE:
-    if_delete_r4(IFRN_T0);
-    if_st(0,IFRN_T0,4,phys_ram_base+a1_32);
-    break;
-    
-
-  case IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC:
-  case IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC:
-    // T1 & 0xffff;
-    info_flow_delete(T1_BASE+2,2);
-    // T0 <- strangefunction(T0,T1)
-    if_self_compute_r4(IFRN_T0, IFRN_T1);
-    break;
-
-  case IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC_MEMWRITE:
-  case IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE:
-    // T1 &= 0xffff;
-    info_flow_delete(T1_BASE+2,2);
-    // T0 <- strangefunction(T0,T1)
-    if_self_compute_r4(IFRN_T0, IFRN_T1);
-    // glue(st, MEM_SUFFIX)(A0, T0);
-    if_st(0,IFRN_T0,4,phys_ram_base+a1_32);
-    break;
-
-  case IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC:
-  case IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC:
-    // T1 &= 0xffff
-    // T0 = strangefunction(T0,T1,ECX)
-    if_self_compute_r4(IFRN_T0, IFRN_T1);
-    if_self_compute_r4(IFRN_T0, IFRN_ECX);
-    break;
-
-  case IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE:
-  case IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE:
-    // T1 &= 0xffff
-    // T0 = strangefunction(T0,T1,ECX)
-    if_self_compute_r4(IFRN_T0, IFRN_T1);
-    if_self_compute_r4(IFRN_T0, IFRN_ECX);
-    // glue(st, MEM_SUFFIX)(A0, T0);
-    if_st(0,IFRN_T0,4,phys_ram_base+a1_32);
-    break;
-
-  case IFLO_OPS_TEMPLATE_ADC_T0_T1_CC:
-  case IFLO_OPS_TEMPLATE_SBB_T0_T1_CC:
-    // T0 = T0 + T1 + cf;
-    if_self_compute_r4(IFRN_T0, IFRN_T1);
-    break;
-
-  case IFLO_OPS_TEMPLATE_ADC_T0_T1_CC_MEMWRITE:
-  case IFLO_OPS_TEMPLATE_SBB_T0_T1_CC_MEMWRITE:
-    // T0 = T0 + T1 + cf;
-    if_self_compute_r4(IFRN_T0, IFRN_T1);
-    // glue(st, MEM_SUFFIX)(A0, T0);
-    if_st(0,IFRN_T0,4,phys_ram_base+a1_32);
-    break;
-
-  case IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC:
-    // T0 = T1;
-    if_copy_r4(IFRN_T0, IFRN_T1);
-    break;
-
-  case IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE:
-    // T0 = T1;
-    if_copy_r4(IFRN_T0, IFRN_T1);
-    // glue(st, MEM_SUFFIX)(A0, T0);
-    if_st(0,IFRN_T0,4,phys_ram_base+a1_32);
-    break;
-
-  case IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_CASE2:
-    // EAX = (EAX & ~DATA_MASK) | (T0 & DATA_MASK);
-    if_self_compute_r4(IFRN_EAX, IFRN_T0);
-    break;
-
-
-    /*
-      Done handling includes of ops_template_mem.h into ops_template.h
-    */
-
-    // note, all have same gross info-flow behaviour.
-    // specifics shown are for 
-  case IFLO_OPS_TEMPLATE_BTS_T0_T1_CC:
-  case IFLO_OPS_TEMPLATE_BTR_T0_T1_CC:
-  case IFLO_OPS_TEMPLATE_BTC_T0_T1_CC:
-    // count = T1 & SHIFT_MASK;
-    // T1 = T0 >> count;
-    // T0 |= (((target_long)1) << count);
-    if_self_compute_r4(IFRN_T1, IFRN_T0);
-    break;
- 
-  case IFLO_OPS_TEMPLATE_ADD_BIT_A0_T1:
-   // A0 += ((DATA_STYPE)T1 >> (3 + SHIFT)) << SHIFT;
+  case IFLO_OPS_TEMPLATE_SETL_T0_SUB:  // NB: a0_8 is SHIFT);
+    // A0 += ((DATA_STYPE)T1 >> (3 + SHIFT)) << SHIFT;
     if_self_compute_r4(IFRN_A0,IFRN_T1);
     break;
 
@@ -1570,6 +1531,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     //    T1 = count;
   case IFLO_OPS_TEMPLATE_BSF_T0_CC:
   case IFLO_OPS_TEMPLATE_BSR_T0_CC:
+    assert_args_1(op);
     if_delete_r4(IFRN_T1);
     if_compute_r4(IFRN_T1,IFRN_T0);
     break;
@@ -1578,45 +1540,56 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // DF is "direction flag" 
     // T0 = DF << SHIFT;    
   case IFLO_OPS_TEMPLATE_MOVL_T0_DSHIFT:
+    assert_args_1(op);
     if_delete_r4(IFRN_T0);
     break;
     
 
   case IFLO_HD_TRANSFER_PART1_T0_BASE:
+    assert_args_0(op);
+    printf ("IFLO_HD_TRANSFER_PART1_T0_BASE = %p\n", T0_BASE);
     iferret->last_hd_transfer_from = T0_BASE;
     break;
     
 
   case IFLO_HD_TRANSFER_PART1_T1_BASE:
+    assert_args_0(op);
+    printf ("IFLO_HD_TRANSFER_PART1_T1_BASE = %p\n", T1_BASE);
     iferret->last_hd_transfer_from = T1_BASE;
     break;
     
 
   case IFLO_HD_TRANSFER_PART1:
+    assert_args_8(op);
     // (from)
     // save the from address?
+    printf ("IFLO_HD_TRANSFER_PART1 = %p\n", a0_64);
     iferret->last_hd_transfer_from = a0_64;
     break;
 
   case IFLO_HD_TRANSFER_PART2:
-    // (to,size): (a0_64,a1_32)
+    assert_args_81(op);
+    // (to,size): (a0_64,a1_8)
     // make use of saved from address.  
+    printf ("info flow op: IFLO_HD_TRANSFER P12 %p -> %p num=%d\n", 
+	    iferret->last_hd_transfer_from, a0_64, a1_8);
     if (iferret->last_hd_transfer_from != 0) {
-      if (exists_taint(iferret->last_hd_transfer_from, a1_32, "foo", -1)) {
+      if (exists_taint(iferret->last_hd_transfer_from, a1_8, "foo", -1)) {
 	printf ("IFLO_HD_TRANSFER_PART2 from tainted:\n");
       }
-      if (exists_taint(a0_64, a1_32, "foo", -1)) {
+      if (exists_taint(a0_64, a1_8, "foo", -1)) {
 	printf ("IFLO_HD_TRANSFER_PART2 to tainted:\n");
       }		  
-      info_flow_copy(a0_64, iferret->last_hd_transfer_from, a1_32);
+      info_flow_copy(a0_64, iferret->last_hd_transfer_from, a1_8);
     }
-    printf ("info flow op: IFLO_HD_TRANSFER P12 %p -> %p num=%d\n", 
-	    iferret->last_hd_transfer_from, a0_64, a1_32);
     break;
 
   case IFLO_HD_TRANSFER:
+    assert_args_884(op);
     // (from,to,size): (a0_64,a1_64,a2_32)
     // NB: from could be HD or io buffer and to could be either.
+    printf ("info flow op: IFLO_HD_TRANSFER %p -> %p num=%d\n", 
+	    a0_64, a1_64, a2_32);
     info_flow_copy(a1_64,a0_64,a2_32);
     if (exists_taint(a1_64, a1_32, "foo", -1)) {
       printf ("IFLO_HD_TRANSFER from tainted:\n");
@@ -1624,43 +1597,47 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     if (exists_taint(a0_64, a1_32, "foo", -1)) {
       printf ("IFLO_HD_TRANSFER to tainted:\n");
     }		  
-    printf ("info flow op: IFLO_HD_TRANSFER %p -> %p num=%d\n", 
-	    a0_64, a1_64, a2_32);
     break;
 
 
     // network output.  what do we do?
   case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T1:
+    assert_args_0(op);
     if (exists_taint(T1_BASE, 1, "NONE", -1)) {
       squeal_about_exfiltration(T1_BASE,1);
     }
     break;
 
   case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T1:
+    assert_args_0(op);
     if (exists_taint(T1_BASE, 2, "NONE", -1)) {
       squeal_about_exfiltration(T1_BASE,2);
     }
     break;
 
   case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T1:
+    assert_args_0(op);
     if (exists_taint(T1_BASE, 4, "NONE", -1)) {
       squeal_about_exfiltration(T1_BASE,4);
     }
     break;
     
   case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T0:
+    assert_args_0(op);
     if (exists_taint(T0_BASE, 1, "NONE", -1)) {
       squeal_about_exfiltration(T0_BASE,1);
     }
     break;
 
   case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T0:
+    assert_args_0(op);
     if (exists_taint(T0_BASE, 2, "NONE", -1)) {
       squeal_about_exfiltration(T0_BASE,2);
     }
     break;
 
   case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T0:
+    assert_args_0(op);
     if (exists_taint(T0_BASE, 4, "NONE", -1)) {
       squeal_about_exfiltration(T0_BASE,4);
     }
@@ -1669,26 +1646,32 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
 
     // network input.  add labels...  
   case IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T0:
+    assert_args_4(op);
     info_flow_label(T0_BASE, 1, "NETWORK");
     break;
 
   case IFLO_OPS_TEMPLATE_NETWORK_INPUT_WORD_T0:
+    assert_args_4(op);
     info_flow_label(T0_BASE, 2, "NETWORK");
     break;
 
   case IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T0:
+    assert_args_4(op);
     info_flow_label(T0_BASE, 4, "NETWORK");
     break;
 
   case IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T1:
+    assert_args_4(op);
     info_flow_label(T1_BASE, 1, "NETWORK");
     break;
 
   case IFLO_OPS_TEMPLATE_NETWORK_INPUT_WORD_T1:
+    assert_args_4(op);
     info_flow_label(T1_BASE, 2, "NETWORK");
     break;
 
   case IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T1:
+    assert_args_4(op);
     info_flow_label(T1_BASE, 4, "NETWORK");
     break;
 
@@ -1696,12 +1679,14 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
 
 
   case IFLO_OPS_TEMPLATE_IN_T0_T1: 
+    assert_args_1(op);
     // port i/o 
     // specific cases handled elsewhere (network, hd, e.g.)
     if_delete_r4(IFRN_T1);
     break;
     
   case IFLO_OPS_TEMPLATE_IN_DX_T0:
+    assert_args_1(op);
     // again, port i/o
     if_delete_r4(IFRN_T0);    
     break;
@@ -1712,28 +1697,33 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
 
     // T0 = (int8_t)T0;
   case IFLO_MOVSBL_T0_T0:
+    assert_args_0(op);
     // sign extension?
     if_inc_r4(IFRN_T0);
     break;
 
     // T0 = (uint8_t)T0;
   case IFLO_MOVZBL_T0_T0:
+    assert_args_0(op);
     // clear top 3 bytes
     if_delete_reg_aux(IFRN_T0,1,3);
     break;
 
     // T0 = (int16_t)T0;
   case IFLO_MOVSWL_T0_T0:
+    assert_args_0(op);
     if_inc_r4(IFRN_T0);
     break;
 
     // T0 = (uint16_t)T0;    
   case IFLO_MOVZWL_T0_T0:
+    assert_args_0(op);
     if_delete_reg_aux(IFRN_T0,2,2);
     break;
 
     // EAX = (uint32_t)((int16_t)EAX);
   case IFLO_MOVSWL_EAX_AX:
+    assert_args_0(op);
     // sign extend and then mask?
     if_inc_r4(IFRN_EAX);
     break;
@@ -1747,17 +1737,20 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // wtf, mate?
     // EAX = (EAX & ~0xffff) | ((int8_t)EAX & 0xffff);
   case IFLO_MOVSBW_AX_AL:
+    assert_args_0(op);
     if_inc_r4(IFRN_EAX);
     break;
 
     // wtf isnt this a 64-bit op? 
     // EDX = (uint32_t)((int32_t)EAX >> 31);
   case IFLO_MOVSLQ_EDX_EAX:
+    assert_args_0(op);
     if_self_compute_r4(IFRN_EDX,IFRN_EAX);
     break;
 
     // EDX = (EDX & ~0xffff) | (((int16_t)EAX >> 15) & 0xffff);
   case IFLO_MOVSWL_DX_AX:
+    assert_args_0(op);
     if_self_compute_r4(IFRN_EDX,IFRN_EAX);
     break;    
 
@@ -1768,31 +1761,37 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
 
     // ESI = (uint32_t)(ESI + T0);
   case IFLO_ADDL_ESI_T0:
+    assert_args_0(op);
     if_self_compute_r4(IFRN_ESI,IFRN_T0);
     break;
 
     // ESI = (ESI & ~0xffff) | ((ESI + T0) & 0xffff);
   case IFLO_ADDW_ESI_T0:
+    assert_args_0(op);
     if_self_compute_r2(IFRN_ESI,IFRN_T0);
     break;
 
     // EDI = (uint32_t)(EDI + T0);
   case IFLO_ADDL_EDI_T0:
+    assert_args_0(op);
     if_self_compute_r4(IFRN_EDI,IFRN_T0);
     break;
 
     // EDI = (EDI & ~0xffff) | ((EDI + T0) & 0xffff);
   case IFLO_ADDW_EDI_T0:
+    assert_args_0(op);
     if_self_compute_r2(IFRN_EDI,IFRN_T0);
     break;
 
     // ECX = (uint32_t)(ECX - 1);
   case IFLO_DECL_ECX:
+    assert_args_0(op);
     if_inc_r4(IFRN_ECX);
     break;
 
     // ECX = (ECX & ~0xffff) | ((ECX - 1) & 0xffff);
   case IFLO_DECW_ECX:
+    assert_args_0(op);
     if_inc_r4(IFRN_ECX);
     break;
 
@@ -1805,6 +1804,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
 
     // A0 = (uint32_t)(A0 + env->segs[R_SS].base);
   case IFLO_ADDL_A0_SS:
+    assert_args_8(op);
     info_flow_compute(a0_64,4,A0_BASE,4);
     break;
 
@@ -1812,6 +1812,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_SUBL_A0_2:
     // A0 = (uint32_t)(A0 - 4);
   case IFLO_SUBL_A0_4:
+    assert_args_0(op);
     if_inc_r4(IFRN_A0);
     break;
 
@@ -1827,6 +1828,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_ADDL_ESP_IM:
     // ESP = (ESP & ~0xffff) | ((ESP + PARAM1) & 0xffff);
   case IFLO_ADDW_ESP_IM:
+    assert_args_0(op);
     if_inc_r4(IFRN_ESP);
     break;
 
@@ -1840,12 +1842,14 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
 
     // helper_rdtsc();
   case IFLO_RDTSC:
+    assert_args_0(op);
     if_delete_r4(IFRN_EAX);
     if_delete_r4(IFRN_EDX);
     break;
 
     // helper_cpuid();    
   case IFLO_CPUID:
+    assert_args_0(op);
     if_delete_r4(IFRN_EAX);
     if_delete_r4(IFRN_EBX);
     if_delete_r4(IFRN_ECX);
@@ -1873,6 +1877,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_RDMSR:
     // helper_wrmsr();
   case IFLO_WRMSR:
+    assert_args_0(op);
     if_delete_r4(IFRN_EAX);
     if_delete_r4(IFRN_EDX);
     break;
@@ -1885,6 +1890,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_AAS:
   case IFLO_DAA:
   case IFLO_DAS:
+    assert_args_0(op);
     if_delete_r4(IFRN_EAX);
     break;
 
@@ -1892,21 +1898,25 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // segment handling stuff
   case IFLO_MOVL_SEG_T0:
   case IFLO_MOVL_SEG_T0_VM:
+    assert_args_0(op);
     break;
 
     // T0 = env->segs[PARAM1].selector;
   case IFLO_MOVL_T0_SEG:
+    assert_args_0(op);
     if_delete_r4(IFRN_T0);
     break;
 
     // rainchek
   case IFLO_LSL:
+    assert_args_0(op);
     // load segment limit
     //    T1 = limit;
     if_delete_r4(IFRN_T1);
     break;
 
   case IFLO_LAR:
+    assert_args_0(op);
     // load access rights byte
     //    T1 = e2 & 0x00f0ff00;
     if_delete_r4(IFRN_T1);
@@ -1919,11 +1929,13 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     */
 
   case IFLO_ARPL_CASE_1:
+    assert_args_0(op);
     if_self_compute_r4(IFRN_T0, IFRN_T1);
     if_delete_r4(IFRN_T1);
     break;
 
   case IFLO_ARPL_CASE_2:
+    assert_args_0(op);
     if_delete_r4(IFRN_T1);
     break;
 
@@ -1940,6 +1952,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // protected mode iret
   case IFLO_LRET_PROTECTED:
     // punt.
+    assert_args_0(op);
     break;
 
     // raincheck
@@ -1949,25 +1962,30 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // load task descriptor table
   case IFLO_MOVL_CRN_T0:
     // punting again. 
+    assert_args_0(op);
     break;
 
     // raincheck
   case IFLO_MOVTL_T0_CR8:
+    assert_args_0(op);
     if_delete_r4(IFRN_T0);
     break;
 
     // raincheck
   case IFLO_MOVL_DRN_T0:
+    assert_args_0(op);
     // punt 
     break;
 
     // raincheck
   case IFLO_LMSW_T0:
+    assert_args_0(op);
     if_delete_r4(IFRN_T0);
     break;
 
     // raincheck
   case IFLO_INVLPG_A0:
+    assert_args_0(op);
     // punt
     break;
 
@@ -1977,41 +1995,49 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     
     // T0 = *(uint32_t *)((char *)env + PARAM1);
   case IFLO_MOVL_T0_ENV:
+    assert_args_8(op);
     if_ldu(0, IFRN_T0, 4, a0_64);
     break;
 
     // *(uint32_t *)((char *)env + PARAM1) = T0;
   case IFLO_MOVL_ENV_T0:
+    assert_args_8(op);
     if_st(0, IFRN_T0, 4, a0_64);
     break;
 
     // *(uint32_t *)((char *)env + PARAM1) = T1;
   case IFLO_MOVL_ENV_T1:
+    assert_args_8(op);
     if_st(0, IFRN_T1, 4, a0_64);
     break;
 
     // T0 = *(target_ulong *)((char *)env + PARAM1);
   case IFLO_MOVTL_T0_ENV:
+    assert_args_8(op);
     if_ldu(0, IFRN_T0, 4, a0_64);
     break;
 
     // *(target_ulong *)((char *)env + PARAM1) = T0;
   case IFLO_MOVTL_ENV_T0:
+    assert_args_8(op);
     if_st(0, IFRN_T0, 4, a0_64);
     break;
 
     // T1 = *(target_ulong *)((char *)env + PARAM1);
   case IFLO_MOVTL_T1_ENV:
+    assert_args_8(op);
     if_ldu(0, IFRN_T1, 4, a0_64);
     break;
 
     // *(target_ulong *)((char *)env + PARAM1) = T1;
   case IFLO_MOVTL_ENV_T1:
+    assert_args_8(op);
     if_st(0, IFRN_T1, 4, a0_64);
     break;
 
     // raincheck
   case IFLO_CLTS:
+    assert_args_0(op);
     break; 
 
     /* 
@@ -2032,11 +2058,13 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_SETP_T0_CC:
   case IFLO_SETL_T0_CC:
   case IFLO_SETLE_T0_CC:
+    assert_args_0(op);
     if_delete_r4(IFRN_T0);
     break;
     
     // T0 ^= 1
   case IFLO_XOR_T0_1:
+    assert_args_0(op);
     if_inc_r4(IFRN_T0);
     break;
 
@@ -2046,6 +2074,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     */
 
   case IFLO_MOV_T0_CC:
+    assert_args_0(op);
     if_delete_r4(IFRN_T0);
     break;
 
@@ -2060,12 +2089,14 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_MOVL_EFLAGS_T0_CPL0:
   case IFLO_MOVW_EFLAGS_T0_CPL0:
   case IFLO_MOVB_EFLAGS_T0:
+    assert_args_0(op);
     // punt.
     break;
 
     // raincheck
     // t0 = eflags 
   case IFLO_MOVL_T0_EFLAGS:
+    assert_args_0(op);
     if_delete_r4(IFRN_T0);
     break;
 
@@ -2079,6 +2110,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     */
 
   case IFLO_SALC:
+    assert_args_0(op);
     if_delete_r4(IFRN_EAX);
     break;
 
@@ -2089,6 +2121,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // well, not quite. 
     // hmm this one diddles with EAX.  
   case IFLO_FNSTSW_EAX:
+    assert_args_0(op);
     if_delete_r4(IFRN_EAX);
     break;
 
@@ -2104,6 +2137,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     */
     
   case IFLO_KEYBOARD_INPUT:
+    assert_args_0(op);
     {
       char alabel[1024];						        
       // construct a new keyboard label for each keycode.
@@ -2140,6 +2174,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     
     // iferret_log_info_flow_op_write_8844(IFLO_CPU_PHYSICAL_MEMORY_RW, addr, buf, len, is_write);
   case IFLO_CPU_PHYSICAL_MEMORY_RW:
+    assert_args_4844(op);
     // (addr,buf,len,iswrite) : (a0_32,a1_64,a2_32,a3_32)
     // a0 is a physical address in the guest, thus it is 32 bits.
     // a1 is a vitrual address in qemu's space.  thus it is 64 bits. 

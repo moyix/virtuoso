@@ -29,6 +29,7 @@ typedef struct iferret_struct_t {
   uint32_t eip_at_head_of_tb;   // eip for head of tb currently being executed
   int current_pid;
   int current_uid;
+  int current_cpl;
   opcount_t *opcount;           // counts for ops encounters
   int_int_hashtable_t *open_fd_table;  // map from (pid,fd) to file info for open files
   vslht *mal_files;            // set of malicious files (written to by a mal pid)
@@ -39,6 +40,7 @@ typedef struct iferret_struct_t {
   uint32_t num_logs;
   uint8_t info_flow;
   uint8_t preprocess;
+  uint64_t tb_head_eip;        // eip for head of currently executing tb
 } iferret_t;
 
 

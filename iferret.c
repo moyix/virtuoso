@@ -140,6 +140,8 @@ char *iferret_syscall_num_to_str(int eax, int ebx) {
 }
 
 
+#define MAGIC_NUMBER1 42
+
 iferret_t *iferret_create() {
   iferret_t *iferret;
   iferret = (iferret_t *) my_malloc (sizeof (iferret_t));
@@ -153,7 +155,8 @@ iferret_t *iferret_create() {
   iferret->open_fd_table = int_int_hashtable_new();
   iferret->current_pid = 0;
   iferret->current_uid = 0;
-  iferret->last_hd_transfer_from = 0;
+  iferret->current_cpl = 42;
+  iferret->last_hd_transfer_from = MAGIC_NUMBER1;
   //  iferret->phys_ram_size = 0;
   iferret->log_prefix = NULL;
   iferret->num_logs = 0;
@@ -297,7 +300,7 @@ void iferret_close_file(iferret_t *iferret, char *command, int pid, int fd) {
 
 
 void iferret_read_file(iferret_t *iferret, int pid, char *command, 
-		       int fd, uint64_t p, uint32_t count, int retval) {
+		       uint32_t fd, uint32_t p, uint32_t count, int retval) {
   if (iferret_open_fd_mem(iferret, pid, fd)) {
     char *filename;
     char label[256];
@@ -309,7 +312,7 @@ void iferret_read_file(iferret_t *iferret, int pid, char *command,
     if (iferret->info_flow && retval>0) {
       snprintf (label, 256, "pid-%d-%s-read-%s", pid, command, filename);
       printf ("assigning info-flow label %s\n", label);
-      info_flow_label(p, count, label);
+      info_flow_label(phys_ram_base + p, count, label);
       something_got_labeled = 1;
     }
   }
@@ -317,19 +320,19 @@ void iferret_read_file(iferret_t *iferret, int pid, char *command,
 
 
 void iferret_write_file(iferret_t *iferret, int pid, char *command, 
-			int fd, uint64_t p, uint32_t count, int retval) {
+			uint32_t fd, uint32_t p, uint32_t count) {
   if (iferret_open_fd_mem(iferret, pid, fd)) {
     char *filename;
     char label[256];
     filename = (iferret_open_fd_find(iferret, pid, fd))->filename; 
     // this is a file for which we saw the open
-    printf ("pid %d [%s] wrote %d of %d bytes to file [%s] p=%p\n", 
-	    pid, command, retval, count, filename, p);
+    printf ("pid %d [%s] asking to write %d bytes to file [%s] p=%p\n", 
+	    pid, command, count, filename, p);
     vslht_add(iferret->mal_files, filename, 1);
-    if (iferret->info_flow && retval>0) {
+    if (iferret->info_flow>0) {
       snprintf (label, 256, "pid-%d-%s-write-%s", pid, command, filename);
       printf ("assigning info-flow label %s\n", label);
-      info_flow_label(p, count, label);
+      info_flow_label(phys_ram_base + p, count, label);
       something_got_labeled = 1;
     }
   }
@@ -426,6 +429,18 @@ void iferret_process_syscall(iferret_t *iferret, iferret_op_t *op) {
     // EXIT_GROUP doesn't return, so why push it onto the stack?
     return;
   }
+
+  if (op->num == IFLO_SYS_SYS_WRITE) {
+    // um, need to label buffer *before* syscall happens!
+    iferret_write_file(iferret,
+			 scp->pid,
+			 scp->command,
+			 op->arg[0].val.u32,   // the file descriptor
+			 op->arg[1].val.u32,   // the dest ptr
+			 op->arg[2].val.u32   // num bytes requested for read
+			 );
+  }
+
 
   if (op->num == IFLO_SYS_EXECVE) {
     //   if(!iferret->preprocess) 
@@ -597,6 +612,7 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
     }
     break;
   case IFLO_SYS_SYS_WRITE:
+    /*
     if (retval > 0 && iferret->preprocess==FALSE) {
       // at least 1 byte written
       iferret_write_file(iferret,
@@ -607,6 +623,7 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
 			 syscall->arg[2].val.u32,   // num bytes requested for read
 			 retval);
     }
+    */
     break;
   case IFLO_SYS_SYS_READV: 
     if (retval > 0 && iferret->preprocess==FALSE) {
@@ -695,10 +712,17 @@ void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {
     return;
   }
   if (op->num == IFLO_TB_HEAD_EIP) {
-    if (exists_taint(op->arg[0].val.u32,4,"FOO",-1)) {
+    iferret->tb_head_eip = phys_ram_base + op->arg[0].val.u32;
+    if (exists_taint(iferret->tb_head_eip,4,"FOO",-1)) {
       printf ("Executing code with an info-flow label\n");
     }
   }
+
+  
+  if (op->num == IFLO_SET_CPL) {
+    iferret->current_cpl = op->arg[0].val.u8;
+  }
+  
 
   /*
   if (iferret->current_pid != 0) {
@@ -805,6 +829,27 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
   
   // sets up ifregaddr &c
   iferret_log_preamble(); 
+
+  printf ("phys_ram_base = %p\n", (char *) phys_ram_base);
+    printf ("EIP_BASE = %p\n", (char *) EIP_BASE);
+    printf ("EAX_BASE = %p\n", (char *) EAX_BASE);
+    printf ("ECX_BASE = %p\n", (char *) ECX_BASE);
+    printf ("EDX_BASE = %p\n", (char *) EDX_BASE);
+    printf ("EBX_BASE = %p\n", (char *) EBX_BASE);
+    printf ("ESP_BASE = %p\n", (char *) ESP_BASE);
+    printf ("EBP_BASE = %p\n", (char *) EBP_BASE);
+    printf ("ESI_BASE = %p\n", (char *) ESI_BASE);
+    printf ("EDI_BASE = %p\n", (char *) EDI_BASE);
+    printf ("T0_BASE = %p\n", (char *) T0_BASE);
+    printf ("T1_BASE = %p\n", (char *) T1_BASE);
+    printf ("A0_BASE = %p\n", (char *) A0_BASE);
+    printf ("Q0_BASE = %p\n", (char *) Q0_BASE);
+    printf ("Q1_BASE = %p\n", (char *) Q1_BASE);
+    printf ("Q2_BASE = %p\n", (char *) Q2_BASE);
+    printf ("Q3_BASE = %p\n", (char *) Q3_BASE);
+
+
+
   // process each op in the log, in sequence
   i=0;
   while (iferret_log_ptr < iferret_log_base + iferret_log_size) {
@@ -831,8 +876,15 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
       exit(1);
     }
     iferret_log_op_args_read(&op);
+    
+    if (something_got_labeled) {
+      printf ("i=%d pid=%d uid=%d cpl=%d: ", 
+      	      i, iferret->current_pid, iferret->current_uid, iferret->current_cpl);
+	    //     printf ("i=%d : ", i);
+      iferret_spit_op(&op);
+    }
+    
     iferret_op_process(iferret,&op);
-    //    printf ("i=%d: ", i); iferret_spit_op(&op);
     op_pos_arr->pos[i%OP_POS_CIRC_BUFF_SIZE].opnum = op.num;
     op_pos_arr->pos[i%OP_POS_CIRC_BUFF_SIZE].start = op_start;
     op_pos_arr->pos[i%OP_POS_CIRC_BUFF_SIZE].end = iferret_log_ptr-1;

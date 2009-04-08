@@ -40,15 +40,17 @@
 #define IFRN_EBP 5
 #define IFRN_ESI 6
 #define IFRN_EDI 7
-#define IFRN_T0 8
-#define IFRN_T1 9
-#define IFRN_A0 10
-#define IFRN_Q0 11
-#define IFRN_Q1 11
-#define IFRN_Q2 12
-#define IFRN_Q3 13
-#define IFRN_Q4 14
-#define IFRN_EIP 15
+#define IFRN_EIP 8
+#define IFRN_T0 9
+#define IFRN_T1 10
+#define IFRN_A0 11
+#define IFRN_Q0 12
+#define IFRN_Q1 13
+#define IFRN_Q2 14
+#define IFRN_Q3 15
+#define IFRN_Q4 16
+
+
 
 #define EIP_BASE ifregaddr[IFRN_EIP]
 #define EAX_BASE ifregaddr[IFRN_EAX]

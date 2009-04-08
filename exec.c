@@ -97,7 +97,7 @@ static ram_addr_t phys_ram_alloc_offset = 0;
 
 
 
-uint64_t ifregaddr[16];
+uint64_t ifregaddr[32];
 
 
 
