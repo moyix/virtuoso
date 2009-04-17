@@ -4304,7 +4304,7 @@ void tlb_fill(target_ulong addr, int is_write, int mmu_idx, void *retaddr)
     env = saved_env;
 
     //    IFLW_SAVE_RESTORE_ENV(RESTORE_ENV);
-    iferret_log_info_flow_op_write_0(IFLO_RESTORE_ENV);
+    //    iferret_log_info_flow_op_write_0(IFLO_RESTORE_ENV);
 
 }
 

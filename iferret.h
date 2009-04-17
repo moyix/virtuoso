@@ -37,10 +37,14 @@ typedef struct iferret_struct_t {
   uint64_t last_hd_transfer_from;  // remember from address from _PART1
   //  uint32_t phys_ram_size = 0;
   char *log_prefix;
+  uint32_t start_log_num;
   uint32_t num_logs;
   uint8_t info_flow;
   uint8_t preprocess;
   uint64_t tb_head_eip;        // eip for head of currently executing tb
+#ifdef QAINT
+  ShadowMem *mem;
+#endif
 } iferret_t;
 
 
