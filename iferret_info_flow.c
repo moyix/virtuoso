@@ -635,7 +635,7 @@ inline void if_ld(iferret_t *iferret, uint32_t msn, uint32_t rn, uint32_t n, uin
     printf ("if_ld msn=%d rn=%d n=%d u=%d p=%p\n", msn,rn,n,u,p);
   }
   /*
-    if (info_flow_exists(iferret,p,n,"foo",-1)) {
+    if (info_flow_exists(iferret,p,n)) {
       printf ("loading tainted data.\n");
     }
   */
@@ -1605,7 +1605,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
       if (info_flow_exists(iferret,iferret->last_hd_transfer_from, a1_8)) {
 	printf ("IFLO_HD_TRANSFER_PART2 from tainted:\n");
       }
-      if (info_flow_exists(iferret,a0_64, a1_8) {
+      if (info_flow_exists(iferret,a0_64, a1_8)) {
 	printf ("IFLO_HD_TRANSFER_PART2 to tainted:\n");
       }		  
       info_flow_copy(iferret,a0_64, iferret->last_hd_transfer_from, a1_8);
@@ -1619,10 +1619,10 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     printf ("info flow op: IFLO_HD_TRANSFER %p -> %p num=%d\n", 
 	    a0_64, a1_64, a2_32);
     info_flow_copy(iferret,a1_64,a0_64,a2_32);
-    if (info_flow_exists(iferret,a1_64, a1_32, "foo", -1)) {
+    if (info_flow_exists(iferret,a1_64, a1_32)) {
       printf ("IFLO_HD_TRANSFER from tainted:\n");
     }
-    if (info_flow_exists(iferret,a0_64, a1_32, "foo", -1)) {
+    if (info_flow_exists(iferret,a0_64, a1_32)) {
       printf ("IFLO_HD_TRANSFER to tainted:\n");
     }		  
     break;
@@ -1631,42 +1631,42 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     // network output.  what do we do?
   case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T1:
     assert_args_0(op);
-    if (info_flow_exists(iferret,T1_BASE, 1, "NONE", -1)) {
+    if (info_flow_exists(iferret,T1_BASE, 1)) {
       squeal_about_exfiltration(T1_BASE,1);
     }
     break;
 
   case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T1:
     assert_args_0(op);
-    if (info_flow_exists(iferret,T1_BASE, 2, "NONE", -1)) {
+    if (info_flow_exists(iferret,T1_BASE, 2)) {
       squeal_about_exfiltration(T1_BASE,2);
     }
     break;
 
   case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T1:
     assert_args_0(op);
-    if (info_flow_exists(iferret,T1_BASE, 4, "NONE", -1)) {
+    if (info_flow_exists(iferret,T1_BASE, 4)) {
       squeal_about_exfiltration(T1_BASE,4);
     }
     break;
     
   case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T0:
     assert_args_0(op);
-    if (info_flow_exists(iferret,T0_BASE, 1, "NONE", -1)) {
+    if (info_flow_exists(iferret,T0_BASE, 1)) {
       squeal_about_exfiltration(T0_BASE,1);
     }
     break;
 
   case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T0:
     assert_args_0(op);
-    if (info_flow_exists(iferret,T0_BASE, 2, "NONE", -1)) {
+    if (info_flow_exists(iferret,T0_BASE, 2)) {
       squeal_about_exfiltration(T0_BASE,2);
     }
     break;
 
   case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T0:
     assert_args_0(op);
-    if (info_flow_exists(iferret,T0_BASE, 4, "NONE", -1)) {
+    if (info_flow_exists(iferret,T0_BASE, 4)) {
       squeal_about_exfiltration(T0_BASE,4);
     }
     break;

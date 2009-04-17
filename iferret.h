@@ -8,6 +8,10 @@
 #include "int_set.h"
 #include "vslht.h"
 
+#ifdef OTAINT
+#include "taint.h"
+#endif
+
 typedef enum iferret_mode_enum {
   IFERRET_MODE_RELAXED,
   IFERRET_MODE_SUSPICIOUS
@@ -42,7 +46,7 @@ typedef struct iferret_struct_t {
   uint8_t info_flow;
   uint8_t preprocess;
   uint64_t tb_head_eip;        // eip for head of currently executing tb
-#ifdef QAINT
+#ifdef OTAINT
   ShadowMem *mem;
 #endif
 } iferret_t;

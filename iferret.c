@@ -165,6 +165,9 @@ iferret_t *iferret_create() {
   iferret->use_mal_set = 0;
   iferret->info_flow = FALSE;
   iferret->preprocess = FALSE;
+#ifdef OTAINT
+  iferret->shadowMem = shad_create();
+#endif
   return (iferret);
 }
 
@@ -1000,9 +1003,11 @@ int main (int argc, char **argv) {
   int old_mal_pid_count, new_mal_pid_count;
   int_set_t* temp_mal_pids;
 
+#ifdef QAINT
   GlobalTaintGraph = init_taint();
   GlobalReverseMap = init_reversemap_taint();
-
+#endif
+  
   iferret_log_create();
   iferret = iferret_create();
 
