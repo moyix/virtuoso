@@ -1,0 +1,40 @@
+
+all: oiferret
+
+TD=target-i386
+OTAINTDIR=$(HOME)/hg/otaint
+QEMUDIR=$(HOME)/hg/iferret-logging-new
+
+
+
+
+
+INCDIRS = -I . -I $(OTAINTDIR) -I $(QEMUDIR)/target-i386
+LIBDIRS = -L$(OTAINTDIR)
+
+
+OBJS = iferret.o iferret_info_flow.o iferret_open_fd.o iferret_log.o iferret_syscall_stack.o iferret_op_str.o int_set.o int_string_hashtable.o int_int_hashtable.o vslht.o
+SRCS = $(OBJS,.o=.c) 
+
+
+CFLAGS = -O3 -fno-inline -Dinline="" $(INCDIRS) $(LIBDIRS) -DIFERRET_BACKEND -DOTAINT
+
+
+
+iferret_op_str.o: $(TD)/iferret_op_str.c
+	$(CC) $(CFLAGS) -c $(TD)/iferret_op_str.c 
+
+iferret_syscall_stack.o: $(TD)/iferret_syscall_stack.c
+	$(CC) $(CFLAGS) -c $(TD)/iferret_syscall_stack.c 
+
+
+
+
+
+oiferret: $(OBJS)
+	gcc  -o oiferret  $(INCDIRS) $(LIBDIRS) -I $(QEMUDIR)/target-i386 $(OBJS) $(OTAINTDIR)/taintlib.o $(OTAINTDIR)/taint_wrap.o -I /usr/local/lib/ocaml $(INCDIRS) -L`/usr/local/bin/ocamlopt -where` -lasmrun -lcurses -lm -DOTAINT
+
+
+clean:
+	rm -f $(OBJS)
+

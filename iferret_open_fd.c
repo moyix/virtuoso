@@ -63,7 +63,7 @@ uint8_t iferret_open_fd_mem(iferret_t *iferret, int pid, int fd) {
 
 // key is pid/fd.  find val it maps to and return it.  or fail. 
 iferret_open_fd_t *iferret_open_fd_find(iferret_t *iferret, int pid, int fd) {
-  iferret_open_fd_t *ofd_info;
+  //  iferret_open_fd_t *ofd_info;
   int_int_hashtable_t *ofd_table;
   if (int_int_hashtable_mem(iferret->open_fd_table, pid)) {
     // okay we have already have a table for this pid

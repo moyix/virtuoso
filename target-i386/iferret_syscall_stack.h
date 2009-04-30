@@ -37,4 +37,11 @@ iferret_syscall_stack_element_t iferret_syscall_stack_get_with_eip(int pid, int 
 
 void iferret_syscall_print(iferret_syscall_t syscall);
 
+void iferret_syscall_stacks_stats_print();
+
+void iferret_syscall_stack_kill_process(int pid);
+
+void iferret_syscall_stack_kill_all_processes();
+
+
 #endif

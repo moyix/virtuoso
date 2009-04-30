@@ -464,4 +464,8 @@ void iferret_log_rollup(char *label);
 
 void iferret_spit_op(iferret_op_t *op);
 
+#ifdef IFERRET_BACKEND 
+void iferret_log_preamble();
+#endif
+
 #endif

@@ -47,7 +47,7 @@ typedef struct iferret_struct_t {
   uint8_t preprocess;
   uint64_t tb_head_eip;        // eip for head of currently executing tb
 #ifdef OTAINT
-  ShadowMem *mem;
+  ShadowMem *shadow;
 #endif
 } iferret_t;
 

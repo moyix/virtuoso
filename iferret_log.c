@@ -412,8 +412,8 @@ void iferret_log_preamble() {
 // we are compiling the back-end, i.e. the bit that reads the log and analyzes it.
 // need to read the register base addresses from the start of every log.  
 void iferret_log_preamble() {
-  int i;
-  phys_ram_base = (char *) iferret_log_uint64_t_read();
+  //int i;
+  phys_ram_base = (uint8_t *) iferret_log_uint64_t_read();
   ifregaddr[IFRN_EAX] = iferret_log_uint64_t_read();
   ifregaddr[IFRN_ECX] = iferret_log_uint64_t_read();
   ifregaddr[IFRN_EDX] = iferret_log_uint64_t_read();
@@ -462,6 +462,7 @@ void iferret_log_create() {
   iferret_log_preamble();
 #endif
 }
+
 
 
 

@@ -17,5 +17,6 @@ void int_string_hashtable_add(int_string_hashtable_t *ishe, uint32_t key, char *
 void int_string_hashtable_remove(int_string_hashtable_t *ish, uint32_t key);
 uint8_t int_string_hashtable_mem(int_string_hashtable_t *ish, uint32_t key);
 char *int_string_hashtable_find(int_string_hashtable_t *ish, uint32_t key);
+void int_string_hashtable_clear(int_string_hashtable_t *isht);
 
 #endif
