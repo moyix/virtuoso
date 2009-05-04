@@ -17,7 +17,7 @@ OBJS = iferret.o iferret_info_flow.o iferret_open_fd.o iferret_log.o iferret_sys
 SRCS = $(OBJS,.o=.c) 
 
 
-CFLAGS = -O3 -fno-inline -Dinline="" $(INCDIRS) $(LIBDIRS) -DIFERRET_BACKEND -DOTAINT
+CFLAGS =  -fno-inline -Dinline="" $(INCDIRS) $(LIBDIRS) -DIFERRET_BACKEND -DOTAINT
 
 
 

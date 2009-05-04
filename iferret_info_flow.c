@@ -317,6 +317,7 @@ inline uint8_t qaint_exists(uint64_t p, size_t n) {
 
 #ifdef QAINT
 #define __info_flow_label   qaint_label
+#define __info_flow_add_label   qaint_add_label
 #define __info_flow_delete  qaint_delete
 #define __info_flow_exists  qaint_exists
 #define __info_flow_copy    qaint_copy
@@ -325,6 +326,7 @@ inline uint8_t qaint_exists(uint64_t p, size_t n) {
 
 #ifdef OTAINT
 #define __info_flow_label(p,n,l)          shad_label(iferret->shadow, p, n, l)
+#define __info_flow_add_label(p,n,l)      shad_add_label(iferret->shadow, p, n, l)
 #define __info_flow_delete(p,n)           shad_delete(iferret->shadow, p, n)
 #define __info_flow_exists(p,n)           shad_exists(iferret->shadow, p, n)
 // NB: __info_flow_copy and __info_flow_compute have p1=dest and p2=src
@@ -474,6 +476,20 @@ void info_flow_label(iferret_t *iferret, uint64_t p, size_t n, char *label) {
   else {
     if (iferret_debug) {
       printf ("info_flow_label discarded\n");
+    }
+  }
+}
+
+
+void info_flow_add_label(iferret_t *iferret, uint64_t p, size_t n, char *label) {
+  if (check_addr(p) && check_size(n)) {
+    printf ("info_flow_add_label: (%llx,%d) %s\n", ctull(p), (int)n,label);
+    //    label_taint(wctull(p),n,label,"NONE",-1);
+    __info_flow_add_label(p, n, label);
+  }
+  else {
+    if (iferret_debug) {
+      printf ("info_flow_add_label discarded\n");
     }
   }
 }
@@ -2384,7 +2400,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     */
     
   case IFLO_KEYBOARD_INPUT:
-    assert_args_1(op);
+    //assert_args_1(op);
     {
       //char alabel[1024];						        
       // construct a new keyboard label for each keycode.
@@ -2404,8 +2420,8 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
       */
 	//      }
 	//      info_flow_label(T1_BASE, 1, alabel);
-      info_flow_label(iferret, T1_BASE, 1, "KEYBOARD");
-      info_flow_mark_as_possibly_tainted(IFRN_T1);      
+      //   info_flow_label(iferret, T1_BASE, 1, "KEYBOARD");
+      //      info_flow_mark_as_possibly_tainted(IFRN_T1);      
       
       //      if (if_key_num == 3 && if_key_val == 0x2e) {
       //      	foo2 = TRUE;

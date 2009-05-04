@@ -30,6 +30,7 @@ typedef struct iferret_struct_t {
   uint32_t use_mal_set;
   int_string_hashtable_t *pid_commands;     // current set of pids seen, mapped to command strings
   int_set_t *mal_pids;          // current set of malicious pids
+  int_int_hashtable_t *clone;   // table of clones mapping back to parent pid -- just for those that share fd table.
   uint32_t eip_at_head_of_tb;   // eip for head of tb currently being executed
   int current_pid;
   int current_uid;
@@ -46,6 +47,7 @@ typedef struct iferret_struct_t {
   uint8_t info_flow;
   uint8_t preprocess;
   uint64_t tb_head_eip;        // eip for head of currently executing tb
+  uint32_t chron;              // time, i.e. a counter
 #ifdef OTAINT
   ShadowMem *shadow;
 #endif

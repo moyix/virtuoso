@@ -8,6 +8,9 @@
 #include <assert.h>
 #include <getopt.h>
 #include <caml/callback.h>
+#include <sched.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include "iferret_log.h"
 #include "target-i386/iferret_ops.h"
@@ -150,6 +153,7 @@ iferret_t *iferret_create() {
   iferret->mode = IFERRET_MODE_RELAXED;
   iferret->use_mal_set = 0;
   iferret->pid_commands = int_string_hashtable_new();
+  iferret->clone = int_int_hashtable_new();
   iferret->mal_pids = int_set_new();
   iferret->mal_files = vslht_new();
   iferret->read_files = vslht_new();
@@ -166,6 +170,7 @@ iferret_t *iferret_create() {
   iferret->use_mal_set = 0;
   iferret->info_flow = FALSE;
   iferret->preprocess = FALSE;
+  iferret->chron = 0;
 #ifdef OTAINT
   iferret->shadow = shad_create();
 #endif
@@ -282,19 +287,79 @@ void iferret_open_file(iferret_t *iferret, char *command, int pid, int fd,
 }
 
 
-void iferret_close_file(iferret_t *iferret, char *command, int pid, int fd) {
-  iferret_open_fd_t *iofd;
+
+
+// we want to know filename etc for fd currently in the hands of pid.
+// first, check to see if (pid,fd) is in our table.  if so return info.
+// else, check to see if pid is a clone, in which case recurse, with parent pid.  
+iferret_open_fd_t *iferret_open_fd_get_maybe_clone(iferret_t *iferret, int pid, int fd) {
   if (iferret_open_fd_mem(iferret, pid, fd)) {
-    // yes, it is there. 
-    iofd = iferret_open_fd_find(iferret, pid, fd);
-    
-    printf ("pid %d [%s] closed fd=%d\n", pid, command, fd);
+    // no need to recurse -- (pid,fd) is in the table. 
+    return iferret_open_fd_find(iferret, pid, fd);
+  }
+  else {
+    // pid doesn't know the filename.  
+    // Does it have a parent?  
+    if (int_int_hashtable_mem(iferret->clone, pid)) {
+      // yes we do have a parent.  
+      // recurse to see if that knows that filename.
+      int parent_pid = int_int_hashtable_find(iferret->clone, pid);
+      return iferret_open_fd_get_maybe_clone(iferret,parent_pid,fd);
+    }
+    else {
+      // no parent -- halt recursion.  
+      return NULL;
+    }
+  }
+}
+
+
+
+void iferret_dup_file (iferret_t *iferret, char *command, int pid, int oldfd, int newfd) {
+  iferret_open_fd_t *ofd = iferret_open_fd_get_maybe_clone(iferret,pid,oldfd);
+  if (ofd != NULL) {
+    printf ("pid %d [%s] duplicated ofd=%d [%s] as nfd=%d\n",
+	    pid, command, oldfd, ofd->filename, newfd);
+    iferret_open_fd_add(iferret, pid, newfd, ofd->filename, 0, 0);  
+  }
+  else {
+    printf ("pid %d [%s] duplicated ofd=%d as nfd=%d.  ofd not in hash of open fds?\n",
+	    pid, command, oldfd, newfd);
+    iferret_open_fd_add(iferret, pid, newfd, "UNKNOWN", 0, 0);
+  }
+}
+
+
+
+void iferret_fcntl64(iferret_t *iferret, char *command, int pid, int fd, int cmd, int retval) {
+  printf ("pid %d calling fcntl. fd=%d cmd = %d. retval=%d\n",
+	  pid, fd, cmd, retval);
+
+  if ((cmd == F_DUPFD)) { // not defined?  || (cmd == F_DUPFD_CLOEXEC)) {
+    printf ("fcntl64 is trying to dup.  cmd is ");
+    if (cmd == F_DUPFD) {
+      printf ("DUPFD\n");
+    }
+    else {
+      printf ("DUPFD_CLOEXEC\n");
+    }
+    iferret_dup_file(iferret, command, pid, fd, retval);
+  }
+}
+
+
+
+
+void iferret_close_file(iferret_t *iferret, char *command, int pid, int fd) {
+  iferret_open_fd_t *ofd = iferret_open_fd_get_maybe_clone(iferret,pid,fd);
+  if (ofd != NULL) {
+    printf ("pid %d [%s] closed fd=%d ", pid, command, fd);
     printf ("filename=%s flags=%d mode=%d\n",
-	    iofd->filename, iofd->flags, iofd->mode);
-    
+	    ofd->filename, ofd->flags, ofd->mode);   
     iferret_open_fd_remove(iferret, pid, fd);
   }
   else {
+    printf ("pid=%d Tried to close fd=%d filename=UNKNOWN\n", pid, fd);
     // Ignore -- tried to close a file we never saw open of? 
     /*
     printf ("iferret_close_fd called with pid=%d fd=%d not in table.\n",
@@ -307,83 +372,122 @@ void iferret_close_file(iferret_t *iferret, char *command, int pid, int fd) {
 
 void iferret_read_file(iferret_t *iferret, int pid, char *command, 
 		       uint32_t fd, uint32_t p, uint32_t count, int retval) {
-  if (iferret_open_fd_mem(iferret, pid, fd)) {
-    char *filename;
-    //char label[256];
-    filename = (iferret_open_fd_find(iferret, pid, fd))->filename; 
-    // this is a file for which we saw the open
-    printf ("pid %d [%s] read %d of %d bytes from file [%s] p=%x\n", 
-	    pid, command, retval, count, filename, p);
-    vslht_add(iferret->read_files, filename, 1);
-    /*
-    if (iferret->info_flow && retval>0) {
-      snprintf (label, 256, "pid-%d-%s-read-%s", pid, command, filename);
-      printf ("assigning info-flow label %s\n", label);
-      info_flow_label(iferret, phys_ram_base + p, count, label);
-      something_got_labeled = 1;
+  char label[1024];
+  if (retval > 0) {
+    iferret_open_fd_t *ofd = iferret_open_fd_get_maybe_clone(iferret,pid,fd);  
+    if (ofd != NULL) {
+      // this is a file for which we saw the open
+      printf ("pid %d [%s] read %d of %d bytes from file=[%s] p=%llx\n", 
+	      pid, command, retval, count, ofd->filename, phys_ram_base + p);
+      vslht_add(iferret->read_files, ofd->filename, 1);
+      if (iferret->info_flow) {
+	iferret->chron ++;
+	snprintf (label, 1204, "chron-%d-pid-%d-comm-%s-count-%d-read-%s", 
+		  iferret->chron, pid, command, retval, ofd->filename);
+      }    
     }
+    else {
+      // we don't have the filename. 
+      printf ("pid %d read %d of %d bytes from fd=%d p=%x\n", 
+	      pid, retval, count, fd, phys_ram_base + p);
+      if (iferret->info_flow) {
+	iferret->chron ++;
+	snprintf (label, 1204, "chron-%d-pid-%d-comm-%s-count-%d-read-UNKNOWN", 
+		  iferret->chron, pid, command, retval);
+      }      
+    }  
+    if (iferret->info_flow) {
+      printf ("assigning info-flow label %s\n", label);
+      if (iferret->chron == 10) {
+	info_flow_add_label(iferret, phys_ram_base + p, retval, label);
+	something_got_labeled = 1;
+      }
+    }
+
+  }
+}
+
+
+// NB: 0,1,2 are stdin, stdout, stderr. usually
+
+void iferret_write_file(iferret_t *iferret, int pid, char *command, 
+			uint32_t fd, uint32_t p, uint32_t count, int labelp) {
+  char label[1024];
+  iferret_open_fd_t *ofd = iferret_open_fd_get_maybe_clone(iferret,pid,fd);
+  if (ofd != NULL) {
+    // this is a file for which we saw the open
+    printf ("pid %d [%s] asking to write %d bytes to file [%s] p=%x\n", 
+	    pid, command, count, ofd->filename, p);
+    vslht_add(iferret->mal_files, ofd->filename, 1);
+    if (iferret->info_flow>0 && labelp==TRUE) {
+      iferret->chron ++;
+      snprintf (label, 1024, "chron-%d-pid-%d-comm-%s-write-%s", iferret->chron, pid, command, ofd->filename);
+    }
+  }
+  else {
+    // we don't have the filename. 
+    printf ("pid %d wrote count=%d bytes from fd=%d\n", pid, count, fd);
+    if (iferret->info_flow>0 && labelp==TRUE) {
+      iferret->chron ++;
+      snprintf (label, 1024, "chron-%d-pid-%d-comm-%s-write-UNKNOWN", iferret->chron, pid, command);
+    }
+  }
+  if (iferret->info_flow>0 && labelp==TRUE) {
+    printf ("assigning info-flow label %s\n", label);
+    /*
+    info_flow_add_label(iferret, phys_ram_base + p, count, label);
+    something_got_labeled = 1;
     */
   }
 }
 
 
-void iferret_write_file(iferret_t *iferret, int pid, char *command, 
-			uint32_t fd, uint32_t p, uint32_t count) {
-  if (iferret_open_fd_mem(iferret, pid, fd)) {
-    char *filename;
-    char label[256];
-    filename = (iferret_open_fd_find(iferret, pid, fd))->filename; 
-    // this is a file for which we saw the open
-    printf ("pid %d [%s] asking to write %d bytes to file [%s] p=%x\n", 
-	    pid, command, count, filename, p);
-    vslht_add(iferret->mal_files, filename, 1);
-    if (iferret->info_flow>0) {
-      snprintf (label, 256, "pid-%d-%s-write-%s", pid, command, filename);
-      printf ("assigning info-flow label %s\n", label);
-      info_flow_label(iferret, phys_ram_base + p, count, label);
-      something_got_labeled = 1;
-    }
-  }
-}
-
-
 void iferret_readv_file(iferret_t *iferret, int pid, char *command, int fd)  {
-  if (iferret_open_fd_mem(iferret,pid,fd)) {
-    char *filename;
-    filename = (iferret_open_fd_find(iferret, pid, fd))->filename; 
+  iferret_open_fd_t *ofd = iferret_open_fd_get_maybe_clone(iferret,pid,fd);
+  if (ofd != NULL) {
     // this is a file for which we saw the open
     printf ("pid %d [%s] readv from fd=%d [%s]\n",
-	    pid, command, fd, filename);
-    vslht_add(iferret->read_files, filename, 1);
+	    pid, command, fd, ofd->filename);
+    vslht_add(iferret->read_files, ofd->filename, 1);
   }
 }
 
 
 void iferret_writev_file(iferret_t *iferret, int pid, char *command, int fd)  {
-  if (iferret_open_fd_mem(iferret,pid,fd)) {
-    char *filename;
-    filename = (iferret_open_fd_find(iferret, pid, fd))->filename; 
+  iferret_open_fd_t *ofd = iferret_open_fd_get_maybe_clone(iferret,pid,fd);
+  if (ofd != NULL) {
     // this is a file for which we saw the open
     printf ("pid %d [%s] writev from fd=%d [%s]\n",
-	    pid, command, fd, filename);
-    vslht_add(iferret->mal_files, filename, 1);
+	    pid, command, fd, ofd->filename);
+    vslht_add(iferret->mal_files, ofd->filename, 1);
   }
 }
 
 void iferret_mmap2(iferret_t *iferret, uint32_t pid, char *command,
 		   uint32_t start, uint32_t length, uint32_t prot, 
 		   uint32_t flags, uint32_t fd, uint32_t offset) {
-  
+  iferret_open_fd_t *ofd = iferret_open_fd_get_maybe_clone(iferret,pid,fd);  
   printf ("pid=%d command=[%s] mmap2 called with fd=%d fn=[", pid, command, fd);
-  
-  if (iferret_open_fd_mem(iferret,pid,fd)) {
-    char *filename;
-    filename = (iferret_open_fd_find(iferret, pid, fd))->filename; 
-    printf ("%s", filename);
+  if (ofd != NULL) {
+    printf ("%s", ofd->filename);
   }
-
+  else {
+    printf ("UNKNOWN");
+  }
   printf ("]\n");
 }
+
+
+
+void iferret_socketcall_socket(iferret_t *iferret, char *command, 
+			       int pid, int domain, int type, int protocol, int fd) {
+  char name[1024];
+  printf ("pid=%d command=[%s] socket domain=%d type=%d protocl=%d.  fd=%d\n", 
+	  pid, command, domain, type, protocol, fd);
+  snprintf (name, 1024, "SOCKET-%d-%d-%d", domain,type,protocol);
+  iferret_open_file(iferret,command,pid,fd,name,0,0);
+}
+
 
 
 // kill
@@ -421,37 +525,37 @@ void iferret_process_syscall(iferret_t *iferret, iferret_op_t *op) {
   iferret_syscall_t *scp;
   scp = op->syscall;  
 
-
+  
   iferret_change_current_pid(iferret, scp->pid);
-
-  /*
-  if (op->num == IFLO_SYS_CLONE) {
-    printf ("call clone\n");
-  }
-  if (op->num == IFLO_SYS_EXECVE) {
-    printf ("call execve\n");
-  }
-  */
-
+  
   //  if(!iferret->preprocess)
-    iferret_track_pid_commands(iferret, scp->pid, scp->command);
+  iferret_track_pid_commands(iferret, scp->pid, scp->command);
 
   // only process this syscall if it belonged to a process we are tracking
   
   if (iferret_is_pid_not_mal(iferret, scp->pid)) {
-    //    printf ("pid %d not mal -- ignoring syscall\n", scp->pid);	
-    /*
-    if(scp->pid == 5490 && !iferret->preprocess)
-    { 
-      printf("Houston, we have a problem\n");
-      iferret_spit_mal_pids(iferret);
-    }
-    */
     return;
   }
   
+  // count it -- it corresponds to a mal process. 
+  if (iferret->preprocess == FALSE) {
+    iferret_count_op(iferret,op);
+  }
 
+  if (op->num == IFLO_SYS_SYS_DUP) {
+    printf ("foo.\n");
+  }
 
+  iferret_spit_op(op);
+
+  if (op->num == IFLO_SYS_SYS_DUP) {
+    printf ("attempted dup of fd=%d\n", op->arg[0].val.u32);
+  }
+  
+  if (op->num == IFLO_SYS_SYS_DUP2) {
+    printf ("attempted dup2 of ofd=%d to nfd=%d\n", op->arg[0].val.u32, op->arg[1].val.u32);
+  }
+  
   if (op->num == IFLO_SYS_SYS_EXIT_GROUP) {
     //    if(!iferret->preprocess)
     iferret_exit_group(iferret,scp->pid);
@@ -462,12 +566,13 @@ void iferret_process_syscall(iferret_t *iferret, iferret_op_t *op) {
   if (op->num == IFLO_SYS_SYS_WRITE) {
     // um, need to label buffer *before* syscall happens!
     iferret_write_file(iferret,
-			 scp->pid,
-			 scp->command,
-			 op->arg[0].val.u32,   // the file descriptor
-			 op->arg[1].val.u32,   // the dest ptr
-			 op->arg[2].val.u32   // num bytes requested for read
-			 );
+		       scp->pid,
+		       scp->command,
+		       op->arg[0].val.u32,   // the file descriptor
+		       op->arg[1].val.u32,   // the dest ptr
+		       op->arg[2].val.u32,   // num bytes requested for read
+		       TRUE
+		       );
   }
 
 
@@ -555,6 +660,7 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
     //    if(!iferret->preprocess)
     {
       char *clone_command;
+      int flags = syscall->arg[1].val.u32;
       if (int_string_hashtable_mem(iferret->pid_commands, retval)) {
 	clone_command = int_string_hashtable_find(iferret->pid_commands, retval);
       }
@@ -567,6 +673,13 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
 	      command,
 	      retval,
 	      clone_command);
+
+      if (flags | CLONE_FILES) {
+	printf ("fd table is shared."); 
+	int_int_hashtable_add(iferret->clone,retval,syscall->pid);
+      }
+      else
+	printf ("fd table is not shared."); 
       
       printf ("digraph a%d [label=\"%d %s\"]\n", syscall->pid, syscall->pid, command);
       printf ("digraph a%d [label=\"%d %s\"]\n", retval, retval, clone_command);
@@ -642,7 +755,7 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
     }
     break;
   case IFLO_SYS_SYS_WRITE:
-    /*
+
     if (retval > 0 && iferret->preprocess==FALSE) {
       // at least 1 byte written
       iferret_write_file(iferret,
@@ -651,9 +764,9 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
 			 syscall->arg[0].val.u32,   // the file descriptor
 			 syscall->arg[1].val.u32,   // the dest ptr
 			 syscall->arg[2].val.u32,   // num bytes requested for read
-			 retval);
+			 FALSE);
     }
-    */
+    
     break;
   case IFLO_SYS_SYS_READV: 
     if (retval > 0 && iferret->preprocess==FALSE) {
@@ -673,6 +786,25 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
 			  syscall->arg[0].val.u32); // the file descriptor
     }
     break;
+
+
+  case IFLO_SYS_SYS_DUP:
+    if (retval >= 0 && iferret->preprocess==FALSE) {
+      iferret_dup_file(iferret, command, syscall->pid, syscall->arg[0].val.u32, retval);
+    }
+    break;
+
+  case IFLO_SYS_SYS_DUP2:
+    if (retval >= 0 && iferret->preprocess==FALSE) {
+      iferret_dup_file(iferret, command, syscall->pid, syscall->arg[0].val.u32, retval);
+    }
+    break;
+
+  case IFLO_SYS_SYS_FCNTL64:
+    if (retval >= 0 && iferret->preprocess==FALSE) {
+      iferret_fcntl64(iferret, command, syscall->pid, syscall->arg[0].val.u32, syscall->arg[1].val.u32, retval);
+    }
+    break;    
 
   case IFLO_SYS_MMAP2: 
     /*
@@ -705,21 +837,27 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
       as is done by mmap(2)).  This enables applications that use a 32-bit off_t to map large 
       files (up to 2^44 bytes).
     */
+
+    if (retval >= 0 && iferret->preprocess==FALSE) {
     
-    iferret_mmap2(iferret,
-		 syscall->pid,
-		 command,
-		 syscall->arg[0].val.u32,
-		 syscall->arg[1].val.u32,
-		 syscall->arg[2].val.u32,
-		 syscall->arg[3].val.u32,
-		 syscall->arg[4].val.u32,
-		 syscall->arg[5].val.u32);
-    
+      iferret_mmap2(iferret,
+		    syscall->pid,
+		    command,
+		    syscall->arg[0].val.u32,
+		    syscall->arg[1].val.u32,
+		    syscall->arg[2].val.u32,
+		    syscall->arg[3].val.u32,
+		    syscall->arg[4].val.u32,
+		    syscall->arg[5].val.u32);
+    }
     break;
   
-  
-
+  case IFLO_SYS_SOCKETCALL_SOCKET: 
+    if (retval >= 0 && iferret->preprocess==FALSE) {
+      iferret_socketcall_socket(iferret, command, syscall->pid, 
+				syscall->arg[0].val.u32, syscall->arg[1].val.u32, syscall->arg[2].val.u32, 
+				retval);
+    }
 
   default:
     break;
@@ -728,10 +866,7 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
 
 
 void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {  
-  // only count once -- on last round
-  if (iferret->preprocess == FALSE) {
-    iferret_count_op(iferret,op);
-  }
+
 
   if (op->num == IFLO_PID_CHANGE) {
     iferret_change_current_pid(iferret, op->arg[0].val.u32);
@@ -793,6 +928,10 @@ void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {
 	&& something_got_labeled) {
 
       iferret_info_flow_process_op(iferret,op);
+      if (iferret->preprocess == FALSE) {
+	iferret_count_op(iferret,op);
+      }
+
     }
     //  }
 }
@@ -828,7 +967,7 @@ void iferret_stats (iferret_t *iferret) {
 }
 
 
-
+int interval = 100000;
 
 void iferret_log_process(iferret_t *iferret, char *filename) {
   struct stat fs;
@@ -838,6 +977,9 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
   iferret_syscall_t syscall;
   char command[256];
   char *op_start;
+  static int nbt = -1;
+  static int oldNbt = -1;
+  static int ii = 0;
 
   if (op_pos_arr == NULL) {
     op_pos_arr = (op_pos_arr_t *) my_malloc (sizeof(op_pos_arr_t));
@@ -885,18 +1027,49 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
   i=0;
   while (iferret_log_ptr < iferret_log_base + iferret_log_size) {
 
-    if ((i%10000) == 0) {
+    ii ++;
+
+    if (iferret->info_flow) {
+#ifdef OTAINT
+      /*
+      nbt = shad_num_labels(iferret->shadow);
+      if (nbt != oldNbt) {
+	printf ("op %d nbt %d\n", ii, nbt); fflush(stdout);
+	oldNbt = nbt;
+      }
+      */
+ #endif 
+
+      if (something_got_labeled) {
+
 #ifdef OTAINT 
-      fflush(stdout);
-      printf ("\n%d bytes tainted\n", shad_num_labels(iferret->shadow));
-      shad_stats(iferret->shadow);
-      shad_spit(iferret->shadow);
-      fflush(stdout);
+	nbt = shad_num_bytes_with_label(iferret->shadow, "chron-10-pid-4753-comm-gzip-count-1052-read-cups.gz");
+	if (nbt != oldNbt) {
+	  printf ("op %d nbt %d\n", ii, nbt);
+	  /*
+	  if (nbt > 0) {
+	    interval /= 2;
+	    if (interval < 1) interval = 1;
+	    printf ("interval is now %d\n", interval);
+	  }
+	  */
+	  oldNbt = nbt;
+	  fflush(stdout);
+
+	}
+	/*
+	printf ("\n%d bytes tainted\n", shad_num_labels(iferret->shadow));
+	shad_stats(iferret->shadow);
+	shad_spit(iferret->shadow);
+	fflush(stdout);
+	*/
 #endif
 #ifdef QAINT
 	printf ("%d bytes tainted\n", how_many_bytes_are_tainted());
 #endif
       }
+
+    }
 
     op_start = iferret_log_ptr;
     if (iferret->use_mal_set && (int_set_size(iferret->mal_pids) == 0)) {
