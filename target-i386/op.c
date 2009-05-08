@@ -204,6 +204,7 @@ static inline uint64_t phys_a0() {
 /* update flags with T0 and T1 (add/sub case) */
 void OPPROTO op_update2_cc(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_UPDATE2_CC);
     CC_SRC = T1;
     CC_DST = T0;
 }
@@ -211,29 +212,34 @@ void OPPROTO op_update2_cc(void)
 /* update flags with T0 (logic operation case) */
 void OPPROTO op_update1_cc(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_UPDATE1_CC);
     CC_DST = T0;
 }
 
 void OPPROTO op_update_neg_cc(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_UPDATE_NEG_CC);
     CC_SRC = -T0;
     CC_DST = T0;
 }
 
 void OPPROTO op_cmpl_T0_T1_cc(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_CMPL_T0_T1_CC);
     CC_SRC = T1;
     CC_DST = T0 - T1;
 }
 
 void OPPROTO op_update_inc_cc(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_UPDATE_INC_CC);
     CC_SRC = cc_table[CC_OP].compute_c();
     CC_DST = T0;
 }
 
 void OPPROTO op_testl_T0_T1_cc(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_TESTL_T0_T1_CC);
     CC_DST = T0 & T1;
 }
 
@@ -787,16 +793,19 @@ void OPPROTO op_movq_eip_im64(void)
 
 void OPPROTO op_hlt(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_HLT);  
     helper_hlt();
 }
 
 void OPPROTO op_monitor(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_MONITOR);
     helper_monitor();
 }
 
 void OPPROTO op_mwait(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_MWAIT);
     helper_mwait();
 }
 
@@ -809,6 +818,7 @@ void OPPROTO op_debug(void)
 void OPPROTO op_raise_interrupt(void)
 {
     int intno, next_eip_addend;
+  iferret_log_info_flow_op_write_0(IFLO_RAISE_INTERRUPT);
     intno = PARAM1;
     next_eip_addend = PARAM2;
     raise_interrupt(intno, 1, 0, next_eip_addend);
@@ -817,6 +827,7 @@ void OPPROTO op_raise_interrupt(void)
 void OPPROTO op_raise_exception(void)
 {
     int exception_index;
+  iferret_log_info_flow_op_write_0(IFLO_RAISE_EXCEPTION);
     exception_index = PARAM1;
     raise_exception(exception_index);
 }
@@ -824,6 +835,7 @@ void OPPROTO op_raise_exception(void)
 void OPPROTO op_into(void)
 {
     int eflags;
+  iferret_log_info_flow_op_write_0(IFLO_INTO);
     eflags = cc_table[CC_OP].compute_all();
     if (eflags & CC_O) {
         raise_interrupt(EXCP04_INTO, 1, 0, PARAM1);
@@ -833,26 +845,31 @@ void OPPROTO op_into(void)
 
 void OPPROTO op_cli(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_CLI);
     env->eflags &= ~IF_MASK;
 }
 
 void OPPROTO op_sti(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_STI);
     env->eflags |= IF_MASK;
 }
 
 void OPPROTO op_set_inhibit_irq(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_SET_INHIBIT_IRQ);
     env->hflags |= HF_INHIBIT_IRQ_MASK;
 }
 
 void OPPROTO op_reset_inhibit_irq(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_RESET_INHIBIT_IRQ);
     env->hflags &= ~HF_INHIBIT_IRQ_MASK;
 }
 
 void OPPROTO op_rsm(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_HELPER_RSM);
     helper_rsm();
 }
 
@@ -877,6 +894,7 @@ void OPPROTO op_sti_vm(void)
 void OPPROTO op_boundw(void)
 {
     int low, high, v;
+  iferret_log_info_flow_op_write_0(IFLO_BOUNDW);
     low = ldsw(A0);
     high = ldsw(A0 + 2);
     v = (int16_t)T0;
@@ -889,6 +907,7 @@ void OPPROTO op_boundw(void)
 void OPPROTO op_boundl(void)
 {
     int low, high, v;
+  iferret_log_info_flow_op_write_0(IFLO_BOUNDL);
     low = ldl(A0);
     high = ldl(A0 + 4);
     v = T0;
@@ -900,11 +919,13 @@ void OPPROTO op_boundl(void)
 
 void OPPROTO op_cmpxchg8b(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_CMPXCHG8B);
     helper_cmpxchg8b();
 }
 
 void OPPROTO op_single_step(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_SINGLE_STEP);
     helper_single_step();
 }
 
@@ -917,6 +938,7 @@ void OPPROTO op_movl_T0_0(void)
 
 void OPPROTO op_exit_tb(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_EXIT_TB);
     EXIT_TB();
 }
 
@@ -1122,21 +1144,18 @@ void op_addw_ESP_4(void)
 void op_addw_ESP_2(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ADDW_ESP_2);
-
     ESP = (ESP & ~0xffff) | ((ESP + 2) & 0xffff);
 }
 
 void op_addl_ESP_im(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ADDL_ESP_IM);
-
     ESP = (uint32_t)(ESP + PARAM1);
 }
 
 void op_addw_ESP_im(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ADDW_ESP_IM);
-
     ESP = (ESP & ~0xffff) | ((ESP + PARAM1) & 0xffff);
 }
 
@@ -1166,26 +1185,24 @@ void op_addq_ESP_im(void)
 void OPPROTO op_rdtsc(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_RDTSC);
-
     helper_rdtsc();
 }
 
 void OPPROTO op_rdpmc(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_RDPMC);
     helper_rdpmc();
 }
 
 void OPPROTO op_cpuid(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_CPUID);
-
     helper_cpuid();
 }
 
 void OPPROTO op_enter_level(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ENTER_LEVEL);
-
     helper_enter_level(PARAM1, PARAM2);
 }
 
@@ -1199,14 +1216,12 @@ void OPPROTO op_enter64_level(void)
 void OPPROTO op_sysenter(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_SYSENTER);
-
     helper_sysenter();
 }
 
 void OPPROTO op_sysexit(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_SYSEXIT); 
- 
     helper_sysexit();
 }
 
@@ -1225,14 +1240,12 @@ void OPPROTO op_sysret(void)
 void OPPROTO op_rdmsr(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_RDMSR);
-
     helper_rdmsr();
 }
 
 void OPPROTO op_wrmsr(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_WRMSR);
-
     helper_wrmsr();
 }
 
@@ -1411,31 +1424,30 @@ void OPPROTO op_movl_seg_T0_vm(void)
 void OPPROTO op_movl_T0_seg(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_SEG);
-
     T0 = env->segs[PARAM1].selector;
 }
 
 void OPPROTO op_lsl(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_LSL);
-
     helper_lsl();
 }
 
 void OPPROTO op_lar(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_LAR);
-
     helper_lar();
 }
 
 void OPPROTO op_verr(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_VERR);
     helper_verr();
 }
 
 void OPPROTO op_verw(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_VERW);
     helper_verw();
 }
 
@@ -1456,6 +1468,7 @@ void OPPROTO op_arpl(void)
 void OPPROTO op_arpl_update(void)
 {
     int eflags;
+    iferret_log_info_flow_op_write_0(IFLO_ARPL_UPDATE);
     eflags = cc_table[CC_OP].compute_all();
     CC_SRC = (eflags & ~CC_Z) | T1;
 }
@@ -1464,56 +1477,48 @@ void OPPROTO op_arpl_update(void)
 void OPPROTO op_ljmp_protected_T0_T1(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_LJMP_PROTECTED_T0_T1);
-
     helper_ljmp_protected_T0_T1(PARAM1);
 }
 
 void OPPROTO op_lcall_real_T0_T1(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_LCALL_REAL_T0_T1);
-
     helper_lcall_real_T0_T1(PARAM1, PARAM2);
 }
 
 void OPPROTO op_lcall_protected_T0_T1(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_LCALL_PROTECTED_T0_T1);
-
     helper_lcall_protected_T0_T1(PARAM1, PARAM2);
 }
 
 void OPPROTO op_iret_real(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_IRET_REAL);
-
     helper_iret_real(PARAM1);
 }
 
 void OPPROTO op_iret_protected(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_IRET_PROTECTED);
-
     helper_iret_protected(PARAM1, PARAM2);
 }
 
 void OPPROTO op_lret_protected(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_LRET_PROTECTED);
-
     helper_lret_protected(PARAM1, PARAM2);
 }
 
 void OPPROTO op_lldt_T0(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_LLDT_T0);
-
     helper_lldt_T0();
 }
 
 void OPPROTO op_ltr_T0(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_LTR_T0);
-
     helper_ltr_T0();
 }
 
@@ -1521,31 +1526,34 @@ void OPPROTO op_ltr_T0(void)
 void OPPROTO op_movl_crN_T0(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVL_CRN_T0);
-
     helper_movl_crN_T0(PARAM1);
 }
 
 /* These pseudo-opcodes check for SVM intercepts. */
 void OPPROTO op_svm_check_intercept(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_SVM_CHECK_INTERCEPT);
     A0 = PARAM1 & PARAM2;
     svm_check_intercept(PARAMQ1);
 }
 
 void OPPROTO op_svm_check_intercept_param(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_SVM_CHECK_INTERCEPT_PARAM);
     A0 = PARAM1 & PARAM2;
     svm_check_intercept_param(PARAMQ1, T1);
 }
 
 void OPPROTO op_svm_vmexit(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_SVM_VMEXIT);
     A0 = PARAM1 & PARAM2;
     vmexit(PARAMQ1, T1);
 }
 
 void OPPROTO op_geneflags(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_GENEFLAGS);
     CC_SRC = cc_table[CC_OP].compute_all();
 }
 
@@ -1578,7 +1586,6 @@ void OPPROTO op_movtl_T0_cr8(void)
 void OPPROTO op_movl_drN_T0(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVL_DRN_T0);
-
     helper_movl_drN_T0(PARAM1);
 }
 
@@ -1595,63 +1602,54 @@ void OPPROTO op_lmsw_T0(void)
 void OPPROTO op_invlpg_A0(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_INVLPG_A0);
-
     helper_invlpg(A0);
 }
 
 void OPPROTO op_movl_T0_env(void)
 {
   iferret_log_info_flow_op_write_8(IFLO_MOVL_T0_ENV, PTR_TO_ADDR(env) + PARAM1);
-
     T0 = *(uint32_t *)((char *)env + PARAM1);
 }
 
 void OPPROTO op_movl_env_T0(void)
 {
   iferret_log_info_flow_op_write_8(IFLO_MOVL_ENV_T0, PTR_TO_ADDR(env) + PARAM1);
-
     *(uint32_t *)((char *)env + PARAM1) = T0;
 }
 
 void OPPROTO op_movl_env_T1(void)
 {
   iferret_log_info_flow_op_write_8(IFLO_MOVL_ENV_T1, PTR_TO_ADDR(env) + PARAM1);
-
     *(uint32_t *)((char *)env + PARAM1) = T1;
 }
 
 void OPPROTO op_movtl_T0_env(void)
 {
   iferret_log_info_flow_op_write_8(IFLO_MOVTL_T0_ENV, PTR_TO_ADDR(env) + PARAM1);
-
     T0 = *(target_ulong *)((char *)env + PARAM1);
 }
 
 void OPPROTO op_movtl_env_T0(void)
 {
   iferret_log_info_flow_op_write_8(IFLO_MOVTL_ENV_T0, PTR_TO_ADDR(env) + PARAM1);
-
     *(target_ulong *)((char *)env + PARAM1) = T0;
 }
 
 void OPPROTO op_movtl_T1_env(void)
 {
   iferret_log_info_flow_op_write_8(IFLO_MOVTL_T1_ENV, PTR_TO_ADDR(env) + PARAM1);
-
     T1 = *(target_ulong *)((char *)env + PARAM1);
 }
 
 void OPPROTO op_movtl_env_T1(void)
 {
   iferret_log_info_flow_op_write_8(IFLO_MOVTL_ENV_T1, PTR_TO_ADDR(env) + PARAM1);
-
     *(target_ulong *)((char *)env + PARAM1) = T1;
 }
 
 void OPPROTO op_clts(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_CLTS);
-
     env->cr[0] &= ~CR0_TS_MASK;
     env->hflags &= ~HF_TS_MASK;
 }
@@ -1660,21 +1658,25 @@ void OPPROTO op_clts(void)
 
 void OPPROTO op_goto_tb0(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_GOTO_TB0);
     GOTO_TB(op_goto_tb0, PARAM1, 0);
 }
 
 void OPPROTO op_goto_tb1(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_GOTO_TB1);
     GOTO_TB(op_goto_tb1, PARAM1, 1);
 }
 
 void OPPROTO op_jmp_label(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_JMP_LABEL);
     GOTO_LABEL_PARAM(1);
 }
 
 void OPPROTO op_jnz_T0_label(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_JNZ_T0_LABEL);
     if (T0)
         GOTO_LABEL_PARAM(1);
     FORCE_RET();
@@ -1682,6 +1684,7 @@ void OPPROTO op_jnz_T0_label(void)
 
 void OPPROTO op_jz_T0_label(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_JZ_LABEL);
     if (!T0)
         GOTO_LABEL_PARAM(1);
     FORCE_RET();
@@ -1921,6 +1924,7 @@ void OPPROTO op_std(void)
 void OPPROTO op_clc(void)
 {
     int eflags;
+  iferret_log_info_flow_op_write_0(IFLO_CLC);
     eflags = cc_table[CC_OP].compute_all();
     eflags &= ~CC_C;
     CC_SRC = eflags;
@@ -1929,6 +1933,7 @@ void OPPROTO op_clc(void)
 void OPPROTO op_stc(void)
 {
     int eflags;
+  iferret_log_info_flow_op_write_0(IFLO_STC);
     eflags = cc_table[CC_OP].compute_all();
     eflags |= CC_C;
     CC_SRC = eflags;
@@ -1937,6 +1942,7 @@ void OPPROTO op_stc(void)
 void OPPROTO op_cmc(void)
 {
     int eflags;
+  iferret_log_info_flow_op_write_0(IFLO_CMC);
     eflags = cc_table[CC_OP].compute_all();
     eflags ^= CC_C;
     CC_SRC = eflags;
@@ -1954,11 +1960,13 @@ void OPPROTO op_salc(void)
 
 static int compute_all_eflags(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_COMPUTE_ALL_EFLAGS);
     return CC_SRC;
 }
 
 static int compute_c_eflags(void)
 {
+  iferret_log_info_flow_op_write_0(IFLO_COMPUTE_C_EFLAGS);
     return CC_SRC & CC_C;
 }
 

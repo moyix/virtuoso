@@ -48,7 +48,7 @@ extern char *iferret_log_base;
 extern char *iferret_log_ptr;      
 
 
-uint8_t something_got_labeled = 0;
+
 
 uint8_t iferret_debug = 0; 
 
@@ -171,6 +171,9 @@ iferret_t *iferret_create() {
   iferret->info_flow = FALSE;
   iferret->preprocess = FALSE;
   iferret->chron = 0;
+  iferret->first_log = TRUE;
+  iferret->something_got_labeled = FALSE;
+  iferret->if_debug = FALSE;
 #ifdef OTAINT
   iferret->shadow = shad_create();
 #endif
@@ -398,10 +401,13 @@ void iferret_read_file(iferret_t *iferret, int pid, char *command,
     }  
     if (iferret->info_flow) {
       printf ("assigning info-flow label %s\n", label);
-      if (iferret->chron == 10) {
+      //      if (iferret->chron == 10) {
+	printf ("labeling %d bytes at p=%x i.e. physaddr=%llx with [%s]\n",
+		retval, p, phys_ram_base + p, label);
 	info_flow_add_label(iferret, phys_ram_base + p, retval, label);
-	something_got_labeled = 1;
-      }
+	iferret->something_got_labeled = TRUE;
+	//	iferret->if_debug = TRUE;
+	//      }
     }
 
   }
@@ -513,9 +519,11 @@ void iferret_change_current_pid(iferret_t *iferret, int new_pid) {
   if (iferret->use_mal_set && !(int_set_mem(iferret->mal_pids, new_pid))) {
     // make iferret supcious if new pid is in mal set. 
     iferret->mode = IFERRET_MODE_SUSPICIOUS;
+    printf ("iferret now suspicious.\n");
   }
   else {
     iferret->mode = IFERRET_MODE_RELAXED;
+    printf ("iferret now relaxed.\n");
   }
 }    
 
@@ -925,7 +933,7 @@ void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {
     }
     if (op->num < IFLO_SYS_CALLS_START && 
 	iferret->preprocess == FALSE && iferret->info_flow==TRUE
-	&& something_got_labeled) {
+	&& iferret->something_got_labeled) {
 
       iferret_info_flow_process_op(iferret,op);
       if (iferret->preprocess == FALSE) {
@@ -969,6 +977,13 @@ void iferret_stats (iferret_t *iferret) {
 
 int interval = 100000;
 
+
+void minmax(int64_t *x1, int64_t *x2, int64_t a) {
+  if (a < *x1) *x1 = a;
+  if (a > *x2) *x2 = a;
+}
+
+
 void iferret_log_process(iferret_t *iferret, char *filename) {
   struct stat fs;
   uint32_t i, n, iferret_log_size;
@@ -977,8 +992,6 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
   iferret_syscall_t syscall;
   char command[256];
   char *op_start;
-  static int nbt = -1;
-  static int oldNbt = -1;
   static int ii = 0;
 
   if (op_pos_arr == NULL) {
@@ -1002,25 +1015,60 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
   // sets up ifregaddr &c
   iferret_log_preamble(); 
 
-  /*  
-  printf ("phys_ram_base = %p\n", (char *) phys_ram_base);
-  printf ("EIP_BASE = %p\n", (char *) EIP_BASE);
-  printf ("EAX_BASE = %p\n", (char *) EAX_BASE);
-  printf ("ECX_BASE = %p\n", (char *) ECX_BASE);
-  printf ("EDX_BASE = %p\n", (char *) EDX_BASE);
-  printf ("EBX_BASE = %p\n", (char *) EBX_BASE);
-  printf ("ESP_BASE = %p\n", (char *) ESP_BASE);
-  printf ("EBP_BASE = %p\n", (char *) EBP_BASE);
-  printf ("ESI_BASE = %p\n", (char *) ESI_BASE);
-  printf ("EDI_BASE = %p\n", (char *) EDI_BASE);
-  printf ("T0_BASE = %p\n", (char *) T0_BASE);
-  printf ("T1_BASE = %p\n", (char *) T1_BASE);
-  printf ("A0_BASE = %p\n", (char *) A0_BASE);
-  printf ("Q0_BASE = %p\n", (char *) Q0_BASE);
-  printf ("Q1_BASE = %p\n", (char *) Q1_BASE);
-  printf ("Q2_BASE = %p\n", (char *) Q2_BASE);
-  printf ("Q3_BASE = %p\n", (char *) Q3_BASE);
-  */
+  if (iferret->first_log == TRUE) {
+    int64_t x1, x2;
+    iferret->first_log = FALSE;
+    printf ("phys_ram_base = %p\n", (char *) phys_ram_base);
+    printf ("EIP_BASE = %p\n", (char *) EIP_BASE);
+    printf ("EAX_BASE = %p\n", (char *) EAX_BASE);
+    printf ("ECX_BASE = %p\n", (char *) ECX_BASE);
+    printf ("EDX_BASE = %p\n", (char *) EDX_BASE);
+    printf ("EBX_BASE = %p\n", (char *) EBX_BASE);
+    printf ("ESP_BASE = %p\n", (char *) ESP_BASE);
+    printf ("EBP_BASE = %p\n", (char *) EBP_BASE);
+    printf ("ESI_BASE = %p\n", (char *) ESI_BASE);
+    printf ("EDI_BASE = %p\n", (char *) EDI_BASE);
+    printf ("T0_BASE = %p\n", (char *) T0_BASE);
+    printf ("T1_BASE = %p\n", (char *) T1_BASE);
+    printf ("A0_BASE = %p\n", (char *) A0_BASE);
+    printf ("Q0_BASE = %p\n", (char *) Q0_BASE);
+    printf ("Q1_BASE = %p\n", (char *) Q1_BASE);
+    printf ("Q2_BASE = %p\n", (char *) Q2_BASE);
+    printf ("Q3_BASE = %p\n", (char *) Q3_BASE);
+
+    x1 = EIP_BASE;
+    x2 = EIP_BASE;
+    minmax(&x1,&x2,EAX_BASE);
+    minmax(&x1,&x2,ECX_BASE);
+    minmax(&x1,&x2,EDX_BASE);
+    minmax(&x1,&x2,EBX_BASE);
+    minmax(&x1,&x2,ESP_BASE);
+    minmax(&x1,&x2,EBP_BASE);
+    minmax(&x1,&x2,ESI_BASE);
+    minmax(&x1,&x2,EDI_BASE);
+    minmax(&x1,&x2,T0_BASE);
+    minmax(&x1,&x2,T1_BASE);
+    minmax(&x1,&x2,A0_BASE);
+    minmax(&x1,&x2,Q0_BASE);
+    minmax(&x1,&x2,Q1_BASE);
+    minmax(&x1,&x2,Q2_BASE);
+    minmax(&x1,&x2,Q3_BASE);
+    printf ("register cache from %llx to %llx\n", (unsigned long long) x1, (unsigned long long) x2);
+    shad_init_register_cache(iferret->shadow,x1,x2);
+    shad_addr_name(iferret->shadow,EIP_BASE,"EIP");
+    shad_addr_name(iferret->shadow,EAX_BASE,"EAX");
+    shad_addr_name(iferret->shadow,ECX_BASE,"ECX");
+    shad_addr_name(iferret->shadow,EDX_BASE,"EDX");
+    shad_addr_name(iferret->shadow,EBX_BASE,"EBX");
+    shad_addr_name(iferret->shadow,ESP_BASE,"ESP");
+    shad_addr_name(iferret->shadow,EBP_BASE,"EBP");
+    shad_addr_name(iferret->shadow,ESI_BASE,"ESI");
+    shad_addr_name(iferret->shadow,EDI_BASE,"EDI");
+    shad_addr_name(iferret->shadow,T0_BASE,"T0");
+    shad_addr_name(iferret->shadow,T1_BASE,"T1");
+    shad_addr_name(iferret->shadow,A0_BASE,"A0");
+
+  }
 
 
   // process each op in the log, in sequence
@@ -1028,46 +1076,28 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
   while (iferret_log_ptr < iferret_log_base + iferret_log_size) {
 
     ii ++;
+    if (ii==63762202) {
+      printf ("foo.\n");
+    }
 
     if (iferret->info_flow) {
 #ifdef OTAINT
-      /*
-      nbt = shad_num_labels(iferret->shadow);
-      if (nbt != oldNbt) {
-	printf ("op %d nbt %d\n", ii, nbt); fflush(stdout);
-	oldNbt = nbt;
-      }
-      */
- #endif 
-
-      if (something_got_labeled) {
-
-#ifdef OTAINT 
-	nbt = shad_num_bytes_with_label(iferret->shadow, "chron-10-pid-4753-comm-gzip-count-1052-read-cups.gz");
-	if (nbt != oldNbt) {
-	  printf ("op %d nbt %d\n", ii, nbt);
-	  /*
-	  if (nbt > 0) {
-	    interval /= 2;
-	    if (interval < 1) interval = 1;
-	    printf ("interval is now %d\n", interval);
-	  }
-	  */
-	  oldNbt = nbt;
-	  fflush(stdout);
-
-	}
-	/*
-	printf ("\n%d bytes tainted\n", shad_num_labels(iferret->shadow));
+      
+      if (shad_check_changed(iferret->shadow)) {
+	shad_clear_changed(iferret->shadow);	
+	printf ("op %d nbt %d\n", ii,  shad_num_bytes_with_label(iferret->shadow, "chron-10-pid-4753-comm-gzip-count-1052-read-cups.gz"));
 	shad_stats(iferret->shadow);
 	shad_spit(iferret->shadow);
 	fflush(stdout);
-	*/
-#endif
+      }
+      
+#endif 
+
+
 #ifdef QAINT
 	printf ("%d bytes tainted\n", how_many_bytes_are_tainted());
 #endif
-      }
+      
 
     }
 
@@ -1095,12 +1125,19 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
     }
     iferret_log_op_args_read(&op);
     
-    if (iferret_debug && something_got_labeled) {
+    if (iferret_debug && iferret->something_got_labeled) {
       printf ("i=%d pid=%d uid=%d cpl=%d: ", 
       	      i, iferret->current_pid, iferret->current_uid, iferret->current_cpl);
 	    //     printf ("i=%d : ", i);
       iferret_spit_op(&op);
     }
+
+    if (1==0 && iferret->something_got_labeled) {
+      printf ("ii=%d ", ii);  
+      iferret_spit_op(&op);
+      fflush(stdout);
+    }
+
     
     iferret_op_process(iferret,&op);
     op_pos_arr->pos[i%OP_POS_CIRC_BUFF_SIZE].opnum = op.num;
@@ -1305,6 +1342,10 @@ int main (int argc, char **argv) {
     free(filename);
   }
 
+#ifdef OTAINT
+  shad_stats(iferret->shadow);
+  shad_spit(iferret->shadow);
+#endif
   iferret_stats(iferret);
 
   return (1);

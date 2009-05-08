@@ -52,7 +52,7 @@
 
 
 
-#define EIP_BASE ifregaddr[IFRN_EIP]
+
 #define EAX_BASE ifregaddr[IFRN_EAX]
 #define ECX_BASE ifregaddr[IFRN_ECX]
 #define EDX_BASE ifregaddr[IFRN_EDX]
@@ -61,6 +61,7 @@
 #define EBP_BASE ifregaddr[IFRN_EBP]
 #define ESI_BASE ifregaddr[IFRN_ESI]
 #define EDI_BASE ifregaddr[IFRN_EDI]
+#define EIP_BASE ifregaddr[IFRN_EIP]
 #define T0_BASE ifregaddr[IFRN_T0]
 #define T1_BASE ifregaddr[IFRN_T1]
 #define A0_BASE ifregaddr[IFRN_A0]

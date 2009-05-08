@@ -4803,6 +4803,7 @@ void write_eip_to_iferret_log() {
   addr = cpu_get_phys_addr(env,EIP);
   if (addr != -1) {
     iferret_log_op_write_4(IFLO_TB_HEAD_EIP, addr);
+    iferret_log_op_write_4(IFLO_TB_HEAD_EIP, EIP);
   }
 #endif // IFERRET_PHYS_EIP
 }

@@ -24,6 +24,7 @@ uint8_t if_debug=0;
 #define EBP_BASE ifregaddr[IFRN_EBP]
 #define ESI_BASE ifregaddr[IFRN_ESI]
 #define EDI_BASE ifregaddr[IFRN_EDI]
+#define EIP_BASE ifregaddr[IFRN_EIP]
 #define TO_BASE ifregaddr[IFRN_TO]
 #define T1_BASE ifregaddr[IFRN_T1]
 #define A0_BASE ifregaddr[IFRN_A0]
@@ -34,7 +35,7 @@ uint8_t if_debug=0;
 #define Q4_BASE ifregaddr[IFRN_Q4]
 
 
-char* info_flow_reg_str[16] = {
+char* info_flow_reg_str[32] = {
   "EAX",
   "ECX",
   "EDX",
@@ -43,6 +44,7 @@ char* info_flow_reg_str[16] = {
   "EBP",
   "ESI",
   "EDI",
+  "EIP",
   "T0",
   "T1",
   "A0",
@@ -54,7 +56,7 @@ char* info_flow_reg_str[16] = {
 };
 
 // array of flags to indicate if any part of a register is tainted
-uint8_t if_reg_taint[16] = {
+uint8_t if_reg_taint[32] = {
   FALSE,
   FALSE,
   FALSE,
@@ -347,18 +349,9 @@ inline uint8_t qaint_exists(uint64_t p, size_t n) {
 // delete info-flow for (p,p+n-1)
  void info_flow_delete(iferret_t *iferret, uint64_t p, size_t n) {
   if (check_addr(p) && check_size(n)) {
-    if (iferret_debug && __info_flow_exists(p,n)) {
-      printf ("iferret_info_flow deleting taint on (%llx,%d)\n", ctull(p), (int) n);
-      //      printf ("iferret_info_flow %d bytes tainted.\n", how_many_bytes_are_tainted());
-    }
     __info_flow_delete(p,n);
     //    shad_delete(iferret->shadow, p, n);
     assert ((__info_flow_exists(p,n)) == 0);
-  }
-  else {
-    if (iferret_debug) {
-      printf ("info_flow_delete discarded\n");
-    }
   }
 }
 
@@ -368,55 +361,9 @@ inline uint8_t qaint_exists(uint64_t p, size_t n) {
  void info_flow_copy(iferret_t *iferret, uint64_t p1,uint64_t p2, size_t n) {
   uint8_t pbt=0;
   if (check_addr(p1) && check_addr(p2) && check_size(n)) {
-    if (iferret_debug) {
-      if (__info_flow_exists(p2,n)) {
-	// src is tainted
-	pbt = 1;
-	printf ("iferret_info_flow info_flow_copy (p1=%llx,p2=%llx,n=%d)\n", ctull(p1), ctull(p2), (int)n);
-	printf ("iferret_info_flow some of src p2 is tainted.\n");
-	if (__info_flow_exists(p1,n)) {
-	  // dest was too -- about to be overwritten.  
-	  printf ("iferret_info_flow some of dest p1 was previously tainted.\n");
-	}
-      }
-      else {
-	// src not tainted
-	printf ("iferret_info_flow info_flow_copy (p1=%llx,p2=%llx,n=%d)\n", ctull(p1), ctull(p2), (int)n);
-	printf ("iferret_info_flow none of src p2 is tainted.\n");
-	if (__info_flow_exists(p1,n)) {
-	  // dst tainted -- about to be obliterated
-	  printf ("iferret_info_flow some of dest p1 was previously tainted.\n");
-	  pbt = 1;
-	}
-      }
-    }    
-    //    transfer_taint(wctull(p1),n,wctull(p2),n,1,1,"NONE","NONE",-1);
     __info_flow_copy(p1, p2, n);
-    if (__info_flow_exists(p1,n)) {
-      if (iferret_debug) printf ("iferret_info_flow dest p1 is now tainted.\n");
-      if (p1 >= HD_BASE_ADDR) {
-	printf ("iferret_info_flow we have a tainted hard drive.\n");
-	/*
-	if (__info_flow_exists_with_label(p1,n,"pid-6235-foo.pl-write-bar.sh", "foo",1)) {
-	  printf ("tainted with label pid-6235-foo.pl-write-bar.sh\n");
-	}
-	else {
-	  printf ("not the label we expect..\n");
-	}
-	*/
-	//	exit(1);
-      }
-    }
-    /*
-    if (iferret_debug && pbt==1) {
-      printf ("iferret_info_flow %d bytes tainted.\n", how_many_bytes_are_tainted());
-    }
-    */
-  }
-  else {
-    if (iferret_debug) {
-      printf ("info_flow_copy discarded\n");
-      printf ("p1 = %llx   p2 = %llx   n = %d\n", ctull(p1), ctull(p2), (int)n);
+    if (p1 >= HD_BASE_ADDR && (__info_flow_exists(p1,n))) {
+      printf ("iferret_info_flow we have a tainted hard drive.\n");
     }
   }
 }
@@ -428,40 +375,9 @@ inline uint8_t qaint_exists(uint64_t p, size_t n) {
  void info_flow_compute(iferret_t *iferret, uint64_t p1, size_t n1, uint64_t p2, size_t n2) {
   uint8_t pbt=0;
   if (check_addr(p1) && check_addr(p2) && check_size(n1) && check_size(n2)) {
-    if (iferret_debug && __info_flow_exists(p2,n2)) {
-      printf ("info_flow_compute (p1=%llx,n1=%d,p2=%llx,n2=%d)\n",
-	      ctull(p1),(int)n1,ctull(p2),(int)n2);      
-      printf ("some of src p2 is tainted.\n");
-      pbt = 1;
-    }
-    //    transfer_taint(wctull(p1),n1,wctull(p2),n2,0,0,"NONE","NONE",-1);    
     __info_flow_compute(p1, p2, n1, n2);
-    if (__info_flow_exists(p1,n1)) {
-      if (iferret_debug) printf ("dest p1 is now tainted.\n");
-      if (p1 >= HD_BASE_ADDR) {
-	printf ("iferret_info_flow we have a tainted hard drive.\n");
-	/*
-	if (__info_flow_exists_with_label(p1,n1,"pid-6235-foo.pl-write-bar.sh", "foo",1)) {
-	  printf ("tainted with label pid-6235-foo.pl-write-bar.sh\n");
-	}	
-	else {
-	  printf ("not the label we expect..\n");
-	}
-	*/
-	//	exit (1);
-      }
-    }
-    /*
-    if (iferret_debug && pbt==1) {
-      printf ("%d bytes tainted.\n", how_many_bytes_are_tainted());
-    }
-    */
-  }
-  else {
-    if (iferret_debug) {
-      printf ("info_flow_compute discarded\n");
-      printf ("p1 = %llx   p2 = %llx   n1 = %d  n2 = %d\n",
-	      ctull(p1), ctull(p2), (int)n1, (int)n2);
+    if (p1 >= HD_BASE_ADDR && (__info_flow_exists(p1,n1))) {
+      printf ("iferret_info_flow we have a tainted hard drive.\n");
     }
   }
 }
@@ -473,11 +389,6 @@ void info_flow_label(iferret_t *iferret, uint64_t p, size_t n, char *label) {
     //    label_taint(wctull(p),n,label,"NONE",-1);
     __info_flow_label(p, n, label);
   }
-  else {
-    if (iferret_debug) {
-      printf ("info_flow_label discarded\n");
-    }
-  }
 }
 
 
@@ -487,44 +398,9 @@ void info_flow_add_label(iferret_t *iferret, uint64_t p, size_t n, char *label) 
     //    label_taint(wctull(p),n,label,"NONE",-1);
     __info_flow_add_label(p, n, label);
   }
-  else {
-    if (iferret_debug) {
-      printf ("info_flow_add_label discarded\n");
-    }
-  }
 }
 
 
-
-
-
-/*
-inline uint64_t wctull(uint64_t p) {
-  uint64_t lp;
-  //  char key[9];
-
-  lp = ctull(p);
-
-
-  memset (key,0,16);
-  key[0] = (lp & 0xFF00000000000000) >> 56;
-  key[1] = (lp & 0x00FF000000000000) >> 48;
-  key[2] = (lp & 0x0000FF0000000000) >> 40;
-  key[3] = (lp & 0x000000FF00000000) >> 32;
-  key[4] = (lp & 0x00000000FF000000) >> 24;
-  key[5] = (lp & 0x0000000000FF0000) >> 16;
-  key[6] = (lp & 0x000000000000FF00) >> 8;
-  key[7] = (lp & 0x00000000000000FF);
-  *((uint64_t *) key) = lp;  
-  
-  if (tmh == NULL) 
-    tmh = vslht_new();
-  vslht_add(tmh, key, 1);
-
-
-  return (lp);
-}
-*/
 
 
 
@@ -554,9 +430,23 @@ inline void info_flow_add_label(uint64_t p, size_t n, char *label) {
 */
 inline void info_flow_ld(iferret_t *iferret, uint64_t p1, uint64_t p2, size_t n, uint8_t u) {
 
-  // NB: you are IGNORING u which is wrong!  
-  //  if (if_debug == TRUE) 
-  //    printf ("info_flow_ld %p %p %d %d\n", p1, p2, n, u);
+  if (iferret->if_debug == TRUE) {
+    uint8_t from_range_tainted = FALSE;
+    uint8_t to_range_tainted = FALSE;
+    if (info_flow_exists(iferret,p2,n)) {
+      from_range_tainted = TRUE;
+    }
+    if (info_flow_exists(iferret,p1,n)) {
+      to_range_tainted = TRUE;
+    }
+    if (from_range_tainted || to_range_tainted) {
+      printf ("info_flow_ld physaddr=%llx -> physaddr=%llx size=%d  from_range_tainted=%d to_range_tainted=%d\n",
+	      ctull(p2), ctull(p1), n, from_range_tainted, to_range_tainted);
+    }	      
+  }
+
+
+      
   // um, we shouldn't have 64-bit lds yet...
   assert (n<=4);
   // copy the lower n bytes from p2 into reg at p1
@@ -573,8 +463,23 @@ inline void info_flow_ld(iferret_t *iferret, uint64_t p1, uint64_t p2, size_t n,
 // p1 is address of some info-flow register (fake address).
 // store the low n bytes of that register at location p2.  
 inline void info_flow_st(iferret_t *iferret, uint64_t p1, uint64_t p2, size_t n) {
-  //  if (if_debug == TRUE) 
-  //    printf ("info_flow_st %p %p %d\n", p1, p2, n);
+
+  if (iferret->if_debug == TRUE) {
+    uint8_t from_range_tainted = FALSE;
+    uint8_t to_range_tainted = FALSE;
+    if (info_flow_exists(iferret,p1,n)) {
+      from_range_tainted = TRUE;
+    }
+    if (info_flow_exists(iferret,p2,n)) {
+      to_range_tainted = TRUE;
+    }
+    if (from_range_tainted || to_range_tainted) {
+      printf ("info_flow_st physaddr=%llx -> physaddr=%llx size=%d  from_range_tainted=%d to_range_tainted=%d\n",
+	      ctull(p1), ctull(p2), n, from_range_tainted, to_range_tainted);
+    }	      
+  }
+
+
   assert (n<=4);
   // copy  lower n bytes from p1 into p2. 
   info_flow_copy(iferret,p2,p1,n);
@@ -590,27 +495,25 @@ inline void info_flow_st(iferret_t *iferret, uint64_t p1, uint64_t p2, size_t n)
 // delete info-flow for n bytes of register number rn, starting at offset o.
 // if we delete for all 4 byts, then we can set the big falg.
 inline void if_delete_reg_aux (iferret_t *iferret, uint32_t rn, uint32_t o, uint32_t n) {
+
+  if (iferret->if_debug == TRUE) {
+    uint64_t p = ifregaddr[rn] + o;
+    printf ("if_delete_reg_aux %s\n", if_reg_str(rn));
+    if (info_flow_exists(iferret,p,n)) {
+      printf ("if_delete_reg_aux rn=%d %s physaddr=%llx o=%d size=%d extent was tainted.\n", 
+	      rn, if_reg_str(rn), ctull(p), o, n);
+    }
+  }    
+
   // only bother if reg *may* be tainted 
   if (info_flow_possibly_tainted(rn)) {		
-    if (debug_at_least_med()) 
-      printf ("%s possibly tainted\n", info_flow_reg_str[rn]);
-    // untaint 
     info_flow_delete(iferret,ifregaddr[rn]+o,n);		 
     if (o==0 && n==4) {
       // if we untainted the whole thing.  take note. 
       info_flow_mark_as_not_possibly_tainted(rn); 
     }
   }   
-  else {
-    if (debug_at_least_med()) {
-      printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn]);
-    }
-  }
-  /*
-  if (debug_at_least_med()) {
-    check_reg_taint(rn,__FILE__,__LINE__);
-  }
-  */
+
 }
 
 
@@ -642,25 +545,35 @@ inline void if_delete_r1(iferret_t *iferret, uint32_t rn) {
 // rn1 is dest
 // rn2 is source
 inline void if_copy_regs_aux (iferret_t *iferret, uint32_t rn1, uint32_t o1, uint32_t rn2, uint32_t o2, uint32_t n) {
-  //  assert (rn1 != UNINITIALIZED && rn2 != UNINITIALIZED);	
-  if (debug_at_least_med()) {
-    //    check_reg_taint(rn1,__FILE__,__LINE__);
-    //    check_reg_taint(rn2,__FILE__,__LINE__);
-    printf ("  if_copy_regs_aux (r1=%s o1=%d) (r2=%s o2=%d) n=%d\n",
-	    info_flow_reg_str[rn1], o1, 
-	    info_flow_reg_str[rn2], o2, n);
-  }
-  if (info_flow_possibly_tainted(rn2)) {  
-    if (debug_at_least_med()) {
-      printf ("%s possibly tainted\n", info_flow_reg_str[rn2]);
+
+  if (iferret->if_debug == TRUE) {
+    uint64_t p1, p2;
+    uint8_t from_range_tainted = FALSE;
+    uint8_t to_range_tainted = FALSE;
+    printf ("if_copy_regs_aux %s %s\n", if_reg_str(rn1), if_reg_str(rn2));
+    p1 = ifregaddr[rn1] + o1;
+    p2 = ifregaddr[rn2] + o2;
+    if (info_flow_exists(iferret,p2,n)) {
+      from_range_tainted = TRUE;
     }
+    if (info_flow_exists(iferret,p1,n)) {
+      to_range_tainted = TRUE;
+    }
+    if (from_range_tainted || to_range_tainted) {
+      printf ("if_copy_regs_aux rn2=%d %s addr=%llx -> rn1=%d %s addr=%llx size=%d  from_range_tainted=%d to_range_tainted=%d\n",
+	      rn2, if_reg_str(rn2), ctull(p2), 
+	      rn1, if_reg_str(rn1), ctull(p1), 
+	      n,
+	      from_range_tainted, to_range_tainted);
+    }	      
+  }
+    
+
+  if (info_flow_possibly_tainted(rn2)) {  
     info_flow_copy(iferret,ifregaddr[rn1]+o1,ifregaddr[rn2]+o2,n);   
     info_flow_mark_as_possibly_tainted(rn1); 
   } 
   else { 
-    if (debug_at_least_med()) {
-      printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn2]);
-    }
     if (o1==0 && o2==0 && n==4 && info_flow_possibly_tainted(rn1)) { 
       // untainted rn1 copied to possibly tainted rn2.  
       // Thus, rn2 not possibly tainted  
@@ -668,14 +581,12 @@ inline void if_copy_regs_aux (iferret_t *iferret, uint32_t rn1, uint32_t o1, uin
       info_flow_mark_as_not_possibly_tainted(rn1);	    
     } 
   }   
-  if (debug_at_least_med()) {
-    //    check_reg_taint(rn1,__FILE__,__LINE__);
-    //    check_reg_taint(rn2,__FILE__,__LINE__);
-  }
 }
 
 
 // most common case.  copy 4-byte reg to another 4-byte reg.
+// rn1 is dest
+// rn2 is source
 inline void if_copy_r4(iferret_t *iferret, uint32_t rn1, uint32_t rn2) {
   if_copy_regs_aux(iferret,rn1,0,rn2,0,4);
 }
@@ -707,42 +618,33 @@ inline void if_copy_r1(iferret_t *iferret, uint32_t rn1, uint32_t rn2) {
 inline void if_compute_regs_aux (iferret_t *iferret, 
 				 uint32_t rn1, uint32_t o1, uint32_t n1, 
 				 uint32_t rn2, uint32_t o2, uint32_t n2) {
-  //  assert (rn1 != UNINITIALIZED && rn2 != UNINITIALIZED);	
-  if (debug_at_least_med()) {
-    //    check_reg_taint(rn1,__FILE__,__LINE__);
-    //    check_reg_taint(rn2,__FILE__,__LINE__);
-  }
-  if (debug_at_least_med()) {
-    printf ("  if_compute_regs_aux (r1=%s o1=%d n1=%d) (r2=%s o2=%d n2=%d)\n",
-	    info_flow_reg_str[rn1], o1, n1,
-	    info_flow_reg_str[rn2], o2, n2);
-  }
-  if (info_flow_possibly_tainted(rn2)) { 
-    if (debug_at_least_med()) {
-      printf ("%s possibly tainted\n", info_flow_reg_str[rn2]);
+
+  if (iferret->if_debug == TRUE) {
+    uint64_t p1, p2;
+    uint8_t from_range_tainted = FALSE;
+    uint8_t to_range_tainted = FALSE;
+    printf ("if_compute_regs_aux %s %s\n", if_reg_str(rn1), if_reg_str(rn2));
+    p1 = ifregaddr[rn1] + o1;
+    p2 = ifregaddr[rn2] + o2;
+    if (info_flow_exists(iferret,p2,n2)) {
+      from_range_tainted = TRUE;
     }
-    //  printf("IF_COMPUTE_REGS_AUX(%d,%d,%d,%d,%d,%d)\n", rn1,o1,n1,rn2,o2,n2); 
+    if (info_flow_exists(iferret,p1,n1)) {
+      to_range_tainted = TRUE;
+    }
+    if (from_range_tainted || to_range_tainted) {
+      printf ("if_compute_reg_aux rn2=%d %s addr=%llx n2=%d -> rn1=%d %s addr=%llx n1=%d   from_range_tainted=%d to_range_tainted=%d\n",
+	      rn2, if_reg_str(rn2), ctull(p2), n2,
+	      rn1, if_reg_str(rn1), ctull(p1), n1,
+	      from_range_tainted, to_range_tainted
+	      );
+    }	      
+  }
+
+  if (info_flow_possibly_tainted(rn2)) { 
     info_flow_compute(iferret,ifregaddr[rn1]+o1,n1,ifregaddr[rn2]+o2,n2); 
     info_flow_mark_as_possibly_tainted(rn1); 
   } 
-  else { 
-    if (debug_at_least_med()) {
-      printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn2]);
-    }
-    /*
-      // TRL 0805 whoops this is just bogus, right? 
-      // This is a "non-oblitting" compute transfer.  
-      // if rn2 isn't possibly tainted, it should have no effect upon rn1.
-    if (info_flow_possibly_tainted(rn1)) { 
-      info_flow_delete(iferret,IFRBA(rn1)+o1,n1);	
-      info_flow_mark_as_not_possibly_tainted(rn1); 
-    } 
-    */
-  }
-  if (debug_at_least_med()) {
-    //    check_reg_taint(rn1,__FILE__,__LINE__);
-    //    check_reg_taint(rn2,__FILE__,__LINE__);
-  }
 }
 
 
@@ -767,27 +669,36 @@ inline void if_compute_r1(iferret_t *iferret, uint32_t rn1, uint32_t rn2) {
   We do this with a temporary as it streamlines the operations
   on the taint graph.
   n is to make the self-compute based on fewer than 4 bytes.  
+  rn1 is both source and dest
+  rn2 is source only
 */
 inline void if_self_compute_regs_aux(iferret_t *iferret, uint32_t rn1, uint32_t rn2, uint32_t n) {
   uint8_t r1pt, r2pt;
 
-  //  assert (rn1 != UNINITIALIZED && rn2 != UNINITIALIZED);		
-  if (debug_at_least_med()) {
-    printf ("  if_self_compute_regs_aux r1=%s r2=%s n=%d\n",
-	    info_flow_reg_str[rn1], info_flow_reg_str[rn2],n);
-  }  
+  if (iferret->if_debug == TRUE) {
+    uint64_t p1, p2;
+    uint8_t from_range_tainted = FALSE;
+    uint8_t to_range_tainted = FALSE;
+    p1 = ifregaddr[rn1];
+    p2 = ifregaddr[rn2];
+    printf ("if_self_compute_regs_aux %s %s\n", if_reg_str(rn1), if_reg_str(rn2));
+    if (info_flow_exists(iferret,p1,n) || info_flow_exists(iferret,p2,n)) {
+      from_range_tainted = TRUE;
+    }
+    if (info_flow_exists(iferret,p1,n)) {
+      to_range_tainted = TRUE;
+    }
+    if (from_range_tainted || to_range_tainted) {
+      printf ("if_self_compute_regs_aux rn1=%d %s addr=%llx ?= rn2=%d %s addr=%llx size=%d   from_range_tainted=%d to_range_tainted=%d\n",
+	      rn1, if_reg_str(rn1), ctull(p1), 
+	      rn2, if_reg_str(rn2), ctull(p2), 
+	      n,
+	      from_range_tainted, to_range_tainted);
+    }	      
+  }
+
   r1pt = info_flow_possibly_tainted(rn1);
   r2pt = info_flow_possibly_tainted(rn2);  
-  if (debug_at_least_med()) {
-    if (r1pt == TRUE) 
-      printf ("%s possibly tainted\n", info_flow_reg_str[rn1]);
-    else
-      printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn1]);
-    if (r2pt == TRUE) 
-      printf ("%s possibly tainted\n", info_flow_reg_str[rn2]);
-    else
-      printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn2]);
-  }  
   if (r1pt || r2pt) {
     // we split up r1 += r2 into two parts
     // part 1: q0 = r1 + r2
@@ -824,19 +735,18 @@ inline void if_self_compute_r1(iferret_t *iferret, uint32_t rn1, uint32_t rn2) {
   i.e. Q0 = R + 1;  R = Q0;
 */
 inline void if_inc_r4(iferret_t *iferret, uint32_t rn) {
-  if (debug_at_least_med()) {
-    printf ("  if_inc_r4 r=%s\n",info_flow_reg_str[rn]);
+  if (iferret->if_debug) printf ("if_inc_r4 %s\n", if_reg_str(rn));
+  if (iferret->if_debug == TRUE) {
+    uint64_t p1 = ifregaddr[rn];
+    if (info_flow_exists(iferret,p1,4)) {
+      printf ("if_inc_r4 %d %s was tainted.\n",
+	      rn, ctull(p1));
+    }
   }
   if (info_flow_possibly_tainted(rn)) {		
-    if (debug_at_least_med()) 
-      printf ("%s possibly tainted\n", info_flow_reg_str[rn]);
     if_delete_r4(iferret,IFRN_Q0); 
     if_compute_r4(iferret,IFRN_Q0,rn); 
     if_copy_r4(iferret,rn,IFRN_Q0); 
-  }
-  else {
-    if (debug_at_least_med())     
-      printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn]);
   }
 }
 
@@ -857,36 +767,25 @@ inline void if_ld(iferret_t *iferret, uint32_t msn, uint32_t rn, uint32_t n, uin
   //  assert (msn != UNINITIALIZED); 
   //  assert (rn != UNINITIALIZED); 
   //  assert (p != (char *) UNINITIALIZED);	
+  if (iferret->if_debug) printf ("if_ld %s\n", if_reg_str(rn));
   p += phys_ram_base;
   if (p == 0)
     return;
-  if (debug_at_least_med()) {
-    //    check_reg_taint(rn,__FILE__,__LINE__);
-  }
-  if (debug_at_least_med()) {
-    printf ("if_ld msn=%d rn=%d n=%d u=%d p=%llx\n", msn,rn,n,u,ctull(p));
-  }
-  /*
-    if (info_flow_exists(iferret,p,n)) {
-      printf ("loading tainted data.\n");
-    }
-  */
   info_flow_ld(iferret,ifregaddr[rn], p, n, u);	
   // assume rn might now be tainted.  
   info_flow_mark_as_possibly_tainted(rn);
-  if (debug_at_least_med()) {
-    //    check_reg_taint(rn,__FILE__,__LINE__);
-  }
 }
 
 
 // read n bytes from p and put them in register rn. 
 inline void if_ldu(iferret_t *iferret, uint32_t msn, uint32_t rn, uint32_t n, uint64_t p) {
+  if (iferret->if_debug) printf ("if_ldu %s\n", if_reg_str(rn));
   if_ld(iferret,msn,rn,n,TRUE,p);
 }
 
 
 inline void if_lds(iferret_t *iferret, uint32_t msn, uint32_t rn, uint32_t n, uint64_t p) {
+  if (iferret->if_debug)  printf ("if_lds %s\n", if_reg_str(rn));
   if_ld(iferret,msn,rn,n,FALSE,p);
 }
 
@@ -898,6 +797,10 @@ inline void if_lds(iferret_t *iferret, uint32_t msn, uint32_t rn, uint32_t n, ui
 // it is, we propagate its labels to the dest_addr.
 inline void if_tainted_ptr(iferret_t *iferret, uint64_t dest_addr, uint64_t ptr_addr, uint32_t n) {
   if (info_flow_exists(iferret,ptr_addr, 4)) {
+    if (iferret->if_debug == TRUE) {
+      printf ("if_tainted_ptr dest_addr=%llx ptr_addr=%llx n=%d ptr is tainted.\n",
+	      ctull(dest_addr), ctull(ptr_addr), n);
+    }
     info_flow_compute(iferret,dest_addr, n, ptr_addr, 4);
   }
 }
@@ -909,27 +812,13 @@ inline void if_tainted_ptr(iferret_t *iferret, uint64_t dest_addr, uint64_t ptr_
 // msn is memory suffix number. 
 inline void if_st(iferret_t *iferret, uint32_t msn, uint32_t rn, uint32_t n, uint64_t p) {
   if (p == 0) 
-    return;
-  
+    return;  
+  if (iferret->if_debug) printf ("if_st %s \n", if_reg_str(rn));
   p += phys_ram_base;
-  if (debug_at_least_med()) {
-    //    check_reg_taint(rn,__FILE__,__LINE__);
-  }
   if (info_flow_possibly_tainted(rn)) {		
-    if (debug_at_least_med()) {
-      printf ("if_st msn=%d r=%s n=%d p=%llx\n", msn,info_flow_reg_str[rn],n, ctull(p));
-      printf ("%s possibly tainted\n", info_flow_reg_str[rn]);
-    }
     // note: no way to *mark* an address as possibly tainted.  
     info_flow_st(iferret,ifregaddr[rn], p, n);	
   } 
-  else {
-    if (debug_at_least_med()) 
-      printf ("%s NOT possibly tainted\n", info_flow_reg_str[rn]);
-  }
-  if (debug_at_least_med()) {
-    //    check_reg_taint(rn,__FILE__,__LINE__);
-  }
 }
 
 
@@ -2451,6 +2340,23 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     }
     break;
 
+  case IFLO_TESTL_T0_T1_CC:
+    {
+      uint8_t t0t, t1t;
+      assert_args_0(op);
+    
+      t0t = info_flow_exists(iferret, T0_BASE, 4);
+      t1t = info_flow_exists(iferret, T1_BASE, 4);
+      if (t0t || t1t) {
+	printf ("testl t0 t1. ");
+	if (t0t) printf ("t0 tainted. ");
+	if (t1t) printf ("t1 tainted. ");
+	printf ("\n");
+      }
+    }
+
   }
+
+
 
 }
