@@ -5,6 +5,7 @@
 #include "int_int_hashtable.h"
 #include "int_string_hashtable.h"
 #include "iferret_ops.h"
+//#include "iferret_labeling_spec.h"
 #include "int_set.h"
 #include "vslht.h"
 
@@ -51,9 +52,15 @@ typedef struct iferret_struct_t {
   uint8_t first_log;
   uint8_t something_got_labeled;
   uint8_t if_debug;
+  
 #ifdef OTAINT
   ShadowMem *shadow;
 #endif
+  /*
+  uint32_t next_labeling_rule_ind;
+  uint32_t num_labeling_rules;
+  Ils_rule_t *labeling_rule; 
+  */
 } iferret_t;
 
 

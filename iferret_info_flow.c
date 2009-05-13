@@ -385,7 +385,7 @@ inline uint8_t qaint_exists(uint64_t p, size_t n) {
 
 void info_flow_label(iferret_t *iferret, uint64_t p, size_t n, char *label) {
   if (check_addr(p) && check_size(n)) {
-    printf ("info_flow_label: (%llx,%d) %s\n", ctull(p), (int)n,label);
+    //    printf ("info_flow_label: (%llx,%d) %s\n", ctull(p), (int)n,label);
     //    label_taint(wctull(p),n,label,"NONE",-1);
     __info_flow_label(p, n, label);
   }
@@ -2343,8 +2343,8 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
   case IFLO_TESTL_T0_T1_CC:
     {
       uint8_t t0t, t1t;
-      assert_args_0(op);
-    
+      /*
+      assert_args_0(op);          
       t0t = info_flow_exists(iferret, T0_BASE, 4);
       t1t = info_flow_exists(iferret, T1_BASE, 4);
       if (t0t || t1t) {
@@ -2353,6 +2353,7 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
 	if (t1t) printf ("t1 tainted. ");
 	printf ("\n");
       }
+      */
     }
 
   }

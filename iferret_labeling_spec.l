@@ -1,19 +1,19 @@
 %{
   #include <stdlib.h>
   void yyerror(char *);
-//  #include "y.tab.h"
+  #include "y.tab.h"
 %}
 
 %%
 
 
-"syscall_param"  return  SYSCALL_PARAM;
+"syscall_param"    return  SYSCALL_PARAM;
 
-"memory_access"  return  MEMORY_ACCESS;
+"memory_access"    return  MEMORY_ACCESS;
 
-"file_access"    return  FILE_ACCESS;
+"file_access"      return  FILE_ACCESS;
 
-"add_syscall_num" return  ADD_SYSCALL_NUM;
+"add_syscall_num"  return  ADD_SYSCALL_NUM;
 
 "add_buff_name"    return  ADD_BUFF_NAME;
 
@@ -23,7 +23,7 @@
 
 "add_proc"         return  ADD_PROC; 
 
-"add_filename "     return  ADD_FILENAME;
+"add_filename "    return  ADD_FILENAME;
 
 "add_time"         return  ADD_TIME;
 
@@ -31,9 +31,9 @@
 
 "write"            return WRITE;
 
-;                 return  SEPARATOR;
+;                  return  SEPARATOR;
 
-^\/\/(.*)\n        return  COMMENT;   ; /* discard comment lines */
+^\/\/(.*)\n        return  COMMENT;  
 
 
 [0-9][0-9][0-9][0-9]   {
@@ -69,7 +69,3 @@ int yywrap(void) {
   return 1;
 }
 
-int main (void) {
-  yylex();
-  return 0;
-}

@@ -174,6 +174,9 @@ iferret_t *iferret_create() {
   iferret->first_log = TRUE;
   iferret->something_got_labeled = FALSE;
   iferret->if_debug = FALSE;
+  //  iferret->next_labeling_rule_ind = 0;
+  //  iferret->num_labeling_rules = 0;
+  //  iferret->labeling_rule = NULL;
 #ifdef OTAINT
   iferret->shadow = shad_create();
 #endif
@@ -404,8 +407,8 @@ void iferret_read_file(iferret_t *iferret, int pid, char *command,
       //      if (iferret->chron == 10) {
 	printf ("labeling %d bytes at p=%x i.e. physaddr=%llx with [%s]\n",
 		retval, p, phys_ram_base + p, label);
-	info_flow_add_label(iferret, phys_ram_base + p, retval, label);
-	iferret->something_got_labeled = TRUE;
+	//	info_flow_add_label(iferret, phys_ram_base + p, retval, label);
+	//	iferret->something_got_labeled = TRUE;
 	//	iferret->if_debug = TRUE;
 	//      }
     }
@@ -519,13 +522,33 @@ void iferret_change_current_pid(iferret_t *iferret, int new_pid) {
   if (iferret->use_mal_set && !(int_set_mem(iferret->mal_pids, new_pid))) {
     // make iferret supcious if new pid is in mal set. 
     iferret->mode = IFERRET_MODE_SUSPICIOUS;
-    printf ("iferret now suspicious.\n");
+    //    printf ("iferret now suspicious.\n");
   }
   else {
     iferret->mode = IFERRET_MODE_RELAXED;
-    printf ("iferret now relaxed.\n");
+    //    printf ("iferret now relaxed.\n");
   }
 }    
+
+
+
+void check_syscall_arg(iferret_t *iferret, 
+				 uint64_t reg_base_addr, char *regname, 
+				 uint32_t num, uint32_t time) {
+  char label[1024];
+  if (info_flow_exists(iferret, reg_base_addr, 4)) {
+    printf ("time %d sycall %d. arg %s already has a label.\n", time, num, regname);
+    fflush(stdout);
+#ifdef OTAINT
+    shad_spit_range(iferret->shadow, reg_base_addr, reg_base_addr+4);
+#endif
+  }
+  /*
+  sprintf(label, "syscall-%d-%s-%d", num, regname, time);
+  info_flow_label(iferret, reg_base_addr, 4, label);
+  iferret->something_got_labeled = TRUE;
+  */
+}
 
 
 
@@ -550,11 +573,25 @@ void iferret_process_syscall(iferret_t *iferret, iferret_op_t *op) {
     iferret_count_op(iferret,op);
   }
 
+  
+  check_syscall_arg(iferret, EBX_BASE, "EBX", scp->eax, iferret->chron);
+  check_syscall_arg(iferret, ECX_BASE, "ECX", scp->eax, iferret->chron);
+  check_syscall_arg(iferret, EDX_BASE, "EDX", scp->eax, iferret->chron);
+  check_syscall_arg(iferret, ESP_BASE, "ESP", scp->eax, iferret->chron);
+  check_syscall_arg(iferret, EBP_BASE, "EBP", scp->eax, iferret->chron);
+  check_syscall_arg(iferret, ESI_BASE, "ESI", scp->eax, iferret->chron);
+  check_syscall_arg(iferret, EDI_BASE, "EDI", scp->eax, iferret->chron);
+  
+  //  iferret->chron ++;
+
+
   if (op->num == IFLO_SYS_SYS_DUP) {
     printf ("foo.\n");
   }
 
+  //  printf ("time = %d\n", iferret->chron);
   iferret_spit_op(op);
+
 
   if (op->num == IFLO_SYS_SYS_DUP) {
     printf ("attempted dup of fd=%d\n", op->arg[0].val.u32);
@@ -632,6 +669,14 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
   }
 
   syscall = &element.syscall;
+
+  // label the retval, i.e. EAX
+  {
+    char label[1024];
+    sprintf(label, "syscall-eax-retval-%d-%d", syscall->eax, iferret->chron);
+    info_flow_label(iferret, EAX_BASE, 4, label);
+    iferret->something_got_labeled = TRUE;
+  }
 
   /*
   if(pid == 5490 && !iferret->preprocess && syscall->op_num == IFLO_SYS_CLONE)
@@ -1082,7 +1127,7 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
 
     if (iferret->info_flow) {
 #ifdef OTAINT
-      
+      /*      
       if (shad_check_changed(iferret->shadow)) {
 	shad_clear_changed(iferret->shadow);	
 	printf ("op %d nbt %d\n", ii,  shad_num_bytes_with_label(iferret->shadow, "chron-10-pid-4753-comm-gzip-count-1052-read-cups.gz"));
@@ -1090,7 +1135,7 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
 	shad_spit(iferret->shadow);
 	fflush(stdout);
       }
-      
+      */
 #endif 
 
 
