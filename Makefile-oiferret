@@ -13,7 +13,7 @@ INCDIRS = -I . -I $(OTAINTDIR) -I $(QEMUDIR)/target-i386
 LIBDIRS = -L$(OTAINTDIR)
 
 
-OBJS = iferret.o iferret_info_flow.o iferret_open_fd.o iferret_log.o iferret_syscall_stack.o iferret_op_str.o int_set.o int_string_hashtable.o int_int_hashtable.o vslht.o # iferret_labeling_spec.l.o iferret_labeling_spec.y.o
+OBJS = iferret.o iferret_info_flow.o iferret_open_fd.o iferret_log.o iferret_syscall_stack.o iferret_op_str.o int_set.o int_string_hashtable.o int_int_hashtable.o vslht.o iferret_labeling_spec.l.o iferret_labeling_spec.y.o
 SRCS = $(OBJS,.o=.c) 
 
 
@@ -27,12 +27,12 @@ iferret_op_str.o: $(TD)/iferret_op_str.c
 iferret_syscall_stack.o: $(TD)/iferret_syscall_stack.c
 	$(CC) $(CFLAGS) -c $(TD)/iferret_syscall_stack.c 
 
-#iferret_labeling_spec.l.c: iferret_labeling_spec.l
-#	flex -o iferret_labeling_spec.l.c iferret_labeling_spec.l
+iferret_labeling_spec.l.c: iferret_labeling_spec.l
+	flex -o iferret_labeling_spec.l.c iferret_labeling_spec.l
 
 
-#iferret_labeling_spec.y.c: iferret_labeling_spec.y
-#	bison -o iferret_labeling_spec.y.c iferret_labeling_spec.y
+iferret_labeling_spec.y.c: iferret_labeling_spec.y
+	bison -o iferret_labeling_spec.y.c iferret_labeling_spec.y
 
 
 
