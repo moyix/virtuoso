@@ -37,6 +37,9 @@
 
 %%
 
+labeling_spec_file: /* empty line */
+     | labeling_spec_file labeling_rule
+     ;
 
 labeling_rule:
      what_to_label ',' how_to_label SEPARATOR  

@@ -1,8 +1,18 @@
 %{
   #include <stdlib.h>
+  #include <string.h>
   void yyerror(char *);
-  #include "y.tab.h"
+
+  typedef string_struct {
+    char *buff;
+    uint32_t len;
+  } String_t;
+
+  typedef union tok_union {
+    int num;
+    String_t wrd;
 %}
+
 
 %%
 
@@ -35,30 +45,32 @@
 
 ^\/\/(.*)\n        return  COMMENT;  
 
+[ \t]+             ;  /* discard whitespace */
 
 [0-9][0-9][0-9][0-9]   {
-                          yylval = atoi(yytext);
-                          return  NUMBER4;
+                          ils_tok.num = atoi(yytext);
+                          return NUMBER4;
                        }
 
 [0-9][0-9][0-9]        {
-                          yylval = atoi(yytext);
-                          return  NUMBER3;
+                          ils_tok.num = atoi(yytext);
+                          return NUMBER3;
                        }
 
 [0-9][0-9]             {
-                          yylval = atoi(yytext);
-                          return  NUMBER2;
+                          ils_tok.num = atoi(yytext);
+                          return NUMBER2;
                        }
 
 [0-9]                  {
-                          yylval = atoi(yytext);
-                          return  DIGIT;
+                          ils_tok.num = atoi(yytext);
+                          return DIGIT;
                        }
 
 [A-Za-z][A-Za-z0-9\-_.]+  {
-                            yylval = yytext;
-                            return  WORD;
+                            ils_tok.wrd.buff = yytext;
+                            ils_tok.wrd.len = strlen(yytext);
+                            return WORD;
                           } 
 
 
