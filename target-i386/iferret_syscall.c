@@ -33,8 +33,11 @@ extern struct CPUX86State *env;
 extern pid_t pid;
 extern uid_t uid;
 
-target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
+// defined and set in vl.c
+extern uint8_t iferret_target_os;
 
+target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
+int cpu_virtual_memory_read(CPUState *env, uint32_t addr, char *out, uint32_t length);
 
 pid_t current_pid, last_pid;
 uid_t current_uid, last_uid;
@@ -64,8 +67,166 @@ static unsigned char nargs[18]={AL(0),AL(3),AL(3),AL(3),AL(2),AL(3),
                                 AL(6),AL(2),AL(5),AL(5),AL(3),AL(3)};
 */
 
+/* Windows Introspection for XPSP2 */
+
+// BDG 5/15/2009
+// Get a system call argument in Windows.
+// The system call stub for a generic Windows syscall looks like:
+// NtSystemCall:
+//     mov eax, Ordinal
+//     mov edx, KiFastSystemCall
+//     call [edx]
+// KiFastSystemCall:
+//     mov edx, esp
+//     sysenter
+// When systenter occurs, we can use EDX to retrieve the
+// values from the original stack (ESP gets modified by
+// sysenter). There are two additional things on the stack
+// at this point--the return address for KiFastSystemCall
+// and the return address for the userland entry point to
+// the system call (e.g. the interface exposed by ntdll.dll).
+static inline target_ulong iferret_get_arg_win(int i) {
+    return EDX+(sizeof(target_ulong)*(i+2));
+}
+
+void iferret_get_uchar(uint32_t uchar_addr, uint8_t *out) {
+    if(!cpu_virtual_memory_read(env, uchar_addr, (char *) out, 1)) {
+        *out = 0;
+    }
+    return;
+}
+void iferret_get_large_integer(uint32_t largeint_addr, uint64_t *out) {
+    if(!cpu_virtual_memory_read(env, largeint_addr, (char *) out, 8)) {
+        *out = 0;
+    }
+    return;
+}
+
+void iferret_get_object_attributes(uint32_t oattr_addr, char *out) {
+    uint32_t ustr;
+    
+    //if(!cpu_virtual_memory_read(env, oattr_addr+8, (char *) &ustr, 4)) {
+    if (!read_member(env, oattr_addr, OBJECT_ATTRIBUTES, ObjectName, &ustr)) {
+        goto get_object_attributes_error;
+    }
+
+    if(!ustr) {
+        goto get_object_attributes_error;
+    }
+
+    iferret_get_unicode_string(ustr, out);
+    return;
+
+get_object_attributes_error:
+    out = (char *) malloc(1);
+    out[0] = '\0';
+    return;
+}
+
+void iferret_get_unicode_string(uint32_t ustr_addr, char *out) {
+    int i;
+    uint16_t slen,smaxlen;
+    uint32_t sbuf_addr;
+    char *sbuf = NULL;
+
+    if(!read_member(env, ustr_addr, UNICODE_STRING, Length, &slen)) {
+        goto get_unicode_string_error;
+    }
+    if(!read_member(env, ustr_addr, UNICODE_STRING, MaximumLength, &smaxlen)) {
+        goto get_unicode_string_error;
+    }
+    if(!read_member(env, ustr_addr, UNICODE_STRING, Buffer, &sbuf_addr)) {
+        goto get_unicode_string_error;
+    }
+
+    slen = min(slen, smaxlen);
+
+    sbuf = (char *)malloc(slen);
+    out = (char *)malloc((slen / 2) + 1);
+    if(!cpu_virtual_memory_read(env, sbuf_addr, (char *) sbuf, slen)) {
+        goto get_unicode_string_error;
+    }
+
+    // "Unicode" handling -- skip every other byte
+    for (i = 0; i < (slen / 2); i++) {
+        out[i] = sbuf[i*2];
+    }
+    out[i] = '\0';
+    free(sbuf);
+    return;
+
+get_unicode_string_error:
+    if (sbuf) free(sbuf);
+    if (out) free(out);
+    out = (char *) malloc(1);
+    out[0] = '\0';
+    return;
+}
+
+static inline long iferret_get_current_process_win() {
+    uint32_t eproc, ethread;
+    read_member(env, KPCR_ADDRESS+offsetof(KPCR,PrcbData), KPRCB, CurrentThread, &ethread);
+    if(!ethread) {
+        printf("XPSYS getpid: CurrentThread == NULL\n");
+        return 0;
+    }
+    read_member(env, ethread, ETHREAD, ThreadsProcess, &eproc);
+    return eproc;
+}
+
+static inline target_ulong iferret_get_current_pid_win() {
+    target_ulong pid;
+    char proc_name[17];
+    target_ulong eproc;
+
+    if(!(eproc = iferret_get_current_process_win())) {
+        printf("iferret_get_current_pid_win: Couldn't get current process\n");
+        return 0;
+    }
+
+    read_member(env, eproc, EPROCESS, UniqueProcessId, &pid);
+    read_member(env, eproc, EPROCESS, ImageFileName, proc_name);
+    if (proc_name[15] != '\0')
+        proc_name[16] = '\0';
+    printf("XPSYS Current process name: %s (%u)\n", proc_name, pid);
+    return pid;
+}
+
+static inline uid_t iferret_get_current_uid_win() {
+    uid_t uid;
+    uint32_t eproc,token,ug_count,sid_and_attr,sid;
+    uint32_t subauth_array_base, subauth_array_off;
+    uint8_t auth_count;
+
+    if(!(eproc = iferret_get_current_process_win())) {
+        printf("iferret_get_current_pid_win: Couldn't get current process\n");
+        return -1;
+    }
+
+    read_member(env, eproc, EPROCESS, Token, &token);
+    token &= ~0x7; // Lowest 3 bits are used to encode refcount
+    read_member(env, token, TOKEN, UserAndGroupCount, &ug_count);
+    read_member(env, token, TOKEN, UserAndGroups, &sid_and_attr);
+    read_member(env, sid_and_attr, SID_AND_ATTRIBUTES, Sid, &sid);
+    read_member(env, sid, SID, SubAuthorityCount, &auth_count);
+
+    // Read the last SubAuthority value (kind of ugly)
+    subauth_array_base = sid+offsetof(SID,SubAuthority);
+    subauth_array_off  = (auth_count-1)*membsize(SID,SubAuthority);
+    cpu_virtual_memory_read(env, subauth_array_base+subauth_array_off, (char *) &uid, 4);
+    printf("XPSYS Current UID = %d\n", uid);
+    return uid;
+}
+
+/* End Windows introspection code */
+
 static inline int current_pid_valid() {
-  return (current_pid>=0 && current_pid<=32768);
+  switch(iferret_target_os) {
+    case OS_LINUX:
+      return (current_pid>=0 && current_pid<=32768);
+    case OS_WINXPSP2:
+      return (current_pid & 3) == 0;
+  }
 }
 
 
@@ -113,13 +274,13 @@ static inline void copy_string_phys(char *tempbuf, target_phys_addr_t physaddr, 
 // vaddr is virt addr of a string. 
 // return 0 on failure, 1 on success.
 int copy_string(char *str, uint32_t vaddr) { 
-  target_phys_addr_t paddr;
-  paddr = cpu_get_phys_addr(env,vaddr);
-  if (paddr == -1) {
+  bzero(str, 120);
+  if(!cpu_virtual_memory_read(env, vaddr, str, 120)) {
     return 0;
   }
-  copy_string_phys(str,paddr,120);
-  return (1);
+  else {
+    return 1;
+  }
 }
   
 
@@ -140,8 +301,32 @@ static inline target_ulong get_task_struct_ptr (target_ulong current_esp) {
   return (0);
 }
 
+void iferret_get_current_pid_uid_win() {
+  // save last pid.
+  last_pid = current_pid;
 
-void iferret_get_current_pid_uid() {
+  // compute current pid &c
+  current_pid = iferret_get_current_pid_win();
+  current_uid = iferret_get_current_uid_win();
+
+  if (no_pid_flag == 1) {
+    //    printf ("1 last_pid=%d current_pid is %d\n", last_pid, current_pid);
+    //printf("new PID: %u\r\n",current_pid);
+    write_current_pid_to_iferret_log();
+    write_current_uid_to_iferret_log();
+    no_pid_flag = 0;
+  }
+  else {
+    if (last_pid != current_pid) {
+      //      printf ("2 last_pid=%d current_pid is %d\n", last_pid, current_pid);
+      //printf("new PID: %d\r\n",current_pid);
+      write_current_pid_to_iferret_log();
+      write_current_uid_to_iferret_log();
+    }
+  }
+}
+
+void iferret_get_current_pid_uid_linux() {
   target_ulong current_task; 
   target_ulong parent_task;
 
@@ -189,7 +374,16 @@ void iferret_get_current_pid_uid() {
   //  copy_task_struct_slot(parent_task, COMM_OFFSET, COMM_SIZE, parent_command);
 }
 
-
+void iferret_get_current_pid_uid() {
+  switch(iferret_target_os) {
+    case OS_LINUX:
+        iferret_get_current_pid_uid_linux();
+        break;
+    case OS_WINXPSP2:
+        iferret_get_current_pid_uid_win();
+        break;
+  }
+}
 
 static inline uint32_t get_uint32_t_phys(uint32_t virt_addr) {
   target_phys_addr_t paddr;
@@ -217,11 +411,10 @@ void iferret_check_log_full() {
 #endif
 }
 
-
 // write an entry to iferret log to capture
 // context (eip & pid), number, and arguments of 
 // current system call 
-void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) {
+void iferret_log_syscall_enter_lin (uint8_t is_sysenter, uint32_t eip_for_callsite) {
 #ifdef IFERRET_SYSCALL
 
   /*
@@ -335,6 +528,12 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
 #endif
 }
 
+void iferret_log_syscall_enter_win (uint8_t is_sysenter, uint32_t eip_for_callsite) {
+}
+
+void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) {
+    iferret_log_syscall_enter_lin(is_sysenter, eip_for_callsite);
+}
 
 // log system call return value
 // is_ret is 1 (TRUE) iff this is a return via iret.
@@ -461,3 +660,7 @@ void iferret_log_syscall_ret_iret(uint32_t callsite_esp, uint32_t another_eip) {
   iferret_log_syscall_ret(1, callsite_esp, another_eip);
 #endif
 }
+
+
+
+
