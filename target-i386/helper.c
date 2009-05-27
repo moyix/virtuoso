@@ -31,7 +31,7 @@
 
 // from helper2.c
 target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
-
+int cpu_virtual_memory_read(CPUState *env, uint32_t addr, char *out, uint32_t length);
 
 /*
 // addr is a 32-bit address.  
@@ -81,6 +81,7 @@ extern pid_t current_pid, last_pid;
 extern uid_t current_uid, last_uid;
 extern uint8_t no_pid_flag, no_uid_flag;
 
+extern uint8_t iferret_target_os;
 
 //#define DEBUG_PCALL
 
@@ -2881,6 +2882,19 @@ void helper_lret_protected(int shift, int addend)
 #endif
 }
 
+uint32_t iferret_get_callsite(uint32_t saved_esp) {
+    uint32_t callsite;
+    switch(iferret_target_os) {
+      case OS_LINUX:
+        cpu_virtual_memory_read(env, saved_esp+4*3, (char *) &callsite, 4);
+        return callsite;
+      case OS_WINXPSP2:
+        cpu_virtual_memory_read(env, saved_esp+4, (char *) &callsite, 4);
+        return callsite;
+    }
+    return 0;
+}
+
 void helper_sysenter(void)
 {
   // Xuxian
@@ -2925,14 +2939,9 @@ void helper_sysenter(void)
   SET_ESP(esp, sp_mask);
   
   {
-    target_phys_addr_t paddr;
     uint32_t eip_for_callsite;
-    paddr = cpu_get_phys_addr(env, saved_esp+4*3);
-    if (paddr!=-1) {
-      iferret_cpu_physical_memory_read(paddr, (char *) &eip_for_callsite, 4);
-    } else {
-      exit(1);
-    }
+    // The location of the callsite on the stack varies between OSes
+    eip_for_callsite = iferret_get_callsite(saved_esp);
     //    printf ("helper_sysenter iferret_log_syscall_enter(%d,%x)\n",
     //	    1, eip_for_callsite);
     //    iferret_spit_stack(saved_esp, "helper_sysenter (saved_esp)");
