@@ -2,6 +2,7 @@
 #define _IFERRET_SYSCALL_H_
 
 #include "iferret_log.h"
+#include "iferret_intro.h"
 
 void iferret_log_syscall_enter(uint8_t is_sysenter, uint32_t callsite_eip);
 

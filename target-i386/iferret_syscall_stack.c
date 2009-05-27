@@ -75,7 +75,7 @@ void _resize_syscall_stack(int pid) {
 // die if pid not in allowed range
 void _check_pid(int pid) {
   if ((pid < 0) || (pid > MAX_PID-1)) {
-    printf("Error pid out of range\n");
+    printf("Error pid %d out of range\n", pid);
     exit(1);
   }	
 }
