@@ -1209,4 +1209,55 @@ target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr) {
   }
 }
 
+// Read a virtual memory range page by page
+int cpu_virtual_memory_read(CPUState *env, uint32_t vaddr, uint8_t *buf, int length) {
+    //printf("Virtual memory read: %d bytes from VA %#x into %p\n", length, vaddr, buf);
+    int i, buf_pos = 0;
+    target_phys_addr_t paddr;
+    uint32_t first_block, full_blocks, left_over;
+    uint32_t new_vaddr;
+
+    // Paginate the range
+    first_block = TARGET_PAGE_SIZE - (vaddr % TARGET_PAGE_SIZE);
+    full_blocks = ((length + (vaddr % TARGET_PAGE_SIZE)) / TARGET_PAGE_SIZE) - 1;
+    left_over = (length + vaddr) % TARGET_PAGE_SIZE;
+   
+    paddr = cpu_get_phys_addr(env, vaddr);
+    if (paddr == -1) {
+        return -1;
+    }
+    
+    if (length < first_block) {
+        //printf("Read does not cross page boundary, direct read\n");
+        cpu_physical_memory_read(paddr, buf, length);
+        return 1;
+    }
+
+    //printf("Read crosses page boundary, reading %d bytes to start\n", first_block);
+    cpu_physical_memory_read(paddr, buf, first_block);
+    new_vaddr = vaddr + first_block;
+    buf_pos = buf_pos + first_block;
+
+    for (i = 0; i < full_blocks; i++) {
+        //printf("Reading full block %d of %d\n", i, full_blocks);
+        paddr = cpu_get_phys_addr(env, new_vaddr);
+        if (paddr == -1) {
+            return -1;
+        }
+        cpu_physical_memory_read(paddr, buf+buf_pos, TARGET_PAGE_SIZE);
+        new_vaddr = new_vaddr + TARGET_PAGE_SIZE;
+        buf_pos = buf_pos + TARGET_PAGE_SIZE; 
+    }
+
+    if (left_over > 0) {
+        //printf("Reading %d leftover bytes\n", left_over);
+        paddr = cpu_get_phys_addr(env, new_vaddr);
+        if (paddr == -1) {
+            return -1;
+        }
+        cpu_physical_memory_read(paddr, buf+buf_pos, left_over);
+    }
+    return 1;
+}
+
 #endif /* !CONFIG_USER_ONLY */
