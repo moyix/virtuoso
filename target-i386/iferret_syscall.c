@@ -21,6 +21,7 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "exec.h"
 
@@ -102,7 +103,51 @@ void iferret_get_large_integer(uint32_t largeint_addr, uint64_t *out) {
     return;
 }
 
-void iferret_get_object_attributes(uint32_t oattr_addr, char *out) {
+void iferret_get_unicode_string(uint32_t ustr_addr, char **out) {
+    int i;
+    uint16_t slen,smaxlen;
+    uint32_t sbuf_addr;
+    char *outbuf = NULL;
+    char *sbuf = NULL;
+
+    if(!read_member(env, ustr_addr, UNICODE_STRING, Length, &slen)) {
+        goto get_unicode_string_error;
+    }
+    if(!read_member(env, ustr_addr, UNICODE_STRING, MaximumLength, &smaxlen)) {
+        goto get_unicode_string_error;
+    }
+    if(!read_member(env, ustr_addr, UNICODE_STRING, Buffer, &sbuf_addr)) {
+        goto get_unicode_string_error;
+    }
+
+    // Length is the min of the two
+    slen = (slen < smaxlen) ? slen : smaxlen;
+
+    sbuf = (char *)malloc(slen);
+    outbuf = (char *)malloc((slen / 2) + 1);
+    if(!cpu_virtual_memory_read(env, sbuf_addr, (char *) sbuf, slen)) {
+        goto get_unicode_string_error;
+    }
+
+    // "Unicode" handling -- skip every other byte
+    for (i = 0; i < (slen / 2); i++) {
+        outbuf[i] = sbuf[i*2];
+    }
+    outbuf[i] = '\0';
+    free(sbuf);
+    *out = outbuf;
+    return;
+
+get_unicode_string_error:
+    if (sbuf) free(sbuf);
+    if (outbuf) free(outbuf);
+    outbuf = (char *) malloc(1);
+    outbuf[0] = '\0';
+    *out = outbuf;
+    return;
+}
+
+void iferret_get_object_attributes(uint32_t oattr_addr, char **out) {
     uint32_t ustr;
     
     //if(!cpu_virtual_memory_read(env, oattr_addr+8, (char *) &ustr, 4)) {
@@ -118,48 +163,8 @@ void iferret_get_object_attributes(uint32_t oattr_addr, char *out) {
     return;
 
 get_object_attributes_error:
-    out = (char *) malloc(1);
-    out[0] = '\0';
-    return;
-}
-
-void iferret_get_unicode_string(uint32_t ustr_addr, char *out) {
-    int i;
-    uint16_t slen,smaxlen;
-    uint32_t sbuf_addr;
-    char *sbuf = NULL;
-
-    if(!read_member(env, ustr_addr, UNICODE_STRING, Length, &slen)) {
-        goto get_unicode_string_error;
-    }
-    if(!read_member(env, ustr_addr, UNICODE_STRING, MaximumLength, &smaxlen)) {
-        goto get_unicode_string_error;
-    }
-    if(!read_member(env, ustr_addr, UNICODE_STRING, Buffer, &sbuf_addr)) {
-        goto get_unicode_string_error;
-    }
-
-    slen = min(slen, smaxlen);
-
-    sbuf = (char *)malloc(slen);
-    out = (char *)malloc((slen / 2) + 1);
-    if(!cpu_virtual_memory_read(env, sbuf_addr, (char *) sbuf, slen)) {
-        goto get_unicode_string_error;
-    }
-
-    // "Unicode" handling -- skip every other byte
-    for (i = 0; i < (slen / 2); i++) {
-        out[i] = sbuf[i*2];
-    }
-    out[i] = '\0';
-    free(sbuf);
-    return;
-
-get_unicode_string_error:
-    if (sbuf) free(sbuf);
-    if (out) free(out);
-    out = (char *) malloc(1);
-    out[0] = '\0';
+    *out = (char *) malloc(1);
+    *out[0] = '\0';
     return;
 }
 
@@ -174,21 +179,28 @@ static inline long iferret_get_current_process_win() {
     return eproc;
 }
 
+static inline int iferret_get_current_command_win(char *cmdname) {
+    target_ulong eproc;
+    if(!(eproc = iferret_get_current_process_win())) {
+        //printf("iferret_get_current_command_win: Couldn't get current process\n");
+        return -1;
+    }
+    read_member(env, eproc, EPROCESS, ImageFileName, cmdname);
+    if (cmdname[15] != '\0')
+        cmdname[16] = '\0';
+    return 1;
+}
+
 static inline target_ulong iferret_get_current_pid_win() {
     target_ulong pid;
-    char proc_name[17];
     target_ulong eproc;
 
     if(!(eproc = iferret_get_current_process_win())) {
-        printf("iferret_get_current_pid_win: Couldn't get current process\n");
+        //printf("iferret_get_current_pid_win: Couldn't get current process\n");
         return 0;
     }
 
     read_member(env, eproc, EPROCESS, UniqueProcessId, &pid);
-    read_member(env, eproc, EPROCESS, ImageFileName, proc_name);
-    if (proc_name[15] != '\0')
-        proc_name[16] = '\0';
-    printf("XPSYS Current process name: %s (%u)\n", proc_name, pid);
     return pid;
 }
 
@@ -199,7 +211,7 @@ static inline uid_t iferret_get_current_uid_win() {
     uint8_t auth_count;
 
     if(!(eproc = iferret_get_current_process_win())) {
-        printf("iferret_get_current_pid_win: Couldn't get current process\n");
+        //printf("iferret_get_current_uid_win: Couldn't get current process\n");
         return -1;
     }
 
@@ -214,7 +226,6 @@ static inline uid_t iferret_get_current_uid_win() {
     subauth_array_base = sid+offsetof(SID,SubAuthority);
     subauth_array_off  = (auth_count-1)*membsize(SID,SubAuthority);
     cpu_virtual_memory_read(env, subauth_array_base+subauth_array_off, (char *) &uid, 4);
-    printf("XPSYS Current UID = %d\n", uid);
     return uid;
 }
 
@@ -529,10 +540,51 @@ void iferret_log_syscall_enter_lin (uint8_t is_sysenter, uint32_t eip_for_callsi
 }
 
 void iferret_log_syscall_enter_win (uint8_t is_sysenter, uint32_t eip_for_callsite) {
+#ifdef IFERRET_SYSCALL
+    iferret_check_log_full();
+    iferret_get_current_pid_uid();
+
+    char command[COMM_SIZE];
+    int pid;
+    iferret_get_current_command_win(command);
+    pid = iferret_get_current_pid_win();
+
+    {
+        iferret_syscall_t sc, *scp;
+        
+        scp = &sc;
+            
+        scp->is_sysenter = is_sysenter;
+        scp->pid = pid;
+        scp->callsite_eip = eip_for_callsite;
+        scp->command = command;
+        scp->eax = EAX;
+        scp->ebx = EBX;
+
+        scp->op_num = EAX + IFLO_SYS_WINCALLS_START + 1;
+
+        // NtContinue doesn't return
+        if (scp->op_num != IFLO_SYS_NTCONTINUE_32) {
+          // manage Ryan's stack
+          iferret_syscall_stack_push(*scp);    
+        }
+
+// this is the big switch stmt.  auto-generated by make_iferret_code.pl
+#include "./iferret_syscall_switch_xpsp2.h"
+    }
+#endif
 }
 
 void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) {
-    iferret_log_syscall_enter_lin(is_sysenter, eip_for_callsite);
+    printf("syscall enter is_sysenter=%d eip_for_callsite=%08x\n", is_sysenter, eip_for_callsite);
+    switch(iferret_target_os) {
+        case OS_LINUX:
+            iferret_log_syscall_enter_lin(is_sysenter, eip_for_callsite);
+            break;
+        case OS_WINXPSP2:
+            iferret_log_syscall_enter_win(is_sysenter, eip_for_callsite);
+            break;
+    }
 }
 
 // log system call return value
@@ -540,7 +592,7 @@ void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) 
 // is_ret is 0 (FALSE) iff this is a return via sys_exit.
 // callsite_esp is stack pointer for callsite. 
 // what's this another_eip?  
-void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t another_eip) {
+void iferret_log_syscall_ret_linux(uint8_t is_iret, uint32_t callsite_esp, uint32_t another_eip) {
 #ifdef IFERRET_SYSCALL
   uint8_t is_sysenter;
   target_ulong current_task;
@@ -634,7 +686,50 @@ void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t an
 #endif
 }
 
+void iferret_log_syscall_ret_win(uint8_t is_iret, uint32_t callsite_esp, uint32_t another_eip) {
+#ifdef IFERRET_SYSCALL
+    iferret_syscall_stack_element_t element;
+    target_ulong eip_for_callsite;
+    int pid;
 
+    // We don't care about INT-based syscalls for now
+    if (is_iret) return;
+
+    iferret_check_log_full();
+    iferret_get_current_pid_uid();
+
+    pid = iferret_get_current_pid_win();
+
+    // On Windows callsite is second down on the stack
+    // Note: is this an invariant?
+    if(!cpu_virtual_memory_read(env, ECX+4, (char *) &eip_for_callsite, 4))
+        return;
+
+    element = iferret_syscall_stack_get_with_eip(pid, eip_for_callsite, -1);
+    if (element.syscall.callsite_eip != -1) {
+        printf ("syscall exit found: is_iret=%d pid=%d eip_for_callsite=%x\n", is_iret, pid, eip_for_callsite);
+        iferret_log_sysret_op_write_44444(IFLO_SYSEXIT_RET, pid, eip_for_callsite, another_eip, element.syscall.eax, EAX);
+        iferret_syscall_stack_delete_at_index(pid, element.index);
+    }
+    else {
+        printf("Syscall exit but no matching enter found!\n");
+        printf ("syscall is_iret=%d pid=%d eip_for_callsite=%x\n", is_iret, pid, eip_for_callsite);
+    }
+#endif
+}
+
+void iferret_log_syscall_ret(uint8_t is_iret, uint32_t callsite_esp, uint32_t another_eip) {
+#ifdef IFERRET_SYSCALL
+    switch(iferret_target_os) {
+        case OS_LINUX:
+            iferret_log_syscall_ret_linux(is_iret, callsite_esp, another_eip);
+            break;
+        case OS_WINXPSP2:
+            iferret_log_syscall_ret_win(is_iret, callsite_esp, another_eip);
+            break;
+    }
+#endif
+}
 
 // log system call (via sysexit) return value 
 void iferret_log_syscall_ret_sysexit(uint32_t callsite_esp) {

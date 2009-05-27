@@ -536,13 +536,7 @@ EOF
                 # Write the extraction code
                 for (my $j = 0; $j < $n; $j++) {
                     my $fmt = $syscall_win[$i]{fmt_list}[$j];
-                    my $varName;
-                    if ($fmt eq "s") {
-                        $varName = "arg$j";
-                    }
-                    else {
-                        $varName = "&arg$j";
-                    }
+                    my $varName = "&arg$j";
                     print SW "arg_temp = iferret_get_arg_win($j);\n";
                     print "arg_temp = iferret_get_arg_win($j);\n";
                     my ($stmt, $pointer_depth) = build_win_arg_extractor($syscall_win[$i]{args}[$j], $varName, 0);
