@@ -51,6 +51,9 @@
 #include <assert.h>
 #include "iferret_log.h"
 
+// BDG 05/18/2009
+#include "target-i386/iferret_intro.h"
+
 #ifndef _WIN32
 #include <sys/times.h>
 #include <sys/wait.h>
@@ -247,6 +250,7 @@ extern uint8_t iferret_info_flow_on;
 
 extern uint64_t ifregaddr[16];
 
+uint8_t iferret_target_os;
 
 #define TFR(expr) do { if ((expr) != -1) break; } while (errno == EINTR)
 
@@ -7575,6 +7579,7 @@ static void help(int exitcode)
            "-g WxH[xDEPTH]  Set the initial graphical resolution and depth\n"
 #endif
            "-name string    set the name of the guest\n"
+           "-os string      set the target OS for introspection\n"
            "\n"
            "Network options:\n"
            "-net nic[,vlan=n][,macaddr=addr][,model=type]\n"
@@ -7755,7 +7760,10 @@ enum {
     QEMU_OPTION_startdate,
 
     // TRL 0902
-    QEMU_OPTION_info_flow
+    QEMU_OPTION_info_flow,
+
+    // BDG 0905
+    QEMU_OPTION_os
 
 };
 
@@ -7869,6 +7877,9 @@ const QEMUOption qemu_options[] = {
 
     // TRL 0902
     { "info_flow", 0, QEMU_OPTION_info_flow },
+
+    // BDG 0905
+    { "os", HAS_ARG, QEMU_OPTION_os },
 
     { NULL },
 };
@@ -8657,6 +8668,18 @@ int main(int argc, char **argv)
 	    case QEMU_OPTION_info_flow:
 	      iferret_info_flow_on=1;
                 break;
+        case QEMU_OPTION_os:
+          if (strcmp(optarg, "Linux") == 0) {
+            iferret_target_os = OS_LINUX;
+          }
+          else if (strcmp(optarg, "WinXPSP2") == 0) {
+            iferret_target_os = OS_WINXPSP2;
+          }
+          else {
+		    fprintf(stderr, "Unrecognized OS, valid options: [Linux, WinXPSP2]\n");
+		    exit(1);
+          }
+            break;
 
 #ifdef TARGET_SPARC
             case QEMU_OPTION_prom_env:
