@@ -109,7 +109,8 @@ typedef struct iferret_syscall_struct_t {
   uint32_t eax;
   uint32_t ebx;
   uint32_t op_num;
-  uint8_t is_sysenter;
+  uint8_t is_sysenter;  // Distinguish between INT and sysenter methods
+  uint8_t is_enter;     // Is this a system call enter or exit?
   uint32_t pid;
   uint32_t callsite_eip;
   char *command;
@@ -240,12 +241,12 @@ static inline int iferret_log_sentinel_check(void) {
 }
 
 
-// strlen but clipped to 100.  
+// strlen but clipped to MAX_STRING_LEN.  
 static inline uint32_t safe_strlen(char *str) {
   char *p;
 
   p = str;
-  while ((*p != '\0') && (p-str < 100)) {
+  while ((*p != '\0') && (p-str < MAX_STRING_LEN)) {
     p++;
   }
   return (p-str);
@@ -289,6 +290,7 @@ static inline void iferret_log_op_write_prologue(iferret_log_op_enum_t op_num) {
 static inline void iferret_log_syscall_commoner(iferret_syscall_t *sc) {
   // write the std syscall other args.
   iferret_log_uint8_t_write(sc->is_sysenter);  
+  iferret_log_uint8_t_write(sc->is_enter);  
   iferret_log_uint32_t_write(sc->pid);
   iferret_log_uint32_t_write(sc->callsite_eip);
   iferret_log_uint32_t_write(sc->eax);

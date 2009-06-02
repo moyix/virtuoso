@@ -103,7 +103,9 @@ void iferret_syscall_stack_push(iferret_syscall_t syscall) {
   // this is the stack for this pid. 
   stack = &(iferret_syscall_stack[syscall.pid]);
   // add the element.
-  stack->stack[stack->size].syscall = syscall;	
+  // Make sure to do a deep copy, including string
+  stack->stack[stack->size].syscall = syscall;
+  stack->stack[stack->size].syscall.command = strdup(syscall.command);
   stack->stack[stack->size].index = stack->size; // element needs to know its own index as it will get disconnected
   stack->size++;
 }
@@ -119,6 +121,7 @@ void iferret_syscall_stack_push(iferret_syscall_t syscall) {
 // deletes the element at this index within the stack for pid.
 void iferret_syscall_stack_delete_at_index(int pid, int index) {
   iferret_syscall_stack_t *stack;
+  iferret_syscall_stack_element_t to_delete;
   int i;	
   _check_pid(pid);
   iferret_syscall_stacks_init();
@@ -127,6 +130,11 @@ void iferret_syscall_stack_delete_at_index(int pid, int index) {
     printf("Error, attempting to underflow\n");
     exit(1);
   }
+
+  // Free the command string
+  to_delete = iferret_syscall_stack_get_at_index(pid, index);
+  free(to_delete.syscall.command);
+
   if (stack->size == 1) {
     // only one there -- just decrease stack size by one.
   }

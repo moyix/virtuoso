@@ -2366,7 +2366,9 @@ static uint32_t ide_data_readw(void *opaque, uint32_t addr)
     // (op,from)
     // IO_BUFFER -> 
     iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1, (uint64_t) s->io_buffer + (s->data_ptr - s->data_ptr_base));
+#ifdef IFERRET_INFO_FLOW
     printf ("2 IFLO_HD_TRANSFER_PART1 %p\n",  (uint64_t) s->io_buffer + (s->data_ptr - s->data_ptr_base));
+#endif
     /*
     printf("IO_BUFF starts at %llu and offset is %u\r\n",IO_BUFFER_BASE_ADDR,s->data_ptr - s->data_ptr_base);
     printf("phys_ram_size is %llu\r\n",(unsigned long long)phys_ram_size);
@@ -2407,7 +2409,9 @@ static uint32_t ide_data_readl(void *opaque, uint32_t addr)
 
     // IO_BUFFER -> 
     iferret_log_info_flow_op_write_8(IFLO_HD_TRANSFER_PART1, (uint64_t) s->io_buffer + (s->data_ptr - s->data_ptr_base));
+#ifdef IFERRET_INFO_FLOW
     printf ("1 IFLO_HD_TRANSFER_PART1 %p\n", (uint64_t) s->io_buffer + (s->data_ptr - s->data_ptr_base));
+#endif
     /*
     printf("IO_BUFF starts at %llu and offset is %u\r\n",IO_BUFFER_BASE_ADDR,s->data_ptr - s->data_ptr_base);
     printf("phys_ram_size is %llu\r\n",(unsigned long long)phys_ram_size);

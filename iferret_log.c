@@ -39,6 +39,7 @@ uint64_t ifregaddr[16];
 
 extern unsigned int phys_ram_size;
 extern uint8_t *phys_ram_base;
+extern uint32_t iferret_target_os;
 
 
 uint32_t iferret_max_overflow = 0;
@@ -217,7 +218,7 @@ void iferret_log_socketcall_write_4444444444444444444
 void iferret_log_op_args_write(iferret_log_op_enum_t op_num, va_list op_args) {
   char *op_fmt, *p;
 
-  op_fmt = iferret_log_arg_format[op_num];
+  op_fmt = iferret_log_arg_format[op_num].fmt;
   //  va_start(op_args, op_num);
   for (p=op_fmt; *p!='\0'; p++) {
     switch (*p) {
@@ -274,6 +275,7 @@ void iferret_log_op_args_read(iferret_op_t *op) {
   if (op->num >= IFLO_SYS_CALLS_START) {
     // its a syscall.  read in the other stuff.
     op->syscall->is_sysenter = iferret_log_uint8_t_read();
+    op->syscall->is_enter = iferret_log_uint8_t_read();
     op->syscall->pid = iferret_log_uint32_t_read();
     op->syscall->callsite_eip = iferret_log_uint32_t_read();
     op->syscall->eax = iferret_log_uint32_t_read();
@@ -287,7 +289,7 @@ void iferret_log_op_args_read(iferret_op_t *op) {
 
   i=0;
   op->num_args = 0;
-  for (p=iferret_log_arg_format[op->num]; *p!='\0'; p++) {
+  for (p=iferret_log_arg_format[op->num].fmt; *p!='\0'; p++) {
     switch (*p) {
     case '1':      // a 1-byte unsigned int
       op->arg[i].type = IFLAT_UI8;
@@ -331,28 +333,33 @@ void iferret_spit_op(iferret_op_t *op) {
   printf ("(%s", iferret_op_num_to_str(op->num));
   if (op->num >= IFLO_SYS_CALLS_START) {
     printf (",(is_sysenter,%d)", op->syscall->is_sysenter);
+    printf (",(is_enter,%d)", op->syscall->is_enter);
     printf (",(pid,%d)", op->syscall->pid);
     printf (",(callsite_eip,%d)", op->syscall->callsite_eip);
     printf (",(command,%s)", op->syscall->command);
   }
   for (i=0; i<op->num_args; i++) {
+    printf(",");
+    if (op->num >= IFLO_SYS_CALLS_START) {
+      printf("%s=", iferret_log_arg_format[op->num].args[i]);
+    }
     switch (op->arg[i].type) {
     case IFLAT_NONE:
       exit(1);
     case IFLAT_UI8:
-      printf (",(ui8,%x)", op->arg[i].val.u8);
+      printf ("(ui8,%x)", op->arg[i].val.u8);
       break;
     case IFLAT_UI16:
-      printf (",(ui16,%x)", op->arg[i].val.u16);
+      printf ("(ui16,%x)", op->arg[i].val.u16);
       break;      
     case IFLAT_UI32: 
-      printf (",(ui32,%lx)", (long unsigned int) op->arg[i].val.u32);
+      printf ("(ui32,%lx)", (long unsigned int) op->arg[i].val.u32);
       break;
     case IFLAT_UI64:
-      printf (",(ui64,%llx)", (long long unsigned int) op->arg[i].val.u64);
+      printf ("(ui64,%llx)", (long long unsigned int) op->arg[i].val.u64);
       break;
     case IFLAT_STR:
-      printf (",(str,%s)", op->arg[i].val.str);
+      printf ("(str,%s)", op->arg[i].val.str);
       break;
     }
   }
@@ -390,6 +397,7 @@ void iferret_set_network_label(const char *label) {
 void iferret_log_preamble() {
   int i;
   iferret_log_uint64_t_write((uint64_t) phys_ram_base);
+  iferret_log_uint64_t_write((uint64_t) iferret_target_os);
   iferret_log_uint64_t_write(ifregaddr[IFRN_EAX]);
   iferret_log_uint64_t_write(ifregaddr[IFRN_ECX]);
   iferret_log_uint64_t_write(ifregaddr[IFRN_EDX]);
@@ -414,6 +422,7 @@ void iferret_log_preamble() {
 void iferret_log_preamble() {
   //int i;
   phys_ram_base = (uint8_t *) iferret_log_uint64_t_read();
+  iferret_target_os = (uint32_t) iferret_log_uint64_t_read();
   ifregaddr[IFRN_EAX] = iferret_log_uint64_t_read();
   ifregaddr[IFRN_ECX] = iferret_log_uint64_t_read();
   ifregaddr[IFRN_EDX] = iferret_log_uint64_t_read();

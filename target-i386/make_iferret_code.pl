@@ -132,6 +132,7 @@ my %iferret_fmts;
             else {
                 # one or more args
                 $syscall[$call_num]{args} = ();
+                $syscall[$call_num]{argnames} = ();
                 $inside =~ s/\*/\* /g;
                 my @args = split ',', $inside;
                 my $n = scalar @args;
@@ -173,6 +174,8 @@ my %iferret_fmts;
                         $format .= "4";
                         print "$arg is a 4-byte int\n";
                     }
+                    # Keep track of the variable names for later
+                    push @{$syscall[$call_num]{argnames}}, $varname;
                 }
                 print "format is $format\n";
                 $syscall[$call_num]{format} = $format;
@@ -234,6 +237,7 @@ my %iferret_fmts;
             else {
                 # one or more args
                 $syscall_win[$call_num]{args} = ();
+                $syscall_win[$call_num]{argnames} = ();
                 $inside =~ s/\*/\* /g;
                 my @args = split ',', $inside;
                 my $n = scalar @args;
@@ -256,6 +260,7 @@ my %iferret_fmts;
                     push @{$syscall_win[$call_num]{args}}, $argType;
                     push @{$syscall_win[$call_num]{fmt_list}}, $fmt;
                     $format .= $fmt;
+                    push @{$syscall_win[$call_num]{argnames}}, $varname;
                 }
                 print "format is $format\n";
                 $syscall_win[$call_num]{format} = $format;
@@ -422,7 +427,7 @@ my %iferret_fmts;
 // It should be included in iferret_syscalls.c
 EOF
 
-    print SW "switch (EAX) {\n";
+    print SW "switch (scp->eax) {\n";
     for (my $i=0; $i<=$maxSyscallNum; $i++) {
         if (exists $syscall[$i]) {
             if ($i == 102) {
@@ -491,7 +496,10 @@ EOF
 // It should be included in iferret_syscalls.c
 EOF
 
-    print SW "switch (EAX) {\n";
+    print SW "static inline void iferret_write_syscall_params_xpsp2(iferret_syscall_t *scp) {\n";
+    print "static inline void iferret_write_syscall_params_xpsp2(iferret_syscall_t *scp) {\n";
+    print SW "switch (scp->eax) {\n";
+    print "switch (scp->eax) {\n";
     for (my $i=0; $i<=$maxSyscallNum_win; $i++) {
         if (exists $syscall_win[$i]) {
             print SW "case $i: // $i $syscall_win[$i]{proto}\n";
@@ -537,8 +545,8 @@ EOF
                 for (my $j = 0; $j < $n; $j++) {
                     my $fmt = $syscall_win[$i]{fmt_list}[$j];
                     my $varName = "&arg$j";
-                    print SW "arg_temp = iferret_get_arg_win($j);\n";
-                    print "arg_temp = iferret_get_arg_win($j);\n";
+                    print SW "arg_temp = iferret_get_arg_win($j,scp->is_enter);\n";
+                    print "arg_temp = iferret_get_arg_win($j,scp->is_enter);\n";
                     my ($stmt, $pointer_depth) = build_win_arg_extractor($syscall_win[$i]{args}[$j], $varName, 0);
                     for(my $k = 0; $k < $pointer_depth; $k++) {
                         print SW "cpu_virtual_memory_read(env, arg_temp, (char *) &arg_temp, 4);\n";
@@ -576,6 +584,9 @@ EOF
         }
     }
     print SW "}\n";
+    print "}\n";
+    print SW "}\n";
+    print "}\n";
     close SW;
 
 #
@@ -597,12 +608,14 @@ EOF
         }
         $enum[$ii]{comment} = $comment;
         $enum[$ii]{format} = $ops{$opname}{format};
+        $enum[$ii]{args} = ();
         $ii++;
     }
     
     $enum[$ii]{opname} = "IFLO_SYS_CALLS_START";
     $enum[$ii]{comment} = "//This is just a separator\n";
     $enum[$ii]{format} = "0";
+    $enum[$ii]{args} = ();
     $ii++;
 
 # second, all the syscalls (except socketcall)
@@ -624,6 +637,7 @@ EOF
         my $comment .= "// syscall # $i";
         $comment .= "// $syscall[$i]{proto}\n";
         $enum[$ii]{comment} = $comment;
+        $enum[$ii]{args} = $syscall[$i]{argnames};
 #       my $format = "";
 #       if (exists $syscall[$i]{args}) {
 #           if ((scalar @{$syscall[$i]{args}}) == 0) {
@@ -647,6 +661,7 @@ EOF
     $enum[$ii]{opname} = "IFLO_SYS_SOCKETCALLS_START";
     $enum[$ii]{comment} = "//This is just a separator\n";
     $enum[$ii]{format} = "0";
+    $enum[$ii]{args} = ();
     $ii++;
 
 # third, all the socketcalls 
@@ -655,12 +670,14 @@ EOF
         print "enum=$ii socketcall $rh->{name}\n";
         $enum[$ii]{comment} = $rh->{comment};
         $enum[$ii]{format} = $rh->{format};
+        $enum[$ii]{args} = ();
         $ii++;
     }
 
     $enum[$ii]{opname} = "IFLO_SYS_WINCALLS_START";
     $enum[$ii]{comment} = "//This is just a separator\n";
     $enum[$ii]{format} = "0";
+    $enum[$ii]{args} = ();
     $ii++;
 
 # fourth, Windows system calls
@@ -669,6 +686,7 @@ EOF
             $enum[$ii]{opname} = "IFLO_UNUSED_$ii";
             $enum[$ii]{format} = "0";
             $enum[$ii]{comment} = "";
+            $enum[$ii]{args} = ();
             $ii++;
             next;
         }
@@ -684,6 +702,7 @@ EOF
         $comment .= "// $syscall_win[$i]{proto}\n";
         $enum[$ii]{comment} = $comment;
         $enum[$ii]{format} = $syscall_win[$i]{format};
+        $enum[$ii]{args} = $syscall_win[$i]{argnames};
         $ii++;
     }
 
@@ -692,6 +711,7 @@ EOF
     $enum[$ii]{opname} = "IFLO_DUMMY_LAST";
     $enum[$ii]{comment} = "";
     $enum[$ii]{format} = "0";
+    $enum[$ii]{args} = ();
 
 
 
@@ -728,7 +748,12 @@ EOF
     print FMT "\#ifndef __IFERRET_LOG_ARG_FMT_H_ \n";
     print FMT "\#define __IFERRET_LOG_ARG_FMT_H_ \n";
     print FMT "\n";
-    print FMT "char *iferret_log_arg_format[] = {\n";
+    print FMT "typedef struct {\n";
+    print FMT "  char *fmt;\n";
+    print FMT "  char *args[IFERRET_OP_MAX_NUM_ARGS];\n";
+    print FMT "} iferret_arg_fmt_t;\n";
+    print FMT "\n";
+    print FMT "char **iferret_log_arg_format[] = {\n";
 
     for (my $i=0; $i<scalar @enum; $i++) {
         my $opname = $enum[$i]{opname};
@@ -739,7 +764,16 @@ EOF
         }
         print FMT "  // $i \n";
         print FMT "$enum[$i]{comment}";
-        print FMT "  \"$enum[$i]{format}\"";
+        #if (! defined @{$enum[$i]{args}}) {
+        #    print "DEBUG: args array for $opname [$i] not defined!\n";
+        #    die;
+        #}
+        my @quoted_args = ();
+        
+        foreach my $arg (@{$enum[$i]{args}}) {
+            push @quoted_args, "\"$arg\"";
+        }
+        print FMT " {\"$enum[$i]{format}\", {" .  (join ", ", @quoted_args) . "}}";
         if ($i < (scalar @enum)-1) {
             print FMT ",";
         }

@@ -11,6 +11,7 @@
 #include <sched.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <ctype.h>
 
 #include "iferret_log.h"
 #include "target-i386/iferret_ops.h"
@@ -37,6 +38,7 @@
 
 //unsigned int phys_ram_size;
 uint64_t phys_ram_base;
+uint64_t iferret_target_os;
 
 unsigned long long ifregaddr[16];
 
@@ -93,7 +95,7 @@ void my_free(void *p) {
 }
 
 void op_hex_dump_aux(uint32_t opnum, char *p1, char *p2, char *label) {
-  char *p;
+  unsigned char *p;
   int j;
 
   printf ("%s %s size=%d %p..%p \n", label, iferret_op_num_to_str(opnum), (int) (p2-p1+1), p1, p2);
@@ -101,7 +103,13 @@ void op_hex_dump_aux(uint32_t opnum, char *p1, char *p2, char *label) {
   for (p=p1; p<=p2; p++) {
     if (p!=p1) {
       if ((j % 16) == 0) {
-	printf ("\n");
+        unsigned char *ptemp = p - 16;
+        int k;
+        printf("   ");
+        for(k = 0; k < 16; k++) {
+          printf("%c", isprint(*(ptemp+k)) ? *(ptemp+k) : '.');
+        }
+        printf ("\n");
       }
       else {
 	if ((j % 4) == 0) {
@@ -109,10 +117,10 @@ void op_hex_dump_aux(uint32_t opnum, char *p1, char *p2, char *label) {
 	}
       }
     }
-    if (*p < 0x10) {
-      printf ("0");
-    }
-    printf ("%x", *p);
+    //if (*p < 0x10) {
+    //  printf ("0");
+    //}
+    printf ("%02x", *p);
     j++;
   }
   printf ("\n");
@@ -556,6 +564,13 @@ void iferret_process_syscall(iferret_t *iferret, iferret_op_t *op) {
   iferret_syscall_t *scp;
   scp = op->syscall;  
 
+  iferret_spit_op(op);
+
+  // This might actually be a system call return
+  // that wanted its return params logged
+  if(!scp->is_enter) {
+    return;
+  }
   
   iferret_change_current_pid(iferret, scp->pid);
   
@@ -590,7 +605,6 @@ void iferret_process_syscall(iferret_t *iferret, iferret_op_t *op) {
   }
 
   //  printf ("time = %d\n", iferret->chron);
-  iferret_spit_op(op);
 
 
   if (op->num == IFLO_SYS_SYS_DUP) {
@@ -671,12 +685,12 @@ void iferret_pop_and_process_syscall(iferret_t *iferret, iferret_op_t *op) {
   syscall = &element.syscall;
 
   // label the retval, i.e. EAX
-  {
-    char label[1024];
-    sprintf(label, "syscall-eax-retval-%d-%d", syscall->eax, iferret->chron);
-    info_flow_label(iferret, EAX_BASE, 4, label);
-    iferret->something_got_labeled = TRUE;
-  }
+//  {
+//    char label[1024];
+//    sprintf(label, "syscall-eax-retval-%d-%d", syscall->eax, iferret->chron);
+//    info_flow_label(iferret, EAX_BASE, 4, label);
+//    iferret->something_got_labeled = TRUE;
+//  }
 
   /*
   if(pid == 5490 && !iferret->preprocess && syscall->op_num == IFLO_SYS_CLONE)

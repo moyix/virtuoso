@@ -6,7 +6,7 @@ cd target-i386
 ./make_iferret_code.pl
 
 cd ..
- ./configure --disable-kqemu --prefix=$IFERRET_DIR/install --target-list=i386-softmmu  --disable-linux-user --disable-darwin-user  --extra-cflags="-DIFERRET_SYSCALL -DIFERRET_SET_CPL -DIFERRET_PUID -DIFERRET_PUID_EVERY_TB  -DIFERRET_PHYS_EIP -DIFERRET_INFO_FLOW"
+./configure --disable-kqemu --prefix=$IFERRET_DIR/install --target-list=i386-softmmu  --disable-linux-user --disable-darwin-user
 #-DIFERRET_INFO_FLOW" 
 
 

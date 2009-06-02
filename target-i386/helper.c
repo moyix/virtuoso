@@ -81,7 +81,7 @@ extern pid_t current_pid, last_pid;
 extern uid_t current_uid, last_uid;
 extern uint8_t no_pid_flag, no_uid_flag;
 
-extern uint8_t iferret_target_os;
+extern uint32_t iferret_target_os;
 
 //#define DEBUG_PCALL
 

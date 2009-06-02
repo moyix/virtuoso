@@ -250,7 +250,7 @@ extern uint8_t iferret_info_flow_on;
 
 extern uint64_t ifregaddr[16];
 
-uint8_t iferret_target_os;
+uint32_t iferret_target_os;
 
 #define TFR(expr) do { if ((expr) != -1) break; } while (errno == EINTR)
 
