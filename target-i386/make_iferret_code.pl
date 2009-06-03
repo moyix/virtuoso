@@ -680,6 +680,7 @@ EOF
     $enum[$ii]{args} = ();
     $ii++;
 
+my %win_call_names = ();
 # fourth, Windows system calls
     for (my $i=0; $i<=$maxSyscallNum_win; $i++) {
         if (! (exists $syscall_win[$i])) {
@@ -691,8 +692,15 @@ EOF
             next;
         }
         # Note: some windows functions have multiple ordinals
-        # so we need to ensure uniqueness by appending the ordinal
-        my $name = $syscall_win[$i]{name} . "_" . $i;
+        my $name = $syscall_win[$i]{name};
+        if (exists $win_call_names{$name}) {
+            $win_call_names{$name}++;
+            $name .= $win_call_names{$name};
+        }
+        else {
+            $win_call_names{$name} = 1;
+        }
+
         my $opname = $name;
         $opname =~ tr/a-z/A-Z/;
         $opname = "IFLO_SYS_" . $opname;
@@ -753,7 +761,7 @@ EOF
     print FMT "  char *args[IFERRET_OP_MAX_NUM_ARGS];\n";
     print FMT "} iferret_arg_fmt_t;\n";
     print FMT "\n";
-    print FMT "char **iferret_log_arg_format[] = {\n";
+    print FMT "iferret_arg_fmt_t iferret_log_arg_format[] = {\n";
 
     for (my $i=0; $i<scalar @enum; $i++) {
         my $opname = $enum[$i]{opname};
