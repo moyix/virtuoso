@@ -38,8 +38,8 @@ extern uid_t uid;
 extern uint32_t iferret_target_os;
 
 // Hits and misses for the system call stack
-//uint32_t iferret_stack_hits = 0;
-//uint32_t iferret_stack_misses = 0;
+uint64_t iferret_syscall_hits = 0;
+uint64_t iferret_syscall_misses = 0;
 
 void check_rollup(char *label);
 target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
@@ -580,7 +580,7 @@ void iferret_log_syscall_enter_win (uint8_t is_sysenter, uint32_t eip_for_callsi
         scp->op_num = EAX + IFLO_SYS_WINCALLS_START + 1;
 
         // NtContinue doesn't return
-        if (scp->op_num != IFLO_SYS_NTCONTINUE_32) {
+        if (scp->op_num != IFLO_SYS_NTCONTINUE) {
           // manage Ryan's stack
           iferret_syscall_stack_push(*scp);    
         }
@@ -591,7 +591,7 @@ void iferret_log_syscall_enter_win (uint8_t is_sysenter, uint32_t eip_for_callsi
 }
 
 void iferret_log_syscall_enter (uint8_t is_sysenter, uint32_t eip_for_callsite) {
-    printf("syscall enter is_sysenter=%d eip_for_callsite=%08x\n", is_sysenter, eip_for_callsite);
+    //printf("syscall enter is_sysenter=%d eip_for_callsite=%08x\n", is_sysenter, eip_for_callsite);
     switch(iferret_target_os) {
         case OS_LINUX:
             iferret_log_syscall_enter_lin(is_sysenter, eip_for_callsite);
@@ -672,6 +672,7 @@ void iferret_log_syscall_ret_linux(uint8_t is_iret, uint32_t callsite_esp, uint3
       //      printf ("\n");
     }
     if (element.syscall.callsite_eip != -1){
+      iferret_syscall_hits++;
       /*
             printf ("  found it ret_val=%d ", EAX);
             iferret_syscall_print(element.syscall);
@@ -695,6 +696,7 @@ void iferret_log_syscall_ret_linux(uint8_t is_iret, uint32_t callsite_esp, uint3
       iferret_syscall_stack_delete_at_index(pid, element.index);
     }
     else {
+      iferret_syscall_misses++;
       //     printf ("  not found.\n");
     }
   }
@@ -724,7 +726,8 @@ void iferret_log_syscall_ret_win(uint8_t is_iret, uint32_t callsite_esp, uint32_
 
     element = iferret_syscall_stack_get_with_eip(pid, eip_for_callsite, -1);
     if (element.syscall.callsite_eip != -1) {
-        printf ("syscall exit found: is_iret=%d pid=%d eip_for_callsite=%x\n", is_iret, pid, eip_for_callsite);
+        iferret_syscall_hits++;
+        //printf ("syscall exit found: is_iret=%d pid=%d eip_for_callsite=%x\n", is_iret, pid, eip_for_callsite);
         iferret_log_sysret_op_write_44444(IFLO_SYSEXIT_RET, pid, eip_for_callsite, another_eip, element.syscall.eax, EAX);
 
         // Make a copy for logging the returned params
@@ -736,8 +739,17 @@ void iferret_log_syscall_ret_win(uint8_t is_iret, uint32_t callsite_esp, uint32_
         iferret_syscall_stack_delete_at_index(pid, element.index);
     }
     else {
+        iferret_syscall_misses++;
         printf("Syscall exit but no matching enter found!\n");
         printf ("syscall is_iret=%d pid=%d eip_for_callsite=%x\n", is_iret, pid, eip_for_callsite);
+        unsigned char stack[0x20];
+        int i;
+        printf("Stack (ECX): ");
+        cpu_virtual_memory_read(env, ECX, stack, 0x20);
+        for (i = 0; i < 0x20; i+= 4) {
+            printf("%08x ", *((uint32_t *)(stack+i)));
+        }
+        printf("\n");
     }
 #endif
 }
