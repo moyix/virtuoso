@@ -49,6 +49,10 @@
 #define offsetof(type, field) ((size_t) &((type *)0)->field)
 #endif
 
+// hits and misses log from target-i386/iferret_syscall.c
+extern uint64_t iferret_syscall_hits;
+extern uint64_t iferret_syscall_misses;
+
 /*
  * Supported types:
  *
@@ -374,7 +378,8 @@ static void do_info_cpu_stats (void)
 
 static void do_quit(void)
 {
-  iferret_log_rollup("do_quit");
+    iferret_log_rollup("do_quit");
+    printf("Stack hits: %lu misses: %lu\n", iferret_syscall_hits, iferret_syscall_misses);
     exit(0);
 }
 
