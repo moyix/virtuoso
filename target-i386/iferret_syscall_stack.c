@@ -5,7 +5,19 @@
 
 iferret_syscall_stack_t *iferret_syscall_stack=NULL;
 
-const iferret_syscall_stack_element_t not_found_element = {{-1,-1,-1,-1,-1,-1,NULL},-1};
+const iferret_syscall_stack_element_t not_found_element = {
+    .syscall = {
+        .eax = -1,
+        .ebx = -1,
+        .op_num = -1,
+        .is_sysenter = -1,  // Distinguish between INT and sysenter methods
+        .is_enter = -1,     // Is this a system call enter or exit?
+        .pid = -1,
+        .callsite_eip = -1,
+        .command = NULL
+    },
+    .index = -1
+};
 
 static inline void *my_malloc(size_t n) {
   void *p;
@@ -199,6 +211,11 @@ iferret_syscall_stack_element_t iferret_syscall_stack_get_with_eip(int pid, int 
   _check_pid(pid);
   iferret_syscall_stacks_init();
   stack = &(iferret_syscall_stack[pid]);
+
+  if (stack->size == 0) {
+    return not_found_element;
+  }
+
   for (index=stack->size-1; index>=0; index--) {
     element = iferret_syscall_stack_get_at_index(pid,index);
     if (element.syscall.callsite_eip == this_eip) {
