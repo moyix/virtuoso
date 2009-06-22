@@ -204,7 +204,6 @@ def get_range_from_labels(labels):
     return ints[0], length
 
 def dynslice(insns,bufs,outbuf_hack=False,start=-1):
-    #if outbuf_hack: outbufs = set(bufs)
     if start == -1: start = len(insns) - 1
 
     work = set(bufs)
@@ -213,33 +212,12 @@ def dynslice(insns,bufs,outbuf_hack=False,start=-1):
         op,args = insns[i]
         defs_set = set(defines(op,args))
         uses_set = set(uses(op,args))
-        fake_insn = None
-        # Special case: if op defines the output we care about directly
-        # we do *not* want to track A0.
-        #if outbuf_hack and defs_set & outbufs:
-            #overlap = defs_set & outbufs
-            #print "==> Instruction defines %s" % (overlap,)
-            #print "==> which is part of the output buffer; will not track A0"
-            #uses_set -= set(["A0"])
-            #outbufs -= defs_set
-            # The overlap should be something sensible, like a contiguous 4-byte range
-            #start, length = get_range_from_labels(overlap)
-            #fake_insn = ('IFLO_MOVL_A0_IM', [start])
 
         if defs_set & work:
             #print "Overlap with working set: %s" % (defs_set & work)
             work = (work - defs_set) | uses_set
             #print "Adding to slice: %s" % (insns[i],)
             slice.insert(0, (i,insns[i]))
-
-        # TODO: add a final pass later that will force the value of A0
-        #if outbuf_hack and fake_insn:
-            # Put in a fake instruction that just explicitly sets A0 to the correct
-            # output range if we used the "output buffer hack"
-            #print "==> Adding fake instruction %s" % (fake_insn,)
-            #slice.insert(0, (i,fake_insn))
-
-        #print "Status: %s W={%s}" % (insn_str(insns[i]), ", ".join(w for w in work))
     #print "Working set at end:", work
     return slice
 
