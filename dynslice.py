@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from translate_uop import uop_to_py
+from translate_uop import uop_to_py,uop_to_py_out
 from qemu_data import qemu_regs,qemu_segs
 from pprint import pprint
 import sys,csv
@@ -203,22 +203,58 @@ def get_range_from_labels(labels):
     assert length == len(ints)
     return ints[0], length
 
-def dynslice(insns,bufs,outbuf_hack=False,start=-1):
+def dynslice(insns, bufs, outbuf_track=False, start=-1, debug=False):
+    """Perform a dynamic data slice.
+       
+       Perform a dynamic data slice of a trace with respect to a set of
+       buffers. This is basically the algorithm described in the
+       K-Tracer paper.
+
+       insns: a list of tuples: (index, (op, [arg1,arg2,...]))
+       bufs: a list of outputs to be tracked
+       start: an optional point in the trace at which to begin analysis.
+           By default, analysis begins at the last instruction in the
+           trace.
+       outbuf_track: track the last time an output is defined and mark that
+           instruction using TraceEntry.set_output_label()
+       debug: enable debugging information
+
+       Returns: a list of tuples: (index, TraceEntry)
+    """
+    if outbuf_track: outbufs = set(bufs)
     if start == -1: start = len(insns) - 1
 
     work = set(bufs)
     slice = []
-    for i in range(start, -1, -1):
-        op,args = insns[i]
+    for i,insn in reversed(insns[:start+1]):
+        op,args = insn
         defs_set = set(defines(op,args))
         uses_set = set(uses(op,args))
+        is_output = False
+
+        # Special case: if op defines the output we care about directly
+        # we do *not* want to track A0.
+        if outbuf_track and defs_set & outbufs:
+            overlap = defs_set & outbufs
+            if debug:
+                print "==> Instruction defines %s" % (overlap,)
+                print "==> which is part of the output buffer; will not track A0"
+            uses_set -= set(["A0"])
+            outbufs -= defs_set
+            is_output = True
+
+        if debug: print insn_str(insn)
 
         if defs_set & work:
-            #print "Overlap with working set: %s" % (defs_set & work)
+            if debug: print "Overlap with working set: %s" % (defs_set & work)
             work = (work - defs_set) | uses_set
-            #print "Adding to slice: %s" % (insns[i],)
-            slice.insert(0, (i,insns[i]))
-    #print "Working set at end:", work
+            if debug: print "Adding to slice: %s" % (insn,)
+            te = TraceEntry(insn)
+            slice.insert(0, (i,te))
+            if is_output:
+                te.set_output_label("out")
+
+    if debug: print "Working set at end:", work
     return slice
 
 def get_arg(arg):
@@ -273,6 +309,28 @@ class TB(object):
     def __repr__(self):
         return ("[TB @%s]" % self._eip_str())
 
+class TraceEntry(object):
+    def __init__(self, insn):
+        self.op, self.args = insn
+        self.label = None
+        self.is_output = False
+    def set_output_label(self, label):
+        self.label = label
+        self.is_output = True
+    def __str__(self):
+        s = uop_to_py(self.op, self.args)
+        if self.is_output:
+            s += "\n" + uop_to_py_out(self.op, self.args, self.label)
+        return s
+    def __repr__(self):
+        return insn_str( (self.op, self.args) )
+    def __eq__(self,other):
+        if not isinstance(other, type(self)):
+            return False
+        return self.op == other.op and self.args == other.args
+    def __hash__(self):
+        return hash(self.op) ^ hash(self.args)
+
 class Loop(object):
     """Represents a loop.
 
@@ -304,7 +362,11 @@ class Loop(object):
     def prune(self, slice):
         """Prune the exemplar so that it only includes instructions
            in slice."""
-        self.exemplar.body = filter(lambda i: i in slice, self.exemplar.body)
+        self.exemplar.body = filter(lambda i: (i[0],TraceEntry(i[1])) in slice, self.exemplar.body)
+
+    def pos(self):
+        """Returns the position where this loop goes in the trace"""
+        return self.tbs[0].body[0][0]
 
     def to_py(self):
         s =  "while 1:\n"
@@ -322,14 +384,6 @@ class Loop(object):
 
     def __str__(self):
         return self.to_py()
-
-# This may be necessary in the future, but I'm not sure
-# it is right now.
-#class Op(object):
-#    """Represents a single micro-op."""
-#    def __init__(self, op, args):
-#        self.op = op
-#        self.args = args
 
 def make_tbs(trace):
     tbs = []
@@ -367,6 +421,10 @@ def detect_loops(trace):
 
     return loops
 
+def del_slice_range(start, end, slice):
+    to_excise = range(start, end+1)
+    return dict( (k, slice[k]) for k in slice if not k in to_excise )
+
 def reroll_loops(trace, slice):
     slice_indices = set(s[0] for s in slice)
     loops = detect_loops(trace)
@@ -383,28 +441,27 @@ def reroll_loops(trace, slice):
     slice_dict = dict(slice)
     for loop in loops_in_slice:
         loop_start, loop_end = loop.range()
-        loop_slice = dynslice([t[1] for t in trace], uses(*loop.condition), start=loop_start)
+        loop_slice = dynslice(trace, uses(*loop.condition), start=loop_end)
         slice_dict.update(loop_slice)
 
         #print "Slice on loop condition (%d instructions):" % len(loop_slice)
         #for _,insn in loop_slice:
         #    print insn_str(insn)
     
-    newslice = sorted(slice_dict.items())
-    print "After loop detection, slice grew from %d to %d insns" % (len(slice), len(newslice))
-    print "Added:"
-    for x in newslice:
-        if x not in slice: print x[0],insn_str(x[1])
-
     # Now prune the loop exemplars so they only contain sliced instructions
-    for l in loops_in_slice:
-        print "Before pruning:"
-        print l
-        l.prune(newslice)
-        print "After pruning:"
-        print l
+    newslice = sorted(slice_dict.items())
+    for loop in loops_in_slice:
+        loop.prune(newslice)
 
-    return loops_in_slice
+    # Slice surgery: get rid of the unrolled loops, and insert the
+    # loop object in their place
+    for loop in loops_in_slice:
+        loop_start, loop_end = loop.range()
+        slice_dict = del_slice_range(loop_start, loop_end, slice_dict)
+        slice_dict[loop.pos()] = loop
+
+    newslice = sorted(slice_dict.items())
+    return newslice
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -414,27 +471,23 @@ if __name__ == "__main__":
 
     bufs = []
     output_insns = []
-    insns_glob = get_insns(infile)
-    last_op, last_args = insns_glob.pop()
+    trace = get_insns(infile)
+    last_op, last_args = trace.pop()
     while last_op != 'IFLO_LABEL_OUTPUT':
-        last_op, last_args = insns_glob.pop()
+        last_op, last_args = trace.pop()
     while last_op == 'IFLO_LABEL_OUTPUT':
         bufs += memrange(last_args[0], last_args[1])
         output_insns.append( (last_op, last_args) )
-        last_op, last_args = insns_glob.pop()
+        last_op, last_args = trace.pop()
     # We just popped one too many, push it back on
-    insns_glob.append( (last_op, last_args) )
+    trace.append( (last_op, last_args) )
 
-    slice = dynslice(insns_glob,bufs,outbuf_hack=True)
-    print "Sliced %d instructions down to %d" % (len(insns_glob), len(slice))
-    print "Generated slice:"
-    for _,insn in slice:
-        print insn_str(insn)
-
-    for _, (op, args) in slice:
-        print uop_to_py(op, args)
-
-    print
-
-    for op, args in output_insns:
-        print uop_to_py(op, args)
+    trace = list(enumerate(trace))
+    slice = dynslice(trace,bufs,outbuf_track=True)
+    print "Sliced %d instructions down to %d" % (len(trace), len(slice))
+    print "Re-rolling loops..."
+    newslice = reroll_loops(trace, slice)
+    print "Slice went from %d instructions to %d (loops are counted as one insn)" % (len(slice), len(newslice))
+    
+    for _, insn in newslice:
+        print insn
