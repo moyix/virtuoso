@@ -175,18 +175,18 @@ def is_jcc(op):
         'IFLO_OPS_TEMPLATE_JZ_ECX',
     ]
 
-def defines(op, args):
+def defines(insn):
     try:
-        return defines_uses[op][0](args)
+        return defines_uses[insn.op][0](insn.args)
     except KeyError:
-        print op, "not defined"
+        print insn.op, "not defined"
         sys.exit(1)
 
-def uses(op, args):
+def uses(insn):
     try:
-        return defines_uses[op][1](args)
+        return defines_uses[insn.op][1](insn.args)
     except KeyError:
-        print op, "not defined"
+        print insn.op, "not defined"
         sys.exit(1)
 
 def memrange(start, length):
@@ -203,56 +203,37 @@ def get_range_from_labels(labels):
     assert length == len(ints)
     return ints[0], length
 
-def dynslice(insns, bufs, outbuf_track=False, start=-1, debug=False):
+def dynslice(insns, bufs, start=-1, debug=False):
     """Perform a dynamic data slice.
        
        Perform a dynamic data slice of a trace with respect to a set of
        buffers. This is basically the algorithm described in the
        K-Tracer paper.
 
-       insns: a list of tuples: (index, (op, [arg1,arg2,...]))
+       insns: a list of tuples: (index, TraceEntry)
        bufs: a list of outputs to be tracked
        start: an optional point in the trace at which to begin analysis.
            By default, analysis begins at the last instruction in the
            trace.
-       outbuf_track: track the last time an output is defined and mark that
-           instruction using TraceEntry.set_output_label()
        debug: enable debugging information
 
        Returns: a list of tuples: (index, TraceEntry)
     """
-    if outbuf_track: outbufs = set(bufs)
     if start == -1: start = len(insns) - 1
 
     work = set(bufs)
     slice = []
     for i,insn in reversed(insns[:start+1]):
-        op,args = insn
-        defs_set = set(defines(op,args))
-        uses_set = set(uses(op,args))
-        is_output = False
+        defs_set = set(defines(insn))
+        uses_set = set(uses(insn))
 
-        # Special case: if op defines the output we care about directly
-        # we do *not* want to track A0.
-        if outbuf_track and defs_set & outbufs:
-            overlap = defs_set & outbufs
-            if debug:
-                print "==> Instruction defines %s" % (overlap,)
-                print "==> which is part of the output buffer; will not track A0"
-            uses_set -= set(["A0"])
-            outbufs -= defs_set
-            is_output = True
-
-        if debug: print insn_str(insn)
+        if debug: print repr(insn)
 
         if defs_set & work:
             if debug: print "Overlap with working set: %s" % (defs_set & work)
             work = (work - defs_set) | uses_set
-            if debug: print "Adding to slice: %s" % (insn,)
-            te = TraceEntry(insn)
-            slice.insert(0, (i,te))
-            if is_output:
-                te.set_output_label("out")
+            if debug: print "Adding to slice: %s" % repr(insn)
+            slice.insert(0, (i,insn))
 
     if debug: print "Working set at end:", work
     return slice
@@ -272,10 +253,6 @@ def get_insns(infile):
         args = convert_args([ a.split('.') for a in row[1:] ])
         insns.append( (op, args) )
     return insns
-
-def insn_str(insn):
-    op, args = insn
-    return "%s(%s)" % (op, ",".join(hex(a) for a in args))
 
 # Loop detection:
 #   Go through the trace, and look for sets of TBs where
@@ -305,7 +282,7 @@ class TB(object):
     def _eip_str(self):
         return hex(self.eip) if self.eip is not None else "0x????????"
     def __str__(self):
-        return ("[TB @%s]\n" % self._eip_str()) + "\n".join(insn_str(i[1]) for i in self.body)
+        return ("[TB @%s]\n" % self._eip_str()) + "\n".join(repr(i[1]) for i in self.body)
     def __repr__(self):
         return ("[TB @%s]" % self._eip_str())
 
@@ -318,12 +295,12 @@ class TraceEntry(object):
         self.label = label
         self.is_output = True
     def __str__(self):
-        s = uop_to_py(self.op, self.args)
+        s = uop_to_py(self)
         if self.is_output:
-            s += "\n" + uop_to_py_out(self.op, self.args, self.label)
+            s += "\n" + uop_to_py_out(self, self.label)
         return s
     def __repr__(self):
-        return insn_str( (self.op, self.args) )
+        return "%s(%s)" % (self.op, ",".join(hex(a) for a in self.args))
     def __eq__(self,other):
         if not isinstance(other, type(self)):
             return False
@@ -345,16 +322,16 @@ class Loop(object):
         self.tbs = tbs
         self.exemplar = self.tbs[1]
         
-        for i,(op,args) in tbs[0].body:
-            if is_jcc(op):
-                self.condition = (op, args)
+        for i,insn in tbs[0].body:
+            if is_jcc(insn.op):
+                self.condition = insn
                 break
         else:
             raise RuntimeError("Unable to determine loop condition")
         
-        for i,(op,args) in reversed(tbs[0].body):
-            if op == 'IFLO_MOVL_T0_IM':
-                self.taken = bool(args[0] & 1)
+        for i,insn in reversed(tbs[0].body):
+            if insn.op == 'IFLO_MOVL_T0_IM':
+                self.taken = bool(insn.args[0] & 1)
                 break
         else:
             raise RuntimeError("Unable to determine taken branch")
@@ -362,7 +339,7 @@ class Loop(object):
     def prune(self, slice):
         """Prune the exemplar so that it only includes instructions
            in slice."""
-        self.exemplar.body = filter(lambda i: (i[0],TraceEntry(i[1])) in slice, self.exemplar.body)
+        self.exemplar.body = filter(lambda i: i in slice, self.exemplar.body)
 
     def pos(self):
         """Returns the position where this loop goes in the trace"""
@@ -371,10 +348,10 @@ class Loop(object):
     def to_py(self):
         s =  "while 1:\n"
         s += "    if %s (%s): break\n" % ("" if self.taken else "not",
-                                          uop_to_py(*self.condition))
+                                          uop_to_py(self.condition))
         body = [ i for i in self.exemplar.body if i[1] != self.condition ]
         for i,insn in body:
-            pystr = uop_to_py(*insn)
+            pystr = uop_to_py(insn)
             if pystr:
                 s += "    " + pystr + "\n"
         return s
@@ -388,15 +365,14 @@ class Loop(object):
 def make_tbs(trace):
     tbs = []
     current_tb = TB(None)
-    for insn in trace:
-        i, (op, args) = insn
-        if op == "IFLO_TB_HEAD_EIP":
+    for i,insn in trace:
+        if insn.op == "IFLO_TB_HEAD_EIP":
             if current_tb: tbs.append(current_tb)
-            current_tb = TB(args[0])
-            current_tb.body.append(insn)
+            current_tb = TB(insn.args[0])
+            current_tb.body.append((i,insn))
         else:
             if current_tb:
-                current_tb.body.append(insn)
+                current_tb.body.append((i,insn))
     tbs.append(current_tb)
     return tbs
 
@@ -441,7 +417,7 @@ def reroll_loops(trace, slice):
     slice_dict = dict(slice)
     for loop in loops_in_slice:
         loop_start, loop_end = loop.range()
-        loop_slice = dynslice(trace, uses(*loop.condition), start=loop_end)
+        loop_slice = dynslice(trace, uses(loop.condition), start=loop_end)
         slice_dict.update(loop_slice)
 
         #print "Slice on loop condition (%d instructions):" % len(loop_slice)
@@ -482,8 +458,8 @@ if __name__ == "__main__":
     # We just popped one too many, push it back on
     trace.append( (last_op, last_args) )
 
-    trace = list(enumerate(trace))
-    slice = dynslice(trace,bufs,outbuf_track=True)
+    trace = list(enumerate(TraceEntry(t) for t in trace))
+    slice = dynslice(trace,bufs)
     print "Sliced %d instructions down to %d" % (len(trace), len(slice))
     print "Re-rolling loops..."
     newslice = reroll_loops(trace, slice)

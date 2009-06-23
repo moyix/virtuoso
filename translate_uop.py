@@ -43,16 +43,16 @@ outop_handler = {
     "IFLO_OPS_MEM_STB_T0_A0": lambda args, label: "out.write(A0,T0,'B', '%s')" % label,
 }
 
-def uop_to_py_out(op, args, label):
+def uop_to_py_out(insn, label):
     try:
-        return outop_handler[op](args, label)
+        return outop_handler[insn.op](insn.args, label)
     except KeyError:
-        print "No output handler defined for %s" % op
+        print "No output handler defined for %s" % insn.op
         sys.exit(1)
 
-def uop_to_py(op, args):
+def uop_to_py(insn):
     try:
-        return op_handler[op](args)
+        return op_handler[insn.op](insn.args)
     except KeyError:
-        print "No handler defined for %s" % op
+        print "No handler defined for %s" % insn.op
         sys.exit(1)
