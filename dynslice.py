@@ -192,17 +192,6 @@ def uses(insn):
 def memrange(start, length):
     return [("MEM_%08x" % i) for i in range(start, start+length)]
 
-def get_range_from_labels(labels):
-    ints = [int(l.replace("MEM_",""),16) for l in labels]
-    ints.sort()
-    length = 0
-    for i in ints:
-        length += 1
-        if i+1 not in ints:
-            break
-    assert length == len(ints)
-    return ints[0], length
-
 def dynslice(insns, bufs, start=-1, debug=False):
     """Perform a dynamic data slice.
        
