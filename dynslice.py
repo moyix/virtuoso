@@ -192,7 +192,7 @@ def uses(insn):
 def memrange(start, length):
     return [("MEM_%08x" % i) for i in range(start, start+length)]
 
-def dynslice(insns, bufs, start=-1, debug=False):
+def dynslice(insns, bufs, start=-1, output_track=False, debug=False):
     """Perform a dynamic data slice.
        
        Perform a dynamic data slice of a trace with respect to a set of
@@ -204,11 +204,14 @@ def dynslice(insns, bufs, start=-1, debug=False):
        start: an optional point in the trace at which to begin analysis.
            By default, analysis begins at the last instruction in the
            trace.
+       ouput_track: mark instructions that define data in the output set.
+           This calls TraceEntry.set_output_label().
        debug: enable debugging information
 
        Returns: a list of tuples: (index, TraceEntry)
     """
     if start == -1: start = len(insns) - 1
+    if output_track: outbufs = set(bufs)
 
     work = set(bufs)
     slice = []
@@ -222,6 +225,13 @@ def dynslice(insns, bufs, start=-1, debug=False):
             if debug: print "Overlap with working set: %s" % (defs_set & work)
             work = (work - defs_set) | uses_set
             if debug: print "Adding to slice: %s" % repr(insn)
+            
+            # TODO: allow multiple outputs by separating outbufs into
+            # a dict of (label => memrange) pairs
+            if output_track and defs_set & outbufs:
+                outbufs -= defs_set
+                insn.set_output_label("out")
+        
             slice.insert(0, (i,insn))
 
     if debug: print "Working set at end:", work
@@ -284,7 +294,7 @@ class TraceEntry(object):
         self.label = label
         self.is_output = True
     def __str__(self):
-        s = uop_to_py(self)
+        s = uop_to_py(self) + " # %s" % repr(self)
         if self.is_output:
             s += "\n" + uop_to_py_out(self, self.label)
         return s
@@ -339,10 +349,11 @@ class Loop(object):
         s += "    if %s (%s): break\n" % ("" if self.taken else "not",
                                           uop_to_py(self.condition))
         body = [ i for i in self.exemplar.body if i[1] != self.condition ]
+        loop_statements = []
         for i,insn in body:
-            pystr = uop_to_py(insn)
-            if pystr:
-                s += "    " + pystr + "\n"
+            for line in str(insn).splitlines():
+                loop_statements.append("    " + line + " # %s" % repr(insn))
+        s += "\n".join(loop_statements)
         return s
 
     def range(self):
@@ -448,11 +459,11 @@ if __name__ == "__main__":
     trace.append( (last_op, last_args) )
 
     trace = list(enumerate(TraceEntry(t) for t in trace))
-    slice = dynslice(trace,bufs)
-    print "Sliced %d instructions down to %d" % (len(trace), len(slice))
-    print "Re-rolling loops..."
+    slice = dynslice(trace, bufs, output_track=True)
+    print "# Sliced %d instructions down to %d" % (len(trace), len(slice))
+    print "# Re-rolling loops..."
     newslice = reroll_loops(trace, slice)
-    print "Slice went from %d instructions to %d (loops are counted as one insn)" % (len(slice), len(newslice))
+    print "# Slice went from %d instructions to %d (loops are counted as one insn)" % (len(slice), len(newslice))
     
     for _, insn in newslice:
         print insn
