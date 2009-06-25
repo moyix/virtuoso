@@ -36,6 +36,7 @@ op_handler = {
     "IFLO_OPS_TEMPLATE_JNZ_ECX": lambda args: "regs[%d] != 0" % qemu_regs['ECX'],
     "IFLO_TB_HEAD_EIP": lambda args: "",
     "IFLO_GOTO_TB0": lambda args: "",
+    "IFLO_SET_INPUT": lambda args: "%s = inputs[%d]" % (args[0], args[1]),
 }
 
 outop_handler = {

@@ -131,6 +131,12 @@ defines_uses = {
     'IFLO_MOVL_T0_0': OBLIT('T0'),   
     'IFLO_ADDL_ESP_IM': OBLIT("REGS_%d" % qemu_regs["ESP"]),
 
+    # Special "set the input" pseudo-op
+    'IFLO_SET_INPUT': [
+        lambda args: [args[0]],
+        lambda args: [],
+    ],
+
     # Evil conditionals. We hates them.    
     # Note: if you add one here, also add it to the list
     # in is_jcc()
@@ -286,20 +292,24 @@ class TB(object):
         return ("[TB @%s]" % self._eip_str())
 
 class TraceEntry(object):
+    """A single entry in the trace"""
     def __init__(self, insn):
         self.op, self.args = insn
         self.label = None
         self.is_output = False
+
     def set_output_label(self, label):
+        """Mark this instruction as defining a labelled output."""
         self.label = label
         self.is_output = True
+
     def __str__(self):
         s = uop_to_py(self) + " # %s" % repr(self)
         if self.is_output:
             s += "\n" + uop_to_py_out(self, self.label)
         return s
     def __repr__(self):
-        return "%s(%s)" % (self.op, ",".join(hex(a) for a in self.args))
+        return "%s(%s)" % (self.op, ",".join(a if isinstance(a,str) else hex(a) for a in self.args))
     def __eq__(self,other):
         if not isinstance(other, type(self)):
             return False
@@ -420,10 +430,6 @@ def reroll_loops(trace, slice):
         loop_slice = dynslice(trace, uses(loop.condition), start=loop_end)
         slice_dict.update(loop_slice)
 
-        #print "Slice on loop condition (%d instructions):" % len(loop_slice)
-        #for _,insn in loop_slice:
-        #    print insn_str(insn)
-    
     # Now prune the loop exemplars so they only contain sliced instructions
     newslice = sorted(slice_dict.items())
     for loop in loops_in_slice:
@@ -439,31 +445,66 @@ def reroll_loops(trace, slice):
     newslice = sorted(slice_dict.items())
     return newslice
 
+def set_input(trace, inbufs):
+    inbufs = set(inbufs)
+    for i,te in trace:
+        uses_set = set(uses(te))
+        if uses_set & inbufs:
+            defs = defines(te)
+            assert len(defs) == 1
+            te.op = "IFLO_SET_INPUT"
+            te.args = [defs[0], 0]
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         infile = sys.stdin
     else:
         infile = open(sys.argv[1])
 
-    bufs = []
-    output_insns = []
     trace = get_insns(infile)
+
+    # TODO: both output and input should probably not be thrown into
+    # the same big buffer; instead we should do something like
+    #   outbufs[label] = memrange(...)
+    # This would allow us to handle multiple ins/outs
+
+    # Find the outputs
+    outbufs = []
+    output_insns = []
     last_op, last_args = trace.pop()
     while last_op != 'IFLO_LABEL_OUTPUT':
         last_op, last_args = trace.pop()
     while last_op == 'IFLO_LABEL_OUTPUT':
-        bufs += memrange(last_args[0], last_args[1])
+        outbufs += memrange(last_args[0], last_args[1])
         output_insns.append( (last_op, last_args) )
         last_op, last_args = trace.pop()
-    # We just popped one too many, push it back on
     trace.append( (last_op, last_args) )
 
+    # Find the inputs
+    inbufs = []
+    input_insns = []
+    last_op, last_args = trace.pop(0)
+    while last_op != 'IFLO_LABEL_INPUT':
+        last_op, last_args = trace.pop(0)
+    while last_op == 'IFLO_LABEL_INPUT':
+        inbufs += memrange(last_args[0], last_args[1])
+        input_insns.append( (last_op, last_args) )
+        last_op, last_args = trace.pop(0)
+    trace.insert(0, (last_op, last_args) )
+
+    # Turn the trace into a list of TraceEntry objects
     trace = list(enumerate(TraceEntry(t) for t in trace))
-    slice = dynslice(trace, bufs, output_track=True)
+
+    # Set up the inputs
+    set_input(trace, inbufs)
+
+    slice = dynslice(trace, outbufs, output_track=True)
     print "# Sliced %d instructions down to %d" % (len(trace), len(slice))
     print "# Re-rolling loops..."
     newslice = reroll_loops(trace, slice)
     print "# Slice went from %d instructions to %d (loops are counted as one insn)" % (len(slice), len(newslice))
     
+    print "######## BEGIN GENERATED CODE ########"
     for _, insn in newslice:
         print insn
+    print "########  END GENERATED CODE  ########"
