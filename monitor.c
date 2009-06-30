@@ -677,6 +677,17 @@ static void do_physical_memory_dump(int count, int format, int size,
     memory_dump(count, format, size, addr, 1);
 }
 
+static void do_memory_save_phys(char *fname) {
+    int i;
+    FILE *f;
+    f = fopen(fname, "w");
+    for (i = 0; i < phys_ram_size ; i += 0x1000) {
+        fwrite(phys_ram_base + i, 0x1000, 1, f);
+    }
+    term_printf("Done dumping RAM to %s\n", fname);
+    fclose(f);
+}
+
 static void do_print(int count, int format, int size, unsigned int valh, unsigned int vall)
 {
     target_phys_addr_t val = GET_TPHYSADDR(valh, vall);
@@ -1363,6 +1374,8 @@ static term_cmd_t term_cmds[] = {
        "capture index", "stop capture" },
     { "memsave", "lis", do_memory_save,
       "addr size file", "save to disk virtual memory dump starting at 'addr' of size 'size'", },
+    { "memsavep", "s", do_memory_save_phys,
+      "file", "physical memory dump into 'file'" },
 
     // TRL 03-2008
     /*
