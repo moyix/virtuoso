@@ -38,7 +38,8 @@ int X86_marker = 0;
 // this is in cpu-exec.c
 extern int num_in_disas;
 
-
+// from disas.c (for debug)
+void target_disas_buf(unsigned char **out, target_ulong code, int flags);
 
 /* XXX: move that elsewhere */
 static uint16_t *gen_opc_ptr;
@@ -3256,6 +3257,19 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
     int modrm, reg, rm, mod, reg_addr, op, opreg, offset_addr, val;
     target_ulong next_eip, tval;
     int rex_w, rex_r;
+
+    /* Print the x86 instruction we're about to translate */
+    unsigned char **disbuf_arg;
+    disbuf_arg = (unsigned char **) malloc(4);
+    *disbuf_arg = (unsigned char *) malloc(256);
+    unsigned char *disbuf_orig = *disbuf_arg;
+
+    target_disas_buf(disbuf_arg, pc_start, 0);
+    //printf("%08x     %s\n", pc_start, disbuf_orig); 
+    iferret_log_op_write_4s(IFLO_INSN_DIS, pc_start, disbuf_orig);
+    free(disbuf_orig);
+    free(disbuf_arg);
+    /* Ok, now move on to the real stuff... */
 
     s->pc = pc_start;
     prefixes = 0;
@@ -6837,11 +6851,13 @@ static inline int gen_intermediate_code_internal(CPUState *env,
     dc->is_jmp = DISAS_NEXT;
     pc_ptr = pc_start;
     lj = -1;
+    
+    iferret_log_op_write_4(IFLO_TB_ID, pc_start);
 
     // TRL 0901 add a prologue to head of every translation block
     // to manage info-flow stuff. 
     // Look at op.c/op_info_flow_prologue() to know what this contains.
-    gen_op_iferret_prologue();
+    gen_op_iferret_prologue(pc_start);
 
     for(;;) {
         if (env->nb_breakpoints > 0) {
