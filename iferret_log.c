@@ -34,7 +34,7 @@ char* iferret_network_label=NULL;
 uint8_t iferret_network_label_changed = 0;
 
 // we'll be using these as "addresses" for registers
-uint64_t ifregaddr[16];
+uint64_t ifregaddr[32];
 
 
 extern unsigned int phys_ram_size;
@@ -61,6 +61,12 @@ uint64_t FAKE_Q1;
 uint64_t FAKE_Q2;
 uint64_t FAKE_Q3;
 uint64_t FAKE_Q4;
+//uint64_t FAKE_ES;
+//uint64_t FAKE_CS;
+//uint64_t FAKE_SS;
+//uint64_t FAKE_DS;
+//uint64_t FAKE_FS;
+//uint64_t FAKE_GS;
 
 
 
@@ -330,7 +336,7 @@ void iferret_log_op_args_read(iferret_op_t *op) {
 
 void iferret_spit_op(iferret_op_t *op) {
   int i;
-  printf ("(%s", iferret_op_num_to_str(op->num));
+  printf ("|%s", iferret_op_num_to_str(op->num));
   if (op->num >= IFLO_SYS_CALLS_START) {
     printf (",(is_sysenter,%d)", op->syscall->is_sysenter);
     printf (",(is_enter,%d)", op->syscall->is_enter);
@@ -347,23 +353,23 @@ void iferret_spit_op(iferret_op_t *op) {
     case IFLAT_NONE:
       exit(1);
     case IFLAT_UI8:
-      printf ("(ui8,%x)", op->arg[i].val.u8);
+      printf ("ui8.%x", op->arg[i].val.u8);
       break;
     case IFLAT_UI16:
-      printf ("(ui16,%x)", op->arg[i].val.u16);
+      printf ("ui16.%x", op->arg[i].val.u16);
       break;      
     case IFLAT_UI32: 
-      printf ("(ui32,%lx)", (long unsigned int) op->arg[i].val.u32);
+      printf ("ui32.%lx", (long unsigned int) op->arg[i].val.u32);
       break;
     case IFLAT_UI64:
-      printf ("(ui64,%llx)", (long long unsigned int) op->arg[i].val.u64);
+      printf ("ui64.%llx", (long long unsigned int) op->arg[i].val.u64);
       break;
     case IFLAT_STR:
-      printf ("(str,%s)", op->arg[i].val.str);
+      printf ("str.%s", op->arg[i].val.str);
       break;
     }
   }
-  printf (")\n");
+  printf ("\n");
 }
 
 
@@ -468,6 +474,14 @@ void iferret_log_create() {
   ifregaddr[IFRN_Q2] =  (uint64_t) &(FAKE_Q2);
   ifregaddr[IFRN_Q3] =  (uint64_t) &(FAKE_Q3);
   ifregaddr[IFRN_Q4] =  (uint64_t) &(FAKE_Q4);
+//  ifregaddr[IFRN_ES] =  (uint64_t) &(FAKE_ES);
+//  ifregaddr[IFRN_CS] =  (uint64_t) &(FAKE_CS);
+//  ifregaddr[IFRN_SS] =  (uint64_t) &(FAKE_SS);
+//  ifregaddr[IFRN_DS] =  (uint64_t) &(FAKE_DS);
+//  ifregaddr[IFRN_FS] =  (uint64_t) &(FAKE_FS);
+//  ifregaddr[IFRN_GS] =  (uint64_t) &(FAKE_GS);
+
+
   iferret_log_preamble();
 #endif
 }
