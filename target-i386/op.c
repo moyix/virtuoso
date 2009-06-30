@@ -27,6 +27,8 @@
 
 #include "iferret_log.h"
 
+#define MAGIC_IN  0xdeadbeef
+#define MAGIC_OUT 0xdeadf00d
 
 #define PTR_TO_ADDR(ptr) ((uint64_t) ptr)
 
@@ -550,21 +552,21 @@ void OPPROTO op_idivq_EAX_T0(void)
 void OPPROTO op_movl_T0_imu(void)
 {
 
-  iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_IMU);
+  iferret_log_info_flow_op_write_4(IFLO_MOVL_T0_IMU,PARAM1);
 
     T0 = (uint32_t)PARAM1;
 }
 
 void OPPROTO op_movl_T0_im(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_IM);
+  iferret_log_info_flow_op_write_4(IFLO_MOVL_T0_IM,PARAM1);
 
     T0 = (int32_t)PARAM1;
 }
 
 void OPPROTO op_addl_T0_im(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_ADDL_T0_IM);
+  iferret_log_info_flow_op_write_4(IFLO_ADDL_T0_IM,PARAM1);
 
     T0 += PARAM1;
 }
@@ -578,7 +580,7 @@ void OPPROTO op_andl_T0_ffff(void)
 
 void OPPROTO op_andl_T0_im(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_ANDL_T0_IM);
+  iferret_log_info_flow_op_write_4(IFLO_ANDL_T0_IM,PARAM1);
 
     T0 = T0 & PARAM1;
 }
@@ -595,21 +597,21 @@ void OPPROTO op_movl_T0_T1(void)
 
 void OPPROTO op_movl_T1_imu(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_MOVL_T1_IMU);
+  iferret_log_info_flow_op_write_4(IFLO_MOVL_T1_IMU,PARAM1);
 
     T1 = (uint32_t)PARAM1;
 }
 
 void OPPROTO op_movl_T1_im(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_MOVL_T1_IM);
+  iferret_log_info_flow_op_write_4(IFLO_MOVL_T1_IM,PARAM1);
 
     T1 = (int32_t)PARAM1;
 }
 
 void OPPROTO op_addl_T1_im(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_ADDL_T1_IM);
+  iferret_log_info_flow_op_write_4(IFLO_ADDL_T1_IM,PARAM1);
 
     T1 += PARAM1;
 }
@@ -626,7 +628,7 @@ void OPPROTO op_movl_T1_A0(void)
 
 void OPPROTO op_movl_A0_im(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_MOVL_A0_IM);
+  iferret_log_info_flow_op_write_4(IFLO_MOVL_A0_IM,PARAM1);
 
     A0 = (uint32_t)PARAM1;
 }
@@ -635,7 +637,7 @@ void OPPROTO op_movl_A0_im(void)
 // so we're going to push that address right to the blinking info-flow log.  
 void OPPROTO op_addl_A0_im(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_ADDL_A0_IM);
+  iferret_log_info_flow_op_write_4(IFLO_ADDL_A0_IM,PARAM1);
 
     A0 = (uint32_t)(A0 + PARAM1);
 }
@@ -644,14 +646,15 @@ void OPPROTO op_addl_A0_im(void)
 
 void OPPROTO op_movl_A0_seg(void)
 {
-  iferret_log_info_flow_op_write_8(IFLO_MOVL_A0_SEG, PTR_TO_ADDR(env) + PARAM1);
+  
+  iferret_log_info_flow_op_write_84(IFLO_MOVL_A0_SEG, PTR_TO_ADDR(env) + PARAM1, PARAM1);
 
     A0 = (uint32_t)*(target_ulong *)((char *)env + PARAM1);
 }
 
 void OPPROTO op_addl_A0_seg(void)
 {
-  iferret_log_info_flow_op_write_8(IFLO_ADDL_A0_SEG, PTR_TO_ADDR(env) + PARAM1);  
+  iferret_log_info_flow_op_write_84(IFLO_ADDL_A0_SEG, PTR_TO_ADDR(env) + PARAM1, PARAM1);
 
     A0 = (uint32_t)(A0 + *(target_ulong *)((char *)env + PARAM1));
 }
@@ -774,7 +777,7 @@ void OPPROTO op_jmp_T0(void)
 
 void OPPROTO op_movl_eip_im(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_MOVL_EIP_IM);
+  iferret_log_info_flow_op_write_4(IFLO_MOVL_EIP_IM,PARAM1);
 
     EIP = (uint32_t)PARAM1;
 }
@@ -1149,13 +1152,13 @@ void op_addw_ESP_2(void)
 
 void op_addl_ESP_im(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_ADDL_ESP_IM);
+  iferret_log_info_flow_op_write_4(IFLO_ADDL_ESP_IM,PARAM1);
     ESP = (uint32_t)(ESP + PARAM1);
 }
 
 void op_addw_ESP_im(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_ADDW_ESP_IM);
+  iferret_log_info_flow_op_write_4(IFLO_ADDW_ESP_IM,PARAM1);
     ESP = (ESP & ~0xffff) | ((ESP + PARAM1) & 0xffff);
 }
 
@@ -1197,7 +1200,18 @@ void OPPROTO op_rdpmc(void)
 void OPPROTO op_cpuid(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_CPUID);
-    helper_cpuid();
+  // BDG : Magic instruction -- allows a guest userland program
+  // to notify us that a buffer is to be monitored.
+  if (EAX == 0) {
+    if(EBX == MAGIC_IN) {
+        iferret_log_info_flow_op_write_44(IFLO_LABEL_INPUT, phys_addr(ECX), EDX);
+    }
+    else if (EBX == MAGIC_OUT) {
+        iferret_log_info_flow_op_write_44(IFLO_LABEL_OUTPUT, phys_addr(ECX), EDX);
+    }
+  }
+
+  helper_cpuid();
 }
 
 void OPPROTO op_enter_level(void)
@@ -1402,7 +1416,7 @@ void OPPROTO op_das(void)
 /* never use it with R_CS */
 void OPPROTO op_movl_seg_T0(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_MOVL_SEG_T0);
+  iferret_log_info_flow_op_write_4(IFLO_MOVL_SEG_T0,PARAM1);
     load_seg(PARAM1, T0);
 }
 
@@ -1412,7 +1426,8 @@ void OPPROTO op_movl_seg_T0_vm(void)
     int selector;
     SegmentCache *sc;
 
-    iferret_log_info_flow_op_write_0(IFLO_MOVL_SEG_T0_VM);
+    //iferret_log_info_flow_op_write_0(IFLO_MOVL_SEG_T0_VM);
+    iferret_log_info_flow_op_write_4(IFLO_MOVL_SEG_T0_VM, PARAM1);
 
     selector = T0 & 0xffff;
     /* env->segs[] access */
@@ -1423,7 +1438,7 @@ void OPPROTO op_movl_seg_T0_vm(void)
 
 void OPPROTO op_movl_T0_seg(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_SEG);
+  iferret_log_info_flow_op_write_4(IFLO_MOVL_T0_SEG,PARAM1);
     T0 = env->segs[PARAM1].selector;
 }
 
@@ -1607,43 +1622,44 @@ void OPPROTO op_invlpg_A0(void)
 
 void OPPROTO op_movl_T0_env(void)
 {
-  iferret_log_info_flow_op_write_8(IFLO_MOVL_T0_ENV, PTR_TO_ADDR(env) + PARAM1);
+  //printf("IFLO_MOVL_T0_ENV, PTR_TO_ADDR(env) + PARAM1 = 0x%lx\n", PTR_TO_ADDR(env) + PARAM1);
+  iferret_log_info_flow_op_write_84(IFLO_MOVL_T0_ENV, PTR_TO_ADDR(env) + PARAM1, PARAM1);
     T0 = *(uint32_t *)((char *)env + PARAM1);
 }
 
 void OPPROTO op_movl_env_T0(void)
 {
-  iferret_log_info_flow_op_write_8(IFLO_MOVL_ENV_T0, PTR_TO_ADDR(env) + PARAM1);
+  iferret_log_info_flow_op_write_84(IFLO_MOVL_ENV_T0, PTR_TO_ADDR(env) + PARAM1, PARAM1);
     *(uint32_t *)((char *)env + PARAM1) = T0;
 }
 
 void OPPROTO op_movl_env_T1(void)
 {
-  iferret_log_info_flow_op_write_8(IFLO_MOVL_ENV_T1, PTR_TO_ADDR(env) + PARAM1);
+  iferret_log_info_flow_op_write_84(IFLO_MOVL_ENV_T1, PTR_TO_ADDR(env) + PARAM1, PARAM1);
     *(uint32_t *)((char *)env + PARAM1) = T1;
 }
 
 void OPPROTO op_movtl_T0_env(void)
 {
-  iferret_log_info_flow_op_write_8(IFLO_MOVTL_T0_ENV, PTR_TO_ADDR(env) + PARAM1);
+  iferret_log_info_flow_op_write_84(IFLO_MOVTL_T0_ENV, PTR_TO_ADDR(env) + PARAM1, PARAM1);
     T0 = *(target_ulong *)((char *)env + PARAM1);
 }
 
 void OPPROTO op_movtl_env_T0(void)
 {
-  iferret_log_info_flow_op_write_8(IFLO_MOVTL_ENV_T0, PTR_TO_ADDR(env) + PARAM1);
+  iferret_log_info_flow_op_write_84(IFLO_MOVTL_ENV_T0, PTR_TO_ADDR(env) + PARAM1, PARAM1);
     *(target_ulong *)((char *)env + PARAM1) = T0;
 }
 
 void OPPROTO op_movtl_T1_env(void)
 {
-  iferret_log_info_flow_op_write_8(IFLO_MOVTL_T1_ENV, PTR_TO_ADDR(env) + PARAM1);
+  iferret_log_info_flow_op_write_84(IFLO_MOVTL_T1_ENV, PTR_TO_ADDR(env) + PARAM1, PARAM1);
     T1 = *(target_ulong *)((char *)env + PARAM1);
 }
 
 void OPPROTO op_movtl_env_T1(void)
 {
-  iferret_log_info_flow_op_write_8(IFLO_MOVTL_ENV_T1, PTR_TO_ADDR(env) + PARAM1);
+  iferret_log_info_flow_op_write_84(IFLO_MOVTL_ENV_T1, PTR_TO_ADDR(env) + PARAM1, PARAM1);
     *(target_ulong *)((char *)env + PARAM1) = T1;
 }
 
@@ -2900,7 +2916,7 @@ void OPPROTO op_invlpga(void)
 }
 
 void check_rollup_op(void);
-void write_eip_to_iferret_log(void);
+void write_eip_to_iferret_log(target_ulong pc);
 void helper_manage_pid_stuff(void);
 
 // Note: The fn calls within this op need to take no 
@@ -2911,7 +2927,7 @@ void OPPROTO op_iferret_prologue(void)
   // check if info flow log is anywhere near overflow
   check_rollup_op();
   // write eip of head of this tb
-  write_eip_to_iferret_log();
+  write_eip_to_iferret_log(PARAM1);
   // manage PID stuff.  
   helper_manage_pid_stuff();
 }
