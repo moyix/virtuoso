@@ -52,6 +52,7 @@ typedef struct iferret_struct_t {
   uint8_t first_log;
   uint8_t something_got_labeled;
   uint8_t if_debug;
+  iferret_op_t *current_op;
   
 #ifdef OTAINT
   ShadowMem *shadow;
