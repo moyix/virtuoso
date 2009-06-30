@@ -299,6 +299,7 @@ void OPPROTO glue(op_jb_sub, SUFFIX)(void)
     src1 = CC_DST + CC_SRC;
     src2 = CC_SRC;
 
+    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_JB_SUB,SHIFT);
     if ((DATA_TYPE)src1 < (DATA_TYPE)src2)
         GOTO_LABEL_PARAM(1);
     FORCE_RET();
@@ -306,6 +307,7 @@ void OPPROTO glue(op_jb_sub, SUFFIX)(void)
 
 void OPPROTO glue(op_jz_sub, SUFFIX)(void)
 {
+    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_JZ_SUB,SHIFT);
     if ((DATA_TYPE)CC_DST == 0)
         GOTO_LABEL_PARAM(1);
     FORCE_RET();
@@ -313,6 +315,7 @@ void OPPROTO glue(op_jz_sub, SUFFIX)(void)
 
 void OPPROTO glue(op_jnz_sub, SUFFIX)(void)
 {
+    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_JNZ_SUB,SHIFT);
     if ((DATA_TYPE)CC_DST != 0)
         GOTO_LABEL_PARAM(1);
     FORCE_RET();
@@ -324,6 +327,7 @@ void OPPROTO glue(op_jbe_sub, SUFFIX)(void)
     src1 = CC_DST + CC_SRC;
     src2 = CC_SRC;
 
+    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_JBE_SUB,SHIFT);
     if ((DATA_TYPE)src1 <= (DATA_TYPE)src2)
         GOTO_LABEL_PARAM(1);
     FORCE_RET();
@@ -331,6 +335,7 @@ void OPPROTO glue(op_jbe_sub, SUFFIX)(void)
 
 void OPPROTO glue(op_js_sub, SUFFIX)(void)
 {
+    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_JS_SUB,SHIFT);
     if (CC_DST & SIGN_MASK)
         GOTO_LABEL_PARAM(1);
     FORCE_RET();
@@ -342,6 +347,7 @@ void OPPROTO glue(op_jl_sub, SUFFIX)(void)
     src1 = CC_DST + CC_SRC;
     src2 = CC_SRC;
 
+    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_JL_SUB,SHIFT);
     if ((DATA_STYPE)src1 < (DATA_STYPE)src2)
         GOTO_LABEL_PARAM(1);
     FORCE_RET();
@@ -353,6 +359,7 @@ void OPPROTO glue(op_jle_sub, SUFFIX)(void)
     src1 = CC_DST + CC_SRC;
     src2 = CC_SRC;
 
+    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_JLE_SUB,SHIFT);
     if ((DATA_STYPE)src1 <= (DATA_STYPE)src2)
         GOTO_LABEL_PARAM(1);
     FORCE_RET();
@@ -364,6 +371,7 @@ void OPPROTO glue(op_jle_sub, SUFFIX)(void)
 
 void OPPROTO glue(op_loopnz, SUFFIX)(void)
 {
+    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_LOOPNZ,SHIFT);
     if ((DATA_TYPE)ECX != 0 && !(T0 & CC_Z))
         GOTO_LABEL_PARAM(1);
     FORCE_RET();
@@ -371,6 +379,7 @@ void OPPROTO glue(op_loopnz, SUFFIX)(void)
 
 void OPPROTO glue(op_loopz, SUFFIX)(void)
 {
+    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_LOOPZ,SHIFT);
     if ((DATA_TYPE)ECX != 0 && (T0 & CC_Z))
         GOTO_LABEL_PARAM(1);
     FORCE_RET();
@@ -378,6 +387,7 @@ void OPPROTO glue(op_loopz, SUFFIX)(void)
 
 void OPPROTO glue(op_jz_ecx, SUFFIX)(void)
 {
+    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_JZ_ECX,SHIFT);
     if ((DATA_TYPE)ECX == 0)
         GOTO_LABEL_PARAM(1);
     FORCE_RET();
@@ -385,6 +395,7 @@ void OPPROTO glue(op_jz_ecx, SUFFIX)(void)
 
 void OPPROTO glue(op_jnz_ecx, SUFFIX)(void)
 {
+    iferret_log_info_flow_op_write_14(IFLO_OPS_TEMPLATE_JNZ_ECX,SHIFT,PARAM1);
     if ((DATA_TYPE)ECX != 0)
         GOTO_LABEL_PARAM(1);
     FORCE_RET();
