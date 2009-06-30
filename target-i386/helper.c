@@ -4806,13 +4806,13 @@ void vmexit(uint64_t exit_code, uint64_t exit_info_1)
 
 
 
-void write_eip_to_iferret_log() {
+void write_eip_to_iferret_log(target_ulong pc) {
 #ifdef IFERRET_PHYS_EIP
   uint32_t addr;
   addr = cpu_get_phys_addr(env,EIP);
   if (addr != -1) {
-    iferret_log_op_write_4(IFLO_TB_HEAD_EIP, addr);
-    iferret_log_op_write_4(IFLO_TB_HEAD_EIP, EIP);
+    //iferret_log_op_write_4(IFLO_TB_HEAD_EIP, addr);
+    iferret_log_op_write_4(IFLO_TB_HEAD_EIP, pc);
   }
 #endif // IFERRET_PHYS_EIP
 }
