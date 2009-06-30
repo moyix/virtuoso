@@ -279,9 +279,10 @@ void iferret_track_pid_commands(iferret_t *iferret, int pid, char *command) {
       // we've already seen this pid -- check if command string has changed.
       s = int_string_hashtable_find(iferret->pid_commands,pid);
       if ((strcmp(s,command)) != 0) {
-        printf ("pid %d was [%s] now [%s]\n",
+        /*printf ("pid %d was [%s] now [%s]\n",
   	      pid, s, command);
         printf ("digraph a%d [label=\"%d %s\"]\n", pid, pid, command);
+        */
       }
     }
     int_string_hashtable_add(iferret->pid_commands,
@@ -548,7 +549,7 @@ void check_syscall_arg(iferret_t *iferret,
     printf ("time %d sycall %d. arg %s already has a label.\n", time, num, regname);
     fflush(stdout);
 #ifdef OTAINT
-    shad_spit_range(iferret->shadow, reg_base_addr, reg_base_addr+4);
+    //shad_spit_range(iferret->shadow, reg_base_addr, reg_base_addr+4);
 #endif
   }
   /*
@@ -564,7 +565,7 @@ void iferret_process_syscall(iferret_t *iferret, iferret_op_t *op) {
   iferret_syscall_t *scp;
   scp = op->syscall;  
 
-  iferret_spit_op(op);
+  //iferret_spit_op(op);
 
   // This might actually be a system call return
   // that wanted its return params logged
@@ -944,7 +945,8 @@ void iferret_op_process(iferret_t *iferret, iferret_op_t *op) {
     return;
   }
   if (op->num == IFLO_TB_HEAD_EIP) {
-    iferret->tb_head_eip = phys_ram_base + op->arg[0].val.u32;
+    //iferret->tb_head_eip = phys_ram_base + op->arg[0].val.u32;
+    iferret->tb_head_eip = op->arg[0].val.u32;
     if (info_flow_exists(iferret,iferret->tb_head_eip,4)) {
       printf ("Executing code with an info-flow label\n");
     }
@@ -1052,6 +1054,9 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
   char command[256];
   char *op_start;
   static int ii = 0;
+  int in_trace = 0;
+  int tb_dis = 0;
+  int inarg_count = 0;
 
   if (op_pos_arr == NULL) {
     op_pos_arr = (op_pos_arr_t *) my_malloc (sizeof(op_pos_arr_t));
@@ -1135,9 +1140,6 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
   while (iferret_log_ptr < iferret_log_base + iferret_log_size) {
 
     ii ++;
-    if (ii==63762202) {
-      printf ("foo.\n");
-    }
 
     if (iferret->info_flow) {
 #ifdef OTAINT
@@ -1183,17 +1185,72 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
       exit(1);
     }
     iferret_log_op_args_read(&op);
+
+    // Dump it in the context struct
+    iferret->current_op = &op;
+
+    if (op.num == IFLO_LABEL_INPUT) {
+        iferret->info_flow = TRUE;
+        iferret->something_got_labeled = TRUE;
     
+        if (op.arg[0].val.u32) {
+            uint64_t buf_start = (uint64_t) op.arg[0].val.u32;
+            uint32_t buf_len   = (uint32_t) op.arg[1].val.u32;
+            char label[256];
+            sprintf(label, "input-%d", inarg_count);
+            info_flow_label(iferret, (uint64_t) buf_start, buf_len, label);
+            fflush(stdout);
+            //shad_spit_range_nonl(iferret->shadow, buf_start, buf_start + buf_len - 1);
+            //iferret_spit_op(&op);
+            fflush(stdout);
+            inarg_count++;
+        }
+        in_trace = 1;
+    }
+    if (op.num == IFLO_TB_ID) {
+        tb_dis = 1;
+    }
+
+    if (tb_dis == 1 && op.num != IFLO_TB_ID && op.num != IFLO_INSN_DIS) {
+        tb_dis = 0;
+    }
+
+    //    if (in_trace || tb_dis) {
+    if (in_trace) {
+        //printf("Current op number: %d\n", ii);
+        iferret_spit_op(&op);
+        fflush(stdout);
+    }
+
+    //if (in_trace) {
+    //    fflush(stdout);
+    //    shad_spit(iferret->shadow);
+    //}
+
+    if (op.num == IFLO_LABEL_OUTPUT) {
+        fflush(stdout);
+        #ifndef QAINT
+        uint64_t buf_start = (uint64_t) op.arg[0].val.u32;
+        uint64_t buf_len   = (uint64_t) op.arg[1].val.u32;
+        //shad_spit_range_nonl(iferret->shadow, buf_start, buf_start + buf_len - 1);
+        //iferret_spit_op(&op);
+        fflush(stdout);
+        #endif
+        iferret->info_flow = FALSE;
+        in_trace = 0;
+        inarg_count = 0;
+    }
+
     if (iferret_debug && iferret->something_got_labeled) {
       printf ("i=%d pid=%d uid=%d cpl=%d: ", 
       	      i, iferret->current_pid, iferret->current_uid, iferret->current_cpl);
 	    //     printf ("i=%d : ", i);
-      iferret_spit_op(&op);
+      //iferret_spit_op(&op);
     }
 
     if (1==0 && iferret->something_got_labeled) {
       printf ("ii=%d ", ii);  
-      iferret_spit_op(&op);
+      //iferret_spit_op(&op);
       fflush(stdout);
     }
 
@@ -1351,11 +1408,11 @@ int main (int argc, char **argv) {
   }
   else {
     if (n == 0) {
-      printf ("Initial analysis with no root pid\n");
+      //printf ("Initial analysis with no root pid\n");
     }
     else {
-      printf ("Initial mal set is ");
-      iferret_spit_mal_pids(iferret);
+      //printf ("Initial mal set is ");
+      //iferret_spit_mal_pids(iferret);
     }
   }
 
@@ -1375,8 +1432,8 @@ int main (int argc, char **argv) {
 
   // stats and hist printouts.  
   //  iferret_syscall_stacks_print();
-  iferret_syscall_stacks_stats_print();
-  {
+  //iferret_syscall_stacks_stats_print();
+  if(0){
     char **filename;
     int i, n;
     filename = vslht_key_set(iferret->mal_files);
@@ -1388,7 +1445,7 @@ int main (int argc, char **argv) {
     } 
     free(filename);
   }
-  {
+  if(0){
     char **filename;
     int i, n;
     filename = vslht_key_set(iferret->read_files);
@@ -1402,10 +1459,10 @@ int main (int argc, char **argv) {
   }
 
 #ifdef OTAINT
-  shad_stats(iferret->shadow);
-  shad_spit(iferret->shadow);
+  //shad_stats(iferret->shadow);
+  //shad_spit(iferret->shadow);
 #endif
-  iferret_stats(iferret);
+  //iferret_stats(iferret);
 
   return (1);
 }
