@@ -134,6 +134,122 @@ print_insn_thumb1(bfd_vma pc, disassemble_info *info)
 }
 #endif
 
+// Pretend this is a file printer.
+static int sprintf_wrap(FILE *stream, const char *format, ...) {
+    int ret;
+    unsigned char **buf = (unsigned char **) stream;
+    va_list ap;
+    va_start(ap, format);
+    ret = vsprintf(*buf, format, ap);
+    va_end(ap);
+    //va_start(ap, format);
+    //printf("DEBUG sprintf_wrap: ");
+    //vprintf(format, ap);
+    //printf("\n");
+    //va_end(ap);
+    *buf += ret;
+    return ret;
+}
+
+/* Disassemble a _single_ instruction into the buffer pointed to by out.
+   Note: out must be a pointer to a string buffer rather than a string
+         because it *will* get modified (so that we can emulate fprintf)
+   If you want to keep the orignal buffer unchanged, save it first!
+*/
+
+void target_disas_buf(unsigned char **out, target_ulong code, int flags) {
+    int count;
+    struct disassemble_info disasm_info;
+    int (*print_insn)(bfd_vma pc, disassemble_info *info);
+
+    INIT_DISASSEMBLE_INFO(disasm_info, (FILE *) out, sprintf_wrap);
+
+    disasm_info.read_memory_func = target_read_memory;
+    disasm_info.buffer_vma = code;
+    //disasm_info.buffer_length = size;
+
+#ifdef TARGET_WORDS_BIGENDIAN
+    disasm_info.endian = BFD_ENDIAN_BIG;
+#else
+    disasm_info.endian = BFD_ENDIAN_LITTLE;
+#endif
+#if defined(TARGET_I386)
+    if (flags == 2)
+        disasm_info.mach = bfd_mach_x86_64;
+    else if (flags == 1)
+        disasm_info.mach = bfd_mach_i386_i8086;
+    else
+        disasm_info.mach = bfd_mach_i386_i386_intel_syntax;
+    print_insn = print_insn_i386;
+#elif defined(TARGET_ARM)
+    if (flags)
+	print_insn = print_insn_thumb1;
+    else
+	print_insn = print_insn_arm;
+#elif defined(TARGET_SPARC)
+    print_insn = print_insn_sparc;
+#ifdef TARGET_SPARC64
+    disasm_info.mach = bfd_mach_sparc_v9b;
+#endif
+#elif defined(TARGET_PPC)
+    if (flags >> 16)
+        disasm_info.endian = BFD_ENDIAN_LITTLE;
+    if (flags & 0xFFFF) {
+        /* If we have a precise definitions of the instructions set, use it */
+        disasm_info.mach = flags & 0xFFFF;
+    } else {
+#ifdef TARGET_PPC64
+        disasm_info.mach = bfd_mach_ppc64;
+#else
+        disasm_info.mach = bfd_mach_ppc;
+#endif
+    }
+    print_insn = print_insn_ppc;
+#elif defined(TARGET_M68K)
+    print_insn = print_insn_m68k;
+#elif defined(TARGET_MIPS)
+#ifdef TARGET_WORDS_BIGENDIAN
+    print_insn = print_insn_big_mips;
+#else
+    print_insn = print_insn_little_mips;
+#endif
+#elif defined(TARGET_SH4)
+    disasm_info.mach = bfd_mach_sh4;
+    print_insn = print_insn_sh;
+#elif defined(TARGET_ALPHA)
+    disasm_info.mach = bfd_mach_alpha;
+    print_insn = print_insn_alpha;
+#elif defined(TARGET_CRIS)
+    disasm_info.mach = bfd_mach_cris_v32;
+    print_insn = print_insn_crisv32;
+#else
+    sprintf(*out, "0x" TARGET_FMT_lx
+	    ": Asm output not supported on this arch\n", code);
+    return;
+#endif
+
+    //for (pc = code; pc < code + size; pc += count) {
+    // Update the pointer...
+	count = print_insn(code, &disasm_info);
+    //printf("==> Debug: decoded %d instruction bytes\n", count);
+#if 0
+        {
+            int i;
+            uint8_t b;
+            fprintf(out, " {");
+            for(i = 0; i < count; i++) {
+                target_read_memory(pc + i, &b, 1, &disasm_info);
+                fprintf(out, " %02x", b);
+            }
+            fprintf(out, " }");
+        }
+#endif
+	//sprintf_wrap((FILE *)out, "\n");
+	//if (count < 0)
+	//    break;
+    //}
+}
+
 /* Disassemble this for me please... (debugging). 'flags' has the following
    values:
     i386 - nonzero means 16 bit code
