@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 import sys
-from qemu_data import qemu_regs_r,qemu_segs_r
+from qemu_data import *
 
 op_handler = {
     "IFLO_LABEL_OUTPUT": lambda args: "print mem.read(%#x,%d).encode('hex')" % (args[0],args[1]),
+    "IFLO_OPREG_TEMPL_ADDL_A0_R": lambda args: "A0 += %s" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVL_R_T0": lambda args: "%s = T0" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVL_T0_R": lambda args: "T0 = %s" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVL_T1_R": lambda args: "T1 = %s" % qemu_regs_r[args[0]],
@@ -16,7 +17,6 @@ op_handler = {
     "IFLO_MOVL_A0_IM": lambda args: "A0 = UInt(%#x)" % args[0],
     "IFLO_MOVL_T0_IM": lambda args: "T0 = UInt(%#x)" % args[0],
     "IFLO_MOVL_T1_IM": lambda args: "T1 = UInt(%#x)" % args[0],
-    "IFLO_ADDL_A0_SEG": lambda args: "A0 += %s" % qemu_segs_r[args[1]],
     "IFLO_ADDL_A0_IM": lambda args: "A0 += UInt(%#x)" % args[0],
     "IFLO_ADDL_T0_T1": lambda args: "T0 += T1",
     "IFLO_SUBL_T0_T1": lambda args: "T0 -= T1",
@@ -30,6 +30,7 @@ op_handler = {
     "IFLO_INCL_T0": lambda args: "T0 += UInt(1)",
     "IFLO_OPS_TEMPLATE_MOVL_T0_DSHIFT": lambda args: "T0 = DF << %d" % args[0],
     "IFLO_OPS_TEMPLATE_SHR_T0_T1": lambda args: "T0 = T0 >> T1",
+    "IFLO_OPS_TEMPLATE_SHL_T0_T1": lambda args: "T0 = T0 << T1",
     "IFLO_OPS_MEM_LDUB_T0_A0": lambda args: "T0 = ULInt8(mem.read(A0,1))",
     "IFLO_OPREG_TEMPL_MOVB_R_T0": lambda args: "%s = T0 & 0xFF" % qemu_regs_r[args[0]],
     "IFLO_OPS_MEM_STB_T0_A0": lambda args: "mem.write(A0,T0,'B')",
@@ -37,6 +38,9 @@ op_handler = {
     "IFLO_TB_HEAD_EIP": lambda args: "",
     "IFLO_GOTO_TB0": lambda args: "",
     "IFLO_SET_INPUT": lambda args: "%s = inputs[%d]" % (args[0], args[1]),
+
+    "IFLO_ADDL_A0_SEG": lambda args: "A0 += %s" % fieldname(field_from_env(args[1])),
+    "IFLO_MOVL_SEG_T0": lambda args: "%s = load_seg(mem, T0, GDT, LDT)" % qemu_segs_r[args[0]],
 }
 
 outop_handler = {
@@ -44,16 +48,28 @@ outop_handler = {
     "IFLO_OPS_MEM_STB_T0_A0": lambda args, label: "out.write(A0,T0,'B', '%s')" % label,
 }
 
+def fieldname(s):
+    reg,field = s.split('.')
+    kind, idx = reg.split('_')
+    if kind == "REGS":
+        return "%s.%s" % (qemu_regs_r[int(idx)], field)
+    elif kind == "SEGS":
+        return "%s.%s" % (qemu_segs_r[int(idx)], field)
+    else:
+        raise ValueError("Invalid register class: %s" % kind)
+
 def uop_to_py_out(insn, label):
     try:
         return outop_handler[insn.op](insn.args, label)
-    except KeyError:
+    except KeyError, e:
+        print "Key not found:",e
         print "No output handler defined for %s" % insn.op
         sys.exit(1)
 
 def uop_to_py(insn):
     try:
         return op_handler[insn.op](insn.args)
-    except KeyError:
+    except KeyError, e:
+        print "Key not found:",e
         print "No handler defined for %s" % insn.op
         sys.exit(1)
