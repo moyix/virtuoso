@@ -1197,6 +1197,8 @@ void OPPROTO op_rdpmc(void)
     helper_rdpmc();
 }
 
+void vm_stop(int);
+
 void OPPROTO op_cpuid(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_CPUID);
@@ -1205,6 +1207,7 @@ void OPPROTO op_cpuid(void)
   if (EAX == 0) {
     if(EBX == MAGIC_IN) {
         iferret_log_info_flow_op_write_44(IFLO_LABEL_INPUT, phys_addr(ECX), EDX);
+        //vm_stop(EXCP_INTERRUPT);
     }
     else if (EBX == MAGIC_OUT) {
         iferret_log_info_flow_op_write_44(IFLO_LABEL_OUTPUT, phys_addr(ECX), EDX);

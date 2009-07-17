@@ -417,7 +417,7 @@ void OPPROTO glue(op_setb_T0_sub, SUFFIX)(void)
 
 void OPPROTO glue(op_setz_T0_sub, SUFFIX)(void)
 {
-  iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SETZ_T0_SUB,SHIFT);
+    iferret_log_info_flow_op_write_11(IFLO_OPS_TEMPLATE_SETZ_T0_SUB,SHIFT,((DATA_TYPE)CC_DST == 0));
     T0 = ((DATA_TYPE)CC_DST == 0);
 }
 

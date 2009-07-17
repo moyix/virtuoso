@@ -46,8 +46,8 @@ void OPPROTO glue(glue(op_ldsw, MEMSUFFIX), _T0_A0)(void)
 
 void OPPROTO glue(glue(op_ldl, MEMSUFFIX), _T0_A0)(void)
 {
-  iferret_log_info_flow_op_write_14(IFLO_OPS_MEM_LDL_T0_A0,MEMSUFFIXNUM,phys_a0());
     T0 = (uint32_t)glue(ldl, MEMSUFFIX)(A0);
+    iferret_log_info_flow_op_write_144(IFLO_OPS_MEM_LDL_T0_A0,MEMSUFFIXNUM,phys_a0(),T0);
 }
 
 void OPPROTO glue(glue(op_ldub, MEMSUFFIX), _T1_A0)(void)
@@ -76,8 +76,8 @@ void OPPROTO glue(glue(op_ldsw, MEMSUFFIX), _T1_A0)(void)
 
 void OPPROTO glue(glue(op_ldl, MEMSUFFIX), _T1_A0)(void)
 {
-  iferret_log_info_flow_op_write_14(IFLO_OPS_MEM_LDL_T1_A0,MEMSUFFIXNUM,phys_a0());
     T1 = (uint32_t)glue(ldl, MEMSUFFIX)(A0);
+    iferret_log_info_flow_op_write_144(IFLO_OPS_MEM_LDL_T1_A0,MEMSUFFIXNUM,phys_a0(),T1);
 }
 
 

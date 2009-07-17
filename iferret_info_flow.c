@@ -457,10 +457,10 @@ inline void info_flow_ld(iferret_t *iferret, uint64_t p1, uint64_t p2, size_t n,
   }
 
   /* BDG: Do we want to add in the input source labeling here? */
-  char label[256];
-  sprintf(label, "memsrc-%llx", p2);
+  //char label[256];
+  //sprintf(label, "memsrc-%llx", p2);
   //printf("Applying label %s\n", label);
-  info_flow_label(iferret, p2, n, label);
+  //info_flow_label(iferret, p2, n, label);
 
   // um, we shouldn't have 64-bit lds yet...
   assert (n<=4);

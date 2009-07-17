@@ -94,7 +94,7 @@ void my_free(void *p) {
   free(p);
 }
 
-void op_hex_dump_aux(uint32_t opnum, char *p1, char *p2, char *label) {
+void op_hex_dump_aux(uint32_t opnum, unsigned char *p1, unsigned char *p2, char *label) {
   unsigned char *p;
   int j;
 
@@ -1134,6 +1134,7 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
 
   }
 
+  
 
   // process each op in the log, in sequence
   i=0;
@@ -1188,57 +1189,72 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
 
     // Dump it in the context struct
     iferret->current_op = &op;
+    //iferret_spit_op(&op);
+
+    if (op.num == IFLO_OPS_MEM_STL_T0_A0 && op.arg[1].val.u32 == 0xf766b32c) {
+        fflush(stdout);
+    }
+        
 
     if (op.num == IFLO_LABEL_INPUT) {
-        iferret->info_flow = TRUE;
-        iferret->something_got_labeled = TRUE;
-    
-        if (op.arg[0].val.u32) {
-            uint64_t buf_start = (uint64_t) op.arg[0].val.u32;
-            uint32_t buf_len   = (uint32_t) op.arg[1].val.u32;
-            char label[256];
-            sprintf(label, "input-%d", inarg_count);
-            info_flow_label(iferret, (uint64_t) buf_start, buf_len, label);
-            fflush(stdout);
-            //shad_spit_range_nonl(iferret->shadow, buf_start, buf_start + buf_len - 1);
-            //iferret_spit_op(&op);
-            fflush(stdout);
-            inarg_count++;
-        }
+//        /*
+//    
+//        if (op.arg[0].val.u32) {
+//            uint64_t buf_start = (uint64_t) op.arg[0].val.u32;
+//            uint32_t buf_len   = (uint32_t) op.arg[1].val.u32;
+//            char label[256];
+//            sprintf(label, "input-%d", inarg_count);
+//            info_flow_label(iferret, (uint64_t) buf_start, buf_len, label);
+//            fflush(stdout);
+//            //shad_spit_range_nonl(iferret->shadow, buf_start, buf_start + buf_len - 1);
+//            //iferret_spit_op(&op);
+//            fflush(stdout);
+//            inarg_count++;
+//        }
+//        */
+
+        //info_flow_label(iferret, (uint64_t) 0x80559604, 4, "the_pid");
+        //iferret->info_flow = TRUE;
+        //iferret->if_debug = TRUE;
+        //iferret->something_got_labeled = TRUE;
         in_trace = 1;
     }
-    if (op.num == IFLO_TB_ID) {
-        tb_dis = 1;
-    }
-
-    if (tb_dis == 1 && op.num != IFLO_TB_ID && op.num != IFLO_INSN_DIS) {
-        tb_dis = 0;
-    }
-
-    //    if (in_trace || tb_dis) {
+//    if (op.num == IFLO_TB_ID) {
+//        tb_dis = 1;
+//    }
+//
+//    if (tb_dis == 1 && op.num != IFLO_TB_ID && op.num != IFLO_INSN_DIS) {
+//        tb_dis = 0;
+//    }
+//
+//    if (in_trace || tb_dis) {
     if (in_trace) {
         //printf("Current op number: %d\n", ii);
+        fflush(stdout);
+        //shad_spit(iferret->shadow);
         iferret_spit_op(&op);
         fflush(stdout);
     }
-
-    //if (in_trace) {
-    //    fflush(stdout);
-    //    shad_spit(iferret->shadow);
-    //}
-
+//
+//    //if (in_trace) {
+//    //    fflush(stdout);
+//    //    shad_spit(iferret->shadow);
+//    //}
+//
     if (op.num == IFLO_LABEL_OUTPUT) {
-        fflush(stdout);
-        #ifndef QAINT
-        uint64_t buf_start = (uint64_t) op.arg[0].val.u32;
-        uint64_t buf_len   = (uint64_t) op.arg[1].val.u32;
-        //shad_spit_range_nonl(iferret->shadow, buf_start, buf_start + buf_len - 1);
-        //iferret_spit_op(&op);
-        fflush(stdout);
-        #endif
-        iferret->info_flow = FALSE;
+//        /*
+//        fflush(stdout);
+//        #ifndef QAINT
+//        uint64_t buf_start = (uint64_t) op.arg[0].val.u32;
+//        uint64_t buf_len   = (uint64_t) op.arg[1].val.u32;
+//        //shad_spit_range_nonl(iferret->shadow, buf_start, buf_start + buf_len - 1);
+//        //iferret_spit_op(&op);
+//        fflush(stdout);
+//        #endif
+//        iferret->info_flow = FALSE;
+//        inarg_count = 0;
+//        */
         in_trace = 0;
-        inarg_count = 0;
     }
 
     if (iferret_debug && iferret->something_got_labeled) {
