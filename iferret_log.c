@@ -42,6 +42,8 @@ extern uint8_t *phys_ram_base;
 extern uint32_t iferret_target_os;
 
 
+char *iferret_log_prefix = NULL;
+
 uint32_t iferret_max_overflow = 0;
 
 uint64_t FAKE_EIP;
@@ -484,7 +486,8 @@ void iferret_log_write_to_file(char *label) {
 	  label, (unsigned long long) (iferret_log_ptr - iferret_log_base));
   //  printf ("IFERRET_LOG_SIZE = %d\n", IFERRET_LOG_SIZE);
 
-  snprintf (filename, 1024, "/scratch/tmp2/ifl-%d-%d", getpid(), iferret_log_rollup_count);
+  snprintf (filename, 1024, "%s-%d-%d", 
+	    iferret_log_prefix, getpid(), iferret_log_rollup_count);
 
   fp = fopen (filename, "w");
 
