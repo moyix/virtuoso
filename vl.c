@@ -250,6 +250,8 @@ extern uint8_t iferret_info_flow_on;
 
 extern uint64_t ifregaddr[16];
 
+extern char *iferret_log_prefix;
+
 uint32_t iferret_target_os;
 
 #define TFR(expr) do { if ((expr) != -1) break; } while (errno == EINTR)
@@ -7763,7 +7765,10 @@ enum {
     QEMU_OPTION_info_flow,
 
     // BDG 0905
-    QEMU_OPTION_os
+    QEMU_OPTION_os,
+
+    // TRL 0907
+    QEMU_OPTION_iferret_log
 
 };
 
@@ -7880,6 +7885,10 @@ const QEMUOption qemu_options[] = {
 
     // BDG 0905
     { "os", HAS_ARG, QEMU_OPTION_os },
+
+
+    // TRL 0907
+    { "iferret_log", HAS_ARG, QEMU_OPTION_iferret_log },
 
     { NULL },
 };
@@ -8734,6 +8743,14 @@ int main(int argc, char **argv)
                     }
                 }
                 break;
+		
+	    case QEMU_OPTION_iferret_log:
+	      {
+		printf ("iferret log prefix = [%s]\n", optarg);
+		iferret_log_prefix = strdup(optarg);
+	      }
+	      break;
+
             
 // TRL 0805 disables tb caching
 /*

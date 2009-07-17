@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "int_int_hashtable.h"
 #include "int_string_hashtable.h"
-#include "iferret_ops.h"
+#include "target-i386/iferret_ops.h"
 //#include "iferret_labeling_spec.h"
 #include "int_set.h"
 #include "vslht.h"
