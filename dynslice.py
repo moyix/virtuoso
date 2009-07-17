@@ -1,16 +1,10 @@
 #!/usr/bin/env python
 
+from qemu_trace import get_insns
 from translate_uop import uop_to_py,uop_to_py_out
 from qemu_data import defines,uses,is_jcc,memrange
 from pprint import pprint
 import sys,csv
-
-arg_handler = {
-    "ui64": lambda x: int(x,16),
-    "ui32": lambda x: int(x,16),
-    "ui16": lambda x: int(x,16),
-    "ui8": lambda x: int(x,16),
-}
 
 def dynslice(insns, bufs, start=-1, output_track=False, debug=False):
     """Perform a dynamic data slice.
@@ -56,23 +50,6 @@ def dynslice(insns, bufs, start=-1, output_track=False, debug=False):
 
     if debug: print "Working set at end:", work
     return slice
-
-# Stuff to parse instruction traces produced by oiferret 
-def get_arg(arg):
-    typ,operand = arg
-    return arg_handler[typ](operand)
-
-def convert_args(args):
-    return [get_arg(a) for a in args]
-
-def get_insns(infile):
-    insns = []
-    reader = csv.reader(infile)
-    for row in reader:
-        op = row[0]
-        args = convert_args([ a.split('.') for a in row[1:] ])
-        insns.append( (op, args) )
-    return insns
 
 # Objects to represent translation blocks, single instructions,
 # and loops.
@@ -142,31 +119,43 @@ class Loop(object):
                 self.taken = bool(insn.args[0] & 1)
                 break
         else:
-            raise RuntimeError("Unable to determine taken branch")
+            self.taken = False
+            #self.dump()
+            #raise RuntimeError("Unable to determine taken branch")
 
     def prune(self, slice):
         """Prune the exemplar so that it only includes instructions
-           in slice."""
-        self.exemplar.body = filter(lambda i: i in slice, self.exemplar.body)
+           in slice. Do not prune the loop condition."""
+        newexemp = []
+        for i in self.exemplar.body:
+            if i in slice or i[1] == self.condition:
+                newexemp.append(i)
+        self.exemplar.body = newexemp
 
     def pos(self):
         """Returns the position where this loop goes in the trace"""
         return self.tbs[0].body[0][0]
 
     def to_py(self):
-        s =  "while 1:\n"
-        s += "    if %s (%s): break\n" % ("" if self.taken else "not",
-                                          uop_to_py(self.condition))
-        body = [ i for i in self.exemplar.body if i[1] != self.condition ]
-        loop_statements = []
-        for i,insn in body:
-            for line in str(insn).splitlines():
-                loop_statements.append("    " + line + " # %s" % repr(insn))
-        s += "\n".join(loop_statements)
-        return s
+        loop_statements = [ "while 1:" ]
+        for i,insn in self.exemplar.body:
+            if insn == self.condition:
+                loop_statements.append(
+                    "    if %s (%s): break" % ("" if self.taken else "not", uop_to_py(self.condition))
+                )
+            else:
+                for line in str(insn).splitlines():
+                    loop_statements.append("    " + line + " # %s" % repr(insn))
+        return "\n".join(loop_statements)
 
     def range(self):
         return (self.tbs[0].body[0][0], self.tbs[-1].body[-1][0])
+
+    def dump(self):
+        print "Condition:",repr(self.condition)
+        print "Range:",self.range()
+        for tb in self.tbs:
+            print tb
 
     def __str__(self):
         return self.to_py()
@@ -226,7 +215,7 @@ def del_slice_range(start, end, slice):
     to_excise = range(start, end+1)
     return dict( (k, slice[k]) for k in slice if not k in to_excise )
 
-def reroll_loops(trace, slice):
+def reroll_loops(trace, slice, debug=False):
     slice_indices = set(s[0] for s in slice)
     loops = detect_loops(trace)
     
@@ -237,12 +226,28 @@ def reroll_loops(trace, slice):
         # TB that is in the slice. We ignore the last loop body since
         # it just contains insns to exit the loop.
         if all( any(insn[0] in slice_indices for insn in tb.body) for tb in loop[:-1] ):
+            print "Found a loop of length",len(loop),"which has data flow through it"
             loops_in_slice.append(Loop(loop))
+    
+    if debug:
+        for i,loop in enumerate(loops_in_slice):
+            print "----- Begin Loop %d -----" % i
+            loop.dump()
+            print "-----  End Loop %d  -----" % i
 
     slice_dict = dict(slice)
     for loop in loops_in_slice:
-        loop_start, loop_end = loop.range()
-        loop_slice = dynslice(trace, uses(loop.condition), start=loop_end)
+        # We need to do this for every TB because we need to specify
+        # explicitly the data flow for the loop condition -- it has no
+        # defines, only uses.
+        loop_slice = {}
+        for tb in loop.tbs:
+            loop_start, loop_end = tb.range()
+            tb_slice = dynslice(trace, uses(loop.condition), start=loop_end)
+            loop_slice.update(tb_slice)
+        if debug:
+            print "Loop slice:"
+            for l in sorted(loop_slice.items()): print l
         slice_dict.update(loop_slice)
 
     # Now prune the loop exemplars so they only contain sliced instructions
@@ -314,9 +319,12 @@ if __name__ == "__main__":
     set_input(trace, inbufs)
 
     slice = dynslice(trace, outbufs, output_track=True)
+
     print "# Sliced %d instructions down to %d" % (len(trace), len(slice))
     print "# Re-rolling loops..."
-    newslice = reroll_loops(trace, slice)
+    for s in slice:
+        print repr(s)
+    newslice = reroll_loops(trace, slice, debug=True)
     print "# Slice went from %d instructions to %d (loops are counted as one insn)" % (len(slice), len(newslice))
     
     print "######## BEGIN GENERATED CODE ########"
