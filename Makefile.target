@@ -312,7 +312,7 @@ endif
 CPPFLAGS+=-I$(SRC_PATH)/fpu
 
 ifeq ($(TARGET_ARCH), i386)
-LIBOBJS+=helper.o helper2.o iferret_syscall.o iferret_socketcall.o iferret_op_str.o iferret_syscall_stack.o vslht.o int_set.o
+LIBOBJS+=helper.o helper2.o iferret_syscall.o iferret_syscall_switch_linux.o  iferret_syscall_switch_xpsp2.o iferret_socketcall.o iferret_op_str.o iferret_syscall_stack.o vslht.o int_set.o
 endif
 
 ifeq ($(TARGET_ARCH), x86_64)
@@ -622,6 +622,10 @@ ifeq ($(TARGET_BASE_ARCH), i386)
 helper.o: helper.c
 	$(CC) $(HELPER_CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) -c -o $@ $<
 iferret_syscall.o: iferret_syscall.c
+	$(CC) $(HELPER_CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) -c -o $@ $<
+iferret_syscall_switch_linux.o: iferret_syscall_switch_linux.c
+	$(CC) $(HELPER_CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) -c -o $@ $<
+iferret_syscall_switch_xpsp2.o: iferret_syscall_switch_xpsp2.c
 	$(CC) $(HELPER_CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) -c -o $@ $<
 iferret_socketcall.o: iferret_socketcall.c
 	$(CC) $(HELPER_CFLAGS) $(CPPFLAGS) $(BASE_CFLAGS) -c -o $@ $<

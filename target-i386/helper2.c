@@ -655,6 +655,12 @@ void cpu_dump_state(CPUState *env, FILE *f,
     }
 }
 
+
+void cpu_dump_state2(CPUX86State *env) {  
+  cpu_dump_state(env, stdout, fprintf, X86_DUMP_FPU);
+}
+
+
 /***********************************************************/
 /* x86 mmu */
 /* XXX: add PGE support */
