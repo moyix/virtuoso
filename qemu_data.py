@@ -65,18 +65,34 @@ defines_uses = {
     ],
     'IFLO_OPREG_TEMPL_MOVW_R_T1': [
         lambda args: ["REGS_%d" % args[0]],
+        lambda args: ['T1'],
+    ],
+    'IFLO_OPREG_TEMPL_MOVW_R_T0': [
+        lambda args: ["REGS_%d" % args[0]],
         lambda args: ['T0'],
     ],
     'IFLO_OPREG_TEMPL_MOVL_T1_R': [
         lambda args: ['T1'],
         lambda args: ["REGS_%d" % args[0]],
     ],
+    'IFLO_OPREG_TEMPL_MOVB_R_T1': [
+        lambda args: ["REGS_%d" % args[0]],
+        lambda args: ['T1'],
+    ],
     'IFLO_SETL_T0_CC': [
         lambda args: ['T0'],
         lambda args: ['CC'],
     ],
-    'IFLO_TESTL_T0_T1_CC': [
+    'IFLO_SETB_T0_CC': [
+        lambda args: ['T0'],
         lambda args: ['CC'],
+    ],
+    'IFLO_SETBE_T0_CC': [
+        lambda args: ['T0'],
+        lambda args: ['CC'],
+    ],
+    'IFLO_TESTL_T0_T1_CC': [
+        lambda args: ['CC_DST'],
         lambda args: ['T0', 'T1'],
     ],
     'IFLO_OPREG_TEMPL_MOVB_R_T0': [
@@ -107,9 +123,41 @@ defines_uses = {
         lambda args: ["REGS_%d" % qemu_regs["EAX"], "REGS_%d" % qemu_regs["EDX"]],
         lambda args: ["REGS_%d" % qemu_regs["EAX"], "REGS_%d" % qemu_regs["EDX"]],
     ],
+    'IFLO_IDIVL_EAX_T0': [
+        lambda args: ["REGS_%d" % qemu_regs["EAX"], "REGS_%d" % qemu_regs["EDX"]],
+        lambda args: ["REGS_%d" % qemu_regs["EAX"], "REGS_%d" % qemu_regs["EDX"]],
+    ],
+    'IFLO_MULL_EAX_T0': [
+        lambda args: ["REGS_%d" % qemu_regs["EAX"], "REGS_%d" % qemu_regs["EDX"]],
+        lambda args: ["REGS_%d" % qemu_regs["EAX"], 'T0'],
+    ],
     'IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE': [
         lambda args: ['CC_SRC', 'CC_DST', 'T0'] + memrange(args[0], 4),
         lambda args: ['A0', 'T0', 'T1', "REGS_%d" % qemu_regs["EAX"]],
+    ],
+    'IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_CASE2': [
+        lambda args: ['CC_SRC', 'CC_DST', "REGS_%d" % qemu_regs["EAX"]],
+        lambda args: ['T0', "REGS_%d" % qemu_regs["EAX"]],
+    ],
+    'IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE': [
+        lambda args: ['CC_SRC', 'CC_DST', 'T0'] + memrange(args[0], 4),
+        lambda args: ['T0', 'T1', 'A0'],
+    ],
+    'IFLO_OPS_TEMPLATE_ADC_T0_T1_CC_MEMWRITE': [
+        lambda args: ['CC_SRC', 'CC_DST', 'T0'] + memrange(args[0], 4),
+        lambda args: ['T0', 'T1', 'A0'],
+    ],
+    'IFLO_OPS_TEMPLATE_IN_T0_T1': [
+        lambda args: ['T1'],
+        lambda args: ['T0'],
+    ],
+    'IFLO_CMPXCHG8B_PART1': [
+        lambda args: ['CC_SRC'] + memrange(args[0], 8),
+        lambda args: ["REGS_%d" for r in [qemu_regs[n] for n in ["EAX","EBX","ECX","EDX"] ] ] + ['A0'] + memrange(args[0], 8),
+    ],
+    'IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC': [
+        lambda args: ['T0'],
+        lambda args: ['T0', 'T1', "REGS_%d" % qemu_regs['ECX']],
     ],
     
     # Arithmentic operations, e.g. T0 += T1
@@ -127,6 +175,7 @@ defines_uses = {
     'IFLO_ADDL_ESI_T0':              ARITH("REGS_%d" % qemu_regs["ESI"], 'T0'),
 
     # TODO: flags
+    'IFLO_OPS_TEMPLATE_SAR_T0_T1_CC':     ARITH('T0', 'T1'),
     'IFLO_OPS_TEMPLATE_SBB_T0_T1_CC':     ARITH('T0', 'T1'),
     'IFLO_OPS_TEMPLATE_SHR_T0_T1_CC':     ARITH('T0', 'T1'),
     'IFLO_OPS_TEMPLATE_SHL_T0_T1_CC':     ARITH('T0', 'T1'),
@@ -136,17 +185,22 @@ defines_uses = {
     'IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC': ARITH('T0', 'T1'),
     'IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC': ARITH('T0', 'T1'),
 
+    # For these three we are recording the dynamic value that was set
+    # so we avoid tracking data through flags
     'IFLO_SETZ_T0_CC': [
         lambda args: ['T0'],
-        lambda args: ['CC'],
+        lambda args: [],
+        #lambda args: ['CC'],
     ],
     'IFLO_OPS_TEMPLATE_SETZ_T0_SUB': [
         lambda args: ['T0'],
-        lambda args: ['CC_DST'],
+        lambda args: [],
+        #lambda args: ['CC_DST'],
     ],
     'IFLO_SETLE_T0_CC': [
         lambda args: ['T0'],
-        lambda args: ['CC'],
+        lambda args: [],
+        #lambda args: ['CC'],
     ],
     
     # These can't be called with ARITH because they use args :(
@@ -170,28 +224,47 @@ defines_uses = {
         lambda args: ['A0'],
         lambda args: ['A0', "REGS_%d" % args[0]],
     ],
+    'IFLO_MOVW_EFLAGS_T0_CPL0': [
+        lambda args: ['T0'],
+        lambda args: ['EFLAGS'],
+    ],
+    'IFLO_MOVL_EFLAGS_T0_CPL0': [
+        lambda args: ['T0'],
+        lambda args: ['EFLAGS'],
+    ],
+    'IFLO_MOVSLQ_EDX_EAX': [
+        lambda args: ["REGS_%d" % qemu_regs['EDX']],
+        lambda args: ["REGS_%d" % qemu_regs['EAX']],
+    ],
 
     'IFLO_OPS_MEM_LDL_T0_A0':  LOAD('T0', 4),
     'IFLO_OPS_MEM_LDL_T1_A0':  LOAD('T1', 4),
     'IFLO_OPS_MEM_LDUW_T0_A0': LOAD('T0', 2),
     'IFLO_OPS_MEM_LDUW_T1_A0': LOAD('T1', 2),
     'IFLO_OPS_MEM_LDUB_T0_A0': LOAD('T0', 1),
+    'IFLO_OPS_MEM_LDSB_T0_A0': LOAD('T0', 1),
+    'IFLO_OPS_MEM_LDUB_T1_A0': LOAD('T1', 1),
     'IFLO_OPS_MEM_STL_T0_A0':  STORE('T0', 4),
     'IFLO_OPS_MEM_STL_T1_A0':  STORE('T1', 4),
     'IFLO_OPS_MEM_STW_T0_A0':  STORE('T0', 2),
     'IFLO_OPS_MEM_STB_T0_A0':  STORE('T0', 1),
 
+    'IFLO_MOVSBL_T0_T0': IDENT('T0'),
+    'IFLO_MOVSWL_T0_T0': IDENT('T0'),
+    'IFLO_MOVZWL_T0_T0': IDENT('T0'),
     'IFLO_MOVZBL_T0_T0': IDENT('T0'),
-    'IFLO_UPDATE_INC_CC': IDENT('CC'),
     'IFLO_SUBL_A0_4': IDENT('A0'),
+    'IFLO_SUBL_A0_2': IDENT('A0'),
     'IFLO_ADDL_A0_IM': IDENT('A0'),
     'IFLO_NEGL_T0': IDENT('T0'),
     'IFLO_NOTL_T0': IDENT('T0'),
     'IFLO_INCL_T0': IDENT('T0'),
     'IFLO_DECL_T0': IDENT('T0'),
     'IFLO_XOR_T0_1': IDENT('T0'),
+    'IFLO_ANDL_T0_FFFF': IDENT('T0'),
     'IFLO_DECL_ECX': IDENT("REGS_%d" % qemu_regs["ECX"]),
     'IFLO_ADDL_ESP_4': IDENT("REGS_%d" % qemu_regs["ESP"]),
+    'IFLO_ADDL_ESP_2': IDENT("REGS_%d" % qemu_regs["ESP"]),
     'IFLO_ADDL_ESP_IM': IDENT("REGS_%d" % qemu_regs["ESP"]),
 
     'IFLO_MOVL_A0_IM': OBLIT('A0'),
@@ -217,18 +290,28 @@ defines_uses = {
         lambda args: [],
         lambda args: ["REGS_%d" % qemu_regs["ECX"]],
     ],
+    'IFLO_OPS_TEMPLATE_JZ_SUB': [
+        lambda args: [],
+        lambda args: ['CC_DST'],
+    ],
 
     # Punt on these; will have to handle eventually
     'IFLO_OPS_TEMPLATE_JB_SUB': IGNORE,
     'IFLO_OPS_TEMPLATE_JBE_SUB': IGNORE,
     'IFLO_OPS_TEMPLATE_JLE_SUB': IGNORE,
-    'IFLO_OPS_TEMPLATE_JZ_SUB': IGNORE,
     'IFLO_OPS_TEMPLATE_JS_SUB': IGNORE,
+    'IFLO_OPS_TEMPLATE_JL_SUB': IGNORE,
 
     # This is problematic since our memory model is entirely virtual
     # at the moment.
     'IFLO_CPU_PHYSICAL_MEMORY_RW': IGNORE,
 
+    # More stuff I need to handle and don't want to
+    'IFLO_UPDATE_INC_CC': IGNORE,
+    'IFLO_COMPUTE_ALL_EFLAGS': IGNORE,
+    'IFLO_CMC': IGNORE,
+
+    'IFLO_CMPXCHG8B': IGNORE, # Ok to ignore this -- it's split into PART1/2 elsewhere
     'IFLO_PID_CHANGE': IGNORE,
     'IFLO_UID_CHANGE': IGNORE,
     'IFLO_SYSEXIT': IGNORE,
@@ -260,11 +343,14 @@ defines_uses = {
 
 def is_jcc(op):
     return op in [
-        'IFLO_OPS_TEMPLATE_JNZ_ECX',
-        'IFLO_OPS_TEMPLATE_JB_SUB',
         'IFLO_OPS_TEMPLATE_JBE_SUB',
-        'IFLO_OPS_TEMPLATE_JZ_ECX',
+        'IFLO_OPS_TEMPLATE_JB_SUB',
         'IFLO_OPS_TEMPLATE_JLE_SUB',
+        'IFLO_OPS_TEMPLATE_JL_SUB',
+        'IFLO_OPS_TEMPLATE_JNZ_ECX',
+        'IFLO_OPS_TEMPLATE_JS_SUB',
+        'IFLO_OPS_TEMPLATE_JZ_ECX',
+        'IFLO_OPS_TEMPLATE_JZ_SUB',
     ]
 
 def defines(insn):
