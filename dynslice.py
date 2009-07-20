@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from qemu_trace import get_insns
+from qemu_trace import get_insns, TraceEntry
 from translate_uop import uop_to_py,uop_to_py_out
 from qemu_data import defines,uses,is_jcc,memrange
 from pprint import pprint
@@ -66,32 +66,6 @@ class TB(object):
         return ("[TB @%s]\n" % self._eip_str()) + "\n".join(repr(i[1]) for i in self.body)
     def __repr__(self):
         return ("[TB @%s]" % self._eip_str())
-
-class TraceEntry(object):
-    """A single entry in the trace"""
-    def __init__(self, insn):
-        self.op, self.args = insn
-        self.label = None
-        self.is_output = False
-
-    def set_output_label(self, label):
-        """Mark this instruction as defining a labelled output."""
-        self.label = label
-        self.is_output = True
-
-    def __str__(self):
-        s = uop_to_py(self) + " # %s" % repr(self)
-        if self.is_output:
-            s += "\n" + uop_to_py_out(self, self.label)
-        return s
-    def __repr__(self):
-        return "%s(%s)" % (self.op, ",".join(a if isinstance(a,str) else hex(a) for a in self.args))
-    def __eq__(self,other):
-        if not isinstance(other, type(self)):
-            return False
-        return self.op == other.op and self.args == other.args
-    def __hash__(self):
-        return hash(self.op) ^ hash(self.args)
 
 class Loop(object):
     """Represents a loop.
