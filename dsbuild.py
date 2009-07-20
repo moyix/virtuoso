@@ -74,7 +74,11 @@ for i,addr in enumerate(addrs):
     objend = insts[addr].base + insts[addr].size()
     j = i + 1
     while addrs[j] < objend and j < len(addrs):
-        overlaps.append(insts[addrs[j]])
+        # Only include those overlaps that look like:
+        # [      ]      rather    [         ]
+        #    [     ]     than          [  ]
+        if addrs[j] + insts[addrs[j]].size() > objend:
+            overlaps.append(insts[addrs[j]])
         j += 1
     if overlaps:
         print "%s overlaps with:" % repr(insts[addr])
