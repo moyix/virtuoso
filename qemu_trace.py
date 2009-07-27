@@ -1,3 +1,4 @@
+from translate_uop import uop_to_py,uop_to_py_out
 import csv
 
 """Stuff to parse instruction traces produced by oiferret """
