@@ -201,6 +201,12 @@ class microdo(forensics.commands.command):
         self.op.add_option('-e', '--env',
             help='CPU environment to use (output of info registers in QEMU)',
             dest='env')
+        self.op.add_option('-i', '--interp',
+            help='Python function f that takes the outbuf and interprets it',
+            dest='interp')
+        self.op.add_option('-n', '--input',
+            help='Input vars; should evaluate to a Python list',
+            dest='inputs')
 
     def help(self):
         return  "execute translated QEMU micro-ops"
@@ -222,6 +228,10 @@ class microdo(forensics.commands.command):
         
         # Inputs to the block of micro-ops we want to to execute
         #inputs = [ 0xdeadf000 ] # pBuf -- pointer to the output buffer
+        if self.opts.inputs:
+            inputs = eval(self.opts.inputs)
+        else:
+            inputs = []
 
         # With real introspection, these would be actual values
         # from the env.
@@ -238,3 +248,7 @@ class microdo(forensics.commands.command):
         print data.encode('hex')
         print "Debug dump of scratch:"
         mem.dump_scratch()
+
+        if self.opts.interp:
+            exec(self.opts.interp.decode('string_escape'))
+            f(data)
