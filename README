@@ -1,0 +1,18 @@
+How to generate syscall-prototypes-xpsp2 automatically:
+
+1. Extract the names of the system calls using get_syscall_table.py from pdbparse:
+    get_syscall_table.py ~/system32/ntoskrnl.exe ~/ntoskrnl.pdb | awk '{ print $4 }' > nt.txt
+    get_syscall_table.py ~/system32/win32k.sys ~/win32k.pdb | awk '{ print $4 }' > gdi.txt
+2. Place nt.txt and gdi.txt in the same directory as syscall_table.py
+3. Generate a CSV file with the system call prototypes from the native-nt-toolkit.
+    ./pprintproto.py nt.txt ~/native-nt-toolkit-read-only/ndk/*.[ch] | ./nt_make_csv.sh > protos.csv
+4. Convert the CSV to iFerret's prototype format:
+    ./nt_prototypes.py protos.csv > syscall-prototypes-xpsp2
+
+How to generate iferret_xpsp2_types.h:
+
+1. Run print_ctypes.py from pdbparse on ntoskrnl.pdb. Be sure to use the "introspection" theme
+    print_ctypes.py -t intro ~/ntoskrnl.pdb > iferret_xpsp2_types.h
+2. Edit iferret_xpsp2_types.h and change the PCIBus member of the INTERFACE_TYPE enumeration
+   to xxxPCIBus, as it conflicts with a QEMU type (this is a great example of why namespaces
+   are nice).
