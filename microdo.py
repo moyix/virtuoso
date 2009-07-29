@@ -216,13 +216,21 @@ class microdo(forensics.commands.command):
         #(addr_space, symtab, types) = load_and_identify_image(self.op, self.opts)
         flat = FileAddressSpace(self.opts.filename)
 
+        if not self.opts.env:
+            self.op.error('Must provide a valid CPU environment (use "info registers")')
+        if not self.opts.micro:
+            self.op.error('We need some code to execute')
+
+        # Load the CPU environment
         locals().update(load_env(open(self.opts.env)))
         
+        # Set up virtual memory
         if CR4 & PAE_FLAG:
             addr_space = IA32PagedMemoryPae(flat, int(CR3))
         else:
             addr_space = IA32PagedMemory(flat, int(CR3))
 
+        # Wrap it in copy-on-write
         mem = COWSpace(addr_space)
         out = OutSpace()
         
@@ -235,20 +243,21 @@ class microdo(forensics.commands.command):
 
         # With real introspection, these would be actual values
         # from the env.
-        DF = (EFL & DF_MASK) >> DF_SHIFT
-        #FS = UInt(0x7ffdf000)
-        #EBP = UInt(0xdeadbee0)
-        #ESP = UInt(0xdeadbef0)
+        if (EFL & DF_MASK) >> DF_SHIFT:
+            DF = -1
+        else:
+            DF = 1
 
         # This actually runs the translated code
         exec(open(self.opts.micro))
 
         # TODO: multiple outputs
         data = out.get_output('out')
-        print data.encode('hex')
+        print "Output:", data.encode('hex')
         print "Debug dump of scratch:"
         mem.dump_scratch()
 
+        # Run the translation function
         if self.opts.interp:
             exec(self.opts.interp.decode('string_escape'))
             f(data)
