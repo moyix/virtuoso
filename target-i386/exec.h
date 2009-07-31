@@ -613,7 +613,7 @@ target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 
 
 static inline uint32_t phys_addr(uint32_t addr) {
-  return addr;
+//  return addr;
   addr = cpu_get_phys_addr(env,addr); 
   if (addr == -1)
     return 0;
