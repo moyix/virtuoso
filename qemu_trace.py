@@ -9,6 +9,8 @@ class TraceEntry(object):
         self.op, self.args = insn
         self.label = None
         self.is_output = False
+        # Tuple: (address of TB, micro-instruction offset)
+        self.location = (0,0)
 
     def set_output_label(self, label):
         """Mark this instruction as defining a labelled output."""
@@ -52,6 +54,24 @@ def get_insns(infile):
         insns.append( (op, args) )
     return insns
 
-def get_trace(infile):
+def get_trace(infile, codeloc=False):
+    """Read a trace from an input stream.
+
+    infile: a file object
+    codeloc: if true, the parsed TraceEntry objects will have
+        contain the memory location of instruction in their
+        location member
+    """
+
     trace = get_insns(infile)
-    return list(enumerate(TraceEntry(t) for t in trace))
+    trace = list(enumerate(TraceEntry(t) for t in trace))
+    if codeloc:
+        j = 0
+        head_eip = 0
+        for i,t in trace:
+            if t.op == 'IFLO_TB_HEAD_EIP':
+                j = 0
+                head_eip = t.args[0]
+            t.location = (head_eip, j)
+            j += 1
+    return trace
