@@ -2,8 +2,8 @@
 all: oiferret
 
 TD=target-i386
-OTAINTDIR=$(HOME)/hg/otaint
-QEMUDIR=$(HOME)/hg/iferret-logging-new
+OTAINTDIR=$(HOME)/llstuff/otaint
+QEMUDIR=$(HOME)/llstuff/iferret-logging-new
 
 
 

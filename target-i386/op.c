@@ -1677,25 +1677,25 @@ void OPPROTO op_clts(void)
 
 void OPPROTO op_goto_tb0(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_GOTO_TB0);
+  iferret_log_info_flow_op_write_4(IFLO_GOTO_TB0,PARAM1);
     GOTO_TB(op_goto_tb0, PARAM1, 0);
 }
 
 void OPPROTO op_goto_tb1(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_GOTO_TB1);
+  iferret_log_info_flow_op_write_4(IFLO_GOTO_TB1,PARAM1);
     GOTO_TB(op_goto_tb1, PARAM1, 1);
 }
 
 void OPPROTO op_jmp_label(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_JMP_LABEL);
+  iferret_log_info_flow_op_write_4(IFLO_JMP_LABEL,PARAM1);
     GOTO_LABEL_PARAM(1);
 }
 
 void OPPROTO op_jnz_T0_label(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_JNZ_T0_LABEL);
+  iferret_log_info_flow_op_write_4(IFLO_JNZ_T0_LABEL,T0);
     if (T0)
         GOTO_LABEL_PARAM(1);
     FORCE_RET();
@@ -1703,7 +1703,7 @@ void OPPROTO op_jnz_T0_label(void)
 
 void OPPROTO op_jz_T0_label(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_JZ_LABEL);
+  iferret_log_info_flow_op_write_4(IFLO_JZ_LABEL,!T0);
     if (!T0)
         GOTO_LABEL_PARAM(1);
     FORCE_RET();
