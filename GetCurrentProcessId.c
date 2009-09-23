@@ -1,3 +1,4 @@
+#define __WIN32_LEAN_AND_MEAN__
 #include <windows.h>
 #include <stdio.h>
 #include "vmnotify.h"
