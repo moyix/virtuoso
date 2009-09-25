@@ -7,8 +7,7 @@ int main(int argc, char **argv) {
   char *buf;
   buf = (char *) malloc(256);
   vm_mark_buf_in(&buf, 4);
-  GetModuleFileName(NULL, buf, 256);
+  GetModuleFileNameW(NULL, buf, 256);
   vm_mark_buf_out(buf, 256);
-  printf("%s\n", buf);
   return 0;
 }
