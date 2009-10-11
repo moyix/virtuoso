@@ -294,6 +294,10 @@ defines_uses = {
         lambda args: [],
         lambda args: ['CC_DST'],
     ],
+    'IFLO_JMP_T0': [
+        lambda args: [],
+        lambda args: ['T0'],
+    ],
 
     # Punt on these; will have to handle eventually
     'IFLO_OPS_TEMPLATE_JB_SUB': IGNORE,
@@ -327,13 +331,11 @@ defines_uses = {
     'IFLO_GOTO_TB1': IGNORE,
     'IFLO_UPDATE1_CC': IGNORE,
     'IFLO_UPDATE2_CC': IGNORE,
-    'IFLO_JMP_T0': IGNORE, 
     'IFLO_TB_HEAD_EIP': IGNORE,
     'IFLO_EXIT_TB': IGNORE,
     'IFLO_INSN_DIS': IGNORE,
     'IFLO_TB_ID': IGNORE,
     'IFLO_CPUID': IGNORE,
-    'IFLO_JMP_T0': IGNORE,
     'IFLO_JNZ_T0_LABEL': IGNORE,
     'IFLO_STI': IGNORE,
     'IFLO_CLI': IGNORE,
@@ -351,6 +353,11 @@ def is_jcc(op):
         'IFLO_OPS_TEMPLATE_JS_SUB',
         'IFLO_OPS_TEMPLATE_JZ_ECX',
         'IFLO_OPS_TEMPLATE_JZ_SUB',
+    ]
+
+def is_dynjump(op):
+    return op in [
+        'IFLO_JMP_T0',
     ]
 
 def defines(insn):

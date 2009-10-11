@@ -66,6 +66,7 @@ op_handler = {
     "IFLO_CMPXCHG8B_PART1": lambda args: "mem.write(A0, ECX << 32 | EBX, 'Q')",
     "IFLO_OPS_TEMPLATE_SAR_T0_T1": lambda args: "T0 = T0 >> T1",
     "IFLO_TESTL_T0_T1_CC": lambda args: "CC_DST = T0 & T1",
+    "IFLO_JMP_T0": lambda args: "raise Goto(int(T0))",
 
     "IFLO_ADDL_A0_SEG": lambda args: "A0 += %s" % fieldname(field_from_env(args[1])),
     "IFLO_MOVL_SEG_T0": lambda args: "%s = load_seg(mem, T0, GDT, LDT)" % qemu_segs_r[args[0]],

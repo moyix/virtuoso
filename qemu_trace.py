@@ -1,4 +1,5 @@
 from translate_uop import uop_to_py,uop_to_py_out
+from qemu_data import is_jcc
 import csv
 
 """Stuff to parse instruction traces produced by oiferret """
@@ -11,14 +12,20 @@ class TraceEntry(object):
         self.is_output = False
         # Tuple: (address of TB, micro-instruction offset)
         self.location = (0,0)
+        
+        self.in_slice = False
 
     def set_output_label(self, label):
         """Mark this instruction as defining a labelled output."""
         self.label = label
         self.is_output = True
 
+    def mark(self):
+        self.in_slice = True
+
     def __str__(self):
-        s = uop_to_py(self) + " # %s" % repr(self)
+        s = uop_to_py(self)
+        if not is_jcc(self.op): s += " # %s" % repr(self)
         if self.is_output:
             s += "\n" + uop_to_py_out(self, self.label)
         return s
