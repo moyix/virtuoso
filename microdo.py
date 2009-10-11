@@ -30,7 +30,8 @@ from vutils import *
 from forensics.win32.datetime import windows_to_unix_time
 from time import ctime,asctime,gmtime
 from struct import unpack,pack
-from collections import defaultdict, namedtuple
+from collections import defaultdict
+from namedtuple import namedtuple
 
 def ULInt32(buf):
     assert len(buf) == 4
