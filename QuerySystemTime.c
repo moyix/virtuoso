@@ -19,6 +19,6 @@ int main(int argc, char **argv) {
   vm_mark_buf_in(&SystemTime, sizeof(PLARGE_INTEGER));
   NtQuerySystemTime(SystemTime);
   vm_mark_buf_out(SystemTime, sizeof(LARGE_INTEGER));
-  printf("%llx\n", SystemTime.QuadPart);
+  printf("%llx\n", SystemTime->QuadPart);
   return 0;
 }
