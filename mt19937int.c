@@ -34,6 +34,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "vmnotify.h"
 
 /* Period parameters */  
 #define N 624
@@ -101,5 +102,14 @@ genrand(unsigned long seed)
 
 int main(int argc, char **argv)
 { 
-    printf("%10lu\n", genrand(atoi(argv[1])));
+    unsigned long seed;
+    unsigned long key;
+
+    seed = atoi(argv[1]);
+
+    vm_mark_buf_in(&seed, sizeof(unsigned long));
+    key = genrand(seed);
+    vm_mark_buf_out(&key, sizeof(unsigned long));
+
+    printf("%#10x\n", key);
 }
