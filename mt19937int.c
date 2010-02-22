@@ -58,7 +58,7 @@ genrand(unsigned long seed)
     unsigned long y;
     unsigned long mt[N]; /* the array for the state vector  */
     int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
-    static unsigned long mag01[2]={0x0, MATRIX_A};
+    unsigned long mag01[2]={0x0, MATRIX_A};
     /* mag01[x] = x * MATRIX_A  for x=0,1 */
 
     /* setting initial seeds to mt[N] using         */
