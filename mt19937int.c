@@ -105,7 +105,7 @@ int main(int argc, char **argv)
     unsigned long seed;
     unsigned long key;
 
-    seed = atoi(argv[1]);
+    seed = strtoul(argv[1], 0, 0);
 
     vm_mark_buf_in(&seed, sizeof(unsigned long));
     key = genrand(seed);
