@@ -1,13 +1,17 @@
-1. Control-flow dependencies [Principled]
+1. Control-flow dependencies [Principled] [DONE]
     - Look at system dependence graphs
     - Look at program dependence graphs
-2. Memory allocation [HACK]
+
+2. Memory allocation [HACK] [85%]
     - Write before read => dynamic allocation
     - Set A0 to new non-conflicting address
         - Do not derive; eliminates deps
     - Hmm, side effect? May move the stack
         - That's probably okay
-3. Aliasing (multiple VAs map to same PA) [HACK]
+    - BZZT. Doesn't work this way.
+    - Instead, use domain knowledge of memory allocating functions
+
+3. Aliasing (multiple VAs map to same PA) [HACK] [0%]
     - Similar approach: force A0 so that all access
       to the buffer goes through the same virtual
       address
