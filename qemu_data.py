@@ -79,18 +79,6 @@ defines_uses = {
         lambda args: ["REGS_%d" % args[0]],
         lambda args: ['T1'],
     ],
-    'IFLO_SETL_T0_CC': [
-        lambda args: ['T0'],
-        lambda args: ['CC'],
-    ],
-    'IFLO_SETB_T0_CC': [
-        lambda args: ['T0'],
-        lambda args: ['CC'],
-    ],
-    'IFLO_SETBE_T0_CC': [
-        lambda args: ['T0'],
-        lambda args: ['CC'],
-    ],
     'IFLO_TESTL_T0_T1_CC': [
         lambda args: ['CC_DST'],
         lambda args: ['T0', 'T1'],
@@ -162,6 +150,7 @@ defines_uses = {
     
     # Arithmentic operations, e.g. T0 += T1
     # Define the dest, use the dest and the src
+    # TODO: Figure out which of these set condition flags
     'IFLO_XORL_T0_T1':               ARITH('T0', 'T1'),
     'IFLO_OPS_TEMPLATE_SHR_T0_T1':   ARITH('T0', 'T1'),
     'IFLO_OPS_TEMPLATE_SHL_T0_T1':   ARITH('T0', 'T1'),
@@ -170,9 +159,13 @@ defines_uses = {
     'IFLO_ORL_T0_T1':                ARITH('T0', 'T1'),
     'IFLO_ADDL_T0_T1':               ARITH('T0', 'T1'),
     'IFLO_ANDL_T0_T1':               ARITH('T0', 'T1'),
-    'IFLO_IMULL_T0_T1':              ARITH('T0', 'T1'),
     'IFLO_ADDL_EDI_T0':              ARITH("REGS_%d" % qemu_regs["EDI"], 'T0'),
     'IFLO_ADDL_ESI_T0':              ARITH("REGS_%d" % qemu_regs["ESI"], 'T0'),
+
+    'IFLO_IMULL_T0_T1': [
+        lambda args: ['T0', 'CC_DST', 'CC_SRC'],
+        lambda args: ['T0', 'T1'],
+    ],
 
     # TODO: flags
     'IFLO_OPS_TEMPLATE_SAR_T0_T1_CC':     ARITH('T0', 'T1'),
@@ -203,6 +196,21 @@ defines_uses = {
         #lambda args: ['CC'],
     ],
     
+    # BUGBUG/FIXME: These guys are just wrong
+    'IFLO_SETL_T0_CC': [
+        lambda args: ['T0'],
+        lambda args: ['CC'],
+    ],
+    'IFLO_SETB_T0_CC': [
+        lambda args: ['T0'],
+        lambda args: ['CC'],
+    ],
+    'IFLO_SETBE_T0_CC': [
+        lambda args: ['T0'],
+        lambda args: ['CC'],
+    ],
+
+
     # These can't be called with ARITH because they use args :(
     'IFLO_ADDL_A0_SEG': [
         lambda args: ['A0'],
@@ -236,6 +244,20 @@ defines_uses = {
         lambda args: ["REGS_%d" % qemu_regs['EDX']],
         lambda args: ["REGS_%d" % qemu_regs['EAX']],
     ],
+    
+    # Fast sytem call mechanism
+    'IFLO_SYSENTER': [
+        lambda args: ['SEGS_%d.%s' % (qemu_segs['CS'], part) for part in "base", "limit", "selector", "flags"] + 
+                     ['SEGS_%d.%s' % (qemu_segs['SS'], part) for part in "base", "limit", "selector", "flags"] + 
+                     ["REGS_%d" % qemu_regs["ESP"]],
+        lambda args: ["SYSENTER_ESP", "SYSENTER_CS"],
+    ],
+    'IFLO_SYSEXIT': [
+        lambda args: ['SEGS_%d.%s' % (qemu_segs['CS'], part) for part in "base", "limit", "selector", "flags"] + 
+                     ['SEGS_%d.%s' % (qemu_segs['SS'], part) for part in "base", "limit", "selector", "flags"] + 
+                     ["REGS_%d" % qemu_regs["ESP"]],
+        lambda args: ["SYSENTER_CS", "REGS_%d" % qemu_regs["ECX"], "REGS_%d" % qemu_regs["EDX"]],
+    ],
 
     'IFLO_OPS_MEM_LDL_T0_A0':  LOAD('T0', 4),
     'IFLO_OPS_MEM_LDL_T1_A0':  LOAD('T1', 4),
@@ -267,15 +289,23 @@ defines_uses = {
     'IFLO_ADDL_ESP_2': IDENT("REGS_%d" % qemu_regs["ESP"]),
     'IFLO_ADDL_ESP_IM': IDENT("REGS_%d" % qemu_regs["ESP"]),
 
+    'IFLO_SET_CC_OP': OBLIT('CC_OP'),
     'IFLO_MOVL_A0_IM': OBLIT('A0'),
     'IFLO_MOVL_T0_IM': OBLIT('T0'),
     'IFLO_MOVL_T1_IM': OBLIT('T1'),
     'IFLO_MOVL_T0_0': OBLIT('T0'),
-    'IFLO_ADDL_ESP_IM': OBLIT("REGS_%d" % qemu_regs["ESP"]),
 
     # Special "set the input" pseudo-op
     'IFLO_SET_INPUT': [
         lambda args: [args[0]],
+        lambda args: [],
+    ],
+
+    # Memory allocation pseudo-op
+    'IFLO_MALLOC': OBLIT("REGS_%d" % qemu_regs["EAX"]),
+    
+    'IFLO_OBLIT_R': [
+        lambda args: ["REGS_%d" % args[0]],
         lambda args: [],
     ],
 
@@ -298,16 +328,38 @@ defines_uses = {
         lambda args: [],
         lambda args: ['T0'],
     ],
+    'IFLO_OPS_TEMPLATE_JL_SUB': [
+        lambda args: [],
+        lambda args: ['CC_SRC', 'CC_DST'],
+    ],
+
+
+    # CC-related ops
+    'IFLO_CMPL_T0_T1_CC': [
+        lambda args: ['CC_SRC', 'CC_DST'],
+        lambda args: ['T0', 'T1'],
+    ],
+    'IFLO_UPDATE1_CC': [
+        lambda args: ['CC_DST'],
+        lambda args: ['T0'],
+    ],
+    'IFLO_UPDATE2_CC': [
+        lambda args: ['CC_SRC', 'CC_DST'],
+        lambda args: ['T0', 'T1'],
+    ],
+    'IFLO_UPDATE_NEG_CC': [
+        lambda args: ['CC_SRC', 'CC_DST'],
+        lambda args: ['T0'],
+    ],
 
     # Punt on these; will have to handle eventually
     'IFLO_OPS_TEMPLATE_JB_SUB': IGNORE,
     'IFLO_OPS_TEMPLATE_JBE_SUB': IGNORE,
     'IFLO_OPS_TEMPLATE_JLE_SUB': IGNORE,
     'IFLO_OPS_TEMPLATE_JS_SUB': IGNORE,
-    'IFLO_OPS_TEMPLATE_JL_SUB': IGNORE,
-
-    # This is problematic since our memory model is entirely virtual
-    # at the moment.
+    
+    # Turns out this is legit to ignore, it's only used
+    # in the introspection code :p
     'IFLO_CPU_PHYSICAL_MEMORY_RW': IGNORE,
 
     # More stuff I need to handle and don't want to
@@ -318,19 +370,13 @@ defines_uses = {
     'IFLO_CMPXCHG8B': IGNORE, # Ok to ignore this -- it's split into PART1/2 elsewhere
     'IFLO_PID_CHANGE': IGNORE,
     'IFLO_UID_CHANGE': IGNORE,
-    'IFLO_SYSEXIT': IGNORE,
     'IFLO_SYSEXIT_RET': IGNORE,
-    'IFLO_SYSENTER': IGNORE,
     'IFLO_IRET_PROTECTED': IGNORE,
-    'IFLO_CMPL_T0_T1_CC': IGNORE,
     'IFLO_LABEL_INPUT': IGNORE,
     'IFLO_LABEL_OUTPUT': IGNORE,
     'IFLO_MOVL_EIP_IM': IGNORE,
-    'IFLO_UPDATE_NEG_CC': IGNORE,
     'IFLO_GOTO_TB0': IGNORE,
     'IFLO_GOTO_TB1': IGNORE,
-    'IFLO_UPDATE1_CC': IGNORE,
-    'IFLO_UPDATE2_CC': IGNORE,
     'IFLO_TB_HEAD_EIP': IGNORE,
     'IFLO_EXIT_TB': IGNORE,
     'IFLO_INSN_DIS': IGNORE,

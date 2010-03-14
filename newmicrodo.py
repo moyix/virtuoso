@@ -57,7 +57,7 @@ class OutSpace:
 
     def get_output(self, label):
         if label not in self.scratch:
-            raise KeyError("Output label %s not defined." % label)
+            raise KeyError("Output label '%s' not defined." % label)
 
         data = {}
         start = 0
@@ -179,7 +179,17 @@ def load_env(env_file):
     for c in current:
         var,val = c.split('=')
         regs[var] = UInt(int(val, 16))
-        
+    
+    # Check for the sysenter MSRs
+    current = env_file.readline().strip().split()
+    while current:
+        if current[0].startswith('sysenter'):
+            for c in current:
+                var,val = c.split('=')
+                regs[var] = UInt(int(val, 16))
+            break
+        current = env_file.readline().strip().split()
+
     return regs
 
 PAE_SHIFT = 5
@@ -252,6 +262,11 @@ class newmicrodo(forensics.commands.command):
         else:
             inputs = []
 
+        if self.opts.debug:
+            print "Starting with inputs:"
+            print "  inputs = [ %s ]" % (", ".join("%#x" % i for i in inputs))
+            print
+
         # With real introspection, these would be actual values
         # from the env.
         if (EFL & DF_MASK) >> DF_SHIFT:
@@ -261,10 +276,12 @@ class newmicrodo(forensics.commands.command):
 
         # This actually runs the translated code
         code = pickle.load(open(self.opts.micro))
-        label = '__start__'
+        label = 'START'
+        import time
+        t1 = time.time()
         while True:
-            print "Executing block %s" % (hex(label) if isinstance(label,int) else label)
             if self.opts.debug:
+                print "Executing block %s" % (hex(label) if isinstance(label,int) else label)
                 print "\n".join("  " + l for l in code[label].splitlines())
             try:
                 exec(code[label])
@@ -276,14 +293,36 @@ class newmicrodo(forensics.commands.command):
                 print code[label]
                 import pdb
                 pdb.post_mortem(sys.exc_info()[2])
+        t2 = time.time()
+        if self.opts.debug:
+            print
+            print "Time taken: %f ms" % ((t2-t1)*1000)
+
+        print
 
         # TODO: multiple outputs
         data = out.get_output('out')
         print "Output:", data.encode('hex')
-        print "Debug dump of scratch:"
-        mem.dump_scratch()
+
+        print
 
         # Run the translation function
+        if self.opts.debug:
+            print "Decoding function:"
+            if self.opts.interp:
+                s = self.opts.interp.decode('string_escape')
+                print "\n".join("  " + l for l in s.splitlines())
+            else:
+                print "(none)"
+            print
+
         if self.opts.interp:
+            print "Decoded data:"
             exec(self.opts.interp.decode('string_escape'))
             f(data)
+
+        print 
+
+        if self.opts.debug:
+            print "Debug dump of scratch:"
+            mem.dump_scratch()

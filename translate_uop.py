@@ -67,12 +67,19 @@ op_handler = {
     "IFLO_OPS_TEMPLATE_SAR_T0_T1": lambda args: "T0 = T0 >> T1",
     "IFLO_TESTL_T0_T1_CC": lambda args: "CC_DST = T0 & T1",
     "IFLO_JMP_T0": lambda args: "raise Goto(int(T0))",
+    "IFLO_CMPL_T0_T1_CC": lambda args: "CC_SRC = T1 ; CC_DST = T0 - T1",
+    "IFLO_UPDATE1_CC": lambda args: "CC_DST = T0",
+    "IFLO_UPDATE2_CC": lambda args: "CC_SRC = T1; CC_DST = T0",
+    "IFLO_UPDATE_NEG_CC": lambda args: "CC_SRC = -T0 ; CC_DST = T0",
+    "IFLO_IMULL_T0_T1": lambda args: "res = int(T0)*int(T1) ; T0 = CC_DST = UInt(res) ; CC_SRC = UInt(res) != res",
+    "IFLO_XORL_T0_T1": lambda args: "T0 ^= T1",
 
     "IFLO_ADDL_A0_SEG": lambda args: "A0 += %s" % fieldname(field_from_env(args[1])),
     "IFLO_MOVL_SEG_T0": lambda args: "%s = load_seg(mem, T0, GDT, LDT)" % qemu_segs_r[args[0]],
 
     "IFLO_OPS_TEMPLATE_JNZ_ECX": lambda args: "ECX != 0",
     "IFLO_OPS_TEMPLATE_JZ_SUB": lambda args: "CC_DST == 0",
+    "IFLO_OPS_TEMPLATE_JL_SUB": lambda args: "CC_DST + CC_SRC < CC_SRC",
 }
 
 outop_handler = {

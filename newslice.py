@@ -4,11 +4,26 @@ import IPython
 from collections import defaultdict
 import cPickle as pickle
 
+import time, datetime
+
+import flow
+import networkx
+
 from qemu_trace import get_insns, TraceEntry
 from translate_uop import uop_to_py,uop_to_py_out
 from qemu_data import defines,uses,is_jcc,is_dynjump,memrange
 from pprint import pprint
+from optparse import OptionParser
+from gzip import GzipFile
+
 import sys,csv
+
+def first(cond, l):
+    """Return the first item in L for which cond is true.
+       Return None if """
+    for e in l:
+        if cond(e): return e
+    return None
 
 class NotFoundException(Exception):
     pass
@@ -29,11 +44,30 @@ def dynslice(insns, bufs, start=-1, output_track=False, debug=False):
            This calls TraceEntry.set_output_label().
        debug: enable debugging information
     """
+
+    multislice(insns, [ (start, bufs) ], output_track, debug)
+
+def multislice(insns, worklist, output_track=False, debug=False):
+    wlist = worklist[:]
+    wlist.sort()
+    start, bufs = wlist.pop()
+    
+    if wlist:
+        next_i, next_bufs = wlist.pop()
+    else:
+        next_i = -1
+
     if start == -1: start = len(insns) - 1
     if output_track: outbufs = set(bufs)
-
+    
     work = set(bufs)
+    if debug: print "Initial working set:",work
     for i,insn in reversed(insns[:start+1]):
+        if i == next_i:
+            work = work | set(next_bufs)
+            if wlist:
+                next_i, next_bufs = wlist.pop()
+
         defs_set = set(defines(insn))
         uses_set = set(uses(insn))
 
@@ -43,10 +77,13 @@ def dynslice(insns, bufs, start=-1, output_track=False, debug=False):
             if debug: print "Overlap with working set: %s" % (defs_set & work)
             work = (work - defs_set) | uses_set
             if debug: print "Adding to slice: %s" % repr(insn)
+            if debug: print "Current WS:",work
             
             # TODO: allow multiple outputs by separating outbufs into
             # a dict of (label => memrange) pairs
             if output_track and defs_set & outbufs:
+                print "Accounted for %d of %d output bytes" % (len(defs_set & outbufs), len(outbufs))
+                print "Instruction: %s" % repr(insn)
                 outbufs -= defs_set
                 insn.set_output_label("out")
         
@@ -62,15 +99,18 @@ class TB(object):
         self.label = label
         self.body = []
     def range(self):
-        return (min(ins[0] for ins in self.body),
-                max(ins[0] for ins in self.body))
+        return (self.start(), self.end())
+    def start(self):
+        return self.body[0][0]
+    def end(self):
+        return self.body[-1][0]
     def has_slice(self):
         return any(ins.in_slice for _,ins in self.body)
     def has_dynjump(self):
         return any(is_dynjump(ins.op) for _, ins in self.body)
     def has_jcc(self):
         return any(is_jcc(ins.op) for _, ins in self.body)
-    def get_jcc(self):
+    def get_branch(self):
         return [ins for _,ins in self.body if is_jcc(ins.op)][0]
     def _label_str(self):
         return hex(self.label) if isinstance(self.label,int) else "'%s'" % self.label
@@ -91,7 +131,7 @@ def make_tbs(trace):
     Returns a list of TB objects.
     """
     tbs = []
-    current_tb = TB("__start__")
+    current_tb = TB("START")
     for i,insn in trace:
         if insn.op == "IFLO_TB_HEAD_EIP":
             if current_tb: tbs.append(current_tb)
@@ -102,6 +142,13 @@ def make_tbs(trace):
                 current_tb.body.append((i,insn))
     tbs.append(current_tb)
     return tbs
+
+def make_tbdict(tbs):
+    tbdict = defaultdict(list)
+    for t in tbs:
+        tbdict[t.label].append(t)
+    tbdict = dict(tbdict)
+    return tbdict
 
 def del_slice_range(start, end, slice):
     to_excise = range(start, end+1)
@@ -124,19 +171,15 @@ def find_last_jcc(tbs):
     raise NotFoundException
 
 def make_slice_cfg(tbs):
-    cfg = defaultdict(list)
-    #sltbs = [t for t in tbs if t.has_slice()]
-    sltbs = tbs
-    for i in range(len(sltbs)-1):
-        cfg[sltbs[i].label].append(sltbs[i+1])
-    # Successor of the last one is "__end__"
-    #cfg[sltbs[-1].label].append(TB("__end__"))
-    #print hex(sltbs[-1].label),cfg[sltbs[-1].label]
-    return cfg
+    cfg = defaultdict(set)
+    for i in range(len(tbs)-1):
+        cfg[tbs[i].label].add(tbs[i+1].label)
+    cfg[tbs[-1].label] = set()
+    return dict(cfg)
 
 def add_branch_deps(trace, cfg, tbdict):
     for c in cfg:
-        if len(cfg[c]) > 1:
+        if len(cfg[c]) > 1 and any( tb.has_slice() for tb in tbdict[c] ):
             #idx, insn = find_last_jcc(tbdict[c])
             # Mark the jumps so we can include them in the translation
             for t in tbdict[c]:
@@ -158,10 +201,10 @@ def find_whole_tb(tbs):
     return None
 
 def get_taken_tb(tbs):
-    return [t for t in tbs if t.has_jcc() and t.get_jcc().args[-1]][0]
+    return [t for t in tbs if t.has_jcc() and t.get_branch().args[-1]][0]
 
 def get_not_taken_tb(tbs):
-    return [t for t in tbs if t.has_jcc() and not t.get_jcc().args[-1]][0]
+    return [t for t in tbs if t.has_jcc() and not t.get_branch().args[-1]][0]
 
 def get_branch_target(tbs):
     for t in tbs:
@@ -196,18 +239,17 @@ def simple_translate(tbs):
        Returns: a list of translated instructions (as strings)
     """
     s = []
-    assert all( len(t.body) == len(tbs[0].body) for t in tbs )
+
+    # Note: may not hold in direct block chaining case
+    #assert all( len(t.body) == len(tbs[0].body) for t in tbs )
+
     for insns in zip(*[t.body for t in tbs]):
         if any( insn.in_slice for _,insn in insns ):
             s.append(str(insns[0][1]))
     return s
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        infile = sys.stdin
-    else:
-        infile = open(sys.argv[1])
-
+def load_trace(infile):
+    print "Loading trace into memory..."
     trace = get_insns(infile)
 
     # TODO: both output and input should probably not be thrown into
@@ -215,6 +257,7 @@ if __name__ == "__main__":
     #   outbufs[label] = memrange(...)
     # This would allow us to handle multiple ins/outs
 
+    print "Finding output buffers"
     # Find the outputs
     outbufs = []
     output_insns = []
@@ -227,6 +270,7 @@ if __name__ == "__main__":
         last_op, last_args = trace.pop()
     trace.append( (last_op, last_args) )
 
+    print "Finding input buffers"
     # Find the inputs
     inbufs = []
     input_insns = []
@@ -239,36 +283,124 @@ if __name__ == "__main__":
         last_op, last_args = trace.pop(0)
     trace.insert(0, (last_op, last_args) )
 
+    print "Converting trace to TraceEntrys"
     # Turn the trace into a list of TraceEntry objects
     trace = list(enumerate(TraceEntry(t) for t in trace))
 
     # Set up the inputs
     set_input(trace, inbufs)
 
-    dynslice(trace, outbufs, output_track=True)
-    tbs = make_tbs(trace)
-    tbdict = defaultdict(list)
-    for t in tbs:
-        tbdict[t.label].append(t)
+    return trace, inbufs, outbufs
 
-    # Make the initial slice CFG
+def slice_trace(trace, inbufs, outbufs):
+    print "Doing initial slice..."
+    start_ts = time.time()
+    dynslice(trace, outbufs, output_track=True)
+    end_ts = time.time()
+    print "Slicing done in %s, calculating control dependencies..." % datetime.timedelta(seconds=end_ts-start_ts)
+
+    tbs = make_tbs(trace)
+    tbdict = make_tbdict(tbs)
+
+    # Calculate control dependencies
     cfg = make_slice_cfg(tbs)
 
-    # Look for branch dependencies and add them in
-    # This may alter the slice CFG by adding new TBs and
-    # even including new branches. So we iterate it until
-    # we reach a fixed point.
-    add_branch_deps(trace, cfg, tbdict)
-    newcfg = make_slice_cfg(tbs)
-    while num_branches(newcfg) != num_branches(cfg):
-        print "Fixed point not reached, iterating again"
-        cfg = newcfg
-        add_branch_deps(trace, cfg, tbdict)
-        newcfg = make_slice_cfg(tbs)
-    cfg = newcfg
-    print "Fixed point found."
+    # Post-dominator algo needs this dummy node
+    cfg['ENTRY'] = ['START', tbs[-1].label]
+
+    G = networkx.DiGraph()
+    for s in cfg:
+        for d in cfg[s]:
+            G.add_edge(s,d)
+    cdeps = flow.control_deps(G, start='ENTRY', stop=tbs[-1].label)
     
-    embedshell = IPython.Shell.IPShellEmbed()
+    # Remove the dummy node
+    del cdeps['ENTRY']
+    del cfg['ENTRY']
+    
+    times = []
+    iteration = 0
+    changed = True
+    while changed:
+        iteration += 1
+        print "Adding control flow deps, iteration %d" % iteration
+        start_ts = time.time()
+        changed = False
+
+        # Build up a list of branches we want to add
+        to_add = []
+        for branch in cdeps:
+            if any(any(t.has_slice() for t in tbdict[dep]) for dep in cdeps[branch]):
+                if not all(tb.get_branch().in_slice for tb in tbdict[branch]):
+                    to_add.append(branch)
+                    changed = True
+
+        if not to_add: break
+
+        # Now add them
+        wlist = []
+        for br in to_add:
+            for t in tbdict[br]:
+                for i,isn in t.body:
+                    if is_jcc(isn.op) or is_dynjump(isn.op):
+                        wlist.append( (i, uses(isn)) )
+                        #dynslice(trace, uses(isn), start=i)
+                        isn.mark()
+                        break
+
+        multislice(trace, wlist)
+
+        end_ts = time.time()
+        elapsed = datetime.timedelta(seconds = (end_ts - start_ts ))
+        times.append(elapsed)
+        print "Iteration %d took" % iteration, elapsed, "to add %d branches" % len(to_add)
+    print "Fixed point found, control dependency analysis finished in %s" % sum(times,datetime.timedelta(0))
+
+    return trace, tbs, tbdict, cfg
+
+if __name__ == "__main__":
+    parser = OptionParser()
+    parser.add_option('-c', '--checkpoint', action='store_true',
+                      dest='checkpoint', help='load checkpoint')
+    parser.add_option('-z', '--zipped', action='store_true',
+                      dest='zipped', help='checkpoint is compressed')
+    parser.add_option('-x', '--no-checkpoint', action='store_false',
+                      dest='save_cp', help='disable checkpointing',
+                      default=True)
+    options, args = parser.parse_args()
+    if not args:
+        parser.error('Trace file or checkpoint is required')
+    
+    infile = open(args[0])
+
+    if options.checkpoint:
+        print "Loading sliced trace from checkpoint..."
+        if options.zipped:
+            cp = GzipFile(fileobj=infile)
+        else:
+            cp = infile
+        trace = pickle.load(cp)
+        tbs = make_tbs(trace)
+        tbdict = make_tbdict(tbs)
+        cfg = make_slice_cfg(tbs)
+    else:
+        trace, inbufs, outbufs = load_trace(infile)
+        trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)
+
+    if not options.checkpoint and options.save_cp:
+        # First time we have done this, we should save a checkpoint
+        if options.zipped:
+            cpname = args[0].replace('.trc', '.slz')
+            cp = GzipFile(cpname, 'w')
+        else:
+            cpname = args[0].replace('.trc', '.slc')
+            cp = open(cpname, 'w')
+        
+        print "Saving checkpoint to", cpname
+        pickle.dump(trace, cp, protocol=pickle.HIGHEST_PROTOCOL)
+        cp.close()
+
+    embedshell = IPython.Shell.IPShellEmbed(argv=[])
     embedshell()
 
     transdict = {}
@@ -281,18 +413,29 @@ if __name__ == "__main__":
     # Iterate over the finished CFG and translate each TB
     for c in cfg:
         cur = tbdict[c]
-        next = cfg[c]
+        next = list(cfg[c])
 
-        print "Translating %s" % repr(cur[0])
+        # No need to bother with these
+        if not any(t.has_slice() for t in cur):
+            print "Skipping %s" % repr(cur[0])
+            continue
+
+        print "Translating %s" % repr(first(lambda x: x.has_slice(),cur))
 
         # For TB splitting
         gen_new_tb = False
         remainder = []
 
-        if len(next) == 1:
+        if not next:
+            # Last node (woo special cases)
+            s = simple_translate(cur)
+            s.append("raise Goto('__end__')")
+            transdict[cur[0].label] = "\n".join(s)
+        elif len(next) == 1:
             #s =  "\n".join("%s" % insn for _,insn in cur[0].body if insn.in_slice)
             s = simple_translate(cur)
-            s.append("raise Goto(%s)" % next[0]._label_str())
+            next_tb = tbdict[next[0]][0]
+            s.append("raise Goto(%s)" % next_tb._label_str())
             transdict[cur[0].label] = "\n".join(s)
         elif cur[0].has_dynjump():
             transdict[cur[0].label] = "\n".join(simple_translate(cur))
@@ -320,8 +463,7 @@ if __name__ == "__main__":
                         remainder = tb.body[i+1:]
                         break
 
-            # Find the natural successor. This is the TB that is next
-            # when the jump is not taken
+            # Find the fall-through successor.
             tb = get_not_taken_tb(cur)
             i = tbs.index(tb)
             succ = tbs[i+1]._label_str()
@@ -345,7 +487,10 @@ if __name__ == "__main__":
                 s += "\n" + "raise Goto(%s)" % succ
                 transdict[eval(taken)] = s
 
-    f = open(sys.argv[2],'w')
+    fname, ext = args[0].rsplit('.',1)
+    fname = fname + '.pkl'
+    print "Saving translated code to", fname
+    f = open(fname,'w')
     pickle.dump(transdict, f)
     f.close()
 
