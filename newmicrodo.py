@@ -71,25 +71,52 @@ class OutSpace:
         # Assumption: the output buffer is contiguous
         assert len(data) == 1
         return data.values()[0]
-       
+
+class BufSpace:
+    def __init__(self):
+        self.bufs = {}
+
+    def add(self, label, addr):
+        self.bufs[label] = {}
+        self.bufs[label]['BASE'] = addr
+        return addr
+
+    def read(self, label, addr, length):
+        data = []
+        space = self.bufs[label]
+
+        try:
+            for i in range(addr,addr+length):
+                data.append(space[i])
+        except KeyError, e:
+            raise ValueError("Read error in dynamic buffer %s, address %#x" % (label, addr))
+        return "".join(data)
+
+    def write(self, label, addr, val, pack_char):
+        space = self.bufs[label]
+
+        buf = pack("<" + pack_char, int(val))
+        for (i,c) in enumerate(buf):
+            space[int(addr+i)] = c
+
 class COWSpace:
     def __init__(self, base):
         self.base = base
         self.scratch = {}
     def read(self, addr, length):
         #print "DEBUG: Reading %d bytes at %#x" % (length, addr)
-        bytes = []
+        data = []
         for i in range(addr,addr+length):
             if i in self.scratch:
-                bytes.append(self.scratch[i])
+                data.append(self.scratch[i])
             else:
                 b = self.base.read(i,1)
                 if not b:
                     raise ValueError("Memory read error at %#x" % i)
                 else:
-                    bytes.append(b)
-        #print "DEBUG: Read", "".join(bytes).encode('hex')
-        return "".join(bytes)
+                    data.append(b)
+        #print "DEBUG: Read", "".join(data).encode('hex')
+        return "".join(data)
 
     def write(self, addr, val, pack_char):
         buf = pack("<" + pack_char, int(val))

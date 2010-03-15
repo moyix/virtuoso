@@ -129,14 +129,13 @@ if __name__ == "__main__":
         tbstart = tb.start()
         for c in cfg:
             curtb = tbdict[c][0]
-            print "Checking %s" % repr(curtb)
             if not curtb.start() > tb.end(): continue
             for i,insn in curtb.body:
-                print "Checking instruction %s" % ((i,insn),)
                 if is_memop(insn) and linked_vars(trace, "A0", EAX, start=i, end=tbstart):
-                    print "Adding memop %s in %s" % (repr(insn), repr(tb))
                     off = i - curtb.start()
-                    allocs[site] += [t.body[off] for t in tbdict[c]]
+                    to_add = [t.body[off] for t in tbdict[c]]
+                    print "Adding memop %s in %s (%d instances)" % (repr(insn), repr(curtb), len(to_add))
+                    allocs[site] += to_add
     allocs = dict(allocs)
     
     #embedshell = IPython.Shell.IPShellEmbed(argv=[])

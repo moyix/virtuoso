@@ -20,7 +20,7 @@ import sys,csv
 
 def first(cond, l):
     """Return the first item in L for which cond is true.
-       Return None if """
+       Return None if cond is not true for any item"""
     for e in l:
         if cond(e): return e
     return None
