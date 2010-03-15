@@ -77,6 +77,8 @@ op_handler = {
     "IFLO_ADDL_A0_SEG": lambda args: "A0 += %s" % fieldname(field_from_env(args[1])),
     "IFLO_MOVL_SEG_T0": lambda args: "%s = load_seg(mem, T0, GDT, LDT)" % qemu_segs_r[args[0]],
 
+    "IFLO_MALLOC": lambda args: "EAX = bufs.add('%s', %#x)" % (args[0], args[1]),
+
     "IFLO_OPS_TEMPLATE_JNZ_ECX": lambda args: "ECX != 0",
     "IFLO_OPS_TEMPLATE_JZ_SUB": lambda args: "CC_DST == 0",
     "IFLO_OPS_TEMPLATE_JL_SUB": lambda args: "CC_DST + CC_SRC < CC_SRC",
@@ -85,6 +87,14 @@ op_handler = {
 outop_handler = {
     "IFLO_OPS_MEM_STL_T0_A0": lambda args, label: "out.write(A0,T0,'L', '%s')" % label,
     "IFLO_OPS_MEM_STB_T0_A0": lambda args, label: "out.write(A0,T0,'B', '%s')" % label,
+}
+
+bufop_handler = {
+    "IFLO_OPS_MEM_STL_T0_A0":  lambda args, label: "bufs.write('%s',A0,T0,'L')" % label,
+    "IFLO_OPS_MEM_STB_T0_A0":  lambda args, label: "bufs.write('%s',A0,T0,'B')" % label,
+    "IFLO_OPS_MEM_LDL_T0_A0":  lambda args, label: "T0 = ULInt32(bufs.read('%s',A0,4))" % label,
+    "IFLO_OPS_MEM_LDL_T1_A0":  lambda args, label: "T1 = ULInt32(bufs.read('%s',A0,4))" % label,
+    "IFLO_OPS_MEM_LDUB_T0_A0": lambda args, label: "T0 = ULInt8(bufs.read('%s',A0,1))" % label,
 }
 
 def fieldname(s):
@@ -96,6 +106,14 @@ def fieldname(s):
         return "%s.%s" % (qemu_segs_r[int(idx)], field)
     else:
         raise ValueError("Invalid register class: %s" % kind)
+
+def uop_to_py_buf(insn, label):
+    try:
+        return bufop_handler[insn.op](insn.args, label)
+    except KeyError, e:
+        print "Key not found:",e
+        print "No dynbuf handler defined for %s" % insn.op
+        sys.exit(1)
 
 def uop_to_py_out(insn, label):
     try:

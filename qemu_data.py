@@ -406,6 +406,9 @@ def is_dynjump(op):
         'IFLO_JMP_T0',
     ]
 
+def is_memop(insn):
+    return insn.op.startswith("IFLO_OPS_MEM_")
+
 def defines(insn):
     try:
         return defines_uses[insn.op][0](insn.args)

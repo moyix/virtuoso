@@ -430,8 +430,8 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
             alloc_label = "ALLOC_%d" % alloc_ctr.next()
             trace[remove_start:remove_end] = [
                 (None, TraceEntry(('IFLO_TB_HEAD_EIP',  [alloc_label]))),
-                (None, TraceEntry(('IFLO_ADDL_ESP_IM',  [argbytes]))),
-                (None, TraceEntry(('IFLO_MALLOC',       []))),
+                (None, TraceEntry(('IFLO_ADDL_ESP_IM',  [argbytes+4]))), # 4 extra for retaddr
+                (None, TraceEntry(('IFLO_MALLOC',       [alloc_label, None]))),
             ]
             
             trace, tbs, tbdict, cfg = remake_trace(trace)
@@ -457,7 +457,17 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
                     allocs[alloc_name] += to_add
     allocs = dict(allocs)
 
-    return trace, tbs, tbdict, cfg, allocs
+    # Figure out what the "base" addr is
+    for a in allocs:
+        base = min(e.args[2] for i,e in allocs[a])
+        # This means "Set the second argument of the IFLO_MALLOC"
+        tbdict[a][0].body[2][1].args[1] = base
+
+    for a in allocs:
+        for i,insn in allocs[a]:
+            insn.set_buf_label(a)
+
+    return trace, tbs, tbdict, cfg
 
 if __name__ == "__main__":
     parser = OptionParser()
@@ -473,7 +483,7 @@ if __name__ == "__main__":
 
     # Replace mallocs with summary functions, and find memops
     # we will need to have special handling for.
-    trace, tbs, tbdict, cfg, allocs = detect_mallocs(trace, tbs, tbdict, cfg)
+    trace, tbs, tbdict, cfg = detect_mallocs(trace, tbs, tbdict, cfg)
 
     # Perform slicing and control dependency analysis
     trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)

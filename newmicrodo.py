@@ -99,6 +99,26 @@ class BufSpace:
         for (i,c) in enumerate(buf):
             space[int(addr+i)] = c
 
+    def get_scratch(self, scratch):
+        data = {}
+        start = 0
+        buf = ""
+        for i in sorted(scratch):
+            if not isinstance(i, int): continue
+            if not buf: start = i
+            buf += scratch[i]
+            if i+1 not in scratch:
+                data[start] = buf
+                buf = ""
+        return data
+
+    def dump(self):
+        for label in self.bufs:
+            print ">>> %s <<<" % label
+            for start, buf in self.get_scratch(self.bufs[label]).items():
+                print hex(start),":",buf.encode('hex')
+
+
 class COWSpace:
     def __init__(self, base):
         self.base = base
@@ -281,6 +301,7 @@ class newmicrodo(forensics.commands.command):
         # Wrap it in copy-on-write
         mem = COWSpace(addr_space)
         out = OutSpace()
+        bufs = BufSpace()
         
         # Inputs to the block of micro-ops we want to to execute
         #inputs = [ 0xdeadf000 ] # pBuf -- pointer to the output buffer

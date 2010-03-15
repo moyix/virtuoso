@@ -37,7 +37,7 @@ def get_tb(index, tbmap, trace_ranges):
         return tbmap[trace_ranges[pos]]
 
 def is_memop(insn):
-    return insn.op.startswith("IFLO_OPS_MEM")
+    return insn.op.startswith("IFLO_OPS_MEM_")
 
 def remake_trace(trace):
     trace = list(enumerate(t for i,t in trace))
