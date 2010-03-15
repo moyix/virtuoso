@@ -11,12 +11,20 @@ import networkx
 
 from qemu_trace import get_insns, TraceEntry
 from translate_uop import uop_to_py,uop_to_py_out
-from qemu_data import defines,uses,is_jcc,is_dynjump,memrange
+from qemu_data import defines,uses,is_jcc,is_dynjump,is_memop,memrange
 from pprint import pprint
 from optparse import OptionParser
 from gzip import GzipFile
 
 import sys,csv
+
+# Domain knowledge: a list of memory allocation functions
+# Format: address, number of argument bytes, name
+mallocs = [
+    (0x7c9105d4, 12, 'RtlAllocateHeap'),
+]
+
+# Some small utility functions
 
 def first(cond, l):
     """Return the first item in L for which cond is true.
@@ -25,8 +33,19 @@ def first(cond, l):
         if cond(e): return e
     return None
 
+def counter():
+    i = 0
+    while True:
+        yield i
+        i += 1
+
 class NotFoundException(Exception):
     pass
+
+# The slicing functions. Note that dynslice is just a wrapper around
+# multislice; if you need to slice with respsect to a bunch of things
+# at once, it's much faster to use multislice rather than multiple
+# calls to dynslice.
 
 def dynslice(insns, bufs, start=-1, output_track=False, debug=False):
     """Perform a dynamic data slice.
@@ -82,8 +101,8 @@ def multislice(insns, worklist, output_track=False, debug=False):
             # TODO: allow multiple outputs by separating outbufs into
             # a dict of (label => memrange) pairs
             if output_track and defs_set & outbufs:
-                print "Accounted for %d of %d output bytes" % (len(defs_set & outbufs), len(outbufs))
-                print "Instruction: %s" % repr(insn)
+                if debug: print "Accounted for %d of %d output bytes" % (len(defs_set & outbufs), len(outbufs))
+                if debug: print "Instruction: %s" % repr(insn)
                 outbufs -= defs_set
                 insn.set_output_label("out")
         
@@ -92,9 +111,28 @@ def multislice(insns, worklist, output_track=False, debug=False):
     if debug: print "Working set at end:", work
     #return slice
 
-# Objects to represent translation blocks, single instructions,
-# and loops.
+def linked_vars(insns, sink, source, start=-1, end=0, debug=False):
+    if debug: print "Linking vars sink: %s source: %s between trace positions %d and %d" % (sink, source, end, start)
+    if start == -1: start = len(insns) - 1
+
+    work = set([sink])
+    for i,insn in reversed(insns[end:start+1]):
+        defs_set = set(defines(insn))
+        uses_set = set(uses(insn))
+        # For this one special case we DON'T want to track
+        # the derivation of the address of a buffer.
+        if is_memop(insn):
+            uses_set -= set(["A0"])
+
+        if defs_set & work:
+            work = (work - defs_set) | uses_set
+            if debug: print i,repr(insn)
+
+    if debug: print "Working set at end:", work
+    return source in work
+
 class TB(object):
+    """Represents a Translation Block"""
     def __init__(self, label):
         self.label = label
         self.body = []
@@ -121,6 +159,9 @@ class TB(object):
         return s
     def __repr__(self):
         return ("[TB @%s%s]" % (self._label_str(), " *" if self.has_slice() else ""))
+
+# Some utility functions for dealing with the trace:
+# Loading it from a file, splitting it into TBs, etc.
 
 def make_tbs(trace):
     """Splits the trace into translation blocks.
@@ -150,9 +191,19 @@ def make_tbdict(tbs):
     tbdict = dict(tbdict)
     return tbdict
 
-def del_slice_range(start, end, slice):
-    to_excise = range(start, end+1)
-    return dict( (k, slice[k]) for k in slice if not k in to_excise )
+def remake_trace(trace):
+    trace = list(enumerate(t for i,t in trace))
+    tbs = make_tbs(trace)
+    tbdict = make_tbdict(tbs)
+    cfg = make_cfg(tbs)
+    return trace, tbs, tbdict, cfg
+
+def make_cfg(tbs):
+    cfg = defaultdict(set)
+    for i in range(len(tbs)-1):
+        cfg[tbs[i].label].add(tbs[i+1].label)
+    cfg[tbs[-1].label] = set()
+    return dict(cfg)
 
 def set_input(trace, inbufs):
     inbufs = set(inbufs)
@@ -164,32 +215,65 @@ def set_input(trace, inbufs):
             te.op = "IFLO_SET_INPUT"
             te.args = [defs[0], 0]
 
+def load_trace(infile):
+    print "Loading trace into memory..."
+    trace = get_insns(infile)
+
+    # TODO: both output and input should probably not be thrown into
+    # the same big buffer; instead we should do something like
+    #   outbufs[label] = memrange(...)
+    # This would allow us to handle multiple ins/outs
+
+    print "Finding output buffers"
+    # Find the outputs
+    outbufs = []
+    output_insns = []
+    last_op, last_args = trace.pop()
+    while last_op != 'IFLO_LABEL_OUTPUT':
+        last_op, last_args = trace.pop()
+    while last_op == 'IFLO_LABEL_OUTPUT':
+        outbufs += memrange(last_args[0], last_args[1])
+        output_insns.append( (last_op, last_args) )
+        last_op, last_args = trace.pop()
+    trace.append( (last_op, last_args) )
+
+    print "Finding input buffers"
+    # Find the inputs
+    inbufs = []
+    input_insns = []
+    last_op, last_args = trace.pop(0)
+    while last_op != 'IFLO_LABEL_INPUT':
+        last_op, last_args = trace.pop(0)
+    while last_op == 'IFLO_LABEL_INPUT':
+        inbufs += memrange(last_args[0], last_args[1])
+        input_insns.append( (last_op, last_args) )
+        last_op, last_args = trace.pop(0)
+    trace.insert(0, (last_op, last_args) )
+
+    print "Converting trace to TraceEntrys"
+    # Turn the trace into a list of TraceEntry objects
+    trace = list(enumerate(TraceEntry(t) for t in trace))
+
+    # Set up the inputs
+    set_input(trace, inbufs)
+
+    return trace, inbufs, outbufs
+
+# Helper function to determine the return address
+# given a TB containing a CALL instruction.
+def find_retaddr(calltb):
+    for i, insn in calltb.body[::-1]:
+        if insn.op.startswith('IFLO_OPS_MEM_STL'):
+            return insn.args[-1]
+
+# All this junk is for the apparently simple task of trying to
+# translate a translation block (TB) into a Python code block.
+
 def find_last_jcc(tbs):
     for i, insn in tbs[-1].body:
         if is_jcc(insn.op) or is_dynjump(insn.op):
             return i,insn
     raise NotFoundException
-
-def make_slice_cfg(tbs):
-    cfg = defaultdict(set)
-    for i in range(len(tbs)-1):
-        cfg[tbs[i].label].add(tbs[i+1].label)
-    cfg[tbs[-1].label] = set()
-    return dict(cfg)
-
-def add_branch_deps(trace, cfg, tbdict):
-    for c in cfg:
-        if len(cfg[c]) > 1 and any( tb.has_slice() for tb in tbdict[c] ):
-            #idx, insn = find_last_jcc(tbdict[c])
-            # Mark the jumps so we can include them in the translation
-            for t in tbdict[c]:
-                for i,isn in t.body:
-                    if is_jcc(isn.op) or is_dynjump(isn.op):
-                        dynslice(trace, uses(isn), start=i)
-                        isn.mark()
-
-def num_branches(cfg):
-    return sum(len(cfg[c]) > 1 for c in cfg)
 
 def find_whole_tb(tbs):
     """Find a TB that contains all the uOps; this means one where 
@@ -248,50 +332,6 @@ def simple_translate(tbs):
             s.append(str(insns[0][1]))
     return s
 
-def load_trace(infile):
-    print "Loading trace into memory..."
-    trace = get_insns(infile)
-
-    # TODO: both output and input should probably not be thrown into
-    # the same big buffer; instead we should do something like
-    #   outbufs[label] = memrange(...)
-    # This would allow us to handle multiple ins/outs
-
-    print "Finding output buffers"
-    # Find the outputs
-    outbufs = []
-    output_insns = []
-    last_op, last_args = trace.pop()
-    while last_op != 'IFLO_LABEL_OUTPUT':
-        last_op, last_args = trace.pop()
-    while last_op == 'IFLO_LABEL_OUTPUT':
-        outbufs += memrange(last_args[0], last_args[1])
-        output_insns.append( (last_op, last_args) )
-        last_op, last_args = trace.pop()
-    trace.append( (last_op, last_args) )
-
-    print "Finding input buffers"
-    # Find the inputs
-    inbufs = []
-    input_insns = []
-    last_op, last_args = trace.pop(0)
-    while last_op != 'IFLO_LABEL_INPUT':
-        last_op, last_args = trace.pop(0)
-    while last_op == 'IFLO_LABEL_INPUT':
-        inbufs += memrange(last_args[0], last_args[1])
-        input_insns.append( (last_op, last_args) )
-        last_op, last_args = trace.pop(0)
-    trace.insert(0, (last_op, last_args) )
-
-    print "Converting trace to TraceEntrys"
-    # Turn the trace into a list of TraceEntry objects
-    trace = list(enumerate(TraceEntry(t) for t in trace))
-
-    # Set up the inputs
-    set_input(trace, inbufs)
-
-    return trace, inbufs, outbufs
-
 def slice_trace(trace, inbufs, outbufs):
     print "Doing initial slice..."
     start_ts = time.time()
@@ -303,7 +343,7 @@ def slice_trace(trace, inbufs, outbufs):
     tbdict = make_tbdict(tbs)
 
     # Calculate control dependencies
-    cfg = make_slice_cfg(tbs)
+    cfg = make_cfg(tbs)
 
     # Post-dominator algo needs this dummy node
     cfg['ENTRY'] = ['START', tbs[-1].label]
@@ -358,47 +398,85 @@ def slice_trace(trace, inbufs, outbufs):
 
     return trace, tbs, tbdict, cfg
 
+def detect_mallocs(trace, tbs, tbdict, cfg):
+    EAX = "REGS_0"
+    
+    # Replace the mallocs with summary functions
+    alloc_ctr = counter()
+    alloc_calls = defaultdict(list)
+    alloc_rets = []
+    for m,argbytes,name in mallocs:
+        for idx in range(len(tbdict[m])):  # This allows us to change the tbdict during
+            tb = tbdict[m][idx]       # iteration without getting stale data.
+
+            i = tbs.index(tb)
+            callsite = tbs[i-1]
+            
+            # Find the return address and get its TB object
+            # Note: this might fail if we have nested calls, but worry
+            # about that later. The "right" solution is a shadow stack
+            retaddr = find_retaddr(callsite)
+            for t in tbs[i:]:
+                if t.label == retaddr:
+                    retsite = t
+                    break
+
+            print "Call to %#x (%s) at callsite %s returns to %s" % (m, name, callsite._label_str(), retsite._label_str())
+            remove_start, remove_end = callsite.end() + 1, retsite.start()
+
+            # We replace each call to malloc with a summary function that
+            # fixes the stack (since the Windows API uses callee-cleanup)
+            # and inserts an IFLO_MALLOC pseudo-op into the trace.
+            alloc_label = "ALLOC_%d" % alloc_ctr.next()
+            trace[remove_start:remove_end] = [
+                (None, TraceEntry(('IFLO_TB_HEAD_EIP',  [alloc_label]))),
+                (None, TraceEntry(('IFLO_ADDL_ESP_IM',  [argbytes]))),
+                (None, TraceEntry(('IFLO_MALLOC',       []))),
+            ]
+            
+            trace, tbs, tbdict, cfg = remake_trace(trace)
+            alloc_rets.append((alloc_label,retsite.label))
+            alloc_calls[(m,argbytes)].append(callsite.label)
+
+    alloc_calls = dict(alloc_calls)
+
+    # Find the memory operations that will need to be redirected
+    # to a dynamic buffer
+    allocs = defaultdict(list)
+    for alloc_name, site in alloc_rets:
+        tb = tbdict[site][0]
+        tbstart = tb.start()
+        for c in cfg:
+            curtb = tbdict[c][0]
+            if not curtb.start() > tb.end(): continue
+            for i,insn in curtb.body:
+                if is_memop(insn) and linked_vars(trace, "A0", EAX, start=i, end=tbstart):
+                    off = i - curtb.start()
+                    to_add = [t.body[off] for t in tbdict[c]]
+                    print "Adding memop %s in %s (%d instances)" % (repr(insn), repr(curtb), len(to_add))
+                    allocs[alloc_name] += to_add
+    allocs = dict(allocs)
+
+    return trace, tbs, tbdict, cfg, allocs
+
 if __name__ == "__main__":
     parser = OptionParser()
-    parser.add_option('-c', '--checkpoint', action='store_true',
-                      dest='checkpoint', help='load checkpoint')
-    parser.add_option('-z', '--zipped', action='store_true',
-                      dest='zipped', help='checkpoint is compressed')
-    parser.add_option('-x', '--no-checkpoint', action='store_false',
-                      dest='save_cp', help='disable checkpointing',
-                      default=True)
     options, args = parser.parse_args()
     if not args:
-        parser.error('Trace file or checkpoint is required')
+        parser.error('Trace file is required')
     
     infile = open(args[0])
+    trace, inbufs, outbufs = load_trace(infile)
+    tbs = make_tbs(trace)
+    tbdict = make_tbdict(tbs)
+    cfg = make_cfg(tbs)
 
-    if options.checkpoint:
-        print "Loading sliced trace from checkpoint..."
-        if options.zipped:
-            cp = GzipFile(fileobj=infile)
-        else:
-            cp = infile
-        trace = pickle.load(cp)
-        tbs = make_tbs(trace)
-        tbdict = make_tbdict(tbs)
-        cfg = make_slice_cfg(tbs)
-    else:
-        trace, inbufs, outbufs = load_trace(infile)
-        trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)
+    # Replace mallocs with summary functions, and find memops
+    # we will need to have special handling for.
+    trace, tbs, tbdict, cfg, allocs = detect_mallocs(trace, tbs, tbdict, cfg)
 
-    if not options.checkpoint and options.save_cp:
-        # First time we have done this, we should save a checkpoint
-        if options.zipped:
-            cpname = args[0].replace('.trc', '.slz')
-            cp = GzipFile(cpname, 'w')
-        else:
-            cpname = args[0].replace('.trc', '.slc')
-            cp = open(cpname, 'w')
-        
-        print "Saving checkpoint to", cpname
-        pickle.dump(trace, cp, protocol=pickle.HIGHEST_PROTOCOL)
-        cp.close()
+    # Perform slicing and control dependency analysis
+    trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)
 
     embedshell = IPython.Shell.IPShellEmbed(argv=[])
     embedshell()
