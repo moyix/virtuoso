@@ -1,12 +1,11 @@
 #include <stdio.h>
 #include "vmnotify.h"
 
-int main(int argc, char **argv) {
+int do_stuff() {
     int *p;
     int i;
     int s;
 
-    vm_mark_buf_in(NULL, 0);
     s = 0;
     p = (int *) malloc(sizeof(int)*256);
     for (i = 0; i < 256; i++) {
@@ -16,6 +15,13 @@ int main(int argc, char **argv) {
         if (i % 8)  s += p[i];
         else        s ^= p[i];
     }
-    vm_mark_buf_out(&s, sizeof(int));
-    printf("%d\n", s);
+    return s;
+}
+
+int main(int argc, char **argv) {
+    int res;
+    vm_mark_buf_in(NULL, 0);
+    res = do_stuff();
+    vm_mark_buf_out(&res, sizeof(int));
+    printf("%d\n", res);
 }
