@@ -4,9 +4,10 @@
 int main(int argc, char **argv) {
     int *p;
     int i;
-    int s = 0;
+    int s;
 
     vm_mark_buf_in(NULL, 0);
+    s = 0;
     p = (int *) malloc(sizeof(int)*256);
     for (i = 0; i < 256; i++) {
         p[i] = i;
