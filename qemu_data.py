@@ -365,6 +365,7 @@ defines_uses = {
     # More stuff I need to handle and don't want to
     'IFLO_UPDATE_INC_CC': IGNORE,
     'IFLO_COMPUTE_ALL_EFLAGS': IGNORE,
+    'IFLO_COMPUTE_C_EFLAGS': IGNORE,
     'IFLO_CMC': IGNORE,
 
     'IFLO_CMPXCHG8B': IGNORE, # Ok to ignore this -- it's split into PART1/2 elsewhere

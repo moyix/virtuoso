@@ -49,8 +49,10 @@ def ULInt8(buf):
 class OutSpace:
     def __init__(self):
         self.scratch = defaultdict(dict)
+        self.debug = False
 
     def write(self, addr, val, pack_char, label):
+        if self.debug: print "Writing %#x to address %#x (output label %s)" % (val, addr, label)
         buf = pack("<" + pack_char, int(val))
         for (i,c) in enumerate(buf):
             self.scratch[label][int(addr+i)] = c
@@ -75,13 +77,18 @@ class OutSpace:
 class BufSpace:
     def __init__(self):
         self.bufs = {}
+        self.debug = False
+        self.current_label = 0
 
     def add(self, label, addr):
+        label = "%s_%d" % (label, self.current_label)
         self.bufs[label] = {}
         self.bufs[label]['BASE'] = addr
-        return addr
+        self.current_label += 1
+        return label
 
     def read(self, label, addr, length):
+        if self.debug: print "DEBUG: Reading %d bytes at %#x (malloc buffer %s)" % (length, addr, label)
         data = []
         space = self.bufs[label]
 
@@ -90,9 +97,11 @@ class BufSpace:
                 data.append(space[i])
         except KeyError, e:
             raise ValueError("Read error in dynamic buffer %s, address %#x" % (label, addr))
+        if self.debug: print "DEBUG: Read", "".join(data).encode('hex')
         return "".join(data)
 
     def write(self, label, addr, val, pack_char):
+        if self.debug: print "DEBUG: Writing %#x to address %#x (malloc buffer %s)" % (val, addr, label)
         space = self.bufs[label]
 
         buf = pack("<" + pack_char, int(val))
@@ -123,8 +132,9 @@ class COWSpace:
     def __init__(self, base):
         self.base = base
         self.scratch = {}
+        self.debug = False
     def read(self, addr, length):
-        #print "DEBUG: Reading %d bytes at %#x" % (length, addr)
+        if self.debug: print "DEBUG: Reading %d bytes at %#x" % (length, addr)
         data = []
         for i in range(addr,addr+length):
             if i in self.scratch:
@@ -135,10 +145,11 @@ class COWSpace:
                     raise ValueError("Memory read error at %#x" % i)
                 else:
                     data.append(b)
-        #print "DEBUG: Read", "".join(data).encode('hex')
+        if self.debug: print "DEBUG: Read", "".join(data).encode('hex')
         return "".join(data)
 
     def write(self, addr, val, pack_char):
+        if self.debug: print "DEBUG: Writing %#x to address %#x" % (val, addr)
         buf = pack("<" + pack_char, int(val))
         for (i,c) in enumerate(buf):
             self.scratch[int(addr+i)] = c
@@ -290,7 +301,11 @@ class newmicrodo(forensics.commands.command):
             self.op.error('We need some code to execute')
 
         # Load the CPU environment
-        locals().update(load_env(open(self.opts.env)))
+        env = load_env(open(self.opts.env))
+        if self.opts.debug:
+            print "Starting environment:"
+            print open(self.opts.env).read()
+        locals().update(env)
         
         # Set up virtual memory
         if CR4 & PAE_FLAG:
@@ -302,7 +317,12 @@ class newmicrodo(forensics.commands.command):
         mem = COWSpace(addr_space)
         out = OutSpace()
         bufs = BufSpace()
-        
+
+        if self.opts.debug:
+            mem.debug = True
+            out.debug = True
+            bufs.debug = True        
+
         # Inputs to the block of micro-ops we want to to execute
         #inputs = [ 0xdeadf000 ] # pBuf -- pointer to the output buffer
         if self.opts.inputs:
@@ -374,3 +394,7 @@ class newmicrodo(forensics.commands.command):
         if self.opts.debug:
             print "Debug dump of scratch:"
             mem.dump_scratch()
+
+        if self.opts.debug:
+            print "Debug dump of scratch:"
+            bufs.dump()

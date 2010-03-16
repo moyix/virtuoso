@@ -36,7 +36,7 @@ class TraceEntry(object):
             if self.is_output:
                 s += "\n" + uop_to_py_out(self, self.label)
         else:
-            s = uop_to_py_buf(self, self.buflabel)
+            s = uop_to_py_buf(self, self.buflabel) + " # %s" % repr(self)
         return s
     def __repr__(self):
         return "%s(%s)" % (self.op, ",".join(a if isinstance(a,str) else hex(a) for a in self.args))

@@ -173,10 +173,16 @@ def make_tbs(trace):
     """
     tbs = []
     current_tb = TB("START")
+    current_tb.prev = None
     for i,insn in trace:
         if insn.op == "IFLO_TB_HEAD_EIP":
             if current_tb: tbs.append(current_tb)
             current_tb = TB(insn.args[0])
+            
+            # Maintain forward and back pointers
+            current_tb.prev = tbs[-1]
+            tbs[-1].next = current_tb
+
             current_tb.body.append((i,insn))
         else:
             if current_tb:
@@ -428,10 +434,11 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
             # fixes the stack (since the Windows API uses callee-cleanup)
             # and inserts an IFLO_MALLOC pseudo-op into the trace.
             alloc_label = "ALLOC_%d" % alloc_ctr.next()
+            alloc_var = "VAR_" + alloc_label
             trace[remove_start:remove_end] = [
                 (None, TraceEntry(('IFLO_TB_HEAD_EIP',  [alloc_label]))),
                 (None, TraceEntry(('IFLO_ADDL_ESP_IM',  [argbytes+4]))), # 4 extra for retaddr
-                (None, TraceEntry(('IFLO_MALLOC',       [alloc_label, None]))),
+                (None, TraceEntry(('IFLO_MALLOC',       [alloc_var, alloc_label, None]))),
             ]
             
             trace, tbs, tbdict, cfg = remake_trace(trace)
@@ -460,12 +467,12 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
     # Figure out what the "base" addr is
     for a in allocs:
         base = min(e.args[2] for i,e in allocs[a])
-        # This means "Set the second argument of the IFLO_MALLOC"
-        tbdict[a][0].body[2][1].args[1] = base
+        # This means "Set the third argument of the IFLO_MALLOC"
+        tbdict[a][0].body[2][1].args[2] = base
 
     for a in allocs:
         for i,insn in allocs[a]:
-            insn.set_buf_label(a)
+            insn.set_buf_label("VAR_" + a)
 
     return trace, tbs, tbdict, cfg
 
@@ -481,6 +488,9 @@ if __name__ == "__main__":
     tbdict = make_tbdict(tbs)
     cfg = make_cfg(tbs)
 
+    embedshell = IPython.Shell.IPShellEmbed(argv=[])
+    embedshell()
+
     # Replace mallocs with summary functions, and find memops
     # we will need to have special handling for.
     trace, tbs, tbdict, cfg = detect_mallocs(trace, tbs, tbdict, cfg)
@@ -488,9 +498,18 @@ if __name__ == "__main__":
     # Perform slicing and control dependency analysis
     trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)
 
-    embedshell = IPython.Shell.IPShellEmbed(argv=[])
-    embedshell()
+    # Make sure if an insn defines output, it adds it to the output
+    # space for every instance of that insn
+    for t in tbs:
+        if any(insn.is_output for i,insn in t.body):
+            for i,x in t.body:
+                if x.is_output: break
+            off = i - t.start()
+            label = x.label
+            for tb in tbdict[t.label]:
+                tb.body[off][1].set_output_label(label)
 
+    # It's translation time!
     transdict = {}
     for i in range(len(tbs)-1):
         transdict[tbs[i].label] = "raise Goto(%s)" % tbs[i+1]._label_str()
