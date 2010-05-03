@@ -19,8 +19,13 @@ op_handler = {
     "IFLO_OPS_MEM_LDL_T0_A0": lambda args: "T0 = ULInt32(mem.read(A0,4))",
     "IFLO_OPS_MEM_LDL_T1_A0": lambda args: "T1 = ULInt32(mem.read(A0,4))",
     "IFLO_OPS_MEM_LDUW_T0_A0": lambda args: "T0 = ULInt16(mem.read(A0,2))",
+    "IFLO_OPS_MEM_LDUB_T0_A0": lambda args: "T0 = ULInt8(mem.read(A0,1))",
+    "IFLO_OPS_MEM_LDSB_T0_A0": lambda args: "T0 = SLInt8(mem.read(A0,1))",
     "IFLO_OPS_MEM_STL_T0_A0": lambda args: "mem.write(A0,T0,'L')",
+    "IFLO_OPS_MEM_STL_T1_A0": lambda args: "mem.write(A0,T1,'L')",
     "IFLO_OPS_MEM_STW_T0_A0": lambda args: "mem.write(A0,T0,'H')",
+    "IFLO_OPS_MEM_STW_T1_A0": lambda args: "mem.write(A0,T1,'H')",
+    "IFLO_OPS_MEM_STB_T0_A0": lambda args: "mem.write(A0,T0,'B')",
     "IFLO_OPREG_TEMPL_MOVL_A0_R": lambda args: "A0 = %s" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVL_R_A0": lambda args: "%s = A0" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVW_R_T0": lambda args: "%s = T0 & 0xFFFF" % qemu_regs_r[args[0]],
@@ -43,9 +48,7 @@ op_handler = {
     "IFLO_OPS_TEMPLATE_SHL_T0_T1": lambda args: "T0 = T0 << T1",
     "IFLO_OPS_TEMPLATE_SHL_T0_T1_CC": lambda args: "T0 = T0 << T1",
     "IFLO_OPS_TEMPLATE_SHR_T0_T1_CC": lambda args: "T0 = T0 >> T1",
-    "IFLO_OPS_MEM_LDUB_T0_A0": lambda args: "T0 = ULInt8(mem.read(A0,1))",
     "IFLO_OPREG_TEMPL_MOVB_R_T0": lambda args: "%s = T0 & 0xFF" % qemu_regs_r[args[0]],
-    "IFLO_OPS_MEM_STB_T0_A0": lambda args: "mem.write(A0,T0,'B')",
     "IFLO_TB_HEAD_EIP": lambda args: "",
     "IFLO_GOTO_TB0": lambda args: "",
     "IFLO_SET_INPUT": lambda args: "%s = inputs[%d]" % (args[0], args[1]),
@@ -61,6 +64,7 @@ op_handler = {
     "IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE": lambda args: "T0 = T0 >> T1\nmem.write(A0,T0,'%s')" % width[args[0]],
     "IFLO_MOVZWL_T0_T0": lambda args: "T0 = UInt(UShort(T0))",
     "IFLO_MOVZBL_T0_T0": lambda args: "T0 = UInt(Byte(T0))",
+    "IFLO_MOVSBL_T0_T0": lambda args: "T0 = UInt(SByte(T0))",
     "IFLO_OPS_TEMPLATE_SETZ_T0_SUB": lambda args: "T0 = UInt(%#x)" % args[1],
     "IFLO_OPS_TEMPLATE_SBB_T0_T1_CC": lambda args: "T0 = T0 - T1",
     "IFLO_CMPXCHG8B_PART1": lambda args: "mem.write(A0, ECX << 32 | EBX, 'Q')",
@@ -77,11 +81,18 @@ op_handler = {
     "IFLO_ADDL_A0_SEG": lambda args: "A0 += %s" % fieldname(field_from_env(args[1])),
     "IFLO_MOVL_SEG_T0": lambda args: "%s = load_seg(mem, T0, GDT, LDT)" % qemu_segs_r[args[0]],
 
-    "IFLO_MALLOC": lambda args: "EAX = UInt(%#x) ; %s = bufs.add('%s', %#x)" % (args[2], args[0], args[1], args[2]),
+    "IFLO_MALLOC": lambda args: "EAX = bufs.alloc(ARG)",
+    "IFLO_GET_ARG": lambda args: "ARG = ULInt32(mem.read(ESP + (4*%d) + 4, 4))" % args[0],
+    "IFLO_CALL": lambda args: "T0 = 0; raise Goto('%s')" % args[0],
 
     "IFLO_OPS_TEMPLATE_JNZ_ECX": lambda args: "ECX != 0",
     "IFLO_OPS_TEMPLATE_JZ_SUB": lambda args: "CC_DST == 0",
-    "IFLO_OPS_TEMPLATE_JL_SUB": lambda args: "CC_DST + CC_SRC < CC_SRC",
+    "IFLO_OPS_TEMPLATE_JL_SUB": lambda args: "CC_DST + CC_SRC < CC_SRC",    # Signed? Er...
+    "IFLO_OPS_TEMPLATE_JB_SUB": lambda args: "CC_DST + CC_SRC < CC_SRC",    # FIXME
+    "IFLO_OPS_TEMPLATE_JBE_SUB": lambda args: "CC_DST + CC_SRC <= CC_SRC",
+
+    "IFLO_SYSENTER": lambda args: "ESP = sysenter_cs",
+    "IFLO_SYSEXIT": lambda args: "ESP = ECX; raise Goto(int(EDX))",
 }
 
 outop_handler = {
@@ -90,11 +101,13 @@ outop_handler = {
 }
 
 bufop_handler = {
-    "IFLO_OPS_MEM_STL_T0_A0":  lambda args, label: "bufs.write(%s,A0,T0,'L')" % label,
-    "IFLO_OPS_MEM_STB_T0_A0":  lambda args, label: "bufs.write(%s,A0,T0,'B')" % label,
-    "IFLO_OPS_MEM_LDL_T0_A0":  lambda args, label: "T0 = ULInt32(bufs.read(%s,A0,4))" % label,
-    "IFLO_OPS_MEM_LDL_T1_A0":  lambda args, label: "T1 = ULInt32(bufs.read(%s,A0,4))" % label,
-    "IFLO_OPS_MEM_LDUB_T0_A0": lambda args, label: "T0 = ULInt8(bufs.read(%s,A0,1))" % label,
+    "IFLO_OPS_MEM_STL_T0_A0":  lambda args: "bufs.write(A0,T0,'L')",
+    "IFLO_OPS_MEM_STW_T0_A0":  lambda args: "bufs.write(A0,T0,'H')",
+    "IFLO_OPS_MEM_STB_T0_A0":  lambda args: "bufs.write(A0,T0,'B')",
+    "IFLO_OPS_MEM_LDL_T0_A0":  lambda args: "T0 = ULInt32(bufs.read(A0,4))",
+    "IFLO_OPS_MEM_LDL_T1_A0":  lambda args: "T1 = ULInt32(bufs.read(A0,4))",
+    "IFLO_OPS_MEM_LDUB_T0_A0": lambda args: "T0 = ULInt8(bufs.read(A0,1))",
+    "IFLO_OPS_MEM_LDUW_T0_A0": lambda args: "T0 = ULInt16(bufs.read(A0,2))",
 }
 
 def fieldname(s):
@@ -107,9 +120,9 @@ def fieldname(s):
     else:
         raise ValueError("Invalid register class: %s" % kind)
 
-def uop_to_py_buf(insn, label):
+def uop_to_py_buf(insn):
     try:
-        return bufop_handler[insn.op](insn.args, label)
+        return bufop_handler[insn.op](insn.args)
     except KeyError, e:
         print "Key not found:",e
         print "No dynbuf handler defined for %s" % insn.op

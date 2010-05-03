@@ -8,7 +8,11 @@ import time, datetime
 
 import flow
 import networkx
+import pydasm
 
+from fixedint import UInt
+from summary_functions import malloc_summary, null_summary
+from predict_insn import get_next_from_trace, x86_branches
 from qemu_trace import get_insns, TraceEntry
 from translate_uop import uop_to_py,uop_to_py_out
 from qemu_data import defines,uses,is_jcc,is_dynjump,is_memop,memrange
@@ -17,12 +21,6 @@ from optparse import OptionParser
 from gzip import GzipFile
 
 import sys,csv
-
-# Domain knowledge: a list of memory allocation functions
-# Format: address, number of argument bytes, name
-mallocs = [
-    (0x7c9105d4, 12, 'RtlAllocateHeap'),
-]
 
 # Some small utility functions
 
@@ -111,25 +109,76 @@ def multislice(insns, worklist, output_track=False, debug=False):
     if debug: print "Working set at end:", work
     #return slice
 
-def linked_vars(insns, sink, source, start=-1, end=0, debug=False):
+def linked_vars(insns, sink, source, start=-1, end=0, debug=True):
     if debug: print "Linking vars sink: %s source: %s between trace positions %d and %d" % (sink, source, end, start)
+    return m_linked_vars(insns, [(start, sink)], [(end, source)], debug=debug)
+
+def m_linked_vars(insns, sinks, sources, debug=False):
+    # We make copies because we're going to be modifying
+    # the lists and callers find it disconcerting when their
+    # local variables change without warning.
+    snks = sinks[:]
+    srcs = sources[:]
+
+    snks.sort()
+    srcs.sort()
+
+    # This is not just optimization; it's necessary for correctness
+    # due to the way we process the sinks and sources sequentially.
+    # The property we're enforcing here is:
+    #  * A source cannot influence a sink that precedes it in the trace.
+    # So we must exclude any sink that occurs before the first source,
+    # and any source that occurs after that last sink.
+    snks = filter(lambda x: x >= srcs[0],  snks)
+    srcs = filter(lambda x: x <= snks[-1], srcs)
+
+    start, sink_bufs = snks.pop()
+    end, _ = srcs[0]
+
+    if snks:
+        next_sink, next_sink_bufs = snks.pop()
+    else:
+        next_sink = -1
+    
+    if srcs:
+        next_src, next_src_bufs = srcs.pop()
+    else:
+        next_src = -1
+
     if start == -1: start = len(insns) - 1
 
-    work = set([sink])
+    if debug: print "Will examine trace from %d-%d" % (end,start)
+    if debug: print "Looking for source at position %d" % next_src
+    work = set([sink_bufs])
     for i,insn in reversed(insns[end:start+1]):
+        if i == next_sink:
+            work = work | set([next_sink_bufs])
+            if snks:
+                next_sink, next_sink_bufs = snks.pop()
+            else:
+                next_sink = -1
+        
         defs_set = set(defines(insn))
         uses_set = set(uses(insn))
         # For this one special case we DON'T want to track
         # the derivation of the address of a buffer.
         if is_memop(insn):
             uses_set -= set(["A0"])
-
+         
         if defs_set & work:
             work = (work - defs_set) | uses_set
-            if debug: print i,repr(insn)
+            #if debug: print i,repr(insn)
 
-    if debug: print "Working set at end:", work
-    return source in work
+        if i == next_src:
+            if debug: print "Rejecting source at %d" % i
+            if next_src_bufs in work: return True
+            if srcs:
+                next_src, next_src_bufs = srcs.pop()
+            else:
+                next_src = -1
+            if debug: print "Changing to next source at position %d" % next_src
+
+    return False
 
 class TB(object):
     """Represents a Translation Block"""
@@ -149,7 +198,7 @@ class TB(object):
     def has_jcc(self):
         return any(is_jcc(ins.op) for _, ins in self.body)
     def get_branch(self):
-        return [ins for _,ins in self.body if is_jcc(ins.op)][0]
+        return [ins for _,ins in self.body if is_jcc(ins.op) or is_dynjump(ins.op)][0]
     def _label_str(self):
         return hex(self.label) if isinstance(self.label,int) else "'%s'" % self.label
     def __str__(self):
@@ -157,6 +206,8 @@ class TB(object):
         for _,insn in self.body:
             s += "\n%s%s" % (" * " if insn.in_slice else "   ", repr(insn))
         return s
+    def __iter__(self):
+        return self.body.__iter__()
     def __repr__(self):
         return ("[TB @%s%s]" % (self._label_str(), " *" if self.has_slice() else ""))
 
@@ -272,6 +323,12 @@ def find_retaddr(calltb):
         if insn.op.startswith('IFLO_OPS_MEM_STL'):
             return insn.args[-1]
 
+def get_callsite_esp(calltb):
+    for i, insn in calltb.body[::-1]:
+        if insn.op.startswith('IFLO_OPS_MEM_STL'):
+            phys, virt = insn.args[1:3]
+            return (phys, virt)
+
 # All this junk is for the apparently simple task of trying to
 # translate a translation block (TB) into a Python code block.
 
@@ -297,6 +354,22 @@ def get_not_taken_tb(tbs):
     return [t for t in tbs if t.has_jcc() and not t.get_branch().args[-1]][0]
 
 def get_branch_target(tbs):
+    junk = set(['IFLO_EXIT_TB', 'IFLO_GOTO_TB0', 'IFLO_GOTO_TB1',
+                'IFLO_MOVL_T0_IM', 'IFLO_MOVL_EIP_IM', 'IFLO_TB_ID',
+                'IFLO_MOVL_T0_0'])
+    
+    taken = get_taken_tb(tbs)
+    i,_ = first(lambda x: is_jcc(x[1][1].op), enumerate(taken.body))
+    remaining = set(x.op for _,x in taken.body[i+1:])
+    if not remaining <= junk:
+        return "split"
+    elif 'IFLO_MOVL_EIP_IM' in remaining:
+        _,eipmov = first(lambda x: x[1].op == 'IFLO_MOVL_EIP_IM', taken.body)
+        return eipmov.args[0]
+    else:
+        return "unknown"
+
+def old_get_branch_target(tbs):
     for t in tbs:
         for i,(n,insn) in enumerate(t.body):
             if is_jcc(insn.op) and insn.args[-1]:
@@ -404,111 +477,182 @@ def slice_trace(trace, inbufs, outbufs):
 
     return trace, tbs, tbdict, cfg
 
+def nop_functions(trace, tbs, tbdict, cfg):
+    # No-ops. Format: address, number of argument bytes, name
+    nops = [
+        (0x7c91043d, 12, 'RtlFreeHeap'),
+        (0x8058a2da, 20, 'ExLockUserBuffer'),
+        (0x80503f0a,  4, 'ExUnlockUserBuffer'),
+        (0x8054af07,  8, 'ExFreePoolWithTag'),
+    ]
+
+    for n,argbytes,name in nops:
+        if n not in tbdict: continue
+        surgery_sites = []
+        summary_name = "NOP_%d" % argbytes
+        for tb in tbdict[n]:
+            callsite = tb.prev
+            retaddr = find_retaddr(callsite)
+            esp_p, esp_v = get_callsite_esp(callsite)
+
+            retsite = min((t for t in tbdict[retaddr]), key=lambda x: len(trace) if x.start() < callsite.end() else x.start() - callsite.end())
+
+            print "Call to %#x (%s) at callsite %s.%d returns to %s.%d" % (n, name, callsite._label_str(), callsite.start(), retsite._label_str(), retsite.start())
+            remove_start, remove_end = callsite.end() + 1, retsite.start()
+            surgery_sites.append( (remove_start, remove_end, esp_p, esp_v) )
+
+            # Alter the callsite so that it goes to the redirected function
+            for i, te in reversed(callsite.body):
+                if te.op == 'IFLO_JMP_T0':
+                    te.op = 'IFLO_CALL'
+                    te.args = [summary_name]
+                    break
+
+        surgery_sites.sort()
+        while surgery_sites:
+            st, ed, esp_p, esp_v = surgery_sites.pop()
+            summary = null_summary(summary_name, argbytes, esp_p, esp_v)
+            trace[st:ed] =  summary
+
+        trace, tbs, tbdict, cfg = remake_trace(trace)
+
+    return trace, tbs, tbdict, cfg
+
 def detect_mallocs(trace, tbs, tbdict, cfg):
+    # Domain knowledge: a list of memory allocation functions
+    # Format: address, number of argument bytes, size_param, name
+    mallocs = [
+        (0x7c9105d4, 12, 2, 'RtlAllocateHeap'),
+        (0x804e72c4, 12, 1, 'ExAllocatePoolWithQuotaTag'),
+        (0x8054b044, 12, 1, 'ExAllocatePoolWithTag'),
+    ]
+
     EAX = "REGS_0"
-    
+
+    print "Size of trace before surgery: %d" % len(trace)
+
     # Replace the mallocs with summary functions
-    alloc_ctr = counter()
     alloc_calls = defaultdict(list)
     alloc_rets = []
-    for m,argbytes,name in mallocs:
-        for idx in range(len(tbdict[m])):  # This allows us to change the tbdict during
-            tb = tbdict[m][idx]       # iteration without getting stale data.
-
-            i = tbs.index(tb)
-            callsite = tbs[i-1]
+    for m,argbytes,size_arg,name in mallocs:
+        if m not in tbdict: continue
+        summary_name = "ALLOC_%d_%d" % (argbytes, size_arg)
+        surgery_sites = []
+        for tb in tbdict[m]:
+            callsite = tb.prev
             
             # Find the return address and get its TB object
             # Note: this might fail if we have nested calls, but worry
             # about that later. The "right" solution is a shadow stack
             retaddr = find_retaddr(callsite)
-            for t in tbs[i:]:
-                if t.label == retaddr:
-                    retsite = t
-                    break
-
-            print "Call to %#x (%s) at callsite %s returns to %s" % (m, name, callsite._label_str(), retsite._label_str())
-            remove_start, remove_end = callsite.end() + 1, retsite.start()
-
-            # We replace each call to malloc with a summary function that
-            # fixes the stack (since the Windows API uses callee-cleanup)
-            # and inserts an IFLO_MALLOC pseudo-op into the trace.
-            alloc_label = "ALLOC_%d" % alloc_ctr.next()
-            alloc_var = "VAR_" + alloc_label
-            trace[remove_start:remove_end] = [
-                (None, TraceEntry(('IFLO_TB_HEAD_EIP',  [alloc_label]))),
-                (None, TraceEntry(('IFLO_ADDL_ESP_IM',  [argbytes+4]))), # 4 extra for retaddr
-                (None, TraceEntry(('IFLO_MALLOC',       [alloc_var, alloc_label, None]))),
-            ]
+            esp_p, esp_v = get_callsite_esp(callsite)
             
-            trace, tbs, tbdict, cfg = remake_trace(trace)
+            # Find the closest return site instance to this callsite
+            retsite = min((t for t in tbdict[retaddr]), key=lambda x: len(trace) if x.start() < callsite.end() else x.start() - callsite.end())
+
+            print "Call to %#x (%s) at callsite %s.%d returns to %s.%d" % (m, name, callsite._label_str(), callsite.start(), retsite._label_str(), retsite.start())
+            remove_start, remove_end = callsite.end() + 1, retsite.start()
+            surgery_sites.append( (remove_start, remove_end, esp_p, esp_v) )
+            alloc_label = summary_name
             alloc_rets.append((alloc_label,retsite.label))
             alloc_calls[(m,argbytes)].append(callsite.label)
 
+            # Alter the callsite so that it goes to the redirected function
+            for i, te in reversed(callsite.body):
+                if te.op == 'IFLO_JMP_T0':
+                    te.op = 'IFLO_CALL'
+                    te.args = [summary_name]
+                    break
+
+        # By doing them from the bottom up we can defer recalculating
+        # the indices until we're all done.
+        surgery_sites.sort()
+        while surgery_sites:
+            st, ed, esp_p, esp_v = surgery_sites.pop()
+            summary = malloc_summary(summary_name, argbytes, esp_p, esp_v, size_arg)
+            trace[st:ed] =  summary
+        trace, tbs, tbdict, cfg = remake_trace(trace)
+
     alloc_calls = dict(alloc_calls)
+
+    print "Size of trace after surgery:  %d" % len(trace)
+
+    #embedshell = IPython.Shell.IPShellEmbed(argv=[])
+    #embedshell()
 
     # Find the memory operations that will need to be redirected
     # to a dynamic buffer
-    allocs = defaultdict(list)
-    for alloc_name, site in alloc_rets:
-        tb = tbdict[site][0]
-        tbstart = tb.start()
-        for c in cfg:
-            curtb = tbdict[c][0]
-            if not curtb.start() > tb.end(): continue
-            for i,insn in curtb.body:
-                if is_memop(insn) and linked_vars(trace, "A0", EAX, start=i, end=tbstart):
-                    off = i - curtb.start()
-                    to_add = [t.body[off] for t in tbdict[c]]
-                    print "Adding memop %s in %s (%d instances)" % (repr(insn), repr(curtb), len(to_add))
-                    allocs[alloc_name] += to_add
-    allocs = dict(allocs)
+    sources = []
+    for alloc_name, site in set(alloc_rets):
+        sources += [ (t.start(), EAX)  for t in tbdict[site] ]
 
-    # Figure out what the "base" addr is
-    for a in allocs:
-        base = min(e.args[2] for i,e in allocs[a])
-        # This means "Set the third argument of the IFLO_MALLOC"
-        tbdict[a][0].body[2][1].args[2] = base
-
-    for a in allocs:
-        for i,insn in allocs[a]:
-            insn.set_buf_label("VAR_" + a)
-
+    for c in cfg:
+        curtb = tbdict[c][0]
+        if not any((curtb.start() > s for s,_ in sources)): continue
+        for i, insn in curtb:
+            if is_memop(insn):
+                off = i - curtb.start()
+                sinks = [ (t.start()+off, "A0") for t in tbdict[c] ]
+                if m_linked_vars(trace, sinks, sources):
+                    print "Adding memop %s in %s (%d instances)" % (repr(insn), repr(curtb), len(sinks))
+                    for j,_ in sinks:
+                        trace[j][1].set_buf()
+                else:
+                    pass
+                    #print "Rejecting %s in TB %s" % (repr(insn), repr(curtb))
+    
     return trace, tbs, tbdict, cfg
 
-if __name__ == "__main__":
-    parser = OptionParser()
-    options, args = parser.parse_args()
-    if not args:
-        parser.error('Trace file is required')
-    
-    infile = open(args[0])
-    trace, inbufs, outbufs = load_trace(infile)
-    tbs = make_tbs(trace)
-    tbdict = make_tbdict(tbs)
-    cfg = make_cfg(tbs)
+def filter_interrupts(trace):
+    to_remove = []
+    i = 0
+    while i < len(trace):
+        _, e = trace[i]
+        if e.op == 'IFLO_INTERRUPT' and e.args[-1] == 0:
+            j = i
+            while trace[j][1].op != 'IFLO_INSN_BYTES':
+                j -= 1
+            fault_eip = trace[j][1].args[0]
+            fault_insn = pydasm.get_instruction(trace[j][1].args[1].decode('hex'), pydasm.MODE_32)
+            next = get_next_from_trace(trace, i)
+            if e.args[1] == fault_eip:
+                start = j
+                retry_insn = True
+            else:
+                start = i
+                retry_insn = False
+            
+            if not retry_insn and fault_insn.type in x86_branches:
+                # We will want to start a new TB, so include the TB_HEAD_EIP
+                end_marker = 'IFLO_TB_HEAD_EIP'
+            else:
+                # We are either retrying a faulting instruction, or the last instruction
+                # would not have ended the TB. so we want to merge it with our pre-interrupt
+                # TB, excluding the IFLO_TB_HEAD_EIP marker.
+                end_marker = 'IFLO_INSN_BYTES'
 
-    embedshell = IPython.Shell.IPShellEmbed(argv=[])
-    embedshell()
+            print "Will remove interrupt from %#x to %s" % (fault_eip, ", ".join("%#x" % n for n in next))
+            print "Retrying instruction: %s   Starting new TB: %s" % ("YES" if retry_insn else "NO",
+                                                                      "YES" if end_marker == 'IFLO_TB_HEAD_EIP' else "NO") 
+            
+            i += 1
+            while not (trace[i][1].op == end_marker and trace[i][1].args[0] in next):
+                i += 1
+            print "Found end marker %s" % repr(trace[i][1])
+            end = i
+            
+            to_remove.append( (start, end) )
+        i += 1
 
-    # Replace mallocs with summary functions, and find memops
-    # we will need to have special handling for.
-    trace, tbs, tbdict, cfg = detect_mallocs(trace, tbs, tbdict, cfg)
+    to_remove.sort()
+    while to_remove:
+        st,ed = to_remove.pop()
+        #print "Removing %d:%d" % (st,ed)
+        del trace[st:ed]
 
-    # Perform slicing and control dependency analysis
-    trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)
+    return remake_trace(trace)
 
-    # Make sure if an insn defines output, it adds it to the output
-    # space for every instance of that insn
-    for t in tbs:
-        if any(insn.is_output for i,insn in t.body):
-            for i,x in t.body:
-                if x.is_output: break
-            off = i - t.start()
-            label = x.label
-            for tb in tbdict[t.label]:
-                tb.body[off][1].set_output_label(label)
-
+def translate_code(trace, tbs, tbdict, cfg):
     # It's translation time!
     transdict = {}
     for i in range(len(tbs)-1):
@@ -558,8 +702,7 @@ if __name__ == "__main__":
             if taken == "unknown":
                 # Pick the successor to any TB where the jump is taken
                 tb = get_taken_tb(cur)
-                i = tbs.index(tb)
-                taken = tbs[i+1]._label_str()
+                taken = tb.next._label_str()
             elif taken == "split":
                 gen_new_tb = True
                 tb = get_taken_tb(cur)
@@ -572,27 +715,83 @@ if __name__ == "__main__":
 
             # Find the fall-through successor.
             tb = get_not_taken_tb(cur)
-            i = tbs.index(tb)
-            succ = tbs[i+1]._label_str()
+            succ = tb.next._label_str()
 
-            s = ''
-            for i,ins in whole_tb.body:
-                if not ins.in_slice: continue
-                if is_jcc(ins.op):
-                    s += "if (%s): raise Goto(%s)\n" % (ins, taken)
-                else:
-                    s += str(ins) + "\n"
-            s += "raise Goto(%s)" % succ
-            transdict[cur[0].label] = s
-            
-            if gen_new_tb:
+            if taken == "split":
+                s = ''
+                for i,ins in whole_tb.body:
+                    if not ins.in_slice: continue
+                    if is_jcc(ins.op):
+                        s += "if (%s): raise Goto(%s)\n" % (ins, taken)
+                    else:
+                        s += str(ins) + "\n"
+                s += "raise Goto(%s)" % succ
+                transdict[cur[0].label] = s
+                
                 tak = get_taken_tb(cur)
-                i = tbs.index(tak)
-                succ = tbs[i+1]._label_str()
+                succ = tak.next._label_str()
                 print "Translating [TB @%s]" % taken
                 s = "\n".join("%s" % r for _,r in remainder if r.in_slice)
                 s += "\n" + "raise Goto(%s)" % succ
                 transdict[eval(taken)] = s
+            else:
+                # Nothing hinky going on here
+                s = []
+                for insns in zip(*[c.body for c in cur]):
+                    if any( insn.in_slice for _,insn in insns ):
+                        insn = insns[0][1]
+                        if is_jcc(insn.op):
+                            s.append("if (%s): raise Goto(%s)\n" % (insn, taken))
+                        else:
+                            s.append(str(insn))
+                s.append("raise Goto(%s)" % succ)
+                transdict[cur[0].label] = "\n".join(s)
+    
+    return transdict
+
+if __name__ == "__main__":
+    parser = OptionParser()
+    options, args = parser.parse_args()
+    if not args:
+        parser.error('Trace file is required')
+    
+    infile = open(args[0])
+    trace, inbufs, outbufs = load_trace(infile)
+    tbs = make_tbs(trace)
+    tbdict = make_tbdict(tbs)
+    cfg = make_cfg(tbs)
+
+    # Replace mallocs with summary functions, and find memops
+    # we will need to have special handling for.
+    trace, tbs, tbdict, cfg = filter_interrupts(trace)
+    trace, tbs, tbdict, cfg = nop_functions(trace, tbs, tbdict, cfg)
+    
+    # This is taking a while, let's time it
+    start_ts = time.time()
+    trace, tbs, tbdict, cfg = detect_mallocs(trace, tbs, tbdict, cfg)
+    end_ts = time.time()
+    elapsed = datetime.timedelta(seconds = (end_ts - start_ts ))
+    print "Finished dynamic memory fixups in", elapsed
+
+    # Perform slicing and control dependency analysis
+    trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)
+
+    embedshell = IPython.Shell.IPShellEmbed(argv=[])
+    embedshell()
+
+    # Make sure if an insn defines output, it adds it to the output
+    # space for every instance of that insn
+    for t in tbs:
+        if any(insn.is_output for i,insn in t.body):
+            for i,x in t.body:
+                if x.is_output: break
+            off = i - t.start()
+            label = x.label
+            for tb in tbdict[t.label]:
+                tb.body[off][1].set_output_label(label)
+
+    # Translate it
+    transdict = translate_code(trace, tbs, tbdict, cfg)
 
     fname, ext = args[0].rsplit('.',1)
     fname = fname + '.pkl'
@@ -600,4 +799,3 @@ if __name__ == "__main__":
     f = open(fname,'w')
     pickle.dump(transdict, f)
     f.close()
-

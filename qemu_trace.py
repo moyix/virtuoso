@@ -21,9 +21,8 @@ class TraceEntry(object):
         self.label = label
         self.is_output = True
 
-    def set_buf_label(self, label):
+    def set_buf(self):
         """Mark this instruction as dealing with a dynamically alloc'd buffer"""
-        self.buflabel = label
         self.is_dynbuf = True
 
     def mark(self):
@@ -36,7 +35,7 @@ class TraceEntry(object):
             if self.is_output:
                 s += "\n" + uop_to_py_out(self, self.label)
         else:
-            s = uop_to_py_buf(self, self.buflabel) + " # %s" % repr(self)
+            s = uop_to_py_buf(self) + " # %s" % repr(self)
         return s
     def __repr__(self):
         return "%s(%s)" % (self.op, ",".join(a if isinstance(a,str) else hex(a) for a in self.args))
@@ -48,6 +47,7 @@ class TraceEntry(object):
         return hash(self.op) ^ hash(self.args)
 
 arg_handler = {
+    "str": lambda x: x,
     "ui64": lambda x: int(x,16),
     "ui32": lambda x: int(x,16),
     "ui16": lambda x: int(x,16),

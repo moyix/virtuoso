@@ -302,13 +302,16 @@ defines_uses = {
     ],
 
     # Memory allocation pseudo-op
-    'IFLO_MALLOC': OBLIT("REGS_%d" % qemu_regs["EAX"]),
-    
-    'IFLO_OBLIT_R': [
-        lambda args: ["REGS_%d" % args[0]],
-        lambda args: [],
+    'IFLO_MALLOC': [
+        lambda args: ["REGS_%d" % qemu_regs["EAX"]],
+        lambda args: ["ARG"],
     ],
-
+    'IFLO_GET_ARG': [
+        lambda args: ["ARG"],
+        lambda args: ["REGS_%d" % qemu_regs["ESP"]] + memrange(args[1],4),
+    ],
+    'IFLO_CALL': IGNORE,
+    
     # Evil conditionals. We hates them.    
     # Note: if you add one here, also add it to the list
     # in is_jcc()
@@ -332,7 +335,14 @@ defines_uses = {
         lambda args: [],
         lambda args: ['CC_SRC', 'CC_DST'],
     ],
-
+    'IFLO_JNZ_T0_LABEL': [
+        lambda args: [],
+        lambda args: ['T0'],
+    ],
+    'IFLO_JZ_T0_LABEL': [
+        lambda args: [],
+        lambda args: ['T0'],
+    ],
 
     # CC-related ops
     'IFLO_CMPL_T0_T1_CC': [
@@ -373,6 +383,7 @@ defines_uses = {
     'IFLO_UID_CHANGE': IGNORE,
     'IFLO_SYSEXIT_RET': IGNORE,
     'IFLO_IRET_PROTECTED': IGNORE,
+    'IFLO_INTERRUPT': IGNORE,
     'IFLO_LABEL_INPUT': IGNORE,
     'IFLO_LABEL_OUTPUT': IGNORE,
     'IFLO_MOVL_EIP_IM': IGNORE,
@@ -383,11 +394,11 @@ defines_uses = {
     'IFLO_INSN_DIS': IGNORE,
     'IFLO_TB_ID': IGNORE,
     'IFLO_CPUID': IGNORE,
-    'IFLO_JNZ_T0_LABEL': IGNORE,
     'IFLO_STI': IGNORE,
     'IFLO_CLI': IGNORE,
     'IFLO_SET_INHIBIT_IRQ': IGNORE,
     'IFLO_RESET_INHIBIT_IRQ': IGNORE,
+    'IFLO_INSN_BYTES': IGNORE,
 }
 
 def is_jcc(op):
@@ -400,11 +411,15 @@ def is_jcc(op):
         'IFLO_OPS_TEMPLATE_JS_SUB',
         'IFLO_OPS_TEMPLATE_JZ_ECX',
         'IFLO_OPS_TEMPLATE_JZ_SUB',
+        'IFLO_JNZ_T0_LABEL',
+        'IFLO_JZ_T0_LABEL',
     ]
 
 def is_dynjump(op):
     return op in [
         'IFLO_JMP_T0',
+        'IFLO_CALL',
+        'IFLO_SYSEXIT',
     ]
 
 def is_memop(insn):

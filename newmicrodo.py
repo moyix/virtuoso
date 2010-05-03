@@ -46,6 +46,10 @@ def ULInt8(buf):
     assert len(buf) == 1
     return UInt(unpack("<B", buf)[0])
 
+def SLInt8(buf):
+    assert len(buf) == 1
+    return UInt(unpack("<b", buf)[0])
+
 class OutSpace:
     def __init__(self):
         self.scratch = defaultdict(dict)
@@ -76,33 +80,32 @@ class OutSpace:
 
 class BufSpace:
     def __init__(self):
-        self.bufs = {}
+        self.heap = {}
         self.debug = False
-        self.current_label = 0
+        self.highest = 0x1000
 
-    def add(self, label, addr):
-        label = "%s_%d" % (label, self.current_label)
-        self.bufs[label] = {}
-        self.bufs[label]['BASE'] = addr
-        self.current_label += 1
-        return label
+    def alloc(self, size):
+        ptr = self.highest
+        self.highest += int(size)
+        if self.debug: print "Allocating %#x bytes at %#x" % (size, ptr)
+        return UInt(ptr)
 
-    def read(self, label, addr, length):
-        if self.debug: print "DEBUG: Reading %d bytes at %#x (malloc buffer %s)" % (length, addr, label)
+    def read(self, addr, length):
+        if self.debug: print "DEBUG: Reading %d bytes at %#x (malloc)" % (length, addr)
         data = []
-        space = self.bufs[label]
+        space = self.heap
 
         try:
             for i in range(addr,addr+length):
                 data.append(space[i])
         except KeyError, e:
-            raise ValueError("Read error in dynamic buffer %s, address %#x" % (label, addr))
+            raise ValueError("Read error in dynamic buffer, address %#x" % addr)
         if self.debug: print "DEBUG: Read", "".join(data).encode('hex')
         return "".join(data)
 
-    def write(self, label, addr, val, pack_char):
-        if self.debug: print "DEBUG: Writing %#x to address %#x (malloc buffer %s)" % (val, addr, label)
-        space = self.bufs[label]
+    def write(self, addr, val, pack_char):
+        if self.debug: print "DEBUG: Writing %#x to address %#x (malloc)" % (val, addr)
+        space = self.heap
 
         buf = pack("<" + pack_char, int(val))
         for (i,c) in enumerate(buf):
@@ -122,10 +125,9 @@ class BufSpace:
         return data
 
     def dump(self):
-        for label in self.bufs:
-            print ">>> %s <<<" % label
-            for start, buf in self.get_scratch(self.bufs[label]).items():
-                print hex(start),":",buf.encode('hex')
+        print ">>> HEAP <<<"
+        for start, buf in self.get_scratch(self.heap).items():
+            print hex(start),":",buf.encode('hex')
 
 
 class COWSpace:
