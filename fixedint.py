@@ -62,9 +62,15 @@ class _Integer(object):
       return cmp(long(self), other)
    # Bit-bashing
    def __lshift__(self, other):
-      return type(self)(self._value << other)
+      if isinstance(other, type(self)):
+          return type(self)(self._value << other._value)
+      else:
+          return type(self)(self._value << self.__class__(other)._value)
    def __rshift__(self, other):
-      return type(self)(self._value >> other)
+      if isinstance(other, type(self)):
+          return type(self)(self._value >> other._value)
+      else:
+          return type(self)(self._value >> self.__class__(other)._value)
    def __invert__(self):
       return type(self)(~self._value)
    def __and__(self, other):
