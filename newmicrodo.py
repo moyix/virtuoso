@@ -50,6 +50,557 @@ def SLInt8(buf):
     assert len(buf) == 1
     return UInt(unpack("<b", buf)[0])
 
+# Functions for condition code calculations
+
+CC_C = 0x0001
+CC_P = 0x0004
+CC_A = 0x0010
+CC_Z = 0x0040
+CC_S = 0x0080
+CC_O = 0x0800
+
+parity_table = [
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+]
+
+def lshift(x,n):
+    if (n >= 0):
+        return (x << n)
+    else:
+        return (x >> -n)
+
+def compute_c_adcb(CC_SRC, CC_DST):
+    src1 = Int(CC_SRC)
+    cf = (Int(Byte(CC_DST)) <= Int(Byte(src1)))
+    return cf
+
+def compute_c_adcl(CC_SRC, CC_DST):
+    src1 = Int(CC_SRC)
+    cf = (CC_DST <= UInt(src1))
+    return cf
+
+def compute_c_adcw(CC_SRC, CC_DST):
+    src1 = Int(CC_SRC)
+    cf = (Int(Ushort(CC_DST)) <= Int(Ushort(src1)))
+    return cf
+
+def compute_c_addb(CC_SRC, CC_DST):
+    src1 = Int(CC_SRC)
+    cf = (Int(Byte(CC_DST)) < Int(Byte(src1)))
+    return cf
+
+def compute_c_addl(CC_SRC, CC_DST):
+    src1 = Int(CC_SRC)
+    cf = (CC_DST < UInt(src1))
+    return cf
+
+def compute_c_addw(CC_SRC, CC_DST):
+    src1 = Int(CC_SRC)
+    cf = (Int(Ushort(CC_DST)) < Int(Ushort(src1)))
+    return cf
+
+def compute_c_eflags(CC_SRC, CC_DST):
+    return Int((CC_SRC & UInt(1)))
+
+def compute_c_incl(CC_SRC, CC_DST):
+    return Int(CC_SRC)
+
+def compute_c_logicb(CC_SRC, CC_DST):
+    return 0
+
+def compute_c_logicl(CC_SRC, CC_DST):
+    return 0
+
+def compute_c_logicw(CC_SRC, CC_DST):
+    return 0
+
+def compute_c_mull(CC_SRC, CC_DST):
+    cf = (CC_SRC != UInt(0))
+    return cf
+
+def compute_c_sarl(CC_SRC, CC_DST):
+    return Int((CC_SRC & UInt(1)))
+
+def compute_c_sbbb(CC_SRC, CC_DST):
+    src1 = Int(((CC_DST + CC_SRC) + UInt(1)))
+    src2 = Int(CC_SRC)
+    cf = (Int(Byte(src1)) <= Int(Byte(src2)))
+    return cf
+
+def compute_c_sbbl(CC_SRC, CC_DST):
+    src1 = Int(((CC_DST + CC_SRC) + UInt(1)))
+    src2 = Int(CC_SRC)
+    cf = (UInt(src1) <= UInt(src2))
+    return cf
+
+def compute_c_sbbw(CC_SRC, CC_DST):
+    src1 = Int(((CC_DST + CC_SRC) + UInt(1)))
+    src2 = Int(CC_SRC)
+    cf = (Int(Ushort(src1)) <= Int(Ushort(src2)))
+    return cf
+
+def compute_c_shlb(CC_SRC, CC_DST):
+    return Int(((CC_SRC >> ((1 << 3) - 1)) & UInt(1)))
+
+def compute_c_shll(CC_SRC, CC_DST):
+    return Int(((CC_SRC >> ((1 << 5) - 1)) & UInt(1)))
+
+def compute_c_shlw(CC_SRC, CC_DST):
+    return Int(((CC_SRC >> ((1 << 4) - 1)) & UInt(1)))
+
+def compute_c_subb(CC_SRC, CC_DST):
+    src1 = Int((CC_DST + CC_SRC))
+    src2 = Int(CC_SRC)
+    cf = (Int(Byte(src1)) < Int(Byte(src2)))
+    return cf
+
+def compute_c_subl(CC_SRC, CC_DST):
+    src1 = Int((CC_DST + CC_SRC))
+    src2 = Int(CC_SRC)
+    cf = (UInt(src1) < UInt(src2))
+    return cf
+
+def compute_c_subw(CC_SRC, CC_DST):
+    src1 = Int((CC_DST + CC_SRC))
+    src2 = Int(CC_SRC)
+    cf = (Int(Ushort(src1)) < Int(Ushort(src2)))
+    return cf
+
+def compute_all_adcb(CC_SRC, CC_DST):
+    src1 = Int(CC_SRC)
+    src2 = Int(((CC_DST - CC_SRC) - UInt(1)))
+    cf = (Int(Byte(CC_DST)) <= Int(Byte(src1)))
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((Int(Byte(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 3));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(UInt((src1 ^ src2) ^ -1) & (UInt(src1) ^ CC_DST)), 12 - (1 << 3));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_adcl(CC_SRC, CC_DST):
+    src1 = Int(CC_SRC)
+    src2 = Int(((CC_DST - CC_SRC) - UInt(1)))
+    cf = (CC_DST <= UInt(src1))
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((CC_DST == UInt(0)) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 5));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(UInt((src1 ^ src2) ^ -1) & (UInt(src1) ^ CC_DST)), 12 - (1 << 5));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_adcw(CC_SRC, CC_DST):
+    src1 = Int(CC_SRC)
+    src2 = Int(((CC_DST - CC_SRC) - UInt(1)))
+    cf = (Int(Ushort(CC_DST)) <= Int(Ushort(src1)))
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 4));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(UInt((src1 ^ src2) ^ -1) & (UInt(src1) ^ CC_DST)), 12 - (1 << 4));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_addb(CC_SRC, CC_DST):
+    src1 = Int(CC_SRC)
+    src2 = Int((CC_DST - CC_SRC))
+    cf = (Int(Byte(CC_DST)) < Int(Byte(src1)))
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((Int(Byte(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 3));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(UInt((src1 ^ src2) ^ -1) & (UInt(src1) ^ CC_DST)), 12 - (1 << 3));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_addl(CC_SRC, CC_DST):
+    src1 = Int(CC_SRC)
+    src2 = Int((CC_DST - CC_SRC))
+    cf = (CC_DST < UInt(src1))
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((CC_DST == UInt(0)) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 5));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(UInt((src1 ^ src2) ^ -1) & (UInt(src1) ^ CC_DST)), 12 - (1 << 5));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_addw(CC_SRC, CC_DST):
+    src1 = Int(CC_SRC)
+    src2 = Int((CC_DST - CC_SRC))
+    cf = (Int(Ushort(CC_DST)) < Int(Ushort(src1)))
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 4));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(UInt((src1 ^ src2) ^ -1) & (UInt(src1) ^ CC_DST)), 12 - (1 << 4));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_decb(CC_SRC, CC_DST):
+    src1 = Int((CC_DST + UInt(1)))
+    src2 = 1
+    cf = Int(CC_SRC)
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((Int(Byte(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 3));
+    sf = (tmp & 128)
+    of = (((CC_DST & UInt(255)) == ((UInt(1) << ((1 << 3) - 1)) - UInt(1))) << 11)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_decl(CC_SRC, CC_DST):
+    src1 = Int((CC_DST + UInt(1)))
+    src2 = 1
+    cf = Int(CC_SRC)
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((CC_DST == UInt(0)) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 5));
+    sf = (tmp & 128)
+    of = (((CC_DST & UInt(4294967295)) == ((UInt(1) << ((1 << 5) - 1)) - UInt(1))) << 11)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_decw(CC_SRC, CC_DST):
+    src1 = Int((CC_DST + UInt(1)))
+    src2 = 1
+    cf = Int(CC_SRC)
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 4));
+    sf = (tmp & 128)
+    of = (((CC_DST & UInt(65535)) == ((UInt(1) << ((1 << 4) - 1)) - UInt(1))) << 11)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_eflags(CC_SRC, CC_DST):
+    return Int(CC_SRC)
+
+def compute_all_incb(CC_SRC, CC_DST):
+    src1 = Int((CC_DST - UInt(1)))
+    src2 = 1
+    cf = Int(CC_SRC)
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((Int(Byte(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 3));
+    sf = (tmp & 128)
+    of = (((CC_DST & UInt(255)) == (UInt(1) << ((1 << 3) - 1))) << 11)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_incl(CC_SRC, CC_DST):
+    src1 = Int((CC_DST - UInt(1)))
+    src2 = 1
+    cf = Int(CC_SRC)
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((CC_DST == UInt(0)) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 5));
+    sf = (tmp & 128)
+    of = (((CC_DST & UInt(4294967295)) == (UInt(1) << ((1 << 5) - 1))) << 11)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_incw(CC_SRC, CC_DST):
+    src1 = Int((CC_DST - UInt(1)))
+    src2 = 1
+    cf = Int(CC_SRC)
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 4));
+    sf = (tmp & 128)
+    of = (((CC_DST & UInt(65535)) == (UInt(1) << ((1 << 4) - 1))) << 11)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_logicb(CC_SRC, CC_DST):
+    cf = 0
+    pf = Int(parity_table[int(CC_DST)])
+    af = 0
+    zf = ((Int(Byte(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 3));
+    sf = (tmp & 128)
+    of = 0
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_logicl(CC_SRC, CC_DST):
+    cf = 0
+    pf = Int(parity_table[int(CC_DST)])
+    af = 0
+    zf = ((CC_DST == UInt(0)) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 5));
+    sf = (tmp & 128)
+    of = 0
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_logicw(CC_SRC, CC_DST):
+    cf = 0
+    pf = Int(parity_table[int(CC_DST)])
+    af = 0
+    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 4));
+    sf = (tmp & 128)
+    of = 0
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_mulb(CC_SRC, CC_DST):
+    cf = (CC_SRC != UInt(0))
+    pf = Int(parity_table[int(CC_DST)])
+    af = 0
+    zf = ((Int(Byte(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 3));
+    sf = (tmp & 128)
+    of = (cf << 11)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_mull(CC_SRC, CC_DST):
+    cf = (CC_SRC != UInt(0))
+    pf = Int(parity_table[int(CC_DST)])
+    af = 0
+    zf = ((CC_DST == UInt(0)) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 5));
+    sf = (tmp & 128)
+    of = (cf << 11)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_mulw(CC_SRC, CC_DST):
+    cf = (CC_SRC != UInt(0))
+    pf = Int(parity_table[int(CC_DST)])
+    af = 0
+    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 4));
+    sf = (tmp & 128)
+    of = (cf << 11)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_sarb(CC_SRC, CC_DST):
+    cf = Int((CC_SRC & UInt(1)))
+    pf = Int(parity_table[int(CC_DST)])
+    af = 0
+    zf = ((Int(Byte(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 3));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(CC_SRC ^ CC_DST), 12 - (1 << 3));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_sarl(CC_SRC, CC_DST):
+    cf = Int((CC_SRC & UInt(1)))
+    pf = Int(parity_table[int(CC_DST)])
+    af = 0
+    zf = ((CC_DST == UInt(0)) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 5));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(CC_SRC ^ CC_DST), 12 - (1 << 5));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_sarw(CC_SRC, CC_DST):
+    cf = Int((CC_SRC & UInt(1)))
+    pf = Int(parity_table[int(CC_DST)])
+    af = 0
+    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 4));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(CC_SRC ^ CC_DST), 12 - (1 << 4));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_sbbb(CC_SRC, CC_DST):
+    src1 = Int(((CC_DST + CC_SRC) + UInt(1)))
+    src2 = Int(CC_SRC)
+    cf = (Int(Byte(src1)) <= Int(Byte(src2)))
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((Int(Byte(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 3));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(UInt(src1 ^ src2) & (UInt(src1) ^ CC_DST)), 12 - (1 << 3));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_sbbl(CC_SRC, CC_DST):
+    src1 = Int(((CC_DST + CC_SRC) + UInt(1)))
+    src2 = Int(CC_SRC)
+    cf = (UInt(src1) <= UInt(src2))
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((CC_DST == UInt(0)) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 5));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(UInt(src1 ^ src2) & (UInt(src1) ^ CC_DST)), 12 - (1 << 5));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_sbbw(CC_SRC, CC_DST):
+    src1 = Int(((CC_DST + CC_SRC) + UInt(1)))
+    src2 = Int(CC_SRC)
+    cf = (Int(Ushort(src1)) <= Int(Ushort(src2)))
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 4));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(UInt(src1 ^ src2) & (UInt(src1) ^ CC_DST)), 12 - (1 << 4));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_shlb(CC_SRC, CC_DST):
+    cf = Int(((CC_SRC >> ((1 << 3) - 1)) & UInt(1)))
+    pf = Int(parity_table[int(CC_DST)])
+    af = 0
+    zf = ((Int(Byte(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 3));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(CC_SRC ^ CC_DST), 12 - (1 << 3));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_shll(CC_SRC, CC_DST):
+    cf = Int(((CC_SRC >> ((1 << 5) - 1)) & UInt(1)))
+    pf = Int(parity_table[int(CC_DST)])
+    af = 0
+    zf = ((CC_DST == UInt(0)) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 5));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(CC_SRC ^ CC_DST), 12 - (1 << 5));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_shlw(CC_SRC, CC_DST):
+    cf = Int(((CC_SRC >> ((1 << 4) - 1)) & UInt(1)))
+    pf = Int(parity_table[int(CC_DST)])
+    af = 0
+    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 4));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(CC_SRC ^ CC_DST), 12 - (1 << 4));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_subb(CC_SRC, CC_DST):
+    src1 = Int((CC_DST + CC_SRC))
+    src2 = Int(CC_SRC)
+    cf = (Int(Byte(src1)) < Int(Byte(src2)))
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((Int(Byte(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 3));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(UInt(src1 ^ src2) & (UInt(src1) ^ CC_DST)), 12 - (1 << 3));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_subl(CC_SRC, CC_DST):
+    src1 = Int((CC_DST + CC_SRC))
+    src2 = Int(CC_SRC)
+    cf = (UInt(src1) < UInt(src2))
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((CC_DST == UInt(0)) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 5));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(UInt(src1 ^ src2) & (UInt(src1) ^ CC_DST)), 12 - (1 << 5));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+def compute_all_subw(CC_SRC, CC_DST):
+    src1 = Int((CC_DST + CC_SRC))
+    src2 = Int(CC_SRC)
+    cf = (Int(Ushort(src1)) < Int(Ushort(src2)))
+    pf = Int(parity_table[int(CC_DST)])
+    af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
+    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    tmp = lshift(Int(CC_DST), 8 - (1 << 4));
+    sf = (tmp & 128)
+    tmp___0 = lshift(Int(UInt(src1 ^ src2) & (UInt(src1) ^ CC_DST)), 12 - (1 << 4));
+    of = (tmp___0 & 2048)
+    return (((((cf | pf) | af) | zf) | sf) | of)
+
+CCEntry = namedtuple("CCEntry", "compute_all compute_c")
+
+cc_table = dict(enumerate(
+        CCEntry(None, None), 
+        CCEntry(compute_all_eflags, compute_c_eflags), 
+        CCEntry(compute_all_mulb, compute_c_mull), 
+        CCEntry(compute_all_mulw, compute_c_mull), 
+        CCEntry(compute_all_mull, compute_c_mull), 
+        CCEntry(None, None), 
+        CCEntry(compute_all_addb, compute_c_addb), 
+        CCEntry(compute_all_addw, compute_c_addw), 
+        CCEntry(compute_all_addl, compute_c_addl), 
+        CCEntry(None, None), 
+        CCEntry(compute_all_adcb, compute_c_adcb), 
+        CCEntry(compute_all_adcw, compute_c_adcw), 
+        CCEntry(compute_all_adcl, compute_c_adcl), 
+        CCEntry(None, None), 
+        CCEntry(compute_all_subb, compute_c_subb), 
+        CCEntry(compute_all_subw, compute_c_subw), 
+        CCEntry(compute_all_subl, compute_c_subl), 
+        CCEntry(None, None), 
+        CCEntry(compute_all_sbbb, compute_c_sbbb), 
+        CCEntry(compute_all_sbbw, compute_c_sbbw), 
+        CCEntry(compute_all_sbbl, compute_c_sbbl), 
+        CCEntry(None, None), 
+        CCEntry(compute_all_logicb, compute_c_logicb), 
+        CCEntry(compute_all_logicw, compute_c_logicw), 
+        CCEntry(compute_all_logicl, compute_c_logicl), 
+        CCEntry(None, None), 
+        CCEntry(compute_all_incb, compute_c_incl), 
+        CCEntry(compute_all_incw, compute_c_incl), 
+        CCEntry(compute_all_incl, compute_c_incl), 
+        CCEntry(None, None), 
+        CCEntry(compute_all_decb, compute_c_incl), 
+        CCEntry(compute_all_decw, compute_c_incl), 
+        CCEntry(compute_all_decl, compute_c_incl), 
+        CCEntry(None, None), 
+        CCEntry(compute_all_shlb, compute_c_shlb), 
+        CCEntry(compute_all_shlw, compute_c_shlw), 
+        CCEntry(compute_all_shll, compute_c_shll), 
+        CCEntry(None, None), 
+        CCEntry(compute_all_sarb, compute_c_sarl), 
+        CCEntry(compute_all_sarw, compute_c_sarl), 
+        CCEntry(compute_all_sarl, compute_c_sarl), 
+        CCEntry(None, None)
+))
+
 class OutSpace:
     def __init__(self):
         self.scratch = defaultdict(dict)
