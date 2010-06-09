@@ -99,7 +99,7 @@ def UnsignedType(bits):
       class unsigned(_Integer):
         __doc__ = '%d-bit unsigned integer type' % bits
         def __init__(self, value):
-          self._value = _toFixedUnsigned(value, bits)
+          self._value = _toFixedUnsigned(int(value), bits)
         def __repr__(self):
           return 'fixedint.UnsignedType(%d)(%d)' % (bits, self._value)
       return unsigned
@@ -119,7 +119,7 @@ def SignedType(bits):
       class signed(_Integer):
         __doc__ = '%d-bit signed integer type' % bits
         def __init__(self, value):
-          self._value = _toFixedSigned(value, bits)
+          self._value = _toFixedSigned(int(value), bits)
         def __repr__(self):
           return 'fixedint.SignedType(%d)(%d)' % (bits, self._value)
       return signed
