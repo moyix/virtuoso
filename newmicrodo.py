@@ -17,10 +17,10 @@
 #
 
 """
-@author:       AAron Walters and Brendan Dolan-Gavitt
+@author:       Brendan Dolan-Gavitt
 @license:      GNU General Public License 2.0 or later
-@contact:      awalters@volatilesystems.com,bdolangavitt@wesleyan.edu
-@organization: Volatile Systems
+@contact:      brendandg@gatech.edu
+@organization: Georgia Institute of Technology / MIT Lincoln Laboratory
 """
 
 from fixedint import *
@@ -49,6 +49,21 @@ def ULInt8(buf):
 def SLInt8(buf):
     assert len(buf) == 1
     return UInt(unpack("<b", buf)[0])
+
+def DATA_BITS(SHIFT):
+    return (1 << (3 + SHIFT))
+
+def DATA_MASK(SHIFT):
+    return { 0: 0xff,
+             1: 0xffff,
+             2: 0xffffffff,
+             3: 0xffffffffffffffff }[SHIFT]
+
+def SHIFT1_MASK(DATA_BITS):
+    if DATA_BITS <= 32:
+        return 0x1f
+    else:
+        return 0x3f
 
 # Functions for condition code calculations
 
@@ -554,9 +569,22 @@ def compute_all_subw(CC_SRC, CC_DST):
     of = (tmp___0 & 2048)
     return (((((cf | pf) | af) | zf) | sf) | of)
 
+( CC_OP_DYNAMIC, CC_OP_EFLAGS,
+  CC_OP_MULB, CC_OP_MULW, CC_OP_MULL, CC_OP_MULQ,
+  CC_OP_ADDB, CC_OP_ADDW, CC_OP_ADDL, CC_OP_ADDQ,
+  CC_OP_ADCB, CC_OP_ADCW, CC_OP_ADCL, CC_OP_ADCQ,
+  CC_OP_SUBB, CC_OP_SUBW, CC_OP_SUBL, CC_OP_SUBQ,
+  CC_OP_SBBB, CC_OP_SBBW, CC_OP_SBBL, CC_OP_SBBQ,
+  CC_OP_LOGICB, CC_OP_LOGICW, CC_OP_LOGICL, CC_OP_LOGICQ,
+  CC_OP_INCB, CC_OP_INCW, CC_OP_INCL, CC_OP_INCQ,
+  CC_OP_DECB, CC_OP_DECW, CC_OP_DECL, CC_OP_DECQ,
+  CC_OP_SHLB, CC_OP_SHLW, CC_OP_SHLL, CC_OP_SHLQ,
+  CC_OP_SARB, CC_OP_SARW, CC_OP_SARL, CC_OP_SARQ,
+  CC_OP_NB ) = range(43)
+
 CCEntry = namedtuple("CCEntry", "compute_all compute_c")
 
-cc_table = dict(enumerate(
+cc_table = [
         CCEntry(None, None), 
         CCEntry(compute_all_eflags, compute_c_eflags), 
         CCEntry(compute_all_mulb, compute_c_mull), 
@@ -599,7 +627,7 @@ cc_table = dict(enumerate(
         CCEntry(compute_all_sarw, compute_c_sarl), 
         CCEntry(compute_all_sarl, compute_c_sarl), 
         CCEntry(None, None)
-))
+]
 
 class OutSpace:
     def __init__(self):
