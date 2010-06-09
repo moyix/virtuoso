@@ -10,6 +10,20 @@ width = {
     3: 'Q',
 }
 
+shift2fixed = {
+    0: 'Byte',
+    1: 'UShort',
+    2: 'UInt',
+    3: 'ULong',
+}
+
+shift2fixed_sign = {
+    0: 'SByte',
+    1: 'Short',
+    2: 'Int',
+    3: 'Long',
+}
+
 op_handler = {
     "IFLO_LABEL_OUTPUT": lambda args: "print mem.read(%#x,%d).encode('hex')" % (args[0],args[1]),
     "IFLO_OPREG_TEMPL_ADDL_A0_R": lambda args: "A0 += %s" % qemu_regs_r[args[0]],
@@ -46,8 +60,7 @@ op_handler = {
     "IFLO_OPS_TEMPLATE_MOVL_T0_DSHIFT": lambda args: "T0 = DF << %d" % args[0],
     "IFLO_OPS_TEMPLATE_SHR_T0_T1": lambda args: "T0 = T0 >> T1",
     "IFLO_OPS_TEMPLATE_SHL_T0_T1": lambda args: "T0 = T0 << T1",
-    "IFLO_OPS_TEMPLATE_SHL_T0_T1_CC": lambda args: "T0 = T0 << T1",
-    "IFLO_OPS_TEMPLATE_SHR_T0_T1_CC": lambda args: "T0 = T0 >> T1",
+
     "IFLO_OPREG_TEMPL_MOVB_R_T0": lambda args: "%s = T0 & 0xFF" % qemu_regs_r[args[0]],
     "IFLO_TB_HEAD_EIP": lambda args: "",
     "IFLO_GOTO_TB0": lambda args: "",
@@ -61,12 +74,11 @@ op_handler = {
     "IFLO_DECL_T0": lambda args: "T0 -= 1",
     "IFLO_MOVL_T0_0": lambda args: "T0 = UInt(0)",
     "IFLO_NEGL_T0": lambda args: "T0 *= -1",
-    "IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE": lambda args: "T0 = T0 >> T1\nmem.write(A0,T0,'%s')" % width[args[0]],
     "IFLO_MOVZWL_T0_T0": lambda args: "T0 = UInt(UShort(T0))",
     "IFLO_MOVZBL_T0_T0": lambda args: "T0 = UInt(Byte(T0))",
     "IFLO_MOVSBL_T0_T0": lambda args: "T0 = UInt(SByte(T0))",
-    "IFLO_OPS_TEMPLATE_SETZ_T0_SUB": lambda args: "T0 = UInt(%#x)" % args[1],
-    "IFLO_OPS_TEMPLATE_SBB_T0_T1_CC": lambda args: "T0 = T0 - T1",
+    "IFLO_OPS_TEMPLATE_SETZ_T0_SUB": lambda args: "eflags = cc_table[CC_OP].compute_all() ; T0 = UInt((eflags >> 6) & 1)",
+    "IFLO_OPS_TEMPLATE_SBB_T0_T1_CC": lambda args: "cf = cc_table[int(CC_OP)].compute_c() ; T0 = T0 - T1 - cf; CC_SRC = T1; CC_DST = T0; CC_OP = CC_OP_SUBB + %d + cf * 4" % args[0],
     "IFLO_CMPXCHG8B_PART1": lambda args: "mem.write(A0, ECX << 32 | EBX, 'Q')",
     "IFLO_OPS_TEMPLATE_SAR_T0_T1": lambda args: "T0 = T0 >> T1",
     "IFLO_TESTL_T0_T1_CC": lambda args: "CC_DST = T0 & T1",
@@ -75,8 +87,11 @@ op_handler = {
     "IFLO_UPDATE1_CC": lambda args: "CC_DST = T0",
     "IFLO_UPDATE2_CC": lambda args: "CC_SRC = T1; CC_DST = T0",
     "IFLO_UPDATE_NEG_CC": lambda args: "CC_SRC = -T0 ; CC_DST = T0",
+    "IFLO_UPDATE_INC_CC": lambda args: "CC_SRC = cc_table[CC_OP].compute_c(); CC_DST = T0",
+
     "IFLO_IMULL_T0_T1": lambda args: "res = int(T0)*int(T1) ; T0 = CC_DST = UInt(res) ; CC_SRC = UInt(res) != res",
     "IFLO_XORL_T0_T1": lambda args: "T0 ^= T1",
+    "IFLO_SET_CC_OP": lambda args: "CC_OP = %#x" % args[0],
 
     "IFLO_ADDL_A0_SEG": lambda args: "A0 += %s" % fieldname(field_from_env(args[1])),
     "IFLO_MOVL_SEG_T0": lambda args: "%s = load_seg(mem, T0, GDT, LDT)" % qemu_segs_r[args[0]],
@@ -86,13 +101,61 @@ op_handler = {
     "IFLO_CALL": lambda args: "T0 = 0; raise Goto('%s')" % args[0],
 
     "IFLO_OPS_TEMPLATE_JNZ_ECX": lambda args: "ECX != 0",
-    "IFLO_OPS_TEMPLATE_JZ_SUB": lambda args: "CC_DST == 0",
-    "IFLO_OPS_TEMPLATE_JL_SUB": lambda args: "CC_DST + CC_SRC < CC_SRC",    # Signed? Er...
-    "IFLO_OPS_TEMPLATE_JB_SUB": lambda args: "CC_DST + CC_SRC < CC_SRC",    # FIXME
-    "IFLO_OPS_TEMPLATE_JBE_SUB": lambda args: "CC_DST + CC_SRC <= CC_SRC",
+    "IFLO_OPS_TEMPLATE_JZ_SUB": lambda args: "%s(CC_DST) == 0" % shift2fixed[args[0]],
+    "IFLO_OPS_TEMPLATE_JL_SUB": lambda args: "%s(CC_DST + CC_SRC) < %s(CC_SRC)" % (shift2fixed_sign[args[0]], shift2fixed_sign[args[0]]),
+    "IFLO_OPS_TEMPLATE_JLE_SUB": lambda args: "%s(CC_DST + CC_SRC) < %s(CC_SRC)" % (shift2fixed_sign[args[0]], shift2fixed_sign[args[0]]),
+    "IFLO_OPS_TEMPLATE_JB_SUB": lambda args: "%s(CC_DST + CC_SRC) < %s(CC_SRC)" % (shift2fixed[args[0]],      shift2fixed[args[0]]),
+    "IFLO_OPS_TEMPLATE_JBE_SUB": lambda args: "%s(CC_DST + CC_SRC) <= %s(CC_SRC)" % (shift2fixed[args[0]],      shift2fixed[args[0]]),
 
     "IFLO_SYSENTER": lambda args: "ESP = sysenter_cs",
     "IFLO_SYSEXIT": lambda args: "ESP = ECX; raise Goto(int(EDX))",
+
+    # These guys are ugly, no two ways about it
+    "IFLO_OPS_TEMPLATE_SHL_T0_T1_CC": lambda args: ("""
+count = T1 & SHIFT1_MASK(DATA_BITS(%d))
+if (count):
+    src = %s(T0) << (count - 1)
+    T0 = T0 << count
+    CC_SRC = src
+    CC_DST = T0
+    CC_OP = CC_OP_SHLB + %d
+""" % (args[0], shift2fixed[args[0]], args[0])),
+
+    "IFLO_OPS_TEMPLATE_SHR_T0_T1_CC": lambda args: ("""
+count = T1 & SHIFT1_MASK(DATA_BITS(%d))
+if (count):
+    T0 &= DATA_MASK(%d)
+    src = T0 >> (count - 1)
+    T0 = T0 >> count
+    CC_SRC = src
+    CC_DST = T0
+    CC_OP = CC_OP_SARB + %d
+""" % (args[0], args[0], args[0])),
+
+    "IFLO_OPS_TEMPLATE_SHR_T0_T1_CC_MEMWRITE": lambda args: ("""
+count = T1 & SHIFT1_MASK(DATA_BITS(%d))
+if (count):
+    T0 &= DATA_MASK(%d)
+    src = T0 >> (count - 1)
+    T0 = T0 >> count
+    mem.write(A0,T0,'%s')
+    CC_SRC = src
+    CC_DST = T0
+    CC_OP = CC_OP_SARB + %d
+""" % (args[0], args[0], width[args[0]], args[0])),
+
+    "IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE": lambda args: ("""
+src = T0
+dst = EAX - T0
+if (%s(dst) == 0):
+    T0 = T1
+    mem.write(A0,T0,'%s')
+else:
+    EAX = (EAX & ~DATA_MASK(%d)) | (T0 & DATA_MASK(%d))
+CC_SRC = src;
+CC_DST = dst;
+""" % (shift2fixed[args[0]], width[args[0]], args[0], args[0])),
+
 }
 
 outop_handler = {
