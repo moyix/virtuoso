@@ -706,7 +706,7 @@ def translate_code(trace, tbs, tbdict, cfg):
             elif taken == "split":
                 gen_new_tb = True
                 tb = get_taken_tb(cur)
-                taken = "'label%d'" % labels
+                new_label = "'label%d'" % labels
                 labels += 1
                 for i, (n,insn) in enumerate(tb.body):
                     if is_jcc(insn.op):
@@ -722,7 +722,7 @@ def translate_code(trace, tbs, tbdict, cfg):
                 for i,ins in whole_tb.body:
                     if not ins.in_slice: continue
                     if is_jcc(ins.op):
-                        s += "if (%s): raise Goto(%s)\n" % (ins, taken)
+                        s += "if (%s): raise Goto(%s)\n" % (ins, new_label)
                     else:
                         s += str(ins) + "\n"
                 s += "raise Goto(%s)" % succ
@@ -730,10 +730,10 @@ def translate_code(trace, tbs, tbdict, cfg):
                 
                 tak = get_taken_tb(cur)
                 succ = tak.next._label_str()
-                print "Translating [TB @%s]" % taken
+                print "Translating [TB @%s]" % new_label 
                 s = "\n".join("%s" % r for _,r in remainder if r.in_slice)
                 s += "\n" + "raise Goto(%s)" % succ
-                transdict[eval(taken)] = s
+                transdict[eval(new_label)] = s
             else:
                 # Nothing hinky going on here
                 s = []
