@@ -31,8 +31,12 @@ from forensics.win32.datetime import windows_to_unix_time
 from time import ctime,asctime,gmtime
 from struct import unpack,pack
 from collections import defaultdict
-from namedtuple import namedtuple
 import cPickle as pickle
+
+try:
+    from collections import namedtuple
+except ImportError:
+    from namedtuple import namedtuple
 
 def ULInt32(buf):
     assert len(buf) == 4
@@ -585,48 +589,48 @@ def compute_all_subw(CC_SRC, CC_DST):
 CCEntry = namedtuple("CCEntry", "compute_all compute_c")
 
 cc_table = [
-        CCEntry(None, None), 
-        CCEntry(compute_all_eflags, compute_c_eflags), 
-        CCEntry(compute_all_mulb, compute_c_mull), 
-        CCEntry(compute_all_mulw, compute_c_mull), 
-        CCEntry(compute_all_mull, compute_c_mull), 
-        CCEntry(None, None), 
-        CCEntry(compute_all_addb, compute_c_addb), 
-        CCEntry(compute_all_addw, compute_c_addw), 
-        CCEntry(compute_all_addl, compute_c_addl), 
-        CCEntry(None, None), 
-        CCEntry(compute_all_adcb, compute_c_adcb), 
-        CCEntry(compute_all_adcw, compute_c_adcw), 
-        CCEntry(compute_all_adcl, compute_c_adcl), 
-        CCEntry(None, None), 
-        CCEntry(compute_all_subb, compute_c_subb), 
-        CCEntry(compute_all_subw, compute_c_subw), 
-        CCEntry(compute_all_subl, compute_c_subl), 
-        CCEntry(None, None), 
-        CCEntry(compute_all_sbbb, compute_c_sbbb), 
-        CCEntry(compute_all_sbbw, compute_c_sbbw), 
-        CCEntry(compute_all_sbbl, compute_c_sbbl), 
-        CCEntry(None, None), 
-        CCEntry(compute_all_logicb, compute_c_logicb), 
-        CCEntry(compute_all_logicw, compute_c_logicw), 
-        CCEntry(compute_all_logicl, compute_c_logicl), 
-        CCEntry(None, None), 
-        CCEntry(compute_all_incb, compute_c_incl), 
-        CCEntry(compute_all_incw, compute_c_incl), 
-        CCEntry(compute_all_incl, compute_c_incl), 
-        CCEntry(None, None), 
-        CCEntry(compute_all_decb, compute_c_incl), 
-        CCEntry(compute_all_decw, compute_c_incl), 
-        CCEntry(compute_all_decl, compute_c_incl), 
-        CCEntry(None, None), 
-        CCEntry(compute_all_shlb, compute_c_shlb), 
-        CCEntry(compute_all_shlw, compute_c_shlw), 
-        CCEntry(compute_all_shll, compute_c_shll), 
-        CCEntry(None, None), 
-        CCEntry(compute_all_sarb, compute_c_sarl), 
-        CCEntry(compute_all_sarw, compute_c_sarl), 
-        CCEntry(compute_all_sarl, compute_c_sarl), 
-        CCEntry(None, None)
+    CCEntry(None, None), 
+    CCEntry(compute_all_eflags, compute_c_eflags), 
+    CCEntry(compute_all_mulb, compute_c_mull), 
+    CCEntry(compute_all_mulw, compute_c_mull), 
+    CCEntry(compute_all_mull, compute_c_mull), 
+    CCEntry(None, None), 
+    CCEntry(compute_all_addb, compute_c_addb), 
+    CCEntry(compute_all_addw, compute_c_addw), 
+    CCEntry(compute_all_addl, compute_c_addl), 
+    CCEntry(None, None), 
+    CCEntry(compute_all_adcb, compute_c_adcb), 
+    CCEntry(compute_all_adcw, compute_c_adcw), 
+    CCEntry(compute_all_adcl, compute_c_adcl), 
+    CCEntry(None, None), 
+    CCEntry(compute_all_subb, compute_c_subb), 
+    CCEntry(compute_all_subw, compute_c_subw), 
+    CCEntry(compute_all_subl, compute_c_subl), 
+    CCEntry(None, None), 
+    CCEntry(compute_all_sbbb, compute_c_sbbb), 
+    CCEntry(compute_all_sbbw, compute_c_sbbw), 
+    CCEntry(compute_all_sbbl, compute_c_sbbl), 
+    CCEntry(None, None), 
+    CCEntry(compute_all_logicb, compute_c_logicb), 
+    CCEntry(compute_all_logicw, compute_c_logicw), 
+    CCEntry(compute_all_logicl, compute_c_logicl), 
+    CCEntry(None, None), 
+    CCEntry(compute_all_incb, compute_c_incl), 
+    CCEntry(compute_all_incw, compute_c_incl), 
+    CCEntry(compute_all_incl, compute_c_incl), 
+    CCEntry(None, None), 
+    CCEntry(compute_all_decb, compute_c_incl), 
+    CCEntry(compute_all_decw, compute_c_incl), 
+    CCEntry(compute_all_decl, compute_c_incl), 
+    CCEntry(None, None), 
+    CCEntry(compute_all_shlb, compute_c_shlb), 
+    CCEntry(compute_all_shlw, compute_c_shlw), 
+    CCEntry(compute_all_shll, compute_c_shll), 
+    CCEntry(None, None), 
+    CCEntry(compute_all_sarb, compute_c_sarl), 
+    CCEntry(compute_all_sarw, compute_c_sarl), 
+    CCEntry(compute_all_sarl, compute_c_sarl), 
+    CCEntry(None, None)
 ]
 
 class OutSpace:
