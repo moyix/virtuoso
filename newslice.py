@@ -6,8 +6,8 @@ import cPickle as pickle
 
 import time, datetime
 
-import flow
-import networkx
+#import flow
+#import networkx
 import pydasm
 
 from fixedint import UInt
@@ -424,58 +424,76 @@ def slice_trace(trace, inbufs, outbufs):
     # Calculate control dependencies
     cfg = make_cfg(tbs)
 
-    # Post-dominator algo needs this dummy node
-    cfg['ENTRY'] = ['START', tbs[-1].label]
+    start_ts = time.time()
 
-    G = networkx.DiGraph()
-    for s in cfg:
-        for d in cfg[s]:
-            G.add_edge(s,d)
-    cdeps = flow.control_deps(G, start='ENTRY', stop=tbs[-1].label)
-    
-    # Remove the dummy node
-    del cdeps['ENTRY']
-    del cfg['ENTRY']
-    
-    times = []
-    iteration = 0
-    changed = True
-    while changed:
-        iteration += 1
-        print "Adding control flow deps, iteration %d" % iteration
-        start_ts = time.time()
-        changed = False
-
-        # Build up a list of branches we want to add
-        to_add = []
-        for branch in cdeps:
-            if any(any(t.has_slice() for t in tbdict[dep]) for dep in cdeps[branch]):
-                if not all(tb.get_branch().in_slice for tb in tbdict[branch]):
-                    to_add.append(branch)
-                    changed = True
-
-        if not to_add: break
-
-        # Now add them
-        wlist = []
-        for br in to_add:
-            for t in tbdict[br]:
-                for i,isn in t.body:
-                    if is_jcc(isn.op) or is_dynjump(isn.op):
-                        wlist.append( (i, uses(isn)) )
-                        #dynslice(trace, uses(isn), start=i)
-                        isn.mark()
-                        break
-
-        multislice(trace, wlist)
-
-        end_ts = time.time()
-        elapsed = datetime.timedelta(seconds = (end_ts - start_ts ))
-        times.append(elapsed)
-        print "Iteration %d took" % iteration, elapsed, "to add %d branches" % len(to_add)
-    print "Fixed point found, control dependency analysis finished in %s" % sum(times,datetime.timedelta(0))
+    wlist = []
+    for c in cfg:
+        if len(cfg[c]) < 2: continue
+        for t in tbdict[c]:
+            for i,isn in t.body:
+                if is_jcc(isn.op) or is_dynjump(isn.op):
+                    wlist.append( (i, uses(isn)) )
+                    #dynslice(trace, uses(isn), start=i)
+                    isn.mark()
+                    break
+            
+    multislice(trace, wlist)
+    end_ts = time.time()
+    print "Added branches in %s" % (datetime.timedelta(seconds=end_ts-start_ts))
 
     return trace, tbs, tbdict, cfg
+
+##### FIGURE OUT WHY THIS DOESN'T WORK SOMEDAY #####
+
+#    # Post-dominator algo needs this dummy node
+#    cfg['ENTRY'] = ['START', tbs[-1].label]
+#
+#    G = networkx.DiGraph()
+#    for s in cfg:
+#        for d in cfg[s]:
+#            G.add_edge(s,d)
+#    cdeps = flow.control_deps(G, start='ENTRY', stop=tbs[-1].label)
+#    
+#    # Remove the dummy node
+#    del cdeps['ENTRY']
+#    del cfg['ENTRY']
+#    
+#    times = []
+#    iteration = 0
+#    changed = True
+#    while changed:
+#        iteration += 1
+#        print "Adding control flow deps, iteration %d" % iteration
+#        start_ts = time.time()
+#        changed = False
+#
+#        # Build up a list of branches we want to add
+#        to_add = []
+#        for branch in cdeps:
+#            if any(any(t.has_slice() for t in tbdict[dep]) for dep in cdeps[branch]):
+#                if not all(tb.get_branch().in_slice for tb in tbdict[branch]):
+#                    to_add.append(branch)
+#                    changed = True
+#
+#        if not to_add: break
+#
+#        # Now add them
+#        wlist = []
+#        for br in to_add:
+#            for t in tbdict[br]:
+#                for i,isn in t.body:
+#                    if is_jcc(isn.op) or is_dynjump(isn.op):
+#                        wlist.append( (i, uses(isn)) )
+#                        #dynslice(trace, uses(isn), start=i)
+#                        isn.mark()
+#                        break
+#
+#        end_ts = time.time()
+#        elapsed = datetime.timedelta(seconds = (end_ts - start_ts ))
+#        times.append(elapsed)
+#        print "Iteration %d took" % iteration, elapsed, "to add %d branches" % len(to_add)
+#    print "Fixed point found, control dependency analysis finished in %s" % sum(times,datetime.timedelta(0))
+
 
 def nop_functions(trace, tbs, tbdict, cfg):
     # No-ops. Format: address, number of argument bytes, name
@@ -616,7 +634,9 @@ def filter_interrupts(trace):
             fault_insn = pydasm.get_instruction(trace[j][1].args[1].decode('hex'), pydasm.MODE_32)
             next = get_next_from_trace(trace, i)
             if e.args[1] == fault_eip:
+                print "Faulting instruction: %s" % (trace[j],)
                 start = j
+                next = [fault_eip]
                 retry_insn = True
             else:
                 start = i
@@ -691,7 +711,7 @@ def translate_code(trace, tbs, tbdict, cfg):
         elif cur[0].has_dynjump():
             transdict[cur[0].label] = "\n".join(simple_translate(cur))
         else:
-            # There must be a jump to a variable target (ie conditional or dynamic jump)
+            # There must be a jump to a variable target (ie conditional branch)
             # We need to combine the known instances of this TB and resolve its targets
             
             # Get a "complete" specimen, or if that's not available
@@ -761,9 +781,11 @@ if __name__ == "__main__":
     tbdict = make_tbdict(tbs)
     cfg = make_cfg(tbs)
 
+    # Get rid of interrupts
+    trace, tbs, tbdict, cfg = filter_interrupts(trace)
+    
     # Replace mallocs with summary functions, and find memops
     # we will need to have special handling for.
-    trace, tbs, tbdict, cfg = filter_interrupts(trace)
     trace, tbs, tbdict, cfg = nop_functions(trace, tbs, tbdict, cfg)
     
     # This is taking a while, let's time it
