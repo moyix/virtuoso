@@ -268,6 +268,7 @@ defines_uses = {
     'IFLO_SET_INHIBIT_IRQ': IGNORE,
     'IFLO_RESET_INHIBIT_IRQ': IGNORE,
     'IFLO_INSN_BYTES': IGNORE,
+    'IFLO_LOG_RET_EAX': IGNORE,
 
     # Not sure why these are even in the trace
     'IFLO_COMPUTE_ALL_EFLAGS': IGNORE,

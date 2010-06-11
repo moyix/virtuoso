@@ -494,6 +494,22 @@ def slice_trace(trace, inbufs, outbufs):
 #        print "Iteration %d took" % iteration, elapsed, "to add %d branches" % len(to_add)
 #    print "Fixed point found, control dependency analysis finished in %s" % sum(times,datetime.timedelta(0))
 
+# Domain knowledge: a list of memory allocation functions
+# Format: address, number of argument bytes, size_param, name
+mallocs = [
+    (0x7c9105d4, 12, 2, 'RtlAllocateHeap'),
+    (0x804e72c4, 12, 1, 'ExAllocatePoolWithQuotaTag'),
+    (0x8054b044, 12, 1, 'ExAllocatePoolWithTag'),
+]
+
+frees = [
+    (0x7c91043d, 12, 2, 'RtlFreeHeap'),
+    (0x8054af07,  8, 0, 'ExFreePoolWithTag'),
+]
+
+mempairs = ((mallocs[0], frees[0]),
+            (mallocs[1], frees[1]),
+            (mallocs[2], frees[1]),)
 
 def nop_functions(trace, tbs, tbdict, cfg):
     # No-ops. Format: address, number of argument bytes, name
@@ -536,15 +552,53 @@ def nop_functions(trace, tbs, tbdict, cfg):
 
     return trace, tbs, tbdict, cfg
 
-def detect_mallocs(trace, tbs, tbdict, cfg):
-    # Domain knowledge: a list of memory allocation functions
-    # Format: address, number of argument bytes, size_param, name
-    mallocs = [
-        (0x7c9105d4, 12, 2, 'RtlAllocateHeap'),
-        (0x804e72c4, 12, 1, 'ExAllocatePoolWithQuotaTag'),
-        (0x8054b044, 12, 1, 'ExAllocatePoolWithTag'),
-    ]
+def get_tb_retval(tb):
+    for _,x in reversed(tb.body):
+        if x.op == 'IFLO_LOG_RET_EAX': return x.args[0]
+    return None
 
+def get_function_arg(trace, arg, esp, callsite):
+    arg_mem = esp + (4*arg) + 4
+    i = callsite
+    while i > 0:
+        if (trace[i][1].op.startswith('IFLO_OPS_MEM_ST') and
+            trace[i][1].args[2] == arg_mem):
+            return trace[i][1].args[-1]
+        i -= 1
+    return None
+
+AllocInfo = namedtuple("AllocInfo", "alloc free")
+
+def mark_mallocs(trace, tbs, tbdict, cfg):
+    alloc_calls = defaultdict(list)
+    alloc_rets = []
+    for alloc,free in malloc_pairs:
+        m,a_argbytes,a_size_arg,a_name = alloc
+        n,f_argbytes,f_size_arg,f_name = free
+        if m not in tbdict: continue
+
+        mem = defaultdict(AllocInfo)
+
+        for tb in tbdict[m]:
+            callsite = tb.prev
+        
+            retaddr = find_retaddr(callsite)
+            esp_p, esp_v = get_function_arg(callsite)
+
+            # Find the closest return site instance to this callsite
+            retsite = min((t for t in tbdict[retaddr]), key=lambda x: len(trace) if x.start() < callsite.end() else x.start() - callsite.end())
+
+            m_size = get_malloc_size(trace, size_arg, esp_v, callsite.end())
+            m_start = get_tb_retval(retsite.prev)
+            
+            mem[m_start].alloc = (retsite.end(), m_size)
+
+        for tb in tbdict[n]:
+            callsite = tb.prev
+            esp_p, esp_v = get_function_arg(callsite)
+
+
+def detect_mallocs(trace, tbs, tbdict, cfg):
     EAX = "REGS_0"
 
     print "Size of trace before surgery: %d" % len(trace)
@@ -569,6 +623,8 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
             retsite = min((t for t in tbdict[retaddr]), key=lambda x: len(trace) if x.start() < callsite.end() else x.start() - callsite.end())
 
             print "Call to %#x (%s) at callsite %s.%d returns to %s.%d" % (m, name, callsite._label_str(), callsite.start(), retsite._label_str(), retsite.start())
+            print "  `->   SIZE: [%#x]" % get_malloc_size(trace, size_arg, esp_v, callsite.end())
+            print "  `-> RETURN: [%#x]" % get_tb_retval(retsite.prev)
             remove_start, remove_end = callsite.end() + 1, retsite.start()
             surgery_sites.append( (remove_start, remove_end, esp_p, esp_v) )
             alloc_label = summary_name
