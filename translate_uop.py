@@ -34,6 +34,7 @@ op_handler = {
     "IFLO_OPS_MEM_LDL_T1_A0": lambda args: "T1 = ULInt32(mem.read(A0,4))",
     "IFLO_OPS_MEM_LDUW_T0_A0": lambda args: "T0 = ULInt16(mem.read(A0,2))",
     "IFLO_OPS_MEM_LDUB_T0_A0": lambda args: "T0 = ULInt8(mem.read(A0,1))",
+    "IFLO_OPS_MEM_LDUB_T1_A0": lambda args:  "T1 = ULInt8(mem.read(A0,1))",
     "IFLO_OPS_MEM_LDSB_T0_A0": lambda args: "T0 = SLInt8(mem.read(A0,1))",
     "IFLO_OPS_MEM_STL_T0_A0": lambda args: "mem.write(A0,T0,'L')",
     "IFLO_OPS_MEM_STL_T1_A0": lambda args: "mem.write(A0,T1,'L')",
@@ -77,9 +78,9 @@ op_handler = {
     "IFLO_MOVZWL_T0_T0": lambda args: "T0 = UInt(UShort(T0))",
     "IFLO_MOVZBL_T0_T0": lambda args: "T0 = UInt(Byte(T0))",
     "IFLO_MOVSBL_T0_T0": lambda args: "T0 = UInt(SByte(T0))",
-    "IFLO_OPS_TEMPLATE_SETZ_T0_CC": lambda args: "eflags = cc_table[CC_OP].compute_all() ; T0 = UInt((eflags >> 6) & 1)",
-    "IFLO_OPS_TEMPLATE_SETZ_T0_SUB": lambda args: "T0 = UInt(%s(CC_DST) == 0)" % shift2fixed(args[0]),
-    "IFLO_OPS_TEMPLATE_SBB_T0_T1_CC": lambda args: "cf = cc_table[int(CC_OP)].compute_c() ; T0 = T0 - T1 - cf; CC_SRC = T1; CC_DST = T0; CC_OP = CC_OP_SUBB + %d + cf * 4" % args[0],
+    "IFLO_OPS_TEMPLATE_SETZ_T0_CC": lambda args: "eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST) ; T0 = UInt((eflags >> 6) & 1)",
+    "IFLO_OPS_TEMPLATE_SETZ_T0_SUB": lambda args: "T0 = UInt(%s(CC_DST) == 0)" % shift2fixed[args[0]],
+    "IFLO_OPS_TEMPLATE_SBB_T0_T1_CC": lambda args: "cf = cc_table[int(CC_OP)].compute_c(CC_SRC,CC_DST) ; T0 = T0 - T1 - cf; CC_SRC = T1; CC_DST = T0; CC_OP = CC_OP_SUBB + %d + cf * 4" % args[0],
     "IFLO_CMPXCHG8B_PART1": lambda args: "mem.write(A0, ECX << 32 | EBX, 'Q')",
     "IFLO_OPS_TEMPLATE_SAR_T0_T1": lambda args: "T0 = T0 >> T1",
     "IFLO_TESTL_T0_T1_CC": lambda args: "CC_DST = T0 & T1",
@@ -88,7 +89,7 @@ op_handler = {
     "IFLO_UPDATE1_CC": lambda args: "CC_DST = T0",
     "IFLO_UPDATE2_CC": lambda args: "CC_SRC = T1; CC_DST = T0",
     "IFLO_UPDATE_NEG_CC": lambda args: "CC_SRC = -T0 ; CC_DST = T0",
-    "IFLO_UPDATE_INC_CC": lambda args: "CC_SRC = cc_table[CC_OP].compute_c(); CC_DST = T0",
+    "IFLO_UPDATE_INC_CC": lambda args: "CC_SRC = cc_table[CC_OP].compute_c(CC_SRC,CC_DST); CC_DST = T0",
 
     "IFLO_IMULL_T0_T1": lambda args: "res = int(T0)*int(T1) ; T0 = CC_DST = UInt(res) ; CC_SRC = UInt(res) != res",
     "IFLO_XORL_T0_T1": lambda args: "T0 ^= T1",
@@ -101,6 +102,7 @@ op_handler = {
     "IFLO_GET_ARG": lambda args: "ARG = ULInt32(mem.read(ESP + (4*%d) + 4, 4))" % args[0],
     "IFLO_CALL": lambda args: "T0 = 0; raise Goto('%s')" % args[0],
 
+    "IFLO_JNZ_T0_LABEL": lambda args: "T0",
     "IFLO_OPS_TEMPLATE_JNZ_ECX": lambda args: "ECX != 0",
     "IFLO_OPS_TEMPLATE_JZ_SUB": lambda args: "%s(CC_DST) == 0" % shift2fixed[args[0]],
     "IFLO_OPS_TEMPLATE_JL_SUB": lambda args: "%s(CC_DST + CC_SRC) < %s(CC_SRC)" % (shift2fixed_sign[args[0]], shift2fixed_sign[args[0]]),
@@ -157,6 +159,16 @@ CC_SRC = src;
 CC_DST = dst;
 """ % (shift2fixed[args[0]], width[args[0]], args[0], args[0])),
 
+    "IFLO_MOVL_T0_EFLAGS": lambda args: ("""
+eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST)
+eflags |= (DF & DF_MASK)
+eflags |= EFL & ~(VM_MASK | RF_MASK)
+T0 = UInt(eflags)
+"""),
+
+    "IFLO_MOVL_EFLAGS_T0_CPL0": lambda args: "CC_SRC, DF, EFL = load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK | IF_MASK | IOPL_MASK), EFL)",
+    "IFLO_SETL_T0_CC": lambda args: "eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST); T0 = UInt(((eflags ^ (eflags >> 4)) >> 7) & 1)",
+    
 }
 
 outop_handler = {
