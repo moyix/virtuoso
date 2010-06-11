@@ -69,6 +69,12 @@ def SHIFT1_MASK(DATA_BITS):
     else:
         return 0x3f
 
+def load_eflags(eflags, update_mask, EFL):
+    CC_SRC = eflags & (CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C)
+    DF = 1 - (2 * int((eflags >> 10) & 1))
+    eflags = (EFL & ~update_mask) | (eflags & update_mask)
+    return CC_SRC, DF, eflags
+
 # Functions for condition code calculations
 
 CC_C = 0x0001
@@ -839,6 +845,23 @@ PAE_SHIFT = 5
 PAE_FLAG = 1 << PAE_SHIFT
 DF_SHIFT = 10
 DF_MASK = 1 << DF_SHIFT
+
+TF_SHIFT   = 8
+IOPL_SHIFT = 12
+VM_SHIFT   = 17
+
+TF_MASK   = 0x00000100
+IF_MASK   = 0x00000200
+DF_MASK   = 0x00000400
+IOPL_MASK = 0x00003000
+NT_MASK   = 0x00004000
+RF_MASK   = 0x00010000
+VM_MASK   = 0x00020000
+AC_MASK   = 0x00040000
+VIF_MASK  = 0x00080000
+VIP_MASK  = 0x00100000
+ID_MASK   = 0x00200000
+
 DESC_G_MASK = 1 << 23
 
 class newmicrodo(forensics.commands.command):
