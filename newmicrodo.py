@@ -760,6 +760,11 @@ class COWSpace:
     def dump_scratch(self):
         for start, buf in self.get_scratch().items():
             print hex(start),":",buf.encode('hex')
+    
+    def dd(self,addr,length=0x80):
+        for i in range(length):
+            "%02x" %  
+        
 
 class Goto(Exception):
     def __init__(self, label):
