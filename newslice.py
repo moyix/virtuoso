@@ -10,6 +10,7 @@ import time, datetime
 #import networkx
 import pydasm
 
+from interval import Interval,IntervalSet
 from fixedint import UInt
 from summary_functions import malloc_summary, null_summary
 from predict_insn import get_next_from_trace, x86_branches
@@ -567,36 +568,74 @@ def get_function_arg(trace, arg, esp, callsite):
         i -= 1
     return None
 
-AllocInfo = namedtuple("AllocInfo", "alloc free")
+class AllocInfo:
+    def __init__(self):
+        self.alloc = None
+        self.free = None
 
 def mark_mallocs(trace, tbs, tbdict, cfg):
     alloc_calls = defaultdict(list)
     alloc_rets = []
-    for alloc,free in malloc_pairs:
+    mem = defaultdict(AllocInfo)
+    for alloc,free in mempairs:
         m,a_argbytes,a_size_arg,a_name = alloc
-        n,f_argbytes,f_size_arg,f_name = free
+        n,f_argbytes,f_arg,f_name = free
         if m not in tbdict: continue
-
-        mem = defaultdict(AllocInfo)
 
         for tb in tbdict[m]:
             callsite = tb.prev
         
             retaddr = find_retaddr(callsite)
-            esp_p, esp_v = get_function_arg(callsite)
+            esp_p, esp_v = get_callsite_esp(callsite)
 
             # Find the closest return site instance to this callsite
             retsite = min((t for t in tbdict[retaddr]), key=lambda x: len(trace) if x.start() < callsite.end() else x.start() - callsite.end())
 
-            m_size = get_malloc_size(trace, size_arg, esp_v, callsite.end())
+            m_size = get_function_arg(trace, a_size_arg, esp_v, callsite.end())
             m_start = get_tb_retval(retsite.prev)
             
             mem[m_start].alloc = (retsite.end(), m_size)
 
         for tb in tbdict[n]:
             callsite = tb.prev
-            esp_p, esp_v = get_function_arg(callsite)
+            esp_p, esp_v = get_callsite_esp(callsite)
+            f_ptr = get_function_arg(trace, f_arg, esp_v, callsite.end())
+            mem[f_ptr].free = callsite.end()
 
+    print "Dynamic Allocations:"
+    for m in mem:
+        if not mem[m].alloc:
+            raise ValueError("FREE without MALLOC of %#x" % m)
+        elif not mem[m].free:
+            print "    MALLOC without FREE of %#x" % m
+        else:
+            print "    %#x-%#x: [%d,%d]" % (m, m+mem[m].alloc[1], mem[m].alloc[0], mem[m].free)
+
+    alloc_points = {}
+    free_points = {}
+    for m in mem:
+        st = mem[m].alloc[0]
+        sz = mem[m].alloc[1]
+        if not mem[m].free:
+            ed = len(trace)
+        else:
+            ed = mem[m].free
+        
+        rng = Interval(m, m+sz, upper_closed=False)
+        alloc_points[st] = rng
+        free_points[ed] = rng
+        
+    iset = IntervalSet()
+    for i,insn in trace:
+        if i in alloc_points:
+            iset.add(alloc_points[i])
+        if i in free_points:
+            iset.remove(free_points[i])
+
+        if is_memop(insn):
+            if insn.args[2] in iset:
+                insn.set_buf()
+                print "%s at %d deals with a dynamic buffer" % (`insn`, i)
 
 def detect_mallocs(trace, tbs, tbdict, cfg):
     EAX = "REGS_0"
@@ -623,8 +662,8 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
             retsite = min((t for t in tbdict[retaddr]), key=lambda x: len(trace) if x.start() < callsite.end() else x.start() - callsite.end())
 
             print "Call to %#x (%s) at callsite %s.%d returns to %s.%d" % (m, name, callsite._label_str(), callsite.start(), retsite._label_str(), retsite.start())
-            print "  `->   SIZE: [%#x]" % get_malloc_size(trace, size_arg, esp_v, callsite.end())
-            print "  `-> RETURN: [%#x]" % get_tb_retval(retsite.prev)
+            #print "  `->   SIZE: [%#x]" % get_function_arg(trace, size_arg, esp_v, callsite.end())
+            #print "  `-> RETURN: [%#x]" % get_tb_retval(retsite.prev)
             remove_start, remove_end = callsite.end() + 1, retsite.start()
             surgery_sites.append( (remove_start, remove_end, esp_p, esp_v) )
             alloc_label = summary_name
@@ -649,32 +688,32 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
 
     alloc_calls = dict(alloc_calls)
 
+#
+#    #embedshell = IPython.Shell.IPShellEmbed(argv=[])
+#    #embedshell()
+#
+#    # Find the memory operations that will need to be redirected
+#    # to a dynamic buffer
+#    sources = []
+#    for alloc_name, site in set(alloc_rets):
+#        sources += [ (t.start(), EAX)  for t in tbdict[site] ]
+#
+#    for c in cfg:
+#        curtb = tbdict[c][0]
+#        if not any((curtb.start() > s for s,_ in sources)): continue
+#        for i, insn in curtb:
+#            if is_memop(insn):
+#                off = i - curtb.start()
+#                sinks = [ (t.start()+off, "A0") for t in tbdict[c] ]
+#                if m_linked_vars(trace, sinks, sources):
+#                    print "Adding memop %s in %s (%d instances)" % (repr(insn), repr(curtb), len(sinks))
+#                    for j,_ in sinks:
+#                        trace[j][1].set_buf()
+#                else:
+#                    pass
+#                    #print "Rejecting %s in TB %s" % (repr(insn), repr(curtb))
+#    
     print "Size of trace after surgery:  %d" % len(trace)
-
-    #embedshell = IPython.Shell.IPShellEmbed(argv=[])
-    #embedshell()
-
-    # Find the memory operations that will need to be redirected
-    # to a dynamic buffer
-    sources = []
-    for alloc_name, site in set(alloc_rets):
-        sources += [ (t.start(), EAX)  for t in tbdict[site] ]
-
-    for c in cfg:
-        curtb = tbdict[c][0]
-        if not any((curtb.start() > s for s,_ in sources)): continue
-        for i, insn in curtb:
-            if is_memop(insn):
-                off = i - curtb.start()
-                sinks = [ (t.start()+off, "A0") for t in tbdict[c] ]
-                if m_linked_vars(trace, sinks, sources):
-                    print "Adding memop %s in %s (%d instances)" % (repr(insn), repr(curtb), len(sinks))
-                    for j,_ in sinks:
-                        trace[j][1].set_buf()
-                else:
-                    pass
-                    #print "Rejecting %s in TB %s" % (repr(insn), repr(curtb))
-    
     return trace, tbs, tbdict, cfg
 
 def filter_interrupts(trace):
@@ -839,6 +878,8 @@ if __name__ == "__main__":
 
     # Get rid of interrupts
     trace, tbs, tbdict, cfg = filter_interrupts(trace)
+
+    mark_mallocs(trace, tbs, tbdict, cfg)
     
     # Replace mallocs with summary functions, and find memops
     # we will need to have special handling for.
