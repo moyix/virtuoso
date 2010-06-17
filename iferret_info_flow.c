@@ -2357,22 +2357,22 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     */
     
     // iferret_log_info_flow_op_write_8844(IFLO_CPU_PHYSICAL_MEMORY_RW, addr, buf, len, is_write);
-  case IFLO_CPU_PHYSICAL_MEMORY_RW:
-    assert_args_4844(op);
-    // (addr,buf,len,iswrite) : (a0_32,a1_64,a2_32,a3_32)
-    // a0 is a physical address in the guest, thus it is 32 bits.
-    // a1 is a vitrual address in qemu's space.  thus it is 64 bits. 
-    if (a3_32 == 1) {
-      // this is a write. a0 is dest, a1 is src.
-      //info_flow_copy(iferret, phys_ram_base + a0_32, a1_64, a2_32);
-      info_flow_copy(iferret, a0_32, a1_64, a2_32);
-    }
-    else {
-      // this is a read.  a0 is source. a1 is dest.  
-      //info_flow_copy(iferret, a1_64, phys_ram_base + a0_32, a2_32);		     
-      info_flow_copy(iferret, a1_64, a0_32, a2_32);		     
-    }
-    break;
+//  case IFLO_CPU_PHYSICAL_MEMORY_RW:
+//    assert_args_4844(op);
+//    // (addr,buf,len,iswrite) : (a0_32,a1_64,a2_32,a3_32)
+//    // a0 is a physical address in the guest, thus it is 32 bits.
+//    // a1 is a vitrual address in qemu's space.  thus it is 64 bits. 
+//    if (a3_32 == 1) {
+//      // this is a write. a0 is dest, a1 is src.
+//      //info_flow_copy(iferret, phys_ram_base + a0_32, a1_64, a2_32);
+//      info_flow_copy(iferret, a0_32, a1_64, a2_32);
+//    }
+//    else {
+//      // this is a read.  a0 is source. a1 is dest.  
+//      //info_flow_copy(iferret, a1_64, phys_ram_base + a0_32, a2_32);		     
+//      info_flow_copy(iferret, a1_64, a0_32, a2_32);		     
+//    }
+//    break;
 
   case IFLO_TESTL_T0_T1_CC:
     {

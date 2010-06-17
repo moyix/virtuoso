@@ -653,6 +653,8 @@ void cpu_dump_state(CPUState *env, FILE *f,
                 cpu_fprintf(f, " ");
         }
     }
+    cpu_fprintf(logfile, "sysenter_cs=%08x sysenter_esp=%08x sysenter_eip=%08x\n",
+            env->sysenter_cs, env->sysenter_esp, env->sysenter_eip);
 }
 
 

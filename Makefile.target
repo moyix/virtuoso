@@ -582,6 +582,8 @@ ifdef CONFIG_WIN32
 SDL_LIBS := $(filter-out -mwindows, $(SDL_LIBS)) -mconsole
 endif
 
+LIBS += -L/usr/local/lib -ldasm
+
 $(QEMU_SYSTEM): $(VL_OBJS) ../libqemu_common.a libqemu.a
 	$(CC) $(VL_LDFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS) $(SDL_LIBS) $(COCOA_LIBS) $(VL_LIBS) 
 

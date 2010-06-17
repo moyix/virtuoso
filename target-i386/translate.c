@@ -29,6 +29,9 @@
 #include "exec-all.h"
 #include "disas.h"
 
+/* For *correct* disassembly stuff */
+#include <libdasm.h>
+
 #include "iferret_log.h"
 
 #define DEBUG_DISAS 1
@@ -39,7 +42,7 @@ int X86_marker = 0;
 extern int num_in_disas;
 
 // from disas.c (for debug)
-void target_disas_buf(unsigned char **out, target_ulong code, int flags);
+int target_disas_buf(unsigned char **out, target_ulong code, int flags);
 
 /* XXX: move that elsewhere */
 static uint16_t *gen_opc_ptr;
@@ -3258,17 +3261,31 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
     target_ulong next_eip, tval;
     int rex_w, rex_r;
 
-    /* Print the x86 instruction we're about to translate */
-    unsigned char **disbuf_arg;
-    disbuf_arg = (unsigned char **) malloc(4);
-    *disbuf_arg = (unsigned char *) malloc(256);
-    unsigned char *disbuf_orig = *disbuf_arg;
+//    /* Print the x86 instruction we're about to translate */
+//    unsigned char **disbuf_arg;
+//    disbuf_arg = (unsigned char **) malloc(4);
+//    *disbuf_arg = (unsigned char *) malloc(256);
+//    unsigned char *disbuf_orig = *disbuf_arg;
+//
+//    count = target_disas_buf(disbuf_arg, pc_start, 0);
+//    //printf("%08x     %s\n", pc_start, disbuf_orig); 
+//    iferret_log_op_write_4s(IFLO_INSN_DIS, pc_start, disbuf_orig);
+//    free(disbuf_orig);
+//    free(disbuf_arg);
 
-    target_disas_buf(disbuf_arg, pc_start, 0);
-    //printf("%08x     %s\n", pc_start, disbuf_orig); 
-    iferret_log_op_write_4s(IFLO_INSN_DIS, pc_start, disbuf_orig);
-    free(disbuf_orig);
-    free(disbuf_arg);
+    // Disassemble the current instruction
+    INSTRUCTION inst;
+    unsigned char data[16];
+    unsigned char disas_string[256];
+    int i, count;
+    for(i = 0; i < 16; i++)
+        data[i] = ldub_code(pc_start+i);
+    get_instruction(&inst, data, MODE_32);
+    count = get_instruction_string(&inst, FORMAT_INTEL, pc_start, disas_string, sizeof(disas_string));
+    iferret_log_op_write_4s(IFLO_INSN_DIS, pc_start, disas_string);
+
+    gen_op_log_insn(pc_start, inst.length);
+
     /* Ok, now move on to the real stuff... */
 
     s->pc = pc_start;
@@ -5168,6 +5185,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         gen_stack_update(s, val + (2 << s->dflag));
         if (s->dflag == 0)
             gen_op_andl_T0_ffff();
+        gen_op_log_ret_EAX();
         gen_op_jmp_T0();
         gen_eob(s);
         break;
@@ -5176,6 +5194,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         gen_pop_update(s);
         if (s->dflag == 0)
             gen_op_andl_T0_ffff();
+        gen_op_log_ret_EAX();
         gen_op_jmp_T0();
         gen_eob(s);
         break;

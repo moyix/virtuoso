@@ -1289,7 +1289,7 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
 
 
 void usage() {
-  printf ("Usage: iferret -l LOG_PREFIX -m START_LOG_NUM -n NUM_LOGS [-i] [-p PIDS_TO_FOLLOW]\n");
+  printf ("Usage: iferret -l LOG_PREFIX -s START_LOG_NUM -n NUM_LOGS [-i] [-p PIDS_TO_FOLLOW]\n");
   printf ("Where -i turns on info-flow processing.\n");
   printf ("And PIDS_TO_FOLLOW is a list in quotes.\n");
   exit (1);

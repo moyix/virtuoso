@@ -181,6 +181,20 @@ void iferret_spit_stack(target_ulong addr, char *label) {
   }
 }
 
+void iferret_log_insn_bytes(target_ulong addr, int count) {
+    int i;
+    unsigned char insn_bytes[16];
+    unsigned char insn_hex[32];
+    
+    cpu_virtual_memory_read(env, addr, insn_bytes, count);
+    
+    for(i = 0; i < count; i++) {
+        sprintf(insn_hex + (i*2), "%02x", insn_bytes[i]);
+    }
+    insn_hex[count*2] = '\0';
+    
+    iferret_log_info_flow_op_write_4s(IFLO_INSN_BYTES, addr, insn_hex);
+}
 
 /* thread support */
 
@@ -929,6 +943,7 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
     }
     env->eflags &= ~(TF_MASK | VM_MASK | RF_MASK | NT_MASK);
 
+    iferret_log_op_write_441(IFLO_INTERRUPT, intno, next_eip, is_int);
 
     if (intno == 0x80) {
       /*

@@ -157,7 +157,7 @@ static int sprintf_wrap(FILE *stream, const char *format, ...) {
    If you want to keep the orignal buffer unchanged, save it first!
 */
 
-void target_disas_buf(unsigned char **out, target_ulong code, int flags) {
+int target_disas_buf(unsigned char **out, target_ulong code, int flags) {
     int count;
     struct disassemble_info disasm_info;
     int (*print_insn)(bfd_vma pc, disassemble_info *info);
@@ -232,6 +232,7 @@ void target_disas_buf(unsigned char **out, target_ulong code, int flags) {
     // Update the pointer...
 	count = print_insn(code, &disasm_info);
     //printf("==> Debug: decoded %d instruction bytes\n", count);
+    return count;
 #if 0
         {
             int i;

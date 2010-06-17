@@ -2584,7 +2584,7 @@ void iferret_cpu_physical_memory_rw(target_phys_addr_t addr, uint8_t *buf,
     if (iferret_log) {
       // NB: addr is assumed to be 32-bit address in guest.  
       // buf, on the other hand, is a 64-address in the host.  
-      iferret_log_info_flow_op_write_4844(IFLO_CPU_PHYSICAL_MEMORY_RW, addr, (uint64_t) buf, len, is_write);
+      //iferret_log_info_flow_op_write_4844(IFLO_CPU_PHYSICAL_MEMORY_RW, addr, (uint64_t) buf, len, is_write);
     }
 
     while (len > 0) {

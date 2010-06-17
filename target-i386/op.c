@@ -203,6 +203,16 @@ static inline uint64_t phys_a0() {
 
 /* operations with flags */
 
+/* Log the actual instruction bytes */
+void OPPROTO op_log_insn(void) {
+  iferret_log_insn_bytes(PARAM1, PARAM2);  
+}
+
+/* So we can get the return value of arbitrary functions */
+void OPPROTO op_log_ret_EAX(void) {
+  iferret_log_info_flow_op_write_4(IFLO_LOG_RET_EAX,EAX);
+}
+
 /* update flags with T0 and T1 (add/sub case) */
 void OPPROTO op_update2_cc(void)
 {
@@ -770,7 +780,7 @@ void OPPROTO op_andl_A0_ffff(void)
 
 void OPPROTO op_jmp_T0(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_JMP_T0);
+  iferret_log_info_flow_op_write_4(IFLO_JMP_T0,T0);
 
     EIP = T0;
 }
@@ -1447,13 +1457,13 @@ void OPPROTO op_movl_T0_seg(void)
 
 void OPPROTO op_lsl(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_LSL);
+  iferret_log_info_flow_op_write_4(IFLO_LSL,T0);
     helper_lsl();
 }
 
 void OPPROTO op_lar(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_LAR);
+  iferret_log_info_flow_op_write_4(IFLO_LAR,T0);
     helper_lar();
 }
 
@@ -1798,6 +1808,7 @@ void OPPROTO op_xor_T0_1(void)
 
 void OPPROTO op_set_cc_op(void)
 {
+    iferret_log_info_flow_op_write_4(IFLO_SET_CC_OP,PARAM1);
     CC_OP = PARAM1;
 }
 

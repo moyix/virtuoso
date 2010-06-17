@@ -562,6 +562,8 @@ void OPPROTO glue(glue(op_bsf, SUFFIX), _T0_cc)(void)
     int count;
     target_long res;
 
+	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BSF_T0_CC,SHIFT);
+
     res = T0 & DATA_MASK;
     if (res != 0) {
         count = 0;
@@ -569,8 +571,6 @@ void OPPROTO glue(glue(op_bsf, SUFFIX), _T0_cc)(void)
             count++;
             res >>= 1;
         }
-
-	iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_BSF_T0_CC,SHIFT);
 
         T1 = count;
         CC_DST = 1; /* ZF = 0 */
