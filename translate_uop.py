@@ -98,9 +98,11 @@ op_handler = {
     "IFLO_ADDL_A0_SEG": lambda args: "A0 += %s" % fieldname(field_from_env(args[1])),
     "IFLO_MOVL_SEG_T0": lambda args: "%s = load_seg(mem, T0, GDT, LDT)" % qemu_segs_r[args[0]],
 
-    "IFLO_MALLOC": lambda args: "EAX = bufs.alloc(ARG)",
+    "IFLO_MALLOC": lambda args: "EAX = mem.alloc(ARG)",
     "IFLO_GET_ARG": lambda args: "ARG = ULInt32(mem.read(ESP + (4*%d) + 4, 4))" % args[0],
     "IFLO_CALL": lambda args: "T0 = 0; raise Goto('%s')" % args[0],
+    'IFLO_MOVL_T0_ARG': lambda args: "T0 = ARG",
+    'IFLO_MOVL_A0_ARG': lambda args: "A0 = ARG",
 
     "IFLO_JNZ_T0_LABEL": lambda args: "T0",
     "IFLO_OPS_TEMPLATE_JNZ_ECX": lambda args: "ECX != 0",
@@ -176,15 +178,15 @@ outop_handler = {
     "IFLO_OPS_MEM_STB_T0_A0": lambda args, label: "out.write(A0,T0,'B', '%s')" % label,
 }
 
-bufop_handler = {
-    "IFLO_OPS_MEM_STL_T0_A0":  lambda args: "bufs.write(A0,T0,'L')",
-    "IFLO_OPS_MEM_STW_T0_A0":  lambda args: "bufs.write(A0,T0,'H')",
-    "IFLO_OPS_MEM_STB_T0_A0":  lambda args: "bufs.write(A0,T0,'B')",
-    "IFLO_OPS_MEM_LDL_T0_A0":  lambda args: "T0 = ULInt32(bufs.read(A0,4))",
-    "IFLO_OPS_MEM_LDL_T1_A0":  lambda args: "T1 = ULInt32(bufs.read(A0,4))",
-    "IFLO_OPS_MEM_LDUB_T0_A0": lambda args: "T0 = ULInt8(bufs.read(A0,1))",
-    "IFLO_OPS_MEM_LDUW_T0_A0": lambda args: "T0 = ULInt16(bufs.read(A0,2))",
-}
+#bufop_handler = {
+#    "IFLO_OPS_MEM_STL_T0_A0":  lambda args: "bufs.write(A0,T0,'L')",
+#    "IFLO_OPS_MEM_STW_T0_A0":  lambda args: "bufs.write(A0,T0,'H')",
+#    "IFLO_OPS_MEM_STB_T0_A0":  lambda args: "bufs.write(A0,T0,'B')",
+#    "IFLO_OPS_MEM_LDL_T0_A0":  lambda args: "T0 = ULInt32(bufs.read(A0,4))",
+#    "IFLO_OPS_MEM_LDL_T1_A0":  lambda args: "T1 = ULInt32(bufs.read(A0,4))",
+#    "IFLO_OPS_MEM_LDUB_T0_A0": lambda args: "T0 = ULInt8(bufs.read(A0,1))",
+#    "IFLO_OPS_MEM_LDUW_T0_A0": lambda args: "T0 = ULInt16(bufs.read(A0,2))",
+#}
 
 def fieldname(s):
     reg,field = s.split('.')
@@ -196,13 +198,13 @@ def fieldname(s):
     else:
         raise ValueError("Invalid register class: %s" % kind)
 
-def uop_to_py_buf(insn):
-    try:
-        return bufop_handler[insn.op](insn.args)
-    except KeyError, e:
-        print "Key not found:",e
-        print "No dynbuf handler defined for %s" % insn.op
-        sys.exit(1)
+#def uop_to_py_buf(insn):
+#    try:
+#        return bufop_handler[insn.op](insn.args)
+#    except KeyError, e:
+#        print "Key not found:",e
+#        print "No dynbuf handler defined for %s" % insn.op
+#        sys.exit(1)
 
 def uop_to_py_out(insn, label):
     try:

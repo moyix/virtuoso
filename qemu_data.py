@@ -13,6 +13,8 @@ def OBLIT(x):
     return [ lambda args: [x], lambda args: [] ]
 def IDENT(x):
     return [ lambda args: [x], lambda args: [x] ]
+def MOV(x,y):
+    return [ lambda args: [x], lambda args: [y] ]
 def LOAD(dest,size):
     return [
         lambda args: [dest],
@@ -217,6 +219,8 @@ defines_uses = {
         lambda args: ["ARG"],
         lambda args: ["REGS_%d" % qemu_regs["ESP"]] + memrange(args[1],4),
     ],
+    'IFLO_MOVL_T0_ARG': MOV('T0','ARG'),
+    'IFLO_MOVL_A0_ARG': MOV('A0','ARG'),
     'IFLO_CALL': IGNORE,
     
     # Evil conditionals. We hates them.    

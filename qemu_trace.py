@@ -1,4 +1,4 @@
-from translate_uop import uop_to_py,uop_to_py_out,uop_to_py_buf
+from translate_uop import uop_to_py,uop_to_py_out
 from qemu_data import is_jcc
 import csv
 
@@ -14,28 +14,20 @@ class TraceEntry(object):
         self.location = (0,0)
         
         self.in_slice  = False
-        self.is_dynbuf = False
 
     def set_output_label(self, label):
         """Mark this instruction as defining a labelled output."""
         self.label = label
         self.is_output = True
 
-    def set_buf(self):
-        """Mark this instruction as dealing with a dynamically alloc'd buffer"""
-        self.is_dynbuf = True
-
     def mark(self):
         self.in_slice = True
 
     def __str__(self):
-        if not self.is_dynbuf:
-            s = uop_to_py(self)
-            if not is_jcc(self.op): s += " # %s" % repr(self)
-            if self.is_output:
-                s += "\n" + uop_to_py_out(self, self.label)
-        else:
-            s = uop_to_py_buf(self) + " # %s" % repr(self)
+        s = uop_to_py(self)
+        if not is_jcc(self.op): s += " # %s" % repr(self)
+        if self.is_output:
+            s += "\n" + uop_to_py_out(self, self.label)
         return s
     def __repr__(self):
         return "%s(%s)" % (self.op, ",".join(a if isinstance(a,str) else hex(a) for a in self.args))

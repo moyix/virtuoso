@@ -33,6 +33,22 @@ from struct import unpack,pack
 from collections import defaultdict
 import cPickle as pickle
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+
+    def disable(self):
+        self.HEADER = ''
+        self.OKBLUE = ''
+        self.OKGREEN = ''
+        self.WARNING = ''
+        self.FAIL = ''
+        self.ENDC = ''
+
 try:
     from collections import namedtuple
 except ImportError:
@@ -718,12 +734,27 @@ class BufSpace:
         for start, buf in self.get_scratch(self.heap).items():
             print hex(start),":",buf.encode('hex')
 
-
 class COWSpace:
     def __init__(self, base):
+        self.reserved = []
         self.base = base
         self.scratch = {}
         self.debug = False
+        self.heap_ptr = self.reserve_addr_space()
+
+    def reserve_addr_space(self):
+        """Reserves a 4M chunk in the guest. Returns the starting virtual address."""
+        if self.base.pae:
+            raise NotImplementedError("See your friendly local developer for details")
+        else:
+            entries = unpack("<1024I", self.base.base.read(self.base.pgd_vaddr, 0x1000))
+            for i, e in enumerate(entries):
+                vaddr = i << 22
+                if not e & 1 and not vaddr in self.reserved:
+                    self.reserved.append(vaddr)
+                    return vaddr
+            raise MemoryError("No free space left in guest")
+
     def read(self, addr, length):
         if self.debug: print "DEBUG: Reading %d bytes at %#x" % (length, addr)
         data = []
@@ -738,6 +769,25 @@ class COWSpace:
                     data.append(b)
         if self.debug: print "DEBUG: Read", "".join(data).encode('hex')
         return "".join(data)
+
+    def alloc(self, size):
+        if not size: raise ValueError("Invalid size %d for malloc" % size)
+        size = int(size)
+
+        base = self.heap_ptr & 0xffc00000
+        limit = base + 0x400000
+        
+        # Store this so we can return it
+        vaddr = self.heap_ptr
+
+        if self.heap_ptr + size > limit:
+            self.heap_ptr = self.reserve_addr_space()
+            vaddr = self.heap_ptr
+        else:
+            self.heap_ptr += size
+
+        if self.debug: print "DEBUG: Allocating %#x bytes at %#010x" % (size, vaddr)
+        return UInt(vaddr)
 
     def write(self, addr, val, pack_char):
         if self.debug: print "DEBUG: Writing %#x to address %#x" % (val, addr)
@@ -762,9 +812,23 @@ class COWSpace:
             print hex(start),":",buf.encode('hex')
     
     def dd(self,addr,length=0x80):
-        for i in range(length):
-            "%02x" %  
-        
+        for x in range(0,length,16):
+            print "%08x  " % (addr+x),
+            for i in range(0,16,4):
+                dword = []
+                for j in range(4):
+                    if addr+x+i+j in self.scratch:
+                        b = self.scratch[addr+x+i+j]
+                        hc = (bcolors.FAIL + "%02x" + bcolors.ENDC) % ord(b)
+                    else:
+                        b = self.base.read(addr+x+i+j,1)
+                        if not b:
+                            hc = "??"
+                        else:
+                            hc = "%02x" % ord(b)
+                    dword.insert(0,hc)
+                print "".join(dword),
+            print
 
 class Goto(Exception):
     def __init__(self, label):
@@ -1007,7 +1071,3 @@ class newmicrodo(forensics.commands.command):
         if self.opts.debug:
             print "Debug dump of scratch:"
             mem.dump_scratch()
-
-        if self.opts.debug:
-            print "Debug dump of scratch:"
-            bufs.dump()
