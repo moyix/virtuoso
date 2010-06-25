@@ -15,15 +15,17 @@ def IDENT(x):
     return [ lambda args: [x], lambda args: [x] ]
 def MOV(x,y):
     return [ lambda args: [x], lambda args: [y] ]
+
+
 def LOAD(dest,size):
     return [
         lambda args: [dest],
-        lambda args: ['A0'] + memrange(args[1],size),
+        lambda args: ['A0'] + memrange(args[1],size) + (memrange(args[3],4) if args[3] != 0xffffffff else []) + (memrange(args[4],4) if args[4] != 0xffffffff else []) + (memrange(args[5],4) if args[5] != 0xffffffff else []),
     ]
 def STORE(src,size):
     return [
         lambda args: memrange(args[1],size),
-        lambda args: [src,'A0'],
+        lambda args: [src,'A0'] + (memrange(args[3],4) if args[3] != 0xffffffff else []) + (memrange(args[4],4) if args[4] != 0xffffffff else []) + (memrange(args[5],4) if args[5] != 0xffffffff else []),
     ]
 def ARITH(dest, src):
     return [
@@ -273,6 +275,10 @@ defines_uses = {
     'IFLO_RESET_INHIBIT_IRQ': IGNORE,
     'IFLO_INSN_BYTES': IGNORE,
     'IFLO_LOG_RET_EAX': IGNORE,
+
+    # XXX: This could be important
+    'IFLO_HD_TRANSFER_PART1_T0_BASE': IGNORE,
+    'IFLO_HD_TRANSFER_PART2': IGNORE,
 
     # Not sure why these are even in the trace
     'IFLO_COMPUTE_ALL_EFLAGS': IGNORE,
