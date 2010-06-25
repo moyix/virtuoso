@@ -83,6 +83,11 @@ class _Integer(object):
         return type(self)(self._value | other._value)
       else:
         return type(self)(self._value | self.__class__(other)._value)
+   def __ror__(self, other):
+      if isinstance(other, type(self)):
+        return type(self)(self._value | other._value)
+      else:
+        return type(self)(self._value | self.__class__(other)._value)
    def __xor__(self, other):
       if isinstance(other, type(self)):
         return type(self)(self._value ^ other._value)
