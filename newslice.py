@@ -10,7 +10,7 @@ import time, datetime
 #import networkx
 import pydasm
 
-from interval import Interval,IntervalSet
+#from interval import Interval,IntervalSet
 from fixedint import UInt
 from summary_functions import malloc_summary, null_summary, copyarg_summary
 from predict_insn import get_next_from_trace, x86_branches
@@ -571,7 +571,7 @@ def nop_functions(trace, tbs, tbdict, cfg):
     # No-ops. Format: address, number of argument bytes, name
     nops = [
         (0x7c91043d, 12, 'RtlFreeHeap'),
-        (0x80503f0a,  4, 'ExUnlockUserBuffer'),
+#        (0x80503f0a,  4, 'ExUnlockUserBuffer'),
         (0x8054af07,  8, 'ExFreePoolWithTag'),
     ]
 
@@ -920,7 +920,7 @@ if __name__ == "__main__":
     trace, tbs, tbdict, cfg = nop_functions(trace, tbs, tbdict, cfg)
 
     # Replace functions that just copy their arguments with summaries    
-    trace, tbs, tbdict, cfg = copy_functions(trace, tbs, tbdict, cfg)
+    #trace, tbs, tbdict, cfg = copy_functions(trace, tbs, tbdict, cfg)
 
     # Replace mallocs with summaries
     trace, tbs, tbdict, cfg = detect_mallocs(trace, tbs, tbdict, cfg)
@@ -930,8 +930,8 @@ if __name__ == "__main__":
     # Perform slicing and control dependency analysis
     trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)
 
-#    embedshell = IPython.Shell.IPShellEmbed(argv=[])
-#    embedshell()
+    embedshell = IPython.Shell.IPShellEmbed(argv=[])
+    embedshell()
 
     # Make sure if an insn defines output, it adds it to the output
     # space for every instance of that insn
