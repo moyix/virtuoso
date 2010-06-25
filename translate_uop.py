@@ -34,6 +34,7 @@ op_handler = {
     "IFLO_OPS_MEM_LDL_T0_A0": lambda args: "T0 = ULInt32(mem.read(A0,4))",
     "IFLO_OPS_MEM_LDL_T1_A0": lambda args: "T1 = ULInt32(mem.read(A0,4))",
     "IFLO_OPS_MEM_LDUW_T0_A0": lambda args: "T0 = ULInt16(mem.read(A0,2))",
+    "IFLO_OPS_MEM_LDUW_T1_A0": lambda args: "T1 = ULInt16(mem.read(A0,2))",
     "IFLO_OPS_MEM_LDUB_T0_A0": lambda args: "T0 = ULInt8(mem.read(A0,1))",
     "IFLO_OPS_MEM_LDUB_T1_A0": lambda args:  "T1 = ULInt8(mem.read(A0,1))",
     "IFLO_OPS_MEM_LDSB_T0_A0": lambda args: "T0 = SLInt8(mem.read(A0,1))",
@@ -74,6 +75,7 @@ op_handler = {
     "IFLO_ORL_T0_T1": lambda args: "T0 |= T1",
     "IFLO_XOR_T0_1": lambda args: "T0 ^= 1",
     "IFLO_DECL_T0": lambda args: "T0 -= 1",
+    "IFLO_NOTL_T0": lambda args: "T0 = ~T0",
     "IFLO_MOVL_T0_0": lambda args: "T0 = UInt(0)",
     "IFLO_NEGL_T0": lambda args: "T0 *= -1",
     "IFLO_MOVZWL_T0_T0": lambda args: "T0 = UInt(UShort(T0))",
@@ -167,6 +169,15 @@ eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST)
 eflags |= (DF & DF_MASK)
 eflags |= EFL & ~(VM_MASK | RF_MASK)
 T0 = UInt(eflags)
+"""),
+
+    "IFLO_DIVL_EAX_T0": lambda args: ("""
+num = ULong( (UInt(EAX) | (ULong(UInt(EDX) << 32) ) )
+den = ULong(T0)
+q = (num / den)
+r = (num % den)
+EAX = UInt(q)
+EDX = UInt(r)
 """),
 
     "IFLO_MOVL_EFLAGS_T0_CPL0": lambda args: "CC_SRC, DF, EFL = load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK | IF_MASK | IOPL_MASK), EFL)",

@@ -402,6 +402,15 @@ def get_branch_target(tbs):
     else:
         return "unknown"
 
+def set_outlabel(insns):
+    outlabel = None
+    for _,ins in insns:
+        if ins.is_output:
+            outlabel = ins.label
+            break
+    if outlabel:
+        for _,ins in insns: ins.set_output_label(outlabel)
+
 def simple_translate(tbs):
     """Translate a set of TBs at once.
        Note: does not handle conditional jump case.
@@ -414,6 +423,7 @@ def simple_translate(tbs):
     #assert all( len(t.body) == len(tbs[0].body) for t in tbs )
 
     for insns in zip(*[t.body for t in tbs]):
+        set_outlabel(insns)
         if any( insn.in_slice for _,insn in insns ):
             s.append(str(insns[0][1]))
     return s
@@ -839,12 +849,13 @@ def translate_code(trace, tbs, tbdict, cfg):
                         remainder = tb.body[i+1:]
                         break
 
-            # Find the fall-through successor.
-            tb = get_not_taken_tb(cur)
-            succ = tb.next._label_str()
-
             if taken == "split":
                 # TB Splitting, the most complicated case
+                # Pretty sure this only happens with repnz, so let's go
+                # with that assumption.
+                repeat_target = cur[0]._label_str()
+                fallthru_target = [t._label_str() for t in cur if t.next.label != t.label][0]
+
                 first_halves = []
                 remainders = []
                 for t in cur:
@@ -866,28 +877,40 @@ def translate_code(trace, tbs, tbdict, cfg):
                 s = []
                 for insns in zip(*first_halves):
                     if not any(ins.in_slice for _,ins in insns): continue
+                    set_outlabel(insns)
+
                     if is_jcc(insns[0][1].op):
                         s.append("if (%s): raise Goto(%s)" % (insns[0][1], new_label))
                     else:
                         s.append(str(insns[0][1]))
-                s.append("raise Goto(%s)" % succ)
+                s.append("raise Goto(%s)" % fallthru_target)
                 transdict[cur[0].label] = "\n".join(s)
                     
                 # Translate the second half
                 s = []
-                tak = get_taken_tb(cur)
-                succ = tak.next._label_str()
                 print "Translating [TB @%s]" % new_label 
                 for insns in zip(*[r for r in remainders if r]):
                     if not any(ins.in_slice for _,ins in insns): continue
-                    s.append(str(insns[0][1]))
-                s.append("raise Goto(%s)" % succ)
+                    set_outlabel(insns)
+
+                    if is_jcc(insns[0][1].op):
+                        s.append("if (%s): raise Goto(%s)" % (insns[0][1], fallthru_target))
+                    else:
+                        s.append(str(insns[0][1]))
+
+                s.append("raise Goto(%s)" % repeat_target)
                 transdict[eval(new_label)] = "\n".join(s)
                 
             else:
                 # Nothing hinky going on here
+
+                # Find the fall-through successor.
+                tb = get_not_taken_tb(cur)
+                succ = tb.next._label_str()
+
                 s = []
                 for insns in zip(*[c.body for c in cur]):
+                    set_outlabel(insns)
                     if any( insn.in_slice for _,insn in insns ):
                         insn = insns[0][1]
                         if is_jcc(insn.op):
@@ -931,18 +954,18 @@ if __name__ == "__main__":
     trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)
 
     embedshell = IPython.Shell.IPShellEmbed(argv=[])
-    embedshell()
+    #embedshell()
 
-    # Make sure if an insn defines output, it adds it to the output
-    # space for every instance of that insn
-    for t in tbs:
-        if any(insn.is_output for i,insn in t.body):
-            for i,x in t.body:
-                if x.is_output: break
-            off = i - t.start()
-            label = x.label
-            for tb in tbdict[t.label]:
-                tb.body[off][1].set_output_label(label)
+#    # Make sure if an insn defines output, it adds it to the output
+#    # space for every instance of that insn
+#    for t in tbs:
+#        if any(insn.is_output for i,insn in t.body):
+#            for i,x in t.body:
+#                if x.is_output: break
+#            off = i - t.start()
+#            label = x.label
+#            for tb in tbdict[t.label]:
+#                tb.body[off][1].set_output_label(label)
 
     # Translate it
     transdict = translate_code(trace, tbs, tbdict, cfg)
