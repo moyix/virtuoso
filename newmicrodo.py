@@ -23,11 +23,13 @@
 @organization: Georgia Institute of Technology / MIT Lincoln Laboratory
 """
 
+from interval import Interval, IntervalSet
 from fixedint import *
 from forensics.object2 import *
 from forensics.object import *
 from vutils import *
 from forensics.win32.datetime import windows_to_unix_time
+from forensics.x86_rw import IA32PagedMemoryWr
 from time import ctime,asctime,gmtime
 from struct import unpack,pack
 from collections import defaultdict
@@ -655,6 +657,30 @@ cc_table = [
     CCEntry(None, None)
 ]
 
+# Some paging constants
+
+PAGE_SIZE = 0x1000
+
+( PD_PRESENT,
+  PD_RW,
+  PD_US,
+  PD_PWT,
+  PD_PCD,
+  PD_A,
+  PD_RESERVED,
+  PD_PAGE_SIZE,
+  PD_GLOBAL ) = [1 << i for i in range(9)]
+
+( PT_PRESENT,
+  PT_RW,
+  PT_US,
+  PT_PWT,
+  PT_PCD,
+  PT_A,
+  PT_D,
+  PT_PAT,
+  PT_GLOBAL ) = [1 << i for i in range(9)]
+
 class OutSpace:
     def __init__(self):
         self.scratch = defaultdict(dict)
@@ -683,77 +709,17 @@ class OutSpace:
         assert len(data) == 1
         return data.values()[0]
 
-class BufSpace:
-    def __init__(self):
-        self.heap = {}
-        self.debug = False
-        self.highest = 0x1000
-
-    def alloc(self, size):
-        ptr = self.highest
-        self.highest += int(size)
-        if self.debug: print "Allocating %#x bytes at %#x" % (size, ptr)
-        return UInt(ptr)
-
-    def read(self, addr, length):
-        if self.debug: print "DEBUG: Reading %d bytes at %#x (malloc)" % (length, addr)
-        data = []
-        space = self.heap
-
-        try:
-            for i in range(addr,addr+length):
-                data.append(space[i])
-        except KeyError, e:
-            raise ValueError("Read error in dynamic buffer, address %#x" % addr)
-        if self.debug: print "DEBUG: Read", "".join(data).encode('hex')
-        return "".join(data)
-
-    def write(self, addr, val, pack_char):
-        if self.debug: print "DEBUG: Writing %#x to address %#x (malloc)" % (val, addr)
-        space = self.heap
-
-        buf = pack("<" + pack_char, int(val))
-        for (i,c) in enumerate(buf):
-            space[int(addr+i)] = c
-
-    def get_scratch(self, scratch):
-        data = {}
-        start = 0
-        buf = ""
-        for i in sorted(scratch):
-            if not isinstance(i, int): continue
-            if not buf: start = i
-            buf += scratch[i]
-            if i+1 not in scratch:
-                data[start] = buf
-                buf = ""
-        return data
-
-    def dump(self):
-        print ">>> HEAP <<<"
-        for start, buf in self.get_scratch(self.heap).items():
-            print hex(start),":",buf.encode('hex')
-
-class COWSpace:
+class PCOW(object):
     def __init__(self, base):
-        self.reserved = []
         self.base = base
         self.scratch = {}
         self.debug = False
-        self.heap_ptr = self.reserve_addr_space()
+        self.extended_area = 0x80000000
 
-    def reserve_addr_space(self):
-        """Reserves a 4M chunk in the guest. Returns the starting virtual address."""
-        if self.base.pae:
-            raise NotImplementedError("See your friendly local developer for details")
-        else:
-            entries = unpack("<1024I", self.base.base.read(self.base.pgd_vaddr, 0x1000))
-            for i, e in enumerate(entries):
-                vaddr = i << 22
-                if not e & 1 and not vaddr in self.reserved:
-                    self.reserved.append(vaddr)
-                    return vaddr
-            raise MemoryError("No free space left in guest")
+    def reserve(self, num_pages):
+        old = self.extended_area
+        self.extended_area += (num_pages * PAGE_SIZE)
+        return old
 
     def read(self, addr, length):
         if self.debug: print "DEBUG: Reading %d bytes at %#x" % (length, addr)
@@ -770,28 +736,7 @@ class COWSpace:
         if self.debug: print "DEBUG: Read", "".join(data).encode('hex')
         return "".join(data)
 
-    def alloc(self, size):
-        if not size: raise ValueError("Invalid size %d for malloc" % size)
-        size = int(size)
-
-        base = self.heap_ptr & 0xffc00000
-        limit = base + 0x400000
-        
-        # Store this so we can return it
-        vaddr = self.heap_ptr
-
-        if self.heap_ptr + size > limit:
-            self.heap_ptr = self.reserve_addr_space()
-            vaddr = self.heap_ptr
-        else:
-            self.heap_ptr += size
-
-        if self.debug: print "DEBUG: Allocating %#x bytes at %#010x" % (size, vaddr)
-        return UInt(vaddr)
-
-    def write(self, addr, val, pack_char):
-        if self.debug: print "DEBUG: Writing %#x to address %#x" % (val, addr)
-        buf = pack("<" + pack_char, int(val))
+    def write(self, addr, buf):
         for (i,c) in enumerate(buf):
             self.scratch[int(addr+i)] = c
 
@@ -819,6 +764,128 @@ class COWSpace:
                 for j in range(4):
                     if addr+x+i+j in self.scratch:
                         b = self.scratch[addr+x+i+j]
+                        hc = (bcolors.FAIL + "%02x" + bcolors.ENDC) % ord(b)
+                    else:
+                        b = self.base.read(addr+x+i+j,1)
+                        if not b:
+                            hc = "??"
+                        else:
+                            hc = "%02x" % ord(b)
+                    dword.insert(0,hc)
+                print "".join(dword),
+            print
+
+class VCOW:
+    def __init__(self, base):
+        self.base = base
+        self.debug = False
+        self.heap = {}
+        self.reserved = []
+        self.allocated = IntervalSet()
+        self.heap_ptr = self.reserve_addr_space()
+
+    def reserve_addr_space(self):
+        """Reserves a 4M chunk in the guest. Returns the starting virtual address."""
+        pcow = self.base.base
+        if self.base.pae:
+            raise NotImplementedError("See your friendly local developer for details")
+        else:
+            cr3 = self.base.pgd_vaddr
+            entries = unpack("<1024I", pcow.read(cr3, 0x1000))
+            for i, e in enumerate(entries):
+                vaddr = i << 22
+                if not e & 1 and not vaddr in self.reserved:
+                    self.reserved.append(vaddr)
+                    break
+            else:
+                raise MemoryError("No free space left in guest")
+
+            # Allocate the new PT
+            pt = pcow.reserve(1)
+            # Add the PDE
+            pcow.write(cr3 + i*4, pack("<I", pt | PD_PRESENT | PD_RW))
+            # Alloacte pages
+            pages_start = pcow.reserve(PAGE_SIZE / 4)
+            # Add PTEs to the PD
+            for j in range(PAGE_SIZE / 4):
+                pcow.write(pt + j*4,
+                    pack("<I", (pages_start+(j*PAGE_SIZE)) | PT_PRESENT | PT_RW))
+            return vaddr
+
+    def read(self, addr, length):
+        if self.debug: print "DEBUG: Reading %d bytes at %#x" % (length, addr)
+        return self.base.read(int(addr), length)
+
+#        data = []
+#        for i in range(addr,addr+length):
+#            if i in self.allocated:
+#                data.append(self.heap[i])
+#            else:
+#                b = self.base.read(i,1)
+#                if not b:
+#                    raise ValueError("Memory read error at %#x" % i)
+#                else:
+#                    data.append(b)
+#        if self.debug: print "DEBUG: Read", "".join(data).encode('hex')
+#        return "".join(data)
+
+    def write(self, addr, val, pack_char):
+        buf = pack("<" + pack_char, int(val))
+        self.base.write(int(addr),buf)
+
+#        for (i,c) in enumerate(buf):
+#            if int(addr+i) in self.allocated:
+#                if self.debug: print "DEBUG: Writing %#x to heap address %#x" % (val, addr)
+#                self.heap[int(addr+i)] = c
+#            else:
+#                if self.debug: print "DEBUG: Writing %#x to system address %#x" % (val, addr)
+#                self.base.write(int(addr+i),c)
+
+    def alloc(self, size):
+        if not size: raise ValueError("Invalid size %d for malloc" % size)
+        size = int(size)
+
+        base = self.heap_ptr & 0xffc00000
+        limit = base + 0x400000
+        
+        # Store this so we can return it
+        vaddr = self.heap_ptr
+
+        if self.heap_ptr + size > limit:
+            self.heap_ptr = self.reserve_addr_space()
+            vaddr = self.heap_ptr
+        else:
+            self.heap_ptr += size
+
+        self.allocated.add(Interval(vaddr,vaddr+size-1))
+
+        if self.debug: print "DEBUG: Allocating %#x bytes at %#010x" % (size, vaddr)
+        return UInt(vaddr)
+
+    def get_scratch(self):
+        data = {}
+        start = 0
+        buf = ""
+        for i in sorted(self.heap):
+            if not buf: start = i
+            buf += self.heap[i]
+            if i+1 not in self.heap:
+                data[start] = buf
+                buf = ""
+        return data
+
+    def dump_scratch(self):
+        for start, buf in self.get_scratch().items():
+            print hex(start),":",buf.encode('hex')
+    
+    def dd(self,addr,length=0x80):
+        for x in range(0,length,16):
+            print "%08x  " % (addr+x),
+            for i in range(0,16,4):
+                dword = []
+                for j in range(4):
+                    if addr+x+i+j in self.heap:
+                        b = self.heap[addr+x+i+j]
                         hc = (bcolors.FAIL + "%02x" + bcolors.ENDC) % ord(b)
                     else:
                         b = self.base.read(addr+x+i+j,1)
@@ -970,7 +1037,8 @@ class newmicrodo(forensics.commands.command):
     def execute(self):
         theProfile = Profile()
         #(addr_space, symtab, types) = load_and_identify_image(self.op, self.opts)
-        flat = FileAddressSpace(self.opts.filename)
+        thefile = FileAddressSpace(self.opts.filename)
+        flat = PCOW(thefile)
 
         if not self.opts.env:
             self.op.error('Must provide a valid CPU environment (use "info registers")')
@@ -988,17 +1056,16 @@ class newmicrodo(forensics.commands.command):
         if CR4 & PAE_FLAG:
             addr_space = IA32PagedMemoryPae(flat, int(CR3))
         else:
-            addr_space = IA32PagedMemory(flat, int(CR3))
+            addr_space = IA32PagedMemoryWr(flat, int(CR3))
 
         # Wrap it in copy-on-write
-        mem = COWSpace(addr_space)
+        mem = VCOW(addr_space)
         out = OutSpace()
-        bufs = BufSpace()
 
         if self.opts.debug:
             mem.debug = True
+            flat.debug = True
             out.debug = True
-            bufs.debug = True        
 
         # Inputs to the block of micro-ops we want to to execute
         #inputs = [ 0xdeadf000 ] # pBuf -- pointer to the output buffer
