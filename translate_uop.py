@@ -30,6 +30,7 @@ op_handler = {
     "IFLO_OPREG_TEMPL_MOVL_R_T0": lambda args: "%s = T0" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVL_T0_R": lambda args: "T0 = %s" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVL_T1_R": lambda args: "T1 = %s" % qemu_regs_r[args[0]],
+    "IFLO_OPREG_TEMPL_MOVL_R_T1": lambda args: "%s = T1" % qemu_regs_r[args[0]],
     "IFLO_OPS_MEM_LDL_T0_A0": lambda args: "T0 = ULInt32(mem.read(A0,4))",
     "IFLO_OPS_MEM_LDL_T1_A0": lambda args: "T1 = ULInt32(mem.read(A0,4))",
     "IFLO_OPS_MEM_LDUW_T0_A0": lambda args: "T0 = ULInt16(mem.read(A0,2))",
