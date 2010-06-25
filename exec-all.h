@@ -29,6 +29,12 @@
 
 struct TranslationBlock;
 
+struct pageinfo_t {
+    target_ulong pdpe_addr;
+    target_ulong pde_addr;
+    target_ulong pte_addr;
+};
+
 /* XXX: make safe guess about sizes */
 #define MAX_OP_PER_INSTR 32
 #define OPC_BUF_SIZE 512

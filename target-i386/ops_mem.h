@@ -16,89 +16,115 @@
 
 
 // nb phys_a0() is defined in op.c
-
+int cpu_get_pageinfo(CPUState *env, struct pageinfo_t *pinfo, target_ulong addr);
 
 
 // T0 = *A0
 void OPPROTO glue(glue(op_ldub, MEMSUFFIX), _T0_A0)(void)
 {
     T0 = glue(ldub, MEMSUFFIX)(A0);
-  iferret_log_info_flow_op_write_1444(IFLO_OPS_MEM_LDUB_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,T0);
+  cpu_get_pageinfo(env, &pinfo_glob, A0);
+  iferret_log_info_flow_op_write_1444444(IFLO_OPS_MEM_LDUB_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,pinfo_glob.pdpe_addr,pinfo_glob.pde_addr,pinfo_glob.pte_addr,T0);
+  reset_pageinfo(&pinfo_glob);
 }
 
 void OPPROTO glue(glue(op_ldsb, MEMSUFFIX), _T0_A0)(void)
 {
     T0 = glue(ldsb, MEMSUFFIX)(A0);
-  iferret_log_info_flow_op_write_1444(IFLO_OPS_MEM_LDSB_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,T0);
+  cpu_get_pageinfo(env, &pinfo_glob, A0);
+  iferret_log_info_flow_op_write_1444444(IFLO_OPS_MEM_LDSB_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,pinfo_glob.pdpe_addr,pinfo_glob.pde_addr,pinfo_glob.pte_addr,T0);
+  reset_pageinfo(&pinfo_glob);
 }
 
 void OPPROTO glue(glue(op_lduw, MEMSUFFIX), _T0_A0)(void)
 {
     T0 = glue(lduw, MEMSUFFIX)(A0);
-  iferret_log_info_flow_op_write_1444(IFLO_OPS_MEM_LDUW_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,T0);  
+  cpu_get_pageinfo(env, &pinfo_glob, A0);
+  iferret_log_info_flow_op_write_1444444(IFLO_OPS_MEM_LDUW_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,pinfo_glob.pdpe_addr,pinfo_glob.pde_addr,pinfo_glob.pte_addr,T0);  
+  reset_pageinfo(&pinfo_glob);
 }
 
 void OPPROTO glue(glue(op_ldsw, MEMSUFFIX), _T0_A0)(void)
 {
     T0 = glue(ldsw, MEMSUFFIX)(A0);
-  iferret_log_info_flow_op_write_1444(IFLO_OPS_MEM_LDSW_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,T0);
+  cpu_get_pageinfo(env, &pinfo_glob, A0);
+  iferret_log_info_flow_op_write_1444444(IFLO_OPS_MEM_LDSW_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,pinfo_glob.pdpe_addr,pinfo_glob.pde_addr,pinfo_glob.pte_addr,T0);
+  reset_pageinfo(&pinfo_glob);
 }
 
 void OPPROTO glue(glue(op_ldl, MEMSUFFIX), _T0_A0)(void)
 {
     T0 = (uint32_t)glue(ldl, MEMSUFFIX)(A0);
-    iferret_log_info_flow_op_write_1444(IFLO_OPS_MEM_LDL_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,T0);
+  cpu_get_pageinfo(env, &pinfo_glob, A0);
+  iferret_log_info_flow_op_write_1444444(IFLO_OPS_MEM_LDL_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,pinfo_glob.pdpe_addr,pinfo_glob.pde_addr,pinfo_glob.pte_addr,T0);
+  reset_pageinfo(&pinfo_glob);
 }
 
 void OPPROTO glue(glue(op_ldub, MEMSUFFIX), _T1_A0)(void)
 {
     T1 = glue(ldub, MEMSUFFIX)(A0);
-  iferret_log_info_flow_op_write_1444(IFLO_OPS_MEM_LDUB_T1_A0,MEMSUFFIXNUM,phys_a0(),A0,T1);
+  cpu_get_pageinfo(env, &pinfo_glob, A0);
+  iferret_log_info_flow_op_write_1444444(IFLO_OPS_MEM_LDUB_T1_A0,MEMSUFFIXNUM,phys_a0(),A0,pinfo_glob.pdpe_addr,pinfo_glob.pde_addr,pinfo_glob.pte_addr,T1);
+  reset_pageinfo(&pinfo_glob);
 }
 
 void OPPROTO glue(glue(op_ldsb, MEMSUFFIX), _T1_A0)(void)
 {
     T1 = glue(ldsb, MEMSUFFIX)(A0);
-  iferret_log_info_flow_op_write_1444(IFLO_OPS_MEM_LDSB_T1_A0,MEMSUFFIXNUM,phys_a0(),A0,T1);
+  cpu_get_pageinfo(env, &pinfo_glob, A0);
+  iferret_log_info_flow_op_write_1444444(IFLO_OPS_MEM_LDSB_T1_A0,MEMSUFFIXNUM,phys_a0(),A0,pinfo_glob.pdpe_addr,pinfo_glob.pde_addr,pinfo_glob.pte_addr,T1);
+  reset_pageinfo(&pinfo_glob);
 }
 
 void OPPROTO glue(glue(op_lduw, MEMSUFFIX), _T1_A0)(void)
 {
     T1 = glue(lduw, MEMSUFFIX)(A0);
-  iferret_log_info_flow_op_write_1444(IFLO_OPS_MEM_LDUW_T1_A0,MEMSUFFIXNUM,phys_a0(),A0,T1);
+  cpu_get_pageinfo(env, &pinfo_glob, A0);
+  iferret_log_info_flow_op_write_1444444(IFLO_OPS_MEM_LDUW_T1_A0,MEMSUFFIXNUM,phys_a0(),A0,pinfo_glob.pdpe_addr,pinfo_glob.pde_addr,pinfo_glob.pte_addr,T1);
+  reset_pageinfo(&pinfo_glob);
 }
 
 void OPPROTO glue(glue(op_ldsw, MEMSUFFIX), _T1_A0)(void)
 {
     T1 = glue(ldsw, MEMSUFFIX)(A0);
-  iferret_log_info_flow_op_write_1444(IFLO_OPS_MEM_LDSW_T1_A0,MEMSUFFIXNUM,phys_a0(),A0,T1);
+  cpu_get_pageinfo(env, &pinfo_glob, A0);
+  iferret_log_info_flow_op_write_1444444(IFLO_OPS_MEM_LDSW_T1_A0,MEMSUFFIXNUM,phys_a0(),A0,pinfo_glob.pdpe_addr,pinfo_glob.pde_addr,pinfo_glob.pte_addr,T1);
+  reset_pageinfo(&pinfo_glob);
 }
 
 void OPPROTO glue(glue(op_ldl, MEMSUFFIX), _T1_A0)(void)
 {
     T1 = (uint32_t)glue(ldl, MEMSUFFIX)(A0);
-    iferret_log_info_flow_op_write_1444(IFLO_OPS_MEM_LDL_T1_A0,MEMSUFFIXNUM,phys_a0(),A0,T1);
+  cpu_get_pageinfo(env, &pinfo_glob, A0);
+  iferret_log_info_flow_op_write_1444444(IFLO_OPS_MEM_LDL_T1_A0,MEMSUFFIXNUM,phys_a0(),A0,pinfo_glob.pdpe_addr,pinfo_glob.pde_addr,pinfo_glob.pte_addr,T1);
+  reset_pageinfo(&pinfo_glob);
 }
 
 
 // *A0 = T0
 void OPPROTO glue(glue(op_stb, MEMSUFFIX), _T0_A0)(void)
 {
-  iferret_log_info_flow_op_write_1444(IFLO_OPS_MEM_STB_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,T0);
+  cpu_get_pageinfo(env, &pinfo_glob, A0);
+  iferret_log_info_flow_op_write_1444444(IFLO_OPS_MEM_STB_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,pinfo_glob.pdpe_addr,pinfo_glob.pde_addr,pinfo_glob.pte_addr,T0);
+  reset_pageinfo(&pinfo_glob);
     glue(stb, MEMSUFFIX)(A0, T0);
     FORCE_RET();
 }
 
 void OPPROTO glue(glue(op_stw, MEMSUFFIX), _T0_A0)(void)
 {
-  iferret_log_info_flow_op_write_1444(IFLO_OPS_MEM_STW_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,T0);
+  cpu_get_pageinfo(env, &pinfo_glob, A0);
+  iferret_log_info_flow_op_write_1444444(IFLO_OPS_MEM_STW_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,pinfo_glob.pdpe_addr,pinfo_glob.pde_addr,pinfo_glob.pte_addr,T0);
+  reset_pageinfo(&pinfo_glob);
     glue(stw, MEMSUFFIX)(A0, T0);
     FORCE_RET();
 }
 
 void OPPROTO glue(glue(op_stl, MEMSUFFIX), _T0_A0)(void)
 {
-  iferret_log_info_flow_op_write_1444(IFLO_OPS_MEM_STL_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,T0);
+  cpu_get_pageinfo(env, &pinfo_glob, A0);
+  iferret_log_info_flow_op_write_1444444(IFLO_OPS_MEM_STL_T0_A0,MEMSUFFIXNUM,phys_a0(),A0,pinfo_glob.pdpe_addr,pinfo_glob.pde_addr,pinfo_glob.pte_addr,T0);
+  reset_pageinfo(&pinfo_glob);
     glue(stl, MEMSUFFIX)(A0, T0);
     FORCE_RET();
 }
@@ -113,14 +139,18 @@ void OPPROTO glue(glue(op_stb, MEMSUFFIX), _T1_A0)(void)
 
 void OPPROTO glue(glue(op_stw, MEMSUFFIX), _T1_A0)(void)
 {
-  iferret_log_info_flow_op_write_1444(IFLO_OPS_MEM_STW_T1_A0,MEMSUFFIXNUM,phys_a0(),A0,T1);
+  cpu_get_pageinfo(env, &pinfo_glob, A0);
+  iferret_log_info_flow_op_write_1444444(IFLO_OPS_MEM_STW_T1_A0,MEMSUFFIXNUM,phys_a0(),A0,pinfo_glob.pdpe_addr,pinfo_glob.pde_addr,pinfo_glob.pte_addr,T1);
+  reset_pageinfo(&pinfo_glob);
     glue(stw, MEMSUFFIX)(A0, T1);
     FORCE_RET();
 }
 
 void OPPROTO glue(glue(op_stl, MEMSUFFIX), _T1_A0)(void)
 {
-  iferret_log_info_flow_op_write_1444(IFLO_OPS_MEM_STL_T1_A0,MEMSUFFIXNUM,phys_a0(),A0,T1);
+  cpu_get_pageinfo(env, &pinfo_glob, A0);
+  iferret_log_info_flow_op_write_1444444(IFLO_OPS_MEM_STL_T1_A0,MEMSUFFIXNUM,phys_a0(),A0,pinfo_glob.pdpe_addr,pinfo_glob.pde_addr,pinfo_glob.pte_addr,T1);
+  reset_pageinfo(&pinfo_glob);
     glue(stl, MEMSUFFIX)(A0, T1);
     FORCE_RET();
 }

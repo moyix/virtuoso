@@ -1085,6 +1085,100 @@ int cpu_x86_handle_mmu_fault(CPUX86State *env, target_ulong addr,
     return 1;
 }
 
+int cpu_get_pageinfo(CPUState *env, struct pageinfo_t *pinfo, target_ulong addr) {
+    uint32_t pde_addr, pte_addr;
+    uint32_t pde, pte, page_size;
+
+    if (env->cr[4] & CR4_PAE_MASK) {
+        uint32_t pdpe_addr, pde_addr, pte_addr;
+        uint32_t pdpe;
+
+        /* XXX: we only use 32 bit physical addresses */
+#ifdef TARGET_X86_64
+        if (env->hflags & HF_LMA_MASK) {
+            uint32_t pml4e_addr, pml4e;
+            int32_t sext;
+
+            /* test virtual address sign extension */
+            sext = (int64_t)addr >> 47;
+            if (sext != 0 && sext != -1)
+                return 0;
+
+            pml4e_addr = ((env->cr[3] & ~0xfff) + (((addr >> 39) & 0x1ff) << 3)) &
+                env->a20_mask;
+            pml4e = ldl_phys(pml4e_addr);
+            if (!(pml4e & PG_PRESENT_MASK))
+                return 0;
+
+            pdpe_addr = ((pml4e & ~0xfff) + (((addr >> 30) & 0x1ff) << 3)) &
+                env->a20_mask;
+            pdpe = ldl_phys(pdpe_addr);
+            if (!(pdpe & PG_PRESENT_MASK))
+                return 0;
+        } else
+#endif
+        {
+            pdpe_addr = ((env->cr[3] & ~0x1f) + ((addr >> 27) & 0x18)) &
+                env->a20_mask;
+            pdpe = ldl_phys(pdpe_addr);
+            if (!(pdpe & PG_PRESENT_MASK))
+                return 0;
+        }
+
+        pde_addr = ((pdpe & ~0xfff) + (((addr >> 21) & 0x1ff) << 3)) &
+            env->a20_mask;
+        pde = ldl_phys(pde_addr);
+        if (!(pde & PG_PRESENT_MASK)) {
+            return 0;
+        }
+        if (pde & PG_PSE_MASK) {
+            /* 2 MB page */
+            page_size = 2048 * 1024;
+            pte = pde & ~( (page_size - 1) & ~0xfff); /* align to page_size */
+        } else {
+            /* 4 KB page */
+            pte_addr = ((pde & ~0xfff) + (((addr >> 12) & 0x1ff) << 3)) &
+                env->a20_mask;
+            page_size = 4096;
+            pte = ldl_phys(pte_addr);
+        }
+
+        pinfo->pdpe_addr = pdpe_addr;
+        pinfo->pde_addr = pde_addr;
+        pinfo->pte_addr = pte_addr;
+
+    } else {
+        if (!(env->cr[0] & CR0_PG_MASK)) {
+            pte = addr;
+            page_size = 4096;
+        } else {
+            /* page directory entry */
+            pde_addr = ((env->cr[3] & ~0xfff) + ((addr >> 20) & 0xffc)) & env->a20_mask;
+            pde = ldl_phys(pde_addr);
+            if (!(pde & PG_PRESENT_MASK))
+                return 0;
+            if ((pde & PG_PSE_MASK) && (env->cr[4] & CR4_PSE_MASK)) {
+                pte = pde & ~0x003ff000; /* align to 4MB */
+                page_size = 4096 * 1024;
+            } else {
+                /* page directory entry */
+                pte_addr = ((pde & ~0xfff) + ((addr >> 10) & 0xffc)) & env->a20_mask;
+                pte = ldl_phys(pte_addr);
+                if (!(pte & PG_PRESENT_MASK))
+		  return 0;
+                page_size = 4096;
+            }
+        }
+        pte = pte & env->a20_mask;
+
+        pinfo->pde_addr = pde_addr;
+        pinfo->pte_addr = pte_addr;
+    }
+
+    // success
+    return 1;
+}
+
 int cpu_get_phys_page_stuff(CPUState *env, target_ulong addr,
 			     target_ulong *page_offset_addr, 
 			     target_ulong *page_size_addr, 

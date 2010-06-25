@@ -48,7 +48,16 @@ static inline target_long lshift(target_long x, int n)
 
 // from helper2.c
 target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
+int cpu_get_pageinfo(CPUState *env, struct pageinfo_t *pinfo, target_ulong addr);
 
+// BDG 06222010
+struct pageinfo_t pinfo_glob = {0xffffffff, 0xffffffff, 0xffffffff};
+
+reset_pageinfo(struct pageinfo_t *pinfo) {
+    pinfo->pdpe_addr = 0xffffffff;
+    pinfo->pde_addr = 0xffffffff;
+    pinfo->pte_addr = 0xffffffff;
+}
 
 /*
 // translate A0 into a physical address.  
