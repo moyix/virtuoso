@@ -22,8 +22,11 @@ class bcolors:
 trace = load(open(sys.argv[1]))
 for i, t in trace:
     if t.op == 'IFLO_TB_HEAD_EIP':
-        print bcolors.WARNING + repr(t) + bcolors.ENDC
+        color = bcolors.WARNING
+    elif t.op == 'IFLO_INSN_BYTES':
+        color = bcolors.OKGREEN
     elif t.in_slice:
-        print bcolors.FAIL + repr(t) + bcolors.ENDC
+        color = bcolors.FAIL
     else:
-        print bcolors.OKBLUE  + repr(t) + bcolors.ENDC
+        color = bcolors.OKBLUE
+    print color + repr(t) + bcolors.ENDC
