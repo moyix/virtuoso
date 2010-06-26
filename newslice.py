@@ -10,7 +10,6 @@ import time, datetime
 #import networkx
 import pydasm
 
-#from interval import Interval,IntervalSet
 from fixedint import UInt
 from summary_functions import malloc_summary, null_summary, copyarg_summary
 from predict_insn import get_next_from_trace, x86_branches
@@ -851,10 +850,10 @@ def translate_code(trace, tbs, tbdict, cfg):
 
             if taken == "split":
                 # TB Splitting, the most complicated case
-                # Pretty sure this only happens with repnz, so let's go
+                # Pretty sure this only happens with rep, so let's go
                 # with that assumption.
                 repeat_target = cur[0]._label_str()
-                fallthru_target = [t._label_str() for t in cur if t.next.label != t.label][0]
+                fallthru_target = [t.next._label_str() for t in cur if t.next.label != t.label][0]
 
                 first_halves = []
                 remainders = []
