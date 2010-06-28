@@ -155,7 +155,7 @@ def compute_c_adcl(CC_SRC, CC_DST):
 
 def compute_c_adcw(CC_SRC, CC_DST):
     src1 = Int(CC_SRC)
-    cf = (Int(Ushort(CC_DST)) <= Int(Ushort(src1)))
+    cf = (Int(UShort(CC_DST)) <= Int(UShort(src1)))
     return cf
 
 def compute_c_addb(CC_SRC, CC_DST):
@@ -170,7 +170,7 @@ def compute_c_addl(CC_SRC, CC_DST):
 
 def compute_c_addw(CC_SRC, CC_DST):
     src1 = Int(CC_SRC)
-    cf = (Int(Ushort(CC_DST)) < Int(Ushort(src1)))
+    cf = (Int(UShort(CC_DST)) < Int(UShort(src1)))
     return cf
 
 def compute_c_eflags(CC_SRC, CC_DST):
@@ -210,7 +210,7 @@ def compute_c_sbbl(CC_SRC, CC_DST):
 def compute_c_sbbw(CC_SRC, CC_DST):
     src1 = Int(((CC_DST + CC_SRC) + UInt(1)))
     src2 = Int(CC_SRC)
-    cf = (Int(Ushort(src1)) <= Int(Ushort(src2)))
+    cf = (Int(UShort(src1)) <= Int(UShort(src2)))
     return cf
 
 def compute_c_shlb(CC_SRC, CC_DST):
@@ -237,7 +237,7 @@ def compute_c_subl(CC_SRC, CC_DST):
 def compute_c_subw(CC_SRC, CC_DST):
     src1 = Int((CC_DST + CC_SRC))
     src2 = Int(CC_SRC)
-    cf = (Int(Ushort(src1)) < Int(Ushort(src2)))
+    cf = (Int(UShort(src1)) < Int(UShort(src2)))
     return cf
 
 def compute_all_adcb(CC_SRC, CC_DST):
@@ -269,10 +269,10 @@ def compute_all_adcl(CC_SRC, CC_DST):
 def compute_all_adcw(CC_SRC, CC_DST):
     src1 = Int(CC_SRC)
     src2 = Int(((CC_DST - CC_SRC) - UInt(1)))
-    cf = (Int(Ushort(CC_DST)) <= Int(Ushort(src1)))
+    cf = (Int(UShort(CC_DST)) <= Int(UShort(src1)))
     pf = Int(parity_table[int(CC_DST)])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
-    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
     sf = (tmp & 128)
     tmp___0 = lshift(Int(UInt((src1 ^ src2) ^ -1) & (UInt(src1) ^ CC_DST)), 12 - (1 << 4));
@@ -308,10 +308,10 @@ def compute_all_addl(CC_SRC, CC_DST):
 def compute_all_addw(CC_SRC, CC_DST):
     src1 = Int(CC_SRC)
     src2 = Int((CC_DST - CC_SRC))
-    cf = (Int(Ushort(CC_DST)) < Int(Ushort(src1)))
+    cf = (Int(UShort(CC_DST)) < Int(UShort(src1)))
     pf = Int(parity_table[int(CC_DST)])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
-    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
     sf = (tmp & 128)
     tmp___0 = lshift(Int(UInt((src1 ^ src2) ^ -1) & (UInt(src1) ^ CC_DST)), 12 - (1 << 4));
@@ -348,7 +348,7 @@ def compute_all_decw(CC_SRC, CC_DST):
     cf = Int(CC_SRC)
     pf = Int(parity_table[int(CC_DST)])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
-    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
     sf = (tmp & 128)
     of = (((CC_DST & UInt(65535)) == ((UInt(1) << ((1 << 4) - 1)) - UInt(1))) << 11)
@@ -387,7 +387,7 @@ def compute_all_incw(CC_SRC, CC_DST):
     cf = Int(CC_SRC)
     pf = Int(parity_table[int(CC_DST)])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
-    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
     sf = (tmp & 128)
     of = (((CC_DST & UInt(65535)) == (UInt(1) << ((1 << 4) - 1))) << 11)
@@ -417,7 +417,7 @@ def compute_all_logicw(CC_SRC, CC_DST):
     cf = 0
     pf = Int(parity_table[int(CC_DST)])
     af = 0
-    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
     sf = (tmp & 128)
     of = 0
@@ -447,7 +447,7 @@ def compute_all_mulw(CC_SRC, CC_DST):
     cf = (CC_SRC != UInt(0))
     pf = Int(parity_table[int(CC_DST)])
     af = 0
-    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
     sf = (tmp & 128)
     of = (cf << 11)
@@ -479,7 +479,7 @@ def compute_all_sarw(CC_SRC, CC_DST):
     cf = Int((CC_SRC & UInt(1)))
     pf = Int(parity_table[int(CC_DST)])
     af = 0
-    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
     sf = (tmp & 128)
     tmp___0 = lshift(Int(CC_SRC ^ CC_DST), 12 - (1 << 4));
@@ -515,10 +515,10 @@ def compute_all_sbbl(CC_SRC, CC_DST):
 def compute_all_sbbw(CC_SRC, CC_DST):
     src1 = Int(((CC_DST + CC_SRC) + UInt(1)))
     src2 = Int(CC_SRC)
-    cf = (Int(Ushort(src1)) <= Int(Ushort(src2)))
+    cf = (Int(UShort(src1)) <= Int(UShort(src2)))
     pf = Int(parity_table[int(CC_DST)])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
-    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
     sf = (tmp & 128)
     tmp___0 = lshift(Int(UInt(src1 ^ src2) & (UInt(src1) ^ CC_DST)), 12 - (1 << 4));
@@ -551,7 +551,7 @@ def compute_all_shlw(CC_SRC, CC_DST):
     cf = Int(((CC_SRC >> ((1 << 4) - 1)) & UInt(1)))
     pf = Int(parity_table[int(CC_DST)])
     af = 0
-    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
     sf = (tmp & 128)
     tmp___0 = lshift(Int(CC_SRC ^ CC_DST), 12 - (1 << 4));
@@ -587,10 +587,10 @@ def compute_all_subl(CC_SRC, CC_DST):
 def compute_all_subw(CC_SRC, CC_DST):
     src1 = Int((CC_DST + CC_SRC))
     src2 = Int(CC_SRC)
-    cf = (Int(Ushort(src1)) < Int(Ushort(src2)))
+    cf = (Int(UShort(src1)) < Int(UShort(src2)))
     pf = Int(parity_table[int(CC_DST)])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
-    zf = ((Int(Ushort(CC_DST)) == 0) << 6)
+    zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
     sf = (tmp & 128)
     tmp___0 = lshift(Int(UInt(src1 ^ src2) & (UInt(src1) ^ CC_DST)), 12 - (1 << 4));
@@ -779,10 +779,13 @@ class VCOW:
     def __init__(self, base):
         self.base = base
         self.debug = False
-        self.heap = {}
+        self.userland = {}
         self.reserved = []
         self.allocated = IntervalSet()
         self.heap_ptr = self.reserve_addr_space()
+
+    def init_userland(self, userland):
+        self.userland = userland
 
     def reserve_addr_space(self):
         """Reserves a 4M chunk in the guest. Returns the starting virtual address."""
@@ -814,32 +817,29 @@ class VCOW:
 
     def read(self, addr, length):
         if self.debug: print "DEBUG: Reading %d bytes at %#x" % (length, addr)
-        return self.base.read(int(addr), length)
 
-#        data = []
-#        for i in range(addr,addr+length):
-#            if i in self.allocated:
-#                data.append(self.heap[i])
-#            else:
-#                b = self.base.read(i,1)
-#                if not b:
-#                    raise ValueError("Memory read error at %#x" % i)
-#                else:
-#                    data.append(b)
-#        if self.debug: print "DEBUG: Read", "".join(data).encode('hex')
-#        return "".join(data)
+        data = []
+        for i in range(addr,addr+length):
+            if i in self.userland:
+                data.append(self.userland[i])
+            else:
+                b = self.base.read(i,1)
+                if not b:
+                    raise ValueError("Memory read error at %#x" % i)
+                else:
+                    data.append(b)
+        if self.debug: print "DEBUG: Read", "".join(data).encode('hex')
+        return "".join(data)
 
     def write(self, addr, val, pack_char):
         buf = pack("<" + pack_char, int(val))
-        self.base.write(int(addr),buf)
+        if self.debug: print "DEBUG: Writing %#x to address %#x" % (val, addr)
 
-#        for (i,c) in enumerate(buf):
-#            if int(addr+i) in self.allocated:
-#                if self.debug: print "DEBUG: Writing %#x to heap address %#x" % (val, addr)
-#                self.heap[int(addr+i)] = c
-#            else:
-#                if self.debug: print "DEBUG: Writing %#x to system address %#x" % (val, addr)
-#                self.base.write(int(addr+i),c)
+        for (i,c) in enumerate(buf):
+            if int(addr+i) in self.userland:
+                self.userland[int(addr+i)] = c
+            else:
+                self.base.write(int(addr+i),c)
 
     def alloc(self, size):
         if not size: raise ValueError("Invalid size %d for malloc" % size)
@@ -862,30 +862,30 @@ class VCOW:
         if self.debug: print "DEBUG: Allocating %#x bytes at %#010x" % (size, vaddr)
         return UInt(vaddr)
 
-    def get_scratch(self):
-        data = {}
-        start = 0
-        buf = ""
-        for i in sorted(self.heap):
-            if not buf: start = i
-            buf += self.heap[i]
-            if i+1 not in self.heap:
-                data[start] = buf
-                buf = ""
-        return data
-
-    def dump_scratch(self):
-        for start, buf in self.get_scratch().items():
-            print hex(start),":",buf.encode('hex')
-    
+#    def get_scratch(self):
+#        data = {}
+#        start = 0
+#        buf = ""
+#        for i in sorted(self.heap):
+#            if not buf: start = i
+#            buf += self.heap[i]
+#            if i+1 not in self.heap:
+#                data[start] = buf
+#                buf = ""
+#        return data
+#
+#    def dump_scratch(self):
+#        for start, buf in self.get_scratch().items():
+#            print hex(start),":",buf.encode('hex')
+#    
     def dd(self,addr,length=0x80):
         for x in range(0,length,16):
             print "%08x  " % (addr+x),
             for i in range(0,16,4):
                 dword = []
                 for j in range(4):
-                    if addr+x+i+j in self.heap:
-                        b = self.heap[addr+x+i+j]
+                    if addr+x+i+j in self.userland:
+                        b = self.userland[addr+x+i+j]
                         hc = (bcolors.FAIL + "%02x" + bcolors.ENDC) % ord(b)
                     else:
                         b = self.base.read(addr+x+i+j,1)
@@ -1064,7 +1064,7 @@ class newmicrodo(forensics.commands.command):
 
         if self.opts.debug:
             mem.debug = True
-            flat.debug = True
+            flat.debug = False
             out.debug = True
 
         # Inputs to the block of micro-ops we want to to execute
@@ -1087,7 +1087,8 @@ class newmicrodo(forensics.commands.command):
             DF = 1
 
         # This actually runs the translated code
-        code = pickle.load(open(self.opts.micro))
+        code, userland = pickle.load(open(self.opts.micro))
+        mem.init_userland(userland)
         label = 'START'
         import time
         t1 = time.time()
