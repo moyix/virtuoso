@@ -172,10 +172,9 @@ T0 = UInt(eflags)
 """),
 
     "IFLO_DIVL_EAX_T0": lambda args: ("""
-num = ULong( (UInt(EAX) | (ULong(UInt(EDX) << 32) ) )
-den = ULong(T0)
-q = (num / den)
-r = (num % den)
+num = int( UInt(EAX) | (ULong(UInt(EDX) << 32) ) )
+den = int(T0)
+q,r = divmod(num,den)
 EAX = UInt(q)
 EDX = UInt(r)
 """),
