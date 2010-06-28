@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from cPickle import load
+from distorm import Decode, Decode32Bits
 import sys
 
 class bcolors:
@@ -21,12 +22,15 @@ class bcolors:
 
 trace = load(open(sys.argv[1]))
 for i, t in trace:
+    s = repr(t)
     if t.op == 'IFLO_TB_HEAD_EIP':
         color = bcolors.WARNING
     elif t.op == 'IFLO_INSN_BYTES':
         color = bcolors.OKGREEN
+        a,_,dis,b = Decode(t.args[0], t.args[1].decode('hex'), Decode32Bits)[0]
+        s = "==> %08x  %-15s %s" % (a,dis,b)
     elif t.in_slice:
         color = bcolors.FAIL
     else:
         color = bcolors.OKBLUE
-    print color + repr(t) + bcolors.ENDC
+    print color + s + bcolors.ENDC
