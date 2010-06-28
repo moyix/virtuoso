@@ -6,8 +6,6 @@ import cPickle as pickle
 
 import time, datetime
 
-#import flow
-#import networkx
 import pydasm
 
 from fixedint import UInt
@@ -19,8 +17,12 @@ from qemu_data import defines,uses,is_jcc,is_dynjump,is_memop,memrange
 from pprint import pprint
 from optparse import OptionParser
 from gzip import GzipFile
+from struct import pack
 
 import sys,csv
+
+import re
+memrex = re.compile('IFLO_OPS_MEM_(ST|LD)[US]?([BWLQ])')
 
 # Stupid instructions
 junk = set(['IFLO_EXIT_TB', 'IFLO_GOTO_TB0', 'IFLO_GOTO_TB1',
@@ -451,7 +453,6 @@ def slice_trace(trace, inbufs, outbufs):
                     wlist.append( (i, uses(isn)) )
                     #dynslice(trace, uses(isn), start=i)
                     isn.mark()
-                    break
             
     multislice(trace, wlist)
     end_ts = time.time()
@@ -921,6 +922,30 @@ def translate_code(trace, tbs, tbdict, cfg):
     
     return transdict
 
+def get_user_memory(trace,kernel=0x80000000):
+    m2p = {
+        'Q': 'Q',
+        'L': 'I',
+        'W': 'H',
+        'B': 'B',
+    }
+    mem = {}
+    for i in range(len(trace)-1, -1, -1):
+        _, insn = trace[i]
+        m = memrex.search(insn.op)
+        if m:
+            addr = insn.args[2]
+            if addr >= kernel: continue
+
+            tp,sz = m.groups()
+            if tp == 'ST': continue
+
+            if sz == 'B' and insn.args[-1] > 256: print `insn`
+            buf = pack("<%s" % m2p[sz], insn.args[-1])
+            for i,c in zip(range(addr, addr+len(buf)),buf):
+                mem[i] = c
+    return mem
+
 if __name__ == "__main__":
     parser = OptionParser()
     options, args = parser.parse_args()
@@ -953,7 +978,10 @@ if __name__ == "__main__":
     trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)
 
     embedshell = IPython.Shell.IPShellEmbed(argv=[])
-    #embedshell()
+    embedshell()
+
+    # Get user memory state
+    mem = get_user_memory(trace)
 
 #    # Make sure if an insn defines output, it adds it to the output
 #    # space for every instance of that insn
@@ -973,5 +1001,5 @@ if __name__ == "__main__":
     fname = fname + '.pkl'
     print "Saving translated code to", fname
     f = open(fname,'w')
-    pickle.dump(transdict, f)
+    pickle.dump((transdict,mem), f)
     f.close()
