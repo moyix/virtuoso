@@ -116,77 +116,6 @@ def multislice(insns, worklist, output_track=False, debug=False):
     if debug: print "Working set at end:", work
     #return slice
 
-def linked_vars(insns, sink, source, start=-1, end=0, debug=True):
-    if debug: print "Linking vars sink: %s source: %s between trace positions %d and %d" % (sink, source, end, start)
-    return m_linked_vars(insns, [(start, sink)], [(end, source)], debug=debug)
-
-def m_linked_vars(insns, sinks, sources, debug=False):
-    # We make copies because we're going to be modifying
-    # the lists and callers find it disconcerting when their
-    # local variables change without warning.
-    snks = sinks[:]
-    srcs = sources[:]
-
-    snks.sort()
-    srcs.sort()
-
-    # This is not just optimization; it's necessary for correctness
-    # due to the way we process the sinks and sources sequentially.
-    # The property we're enforcing here is:
-    #  * A source cannot influence a sink that precedes it in the trace.
-    # So we must exclude any sink that occurs before the first source,
-    # and any source that occurs after that last sink.
-    snks = filter(lambda x: x >= srcs[0],  snks)
-    srcs = filter(lambda x: x <= snks[-1], srcs)
-
-    start, sink_bufs = snks.pop()
-    end, _ = srcs[0]
-
-    if snks:
-        next_sink, next_sink_bufs = snks.pop()
-    else:
-        next_sink = -1
-    
-    if srcs:
-        next_src, next_src_bufs = srcs.pop()
-    else:
-        next_src = -1
-
-    if start == -1: start = len(insns) - 1
-
-    if debug: print "Will examine trace from %d-%d" % (end,start)
-    if debug: print "Looking for source at position %d" % next_src
-    work = set([sink_bufs])
-    for i,insn in reversed(insns[end:start+1]):
-        if i == next_sink:
-            work = work | set([next_sink_bufs])
-            if snks:
-                next_sink, next_sink_bufs = snks.pop()
-            else:
-                next_sink = -1
-        
-        defs_set = set(defines(insn))
-        uses_set = set(uses(insn))
-        # For this one special case we DON'T want to track
-        # the derivation of the address of a buffer.
-        if is_memop(insn):
-            uses_set -= set(["A0"])
-         
-        if defs_set & work:
-            work = (work - defs_set) | uses_set
-            #if debug: print i,repr(insn)
-
-        if i == next_src:
-            if debug: print "Rejecting source at %d" % i
-            if next_src_bufs in work: return True
-            if srcs:
-                next_src, next_src_bufs = srcs.pop()
-            else:
-                next_src = -1
-            if debug: print "Changing to next source at position %d" % next_src
-
-    return False
-
 class TB(object):
     """Represents a Translation Block"""
     def __init__(self, label):
@@ -460,57 +389,6 @@ def slice_trace(trace, inbufs, outbufs):
 
     return trace, tbs, tbdict, cfg
 
-##### FIGURE OUT WHY THIS DOESN'T WORK SOMEDAY #####
-
-#    # Post-dominator algo needs this dummy node
-#    cfg['ENTRY'] = ['START', tbs[-1].label]
-#
-#    G = networkx.DiGraph()
-#    for s in cfg:
-#        for d in cfg[s]:
-#            G.add_edge(s,d)
-#    cdeps = flow.control_deps(G, start='ENTRY', stop=tbs[-1].label)
-#    
-#    # Remove the dummy node
-#    del cdeps['ENTRY']
-#    del cfg['ENTRY']
-#    
-#    times = []
-#    iteration = 0
-#    changed = True
-#    while changed:
-#        iteration += 1
-#        print "Adding control flow deps, iteration %d" % iteration
-#        start_ts = time.time()
-#        changed = False
-#
-#        # Build up a list of branches we want to add
-#        to_add = []
-#        for branch in cdeps:
-#            if any(any(t.has_slice() for t in tbdict[dep]) for dep in cdeps[branch]):
-#                if not all(tb.get_branch().in_slice for tb in tbdict[branch]):
-#                    to_add.append(branch)
-#                    changed = True
-#
-#        if not to_add: break
-#
-#        # Now add them
-#        wlist = []
-#        for br in to_add:
-#            for t in tbdict[br]:
-#                for i,isn in t.body:
-#                    if is_jcc(isn.op) or is_dynjump(isn.op):
-#                        wlist.append( (i, uses(isn)) )
-#                        #dynslice(trace, uses(isn), start=i)
-#                        isn.mark()
-#                        break
-#
-#        end_ts = time.time()
-#        elapsed = datetime.timedelta(seconds = (end_ts - start_ts ))
-#        times.append(elapsed)
-#        print "Iteration %d took" % iteration, elapsed, "to add %d branches" % len(to_add)
-#    print "Fixed point found, control dependency analysis finished in %s" % sum(times,datetime.timedelta(0))
-
 # Domain knowledge: a list of memory allocation functions
 # Format: address, number of argument bytes, size_param, name
 mallocs = [
@@ -527,55 +405,6 @@ frees = [
 mempairs = ((mallocs[0], frees[0]),
             (mallocs[1], frees[1]),
             (mallocs[2], frees[1]),)
-
-# Format: addr, argbytes, src_arg, dst_arg, name
-copyarg = [
-    (0x8058a2da, 20, 0, 3, 'ExLockUserBuffer'),
-]
-
-def copy_functions(trace, tbs, tbdict, cfg):
-    for n,argbytes,src_arg,dst_arg,name in copyarg:
-        if n not in tbdict: continue
-        surgery_sites = []
-        summary_name = "COPY_%d_%d_%d" % (argbytes, src_arg, dst_arg)
-        for tb in tbdict[n]:
-            callsite = tb.prev
-            retaddr = find_retaddr(callsite)
-            esp_p, esp_v = get_callsite_esp(callsite)
-
-            retsite = min((t for t in tbdict[retaddr]), key=lambda x: len(trace) if x.start() < callsite.end() else x.start() - callsite.end())
-
-            print "Call to %#x (%s) at callsite %s.%d returns to %s.%d" % (n, name, callsite._label_str(), callsite.start(), retsite._label_str(), retsite.start())
-            
-            # For data flow to work we need to know the address the output
-            # got written to
-            dst_v = get_function_arg(trace, dst_arg, esp_v, callsite.end())
-            _,last_wr = get_last_write(trace, dst_v, retsite.start())
-            dst_p = last_wr.args[1]
-            remap = last_wr.args[-1]
-
-            src = get_function_arg(trace, src_arg, esp_v, callsite.end())
-            print "Address %#x was remapped to %#x" % (src, remap)
-            
-            remove_start, remove_end = callsite.end() + 1, retsite.start()
-            surgery_sites.append( (remove_start, remove_end, esp_p, esp_v, dst_p, dst_v) )
-
-            # Alter the callsite so that it goes to the redirected function
-            for i, te in reversed(callsite.body):
-                if te.op == 'IFLO_JMP_T0':
-                    te.op = 'IFLO_CALL'
-                    te.args = [summary_name]
-                    break
-
-        surgery_sites.sort()
-        while surgery_sites:
-            st, ed, esp_p, esp_v, dst_p, dst_v = surgery_sites.pop()
-            summary = copyarg_summary(summary_name, argbytes, esp_p, esp_v, src_arg, dst_arg, dst_p, dst_v)
-            trace[st:ed] =  summary
-
-        trace, tbs, tbdict, cfg = remake_trace(trace)
-
-    return trace, tbs, tbdict, cfg
 
 def nop_functions(trace, tbs, tbdict, cfg):
     # No-ops. Format: address, number of argument bytes, name
@@ -616,75 +445,6 @@ def nop_functions(trace, tbs, tbdict, cfg):
         trace, tbs, tbdict, cfg = remake_trace(trace)
 
     return trace, tbs, tbdict, cfg
-
-class AllocInfo:
-    def __init__(self):
-        self.alloc = None
-        self.free = None
-
-def mark_mallocs(trace, tbs, tbdict, cfg):
-    alloc_calls = defaultdict(list)
-    alloc_rets = []
-    mem = defaultdict(AllocInfo)
-    for alloc,free in mempairs:
-        m,a_argbytes,a_size_arg,a_name = alloc
-        n,f_argbytes,f_arg,f_name = free
-        if m not in tbdict: continue
-
-        for tb in tbdict[m]:
-            callsite = tb.prev
-        
-            retaddr = find_retaddr(callsite)
-            esp_p, esp_v = get_callsite_esp(callsite)
-
-            # Find the closest return site instance to this callsite
-            retsite = min((t for t in tbdict[retaddr]), key=lambda x: len(trace) if x.start() < callsite.end() else x.start() - callsite.end())
-
-            m_size = get_function_arg(trace, a_size_arg, esp_v, callsite.end())
-            m_start = get_tb_retval(retsite.prev)
-            
-            mem[m_start].alloc = (retsite.end(), m_size)
-
-        for tb in tbdict[n]:
-            callsite = tb.prev
-            esp_p, esp_v = get_callsite_esp(callsite)
-            f_ptr = get_function_arg(trace, f_arg, esp_v, callsite.end())
-            mem[f_ptr].free = callsite.end()
-
-    print "Dynamic Allocations:"
-    for m in mem:
-        if not mem[m].alloc:
-            raise ValueError("FREE without MALLOC of %#x" % m)
-        elif not mem[m].free:
-            print "    MALLOC without FREE of %#x" % m
-        else:
-            print "    %#x-%#x: [%d,%d]" % (m, m+mem[m].alloc[1], mem[m].alloc[0], mem[m].free)
-
-    alloc_points = {}
-    free_points = {}
-    for m in mem:
-        st = mem[m].alloc[0]
-        sz = mem[m].alloc[1]
-        if not mem[m].free:
-            ed = len(trace)
-        else:
-            ed = mem[m].free
-        
-        rng = Interval(m, m+sz, upper_closed=False)
-        alloc_points[st] = rng
-        free_points[ed] = rng
-        
-    iset = IntervalSet()
-    for i,insn in trace:
-        if i in alloc_points:
-            iset.add(alloc_points[i])
-        if i in free_points:
-            iset.remove(free_points[i])
-
-        if is_memop(insn):
-            if insn.args[2] in iset:
-                insn.set_buf()
-                print "%s at %d deals with a dynamic buffer" % (`insn`, i)
 
 def detect_mallocs(trace, tbs, tbdict, cfg):
     EAX = "REGS_0"
