@@ -28,7 +28,7 @@ memrex = re.compile('IFLO_OPS_MEM_(ST|LD)[US]?([BWLQ])')
 junk = set(['IFLO_EXIT_TB', 'IFLO_GOTO_TB0', 'IFLO_GOTO_TB1',
             'IFLO_MOVL_T0_IM', 'IFLO_MOVL_EIP_IM', 'IFLO_TB_ID',
             'IFLO_MOVL_T0_0'])
-    
+
 # Some small utility functions
 
 def first(cond, l):
@@ -37,12 +37,6 @@ def first(cond, l):
     for e in l:
         if cond(e): return e
     return None
-
-def counter():
-    i = 0
-    while True:
-        yield i
-        i += 1
 
 class NotFoundException(Exception):
     pass
@@ -497,6 +491,42 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
 
     return trace, tbs, tbdict, cfg
 
+def is_rep(insn):
+    assert insn.op == 'IFLO_INSN_BYTES'
+    PREFIX_REP = 0x03000000
+    xi = pydasm.get_instruction(insn.args[1].decode('hex'), pydasm.MODE_32)
+    return bool(xi.flags & PREFIX_REP)
+
+def fix_reps(trace):
+    counter=[0] # work around python's lack of proper closures
+    def labelmaker():
+        label = "label%d" % counter[0]
+        counter[0] += 1
+        return label
+    labels = defaultdict(labelmaker)
+
+    newtrace = []
+    current_tb = 'START'
+    while trace:
+        i,t = trace.pop(0)
+        if t.op == 'IFLO_TB_HEAD_EIP':
+            newtrace.append((i,t))
+            current_tb = t.args[0]
+        elif t.op == 'IFLO_INSN_BYTES' and is_rep(t) and newtrace[-1][1].op != 'IFLO_TB_HEAD_EIP':
+            if trace[0][1].op == 'IFLO_SET_CC_OP':
+                newtrace.append(trace.pop(0))
+            newtrace.append((None,TraceEntry(('IFLO_TB_HEAD_EIP',[t.args[0]]))))
+            newtrace.append((i,t))
+            current_tb = t.args[0]
+        elif t.op == 'IFLO_OPS_TEMPLATE_JNZ_ECX' and t.args[-1]:
+            newtrace.append((i,t))
+            newtrace.append((None,TraceEntry(('IFLO_TB_HEAD_EIP',[labels[current_tb]]))))
+            current_tb = labels[current_tb]
+        else:
+            newtrace.append((i,t))
+
+    return remake_trace(newtrace)
+
 def filter_interrupts(trace):
     to_remove = []
     i = 0
@@ -610,6 +640,8 @@ def translate_code(trace, tbs, tbdict, cfg):
                         break
 
             if taken == "split":
+                print "Ruh roh, still splitting even though we already split in %s..." % cur[0]
+                embedshell()
                 # TB Splitting, the most complicated case
                 # Pretty sure this only happens with rep, so let's go
                 # with that assumption.
@@ -731,6 +763,9 @@ if __name__ == "__main__":
 
     # Replace mallocs with summaries
     trace, tbs, tbdict, cfg = detect_mallocs(trace, tbs, tbdict, cfg)
+
+    # Fix QEMU's REP craziness
+    trace, tbs, tbdict, cfg = fix_reps(trace)
 
     print "Size of trace after surgery:  %d" % len(trace)
 
