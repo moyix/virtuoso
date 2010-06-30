@@ -179,6 +179,13 @@ EAX = UInt(q)
 EDX = UInt(r)
 """),
 
+    "IFLO_OPS_TEMPLATE_ADC_T0_T1_CC": lambda args: ("""
+cf = cc_table[CC_OP].compute_c(CC_SRC,CC_DST)
+T0 = T0 + T1 + cf
+CC_SRC = T1
+CC_DST = T0
+CC_OP = CC_OP_ADDB + %d + cf * 4
+""" % (args[0],)),
     "IFLO_MOVL_EFLAGS_T0_CPL0": lambda args: "CC_SRC, DF, EFL = load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK | IF_MASK | IOPL_MASK), EFL)",
     "IFLO_SETL_T0_CC": lambda args: "eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST); T0 = UInt(((eflags ^ (eflags >> 4)) >> 7) & 1)",
     
