@@ -293,21 +293,6 @@ def get_function_arg(trace, arg, esp, callsite):
 # All this junk is for the apparently simple task of trying to
 # translate a translation block (TB) into a Python code block.
 
-def find_last_jcc(tbs):
-    for i, insn in tbs[-1].body:
-        if is_jcc(insn.op) or is_dynjump(insn.op):
-            return i,insn
-    raise NotFoundException
-
-def find_whole_tb(tbs):
-    """Find a TB that contains all the uOps; this means one where 
-    the conditional jump is not taken."""
-    for t in tbs:
-        for i,insn in t.body:
-            if is_jcc(insn.op) and not insn.args[-1]: # last arg of a jcc is the taken/not taken flag
-                return t
-    return None
-
 def get_taken_tb(tbs):
     return [t for t in tbs if t.has_jcc() and t.get_branch().args[-1]][0]
 
@@ -319,7 +304,7 @@ def get_branch_target(tbs):
     i,_ = first(lambda x: is_jcc(x[1][1].op), enumerate(taken.body))
     remaining = set(x.op for _,x in taken.body[i+1:])
     if not remaining <= junk:
-        return "split"
+        raise ValueError("Real instructions remain after a branch! TB Split Fail")
     elif 'IFLO_MOVL_EIP_IM' in remaining:
         _,eipmov = first(lambda x: x[1].op == 'IFLO_MOVL_EIP_IM', taken.body)
         return eipmov.args[0]
@@ -585,8 +570,6 @@ def translate_code(trace, tbs, tbdict, cfg):
         transdict[tbs[i].label] = "raise Goto(%s)" % tbs[i+1]._label_str()
     transdict[tbs[-1].label] = "raise Goto('__end__')"
 
-    # For label generation
-    labels = 0
     # Iterate over the finished CFG and translate each TB
     for c in cfg:
         cur = tbdict[c]
@@ -598,10 +581,6 @@ def translate_code(trace, tbs, tbdict, cfg):
             continue
 
         print "Translating %s" % repr(first(lambda x: x.has_slice(),cur))
-
-        # For TB splitting
-        gen_new_tb = False
-        remainder = []
 
         if not next:
             # Last node (woo special cases)
@@ -620,98 +599,28 @@ def translate_code(trace, tbs, tbdict, cfg):
             # There must be a jump to a variable target (ie conditional branch)
             # We need to combine the known instances of this TB and resolve its targets
             
-            # Get a "complete" specimen, or if that's not available
-            # just pick the first one
-            whole_tb = find_whole_tb(cur) or cur[0]
-
             taken = get_branch_target(cur)
             if taken == "unknown":
                 # Pick the successor to any TB where the jump is taken
                 tb = get_taken_tb(cur)
                 taken = tb.next._label_str()
-            elif taken == "split":
-                gen_new_tb = True
-                tb = get_taken_tb(cur)
-                new_label = "'label%d'" % labels
-                labels += 1
-                for i, (n,insn) in enumerate(tb.body):
+
+            # Find the fall-through successor.
+            tb = get_not_taken_tb(cur)
+            succ = tb.next._label_str()
+
+            s = []
+            for insns in zip(*[c.body for c in cur]):
+                set_outlabel(insns)
+                if any( insn.in_slice for _,insn in insns ):
+                    insn = insns[0][1]
                     if is_jcc(insn.op):
-                        remainder = tb.body[i+1:]
-                        break
-
-            if taken == "split":
-                print "Ruh roh, still splitting even though we already split in %s..." % cur[0]
-                embedshell()
-                # TB Splitting, the most complicated case
-                # Pretty sure this only happens with rep, so let's go
-                # with that assumption.
-                repeat_target = cur[0]._label_str()
-                fallthru_target = [t.next._label_str() for t in cur if t.next.label != t.label][0]
-
-                first_halves = []
-                remainders = []
-                for t in cur:
-                    for (i,(j,x)) in enumerate(t.body):
-                        if is_jcc(x.op):
-                            first_halves.append(t.body[:i+1])
-                            remainders.append(t.body[i+1:])
-                            break
-
-                # Throw away the crap at the end
-                for r in remainders:
-                    while r:
-                        i,x = r.pop()
-                        if not x.op in junk:
-                            r.append((i,x))
-                            break
-
-                # Translate the first half
-                s = []
-                for insns in zip(*first_halves):
-                    if not any(ins.in_slice for _,ins in insns): continue
-                    set_outlabel(insns)
-
-                    if is_jcc(insns[0][1].op):
-                        s.append("if (%s): raise Goto(%s)" % (insns[0][1], new_label))
+                        s.append("if (%s): raise Goto(%s)\n" % (insn, taken))
                     else:
-                        s.append(str(insns[0][1]))
-                s.append("raise Goto(%s)" % fallthru_target)
-                transdict[cur[0].label] = "\n".join(s)
-                    
-                # Translate the second half
-                s = []
-                print "Translating [TB @%s]" % new_label 
-                for insns in zip(*[r for r in remainders if r]):
-                    if not any(ins.in_slice for _,ins in insns): continue
-                    set_outlabel(insns)
+                        s.append(str(insn))
+            s.append("raise Goto(%s)" % succ)
+            transdict[cur[0].label] = "\n".join(s)
 
-                    if is_jcc(insns[0][1].op):
-                        s.append("if (%s): raise Goto(%s)" % (insns[0][1], fallthru_target))
-                    else:
-                        s.append(str(insns[0][1]))
-
-                s.append("raise Goto(%s)" % repeat_target)
-                transdict[eval(new_label)] = "\n".join(s)
-                
-            else:
-                # Nothing hinky going on here
-
-                # Find the fall-through successor.
-                tb = get_not_taken_tb(cur)
-                succ = tb.next._label_str()
-
-                s = []
-                for insns in zip(*[c.body for c in cur]):
-                    set_outlabel(insns)
-                    if any( insn.in_slice for _,insn in insns ):
-                        insn = insns[0][1]
-                        if is_jcc(insn.op):
-                            s.append("if (%s): raise Goto(%s)\n" % (insn, taken))
-                        else:
-                            s.append(str(insn))
-                s.append("raise Goto(%s)" % succ)
-                transdict[cur[0].label] = "\n".join(s)
-    
     return transdict
 
 def get_user_memory(trace,kernel=0x80000000):
