@@ -366,6 +366,26 @@ def slice_trace(trace, inbufs, outbufs):
     end_ts = time.time()
     print "Added branches in %s" % (datetime.timedelta(seconds=end_ts-start_ts))
 
+    print "Performing slice closure..."
+    fp_iterations = 0
+    outerst = time.time()
+    while True:
+        innerst = time.time()
+        wlist = []
+        for t in tbdict:
+            for insns in zip(*[r.body for r in tbdict[t]]):
+                if (any(i.in_slice for _,i in insns) and not
+                    all(i.in_slice for _,i in insns)):
+                   wlist += [(i,uses(x)) for i,x in insns if not x.in_slice]
+                   for _,isn in insns: isn.mark()
+        if not wlist: break
+        multislice(trace, wlist)
+        fp_iterations += 1
+        innered = time.time()
+        print "Sliced %d new instructions in %s" % (len(wlist), datetime.timedelta(seconds=innered-innerst))
+    outered = time.time()
+    print "Reached fixed point after %d iterations, time: %s" % (fp_iterations, datetime.timedelta(seconds=outered-outerst))
+    
     return trace, tbs, tbdict, cfg
 
 # Domain knowledge: a list of memory allocation functions
@@ -667,9 +687,6 @@ if __name__ == "__main__":
     # Kill functions that just need to be stubbed out entirely
     trace, tbs, tbdict, cfg = nop_functions(trace, tbs, tbdict, cfg)
 
-    # Replace functions that just copy their arguments with summaries    
-    #trace, tbs, tbdict, cfg = copy_functions(trace, tbs, tbdict, cfg)
-
     # Replace mallocs with summaries
     trace, tbs, tbdict, cfg = detect_mallocs(trace, tbs, tbdict, cfg)
 
@@ -686,17 +703,6 @@ if __name__ == "__main__":
 
     # Get user memory state
     mem = get_user_memory(trace)
-
-#    # Make sure if an insn defines output, it adds it to the output
-#    # space for every instance of that insn
-#    for t in tbs:
-#        if any(insn.is_output for i,insn in t.body):
-#            for i,x in t.body:
-#                if x.is_output: break
-#            off = i - t.start()
-#            label = x.label
-#            for tb in tbdict[t.label]:
-#                tb.body[off][1].set_output_label(label)
 
     # Translate it
     transdict = translate_code(trace, tbs, tbdict, cfg)
