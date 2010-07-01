@@ -715,6 +715,9 @@ class PCOW(object):
         self.scratch = {}
         self.debug = False
         self.extended_area = 0x80000000
+        
+        # Set up TPR, phys address 0xfee00080
+        self.write(0xfee00080, '\x00\x00\x00\x00')
 
     def reserve(self, num_pages):
         old = self.extended_area
@@ -1135,7 +1138,3 @@ class newmicrodo(forensics.commands.command):
             f(data)
 
         print 
-
-        if self.opts.debug:
-            print "Debug dump of scratch:"
-            mem.dump_scratch()
