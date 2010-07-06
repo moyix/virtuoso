@@ -105,11 +105,11 @@ defines_uses = {
     ],
     'IFLO_DIVL_EAX_T0': [
         lambda args: ["REGS_%d" % qemu_regs["EAX"], "REGS_%d" % qemu_regs["EDX"]],
-        lambda args: ["REGS_%d" % qemu_regs["EAX"], "REGS_%d" % qemu_regs["EDX"]],
+        lambda args: ["REGS_%d" % qemu_regs["EAX"], "REGS_%d" % qemu_regs["EDX"], 'T0'],
     ],
     'IFLO_IDIVL_EAX_T0': [
         lambda args: ["REGS_%d" % qemu_regs["EAX"], "REGS_%d" % qemu_regs["EDX"]],
-        lambda args: ["REGS_%d" % qemu_regs["EAX"], "REGS_%d" % qemu_regs["EDX"]],
+        lambda args: ["REGS_%d" % qemu_regs["EAX"], "REGS_%d" % qemu_regs["EDX"], 'T0'],
     ],
     'IFLO_OPS_TEMPLATE_IN_T0_T1': [
         lambda args: ['T1'],
@@ -680,7 +680,7 @@ defines_uses = {
     ],
     'IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE': [
         lambda args: ["REGS_%d" % qemu_regs['EAX'], 'CC_SRC', 'CC_DST'] + memrange(args[1], 1 << args[0]),
-        lambda args: ['T0', "REGS_%d" % qemu_regs['EAX'], 'A0'],
+        lambda args: ['T0', 'T1', "REGS_%d" % qemu_regs['EAX'], 'A0'],
     ],
 
 #    # These just raise an interrupt
