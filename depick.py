@@ -3,7 +3,7 @@
 import sys
 from cPickle import load
 
-transdict = load(open(sys.argv[1]))
+transdict,userland = load(open(sys.argv[1]))
 print "transdict = {}"
 print
 for k in transdict:
@@ -11,3 +11,5 @@ for k in transdict:
     print transdict[k]
     print '"""'
     print
+
+print "userland = %s" % userland
