@@ -35,6 +35,8 @@ from struct import unpack,pack
 from collections import defaultdict
 import cPickle as pickle
 
+from forensics.win32.obj import *
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -844,7 +846,7 @@ class VCOW:
             else:
                 self.base.write(int(addr+i),c)
 
-    def alloc(self, size):
+    def alloc(self, size, zfill=True):
         if not size: raise ValueError("Invalid size %d for malloc" % size)
         size = int(size)
 
@@ -863,6 +865,9 @@ class VCOW:
         self.allocated.add(Interval(vaddr,vaddr+size-1))
 
         if self.debug: print "DEBUG: Allocating %#x bytes at %#010x" % (size, vaddr)
+
+        if zfill: self.base.write(vaddr, "\x00" * size)
+
         return UInt(vaddr)
 
 #    def get_scratch(self):
