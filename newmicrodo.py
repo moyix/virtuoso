@@ -246,7 +246,7 @@ def compute_all_adcb(CC_SRC, CC_DST):
     src1 = Int(CC_SRC)
     src2 = Int(((CC_DST - CC_SRC) - UInt(1)))
     cf = (Int(Byte(CC_DST)) <= Int(Byte(src1)))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((Int(Byte(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 3));
@@ -259,7 +259,7 @@ def compute_all_adcl(CC_SRC, CC_DST):
     src1 = Int(CC_SRC)
     src2 = Int(((CC_DST - CC_SRC) - UInt(1)))
     cf = (CC_DST <= UInt(src1))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((CC_DST == UInt(0)) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 5));
@@ -272,7 +272,7 @@ def compute_all_adcw(CC_SRC, CC_DST):
     src1 = Int(CC_SRC)
     src2 = Int(((CC_DST - CC_SRC) - UInt(1)))
     cf = (Int(UShort(CC_DST)) <= Int(UShort(src1)))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
@@ -285,7 +285,7 @@ def compute_all_addb(CC_SRC, CC_DST):
     src1 = Int(CC_SRC)
     src2 = Int((CC_DST - CC_SRC))
     cf = (Int(Byte(CC_DST)) < Int(Byte(src1)))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((Int(Byte(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 3));
@@ -298,7 +298,7 @@ def compute_all_addl(CC_SRC, CC_DST):
     src1 = Int(CC_SRC)
     src2 = Int((CC_DST - CC_SRC))
     cf = (CC_DST < UInt(src1))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((CC_DST == UInt(0)) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 5));
@@ -311,7 +311,7 @@ def compute_all_addw(CC_SRC, CC_DST):
     src1 = Int(CC_SRC)
     src2 = Int((CC_DST - CC_SRC))
     cf = (Int(UShort(CC_DST)) < Int(UShort(src1)))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
@@ -324,7 +324,7 @@ def compute_all_decb(CC_SRC, CC_DST):
     src1 = Int((CC_DST + UInt(1)))
     src2 = 1
     cf = Int(CC_SRC)
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((Int(Byte(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 3));
@@ -336,7 +336,7 @@ def compute_all_decl(CC_SRC, CC_DST):
     src1 = Int((CC_DST + UInt(1)))
     src2 = 1
     cf = Int(CC_SRC)
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((CC_DST == UInt(0)) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 5));
@@ -348,7 +348,7 @@ def compute_all_decw(CC_SRC, CC_DST):
     src1 = Int((CC_DST + UInt(1)))
     src2 = 1
     cf = Int(CC_SRC)
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
@@ -363,7 +363,7 @@ def compute_all_incb(CC_SRC, CC_DST):
     src1 = Int((CC_DST - UInt(1)))
     src2 = 1
     cf = Int(CC_SRC)
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((Int(Byte(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 3));
@@ -375,7 +375,7 @@ def compute_all_incl(CC_SRC, CC_DST):
     src1 = Int((CC_DST - UInt(1)))
     src2 = 1
     cf = Int(CC_SRC)
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((CC_DST == UInt(0)) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 5));
@@ -387,7 +387,7 @@ def compute_all_incw(CC_SRC, CC_DST):
     src1 = Int((CC_DST - UInt(1)))
     src2 = 1
     cf = Int(CC_SRC)
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
@@ -397,7 +397,7 @@ def compute_all_incw(CC_SRC, CC_DST):
 
 def compute_all_logicb(CC_SRC, CC_DST):
     cf = 0
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = 0
     zf = ((Int(Byte(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 3));
@@ -407,7 +407,7 @@ def compute_all_logicb(CC_SRC, CC_DST):
 
 def compute_all_logicl(CC_SRC, CC_DST):
     cf = 0
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = 0
     zf = ((CC_DST == UInt(0)) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 5));
@@ -417,7 +417,7 @@ def compute_all_logicl(CC_SRC, CC_DST):
 
 def compute_all_logicw(CC_SRC, CC_DST):
     cf = 0
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = 0
     zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
@@ -427,7 +427,7 @@ def compute_all_logicw(CC_SRC, CC_DST):
 
 def compute_all_mulb(CC_SRC, CC_DST):
     cf = (CC_SRC != UInt(0))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = 0
     zf = ((Int(Byte(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 3));
@@ -437,7 +437,7 @@ def compute_all_mulb(CC_SRC, CC_DST):
 
 def compute_all_mull(CC_SRC, CC_DST):
     cf = (CC_SRC != UInt(0))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = 0
     zf = ((CC_DST == UInt(0)) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 5));
@@ -447,7 +447,7 @@ def compute_all_mull(CC_SRC, CC_DST):
 
 def compute_all_mulw(CC_SRC, CC_DST):
     cf = (CC_SRC != UInt(0))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = 0
     zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
@@ -457,7 +457,7 @@ def compute_all_mulw(CC_SRC, CC_DST):
 
 def compute_all_sarb(CC_SRC, CC_DST):
     cf = Int((CC_SRC & UInt(1)))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = 0
     zf = ((Int(Byte(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 3));
@@ -468,7 +468,7 @@ def compute_all_sarb(CC_SRC, CC_DST):
 
 def compute_all_sarl(CC_SRC, CC_DST):
     cf = Int((CC_SRC & UInt(1)))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = 0
     zf = ((CC_DST == UInt(0)) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 5));
@@ -479,7 +479,7 @@ def compute_all_sarl(CC_SRC, CC_DST):
 
 def compute_all_sarw(CC_SRC, CC_DST):
     cf = Int((CC_SRC & UInt(1)))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = 0
     zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
@@ -492,7 +492,7 @@ def compute_all_sbbb(CC_SRC, CC_DST):
     src1 = Int(((CC_DST + CC_SRC) + UInt(1)))
     src2 = Int(CC_SRC)
     cf = (Int(Byte(src1)) <= Int(Byte(src2)))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((Int(Byte(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 3));
@@ -505,7 +505,7 @@ def compute_all_sbbl(CC_SRC, CC_DST):
     src1 = Int(((CC_DST + CC_SRC) + UInt(1)))
     src2 = Int(CC_SRC)
     cf = (UInt(src1) <= UInt(src2))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((CC_DST == UInt(0)) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 5));
@@ -518,7 +518,7 @@ def compute_all_sbbw(CC_SRC, CC_DST):
     src1 = Int(((CC_DST + CC_SRC) + UInt(1)))
     src2 = Int(CC_SRC)
     cf = (Int(UShort(src1)) <= Int(UShort(src2)))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
@@ -529,7 +529,7 @@ def compute_all_sbbw(CC_SRC, CC_DST):
 
 def compute_all_shlb(CC_SRC, CC_DST):
     cf = Int(((CC_SRC >> ((1 << 3) - 1)) & UInt(1)))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = 0
     zf = ((Int(Byte(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 3));
@@ -540,7 +540,7 @@ def compute_all_shlb(CC_SRC, CC_DST):
 
 def compute_all_shll(CC_SRC, CC_DST):
     cf = Int(((CC_SRC >> ((1 << 5) - 1)) & UInt(1)))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = 0
     zf = ((CC_DST == UInt(0)) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 5));
@@ -551,7 +551,7 @@ def compute_all_shll(CC_SRC, CC_DST):
 
 def compute_all_shlw(CC_SRC, CC_DST):
     cf = Int(((CC_SRC >> ((1 << 4) - 1)) & UInt(1)))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = 0
     zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
@@ -564,7 +564,7 @@ def compute_all_subb(CC_SRC, CC_DST):
     src1 = Int((CC_DST + CC_SRC))
     src2 = Int(CC_SRC)
     cf = (Int(Byte(src1)) < Int(Byte(src2)))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((Int(Byte(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 3));
@@ -577,7 +577,7 @@ def compute_all_subl(CC_SRC, CC_DST):
     src1 = Int((CC_DST + CC_SRC))
     src2 = Int(CC_SRC)
     cf = (UInt(src1) < UInt(src2))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((CC_DST == UInt(0)) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 5));
@@ -590,7 +590,7 @@ def compute_all_subw(CC_SRC, CC_DST):
     src1 = Int((CC_DST + CC_SRC))
     src2 = Int(CC_SRC)
     cf = (Int(UShort(src1)) < Int(UShort(src2)))
-    pf = Int(parity_table[int(CC_DST)])
+    pf = Int(parity_table[int(Byte(CC_DST))])
     af = Int((((CC_DST ^ UInt(src1)) ^ UInt(src2)) & UInt(16)))
     zf = ((Int(UShort(CC_DST)) == 0) << 6)
     tmp = lshift(Int(CC_DST), 8 - (1 << 4));
