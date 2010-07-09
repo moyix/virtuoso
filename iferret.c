@@ -1044,6 +1044,7 @@ void minmax(int64_t *x1, int64_t *x2, int64_t a) {
   if (a > *x2) *x2 = a;
 }
 
+int in_trace = 1;
 
 void iferret_log_process(iferret_t *iferret, char *filename) {
   struct stat fs;
@@ -1054,7 +1055,6 @@ void iferret_log_process(iferret_t *iferret, char *filename) {
   char command[256];
   char *op_start;
   static int ii = 0;
-  int in_trace = 0;
   int tb_dis = 0;
   int inarg_count = 0;
 

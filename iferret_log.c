@@ -17,6 +17,8 @@
 // turn info-flow logging on or off
 uint8_t iferret_info_flow_on = 0;
 
+uint8_t iferret_info_flow = 0;
+
 // ptr to first byte of info flow log
 char *iferret_log_base = NULL;      
 
