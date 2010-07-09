@@ -3280,10 +3280,27 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
     int i, count;
     for(i = 0; i < 16; i++)
         data[i] = ldub_code(pc_start+i);
-    get_instruction(&inst, data, MODE_32);
-    count = get_instruction_string(&inst, FORMAT_INTEL, pc_start, disas_string, sizeof(disas_string));
-    iferret_log_op_write_4s(IFLO_INSN_DIS, pc_start, disas_string);
 
+    // Hack around libdasm bug
+    if (data[0] == 0x0f && data[1] == 0x18 && data[2] == 0x06) {
+        inst.length = 3;
+        strcpy(disas_string, "prefetch crap (3 byte)");
+    }
+    else if (data[0] == 0x0f && data[1] == 0x18 && data[2] == 0x46) {
+        inst.length = 4;
+        strcpy(disas_string, "prefetch crap (4 byte)");
+    }
+    else {
+        if (get_instruction(&inst, data, MODE_32) == 0) {
+            printf("ERROR: get_instruction failed at %#x : ", pc_start);
+            for(i = 0; i < 16; i++) printf("%02x", data[i]);
+            printf("\n");
+            abort();
+        }
+        count = get_instruction_string(&inst, FORMAT_INTEL, pc_start, disas_string, sizeof(disas_string));
+    }
+
+    iferret_log_op_write_4s(IFLO_INSN_DIS, pc_start, disas_string);
     gen_op_log_insn(pc_start, inst.length);
 
     /* Ok, now move on to the real stuff... */
@@ -5833,6 +5850,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         if (gen_svm_check_intercept(s, pc_start, SVM_EXIT_CPUID))
             break;
         gen_op_cpuid();
+        gen_eob(s);
         break;
     case 0xf4: /* hlt */
         if (s->cpl != 0) {
