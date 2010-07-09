@@ -1562,7 +1562,7 @@ void OPPROTO op_ltr_T0(void)
 /* CR registers access */
 void OPPROTO op_movl_crN_T0(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_MOVL_CRN_T0);
+    iferret_log_info_flow_op_write_44(IFLO_MOVL_CRN_T0,PARAM1,T0);
     helper_movl_crN_T0(PARAM1);
 }
 
