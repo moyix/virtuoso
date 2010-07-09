@@ -1722,138 +1722,138 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
     break;
     
 
-//  case IFLO_HD_TRANSFER_PART1_T0_BASE:
-//    assert_args_0(op);
-//    printf ("IFLO_HD_TRANSFER_PART1_T0_BASE = %llx\n", ctull(T0_BASE));
-//    iferret->last_hd_transfer_from = T0_BASE;
-//    break;
+  case IFLO_HD_TRANSFER_PART1_T0_BASE:
+    assert_args_0(op);
+    printf ("IFLO_HD_TRANSFER_PART1_T0_BASE = %llx\n", ctull(T0_BASE));
+    iferret->last_hd_transfer_from = T0_BASE;
+    break;
     
 
-//  case IFLO_HD_TRANSFER_PART1_T1_BASE:
-//    assert_args_0(op);
-//    printf ("IFLO_HD_TRANSFER_PART1_T1_BASE = %llx\n", ctull(T1_BASE));
-//    iferret->last_hd_transfer_from = T1_BASE;
-//    break;
+  case IFLO_HD_TRANSFER_PART1_T1_BASE:
+    assert_args_0(op);
+    printf ("IFLO_HD_TRANSFER_PART1_T1_BASE = %llx\n", ctull(T1_BASE));
+    iferret->last_hd_transfer_from = T1_BASE;
+    break;
     
 
-//  case IFLO_HD_TRANSFER_PART1:
-//    assert_args_8(op);
-//    // (from)
-//    // save the from address?
-//    printf ("IFLO_HD_TRANSFER_PART1 = %llx\n", ctull(a0_64));
-//    iferret->last_hd_transfer_from = a0_64;
-//    break;
-//
-//  case IFLO_HD_TRANSFER_PART2:
-//    assert_args_81(op);
-//    // (to,size): (a0_64,a1_8)
-//    // make use of saved from address.  
-//    printf ("info flow op: IFLO_HD_TRANSFER P12 %llx -> %llx num=%d\n", 
-//	    ctull(iferret->last_hd_transfer_from), ctull(a0_64), (int)a1_8);
-//    if (iferret->last_hd_transfer_from != 0) {
-//      if (info_flow_exists(iferret,iferret->last_hd_transfer_from, a1_8)) {
-//	printf ("IFLO_HD_TRANSFER_PART2 from tainted:\n");
-//      }
-//      if (info_flow_exists(iferret,a0_64, a1_8)) {
-//	printf ("IFLO_HD_TRANSFER_PART2 to tainted:\n");
-//      }		  
-//      info_flow_copy(iferret, a0_64, iferret->last_hd_transfer_from, a1_8);
-//    }
-//    break;
-//
-//  case IFLO_HD_TRANSFER:
-//    assert_args_884(op);
-//    // (from,to,size): (a0_64,a1_64,a2_32)
-//    // NB: from could be HD or io buffer and to could be either.
-//    if (a2_32 == 4096) {
-//      printf ("here I am\n");
-//    }
-//    printf ("info flow op: IFLO_HD_TRANSFER %llx -> %llx num=%d\n", 
-//	    ctull(a0_64), ctull(a1_64), a2_32);
-//    info_flow_copy(iferret,a1_64,a0_64,a2_32);
-//    if (info_flow_exists(iferret,a0_64, a2_32)) {
-//      printf ("IFLO_HD_TRANSFER from tainted:\n");
-//    }
-//    if (info_flow_exists(iferret,a1_64, a2_32)) {
-//      printf ("IFLO_HD_TRANSFER to tainted:\n");
-//    }		  
-//    break;
-//
-//
-//    // network output.  what do we do?
-//  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T1:
-//    assert_args_0(op);
-//    if (info_flow_exists(iferret,T1_BASE, 1)) {
-//      squeal_about_exfiltration(T1_BASE,1);
-//    }
-//    break;
-//
-//  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T1:
-//    assert_args_0(op);
-//    if (info_flow_exists(iferret,T1_BASE, 2)) {
-//      squeal_about_exfiltration(T1_BASE,2);
-//    }
-//    break;
-//
-//  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T1:
-//    assert_args_0(op);
-//    if (info_flow_exists(iferret,T1_BASE, 4)) {
-//      squeal_about_exfiltration(T1_BASE,4);
-//    }
-//    break;
-//    
-//  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T0:
-//    assert_args_0(op);
-//    if (info_flow_exists(iferret,T0_BASE, 1)) {
-//      squeal_about_exfiltration(T0_BASE,1);
-//    }
-//    break;
-//
-//  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T0:
-//    assert_args_0(op);
-//    if (info_flow_exists(iferret,T0_BASE, 2)) {
-//      squeal_about_exfiltration(T0_BASE,2);
-//    }
-//    break;
-//
-//  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T0:
-//    assert_args_0(op);
-//    if (info_flow_exists(iferret,T0_BASE, 4)) {
-//      squeal_about_exfiltration(T0_BASE,4);
-//    }
-//    break;
-//        
-//
-//    // network input.  add labels...  
-//  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T0:
-//    assert_args_4(op);
-//    info_flow_label(iferret, T0_BASE, 1, "NETWORK");
-//    break;
-//
-//  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_WORD_T0:
-//    assert_args_4(op);
-//    info_flow_label(iferret, T0_BASE, 2, "NETWORK");
-//    break;
-//
-//  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T0:
-//    assert_args_4(op);
-//    info_flow_label(iferret, T0_BASE, 4, "NETWORK");
-//    break;
-//
-//  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T1:
-//    assert_args_4(op);
-//    info_flow_label(iferret, T1_BASE, 1, "NETWORK");
-//    break;
-//
-//  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_WORD_T1:
-//    assert_args_4(op);
-//    info_flow_label(iferret, T1_BASE, 2, "NETWORK");
-//    break;
-//
-//  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T1:
-//    assert_args_4(op);
-//    info_flow_label(iferret, T1_BASE, 4, "NETWORK");
-//    break;
+  case IFLO_HD_TRANSFER_PART1:
+    assert_args_8(op);
+    // (from)
+    // save the from address?
+    printf ("IFLO_HD_TRANSFER_PART1 = %llx\n", ctull(a0_64));
+    iferret->last_hd_transfer_from = a0_64;
+    break;
+
+  case IFLO_HD_TRANSFER_PART2:
+    assert_args_81(op);
+    // (to,size): (a0_64,a1_8)
+    // make use of saved from address.  
+    printf ("info flow op: IFLO_HD_TRANSFER P12 %llx -> %llx num=%d\n", 
+	    ctull(iferret->last_hd_transfer_from), ctull(a0_64), (int)a1_8);
+    if (iferret->last_hd_transfer_from != 0) {
+      if (info_flow_exists(iferret,iferret->last_hd_transfer_from, a1_8)) {
+	printf ("IFLO_HD_TRANSFER_PART2 from tainted:\n");
+      }
+      if (info_flow_exists(iferret,a0_64, a1_8)) {
+	printf ("IFLO_HD_TRANSFER_PART2 to tainted:\n");
+      }		  
+      info_flow_copy(iferret, a0_64, iferret->last_hd_transfer_from, a1_8);
+    }
+    break;
+
+  case IFLO_HD_TRANSFER:
+    assert_args_884(op);
+    // (from,to,size): (a0_64,a1_64,a2_32)
+    // NB: from could be HD or io buffer and to could be either.
+    if (a2_32 == 4096) {
+      printf ("here I am\n");
+    }
+    printf ("info flow op: IFLO_HD_TRANSFER %llx -> %llx num=%d\n", 
+	    ctull(a0_64), ctull(a1_64), a2_32);
+    info_flow_copy(iferret,a1_64,a0_64,a2_32);
+    if (info_flow_exists(iferret,a0_64, a2_32)) {
+      printf ("IFLO_HD_TRANSFER from tainted:\n");
+    }
+    if (info_flow_exists(iferret,a1_64, a2_32)) {
+      printf ("IFLO_HD_TRANSFER to tainted:\n");
+    }		  
+    break;
+
+
+    // network output.  what do we do?
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T1:
+    assert_args_0(op);
+    if (info_flow_exists(iferret,T1_BASE, 1)) {
+      squeal_about_exfiltration(T1_BASE,1);
+    }
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T1:
+    assert_args_0(op);
+    if (info_flow_exists(iferret,T1_BASE, 2)) {
+      squeal_about_exfiltration(T1_BASE,2);
+    }
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T1:
+    assert_args_0(op);
+    if (info_flow_exists(iferret,T1_BASE, 4)) {
+      squeal_about_exfiltration(T1_BASE,4);
+    }
+    break;
+    
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T0:
+    assert_args_0(op);
+    if (info_flow_exists(iferret,T0_BASE, 1)) {
+      squeal_about_exfiltration(T0_BASE,1);
+    }
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_WORD_T0:
+    assert_args_0(op);
+    if (info_flow_exists(iferret,T0_BASE, 2)) {
+      squeal_about_exfiltration(T0_BASE,2);
+    }
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T0:
+    assert_args_0(op);
+    if (info_flow_exists(iferret,T0_BASE, 4)) {
+      squeal_about_exfiltration(T0_BASE,4);
+    }
+    break;
+        
+
+    // network input.  add labels...  
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T0:
+    assert_args_4(op);
+    info_flow_label(iferret, T0_BASE, 1, "NETWORK");
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_WORD_T0:
+    assert_args_4(op);
+    info_flow_label(iferret, T0_BASE, 2, "NETWORK");
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T0:
+    assert_args_4(op);
+    info_flow_label(iferret, T0_BASE, 4, "NETWORK");
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_BYTE_T1:
+    assert_args_4(op);
+    info_flow_label(iferret, T1_BASE, 1, "NETWORK");
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_WORD_T1:
+    assert_args_4(op);
+    info_flow_label(iferret, T1_BASE, 2, "NETWORK");
+    break;
+
+  case IFLO_OPS_TEMPLATE_NETWORK_INPUT_LONG_T1:
+    assert_args_4(op);
+    info_flow_label(iferret, T1_BASE, 4, "NETWORK");
+    break;
 
 
 

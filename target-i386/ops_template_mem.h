@@ -141,7 +141,7 @@
 // pack SHIFT and MEMWRITE into 2nd byte
 
 
-void OPPROTO glue(glue(glue(op_rol, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_rol, MEM_SUFFIX), _T0_T1_cc)(void)
 {
     int count;
     target_long src;
@@ -170,7 +170,7 @@ void OPPROTO glue(glue(glue(op_rol, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(vo
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(glue(op_ror, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_ror, MEM_SUFFIX), _T0_T1_cc)(void)
 {
     int count;
     target_long src;
@@ -199,7 +199,7 @@ void OPPROTO glue(glue(glue(op_ror, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(vo
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(glue(op_rol, MEM_SUFFIX), _T0_T1),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_rol, MEM_SUFFIX), _T0_T1)(void)
 {
     int count;
     count = T1 & SHIFT_MASK;
@@ -219,7 +219,7 @@ void OPPROTO glue(glue(glue(op_rol, MEM_SUFFIX), _T0_T1),IFERRET_LOGTHING)(void)
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(glue(op_ror, MEM_SUFFIX), _T0_T1),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_ror, MEM_SUFFIX), _T0_T1)(void)
 {
     int count;
     count = T1 & SHIFT_MASK;
@@ -239,7 +239,7 @@ void OPPROTO glue(glue(glue(op_ror, MEM_SUFFIX), _T0_T1),IFERRET_LOGTHING)(void)
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(glue(op_rcl, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_rcl, MEM_SUFFIX), _T0_T1_cc)(void)
 {
     int count, eflags;
     target_ulong src;
@@ -276,7 +276,7 @@ void OPPROTO glue(glue(glue(op_rcl, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(vo
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(glue(op_rcr, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_rcr, MEM_SUFFIX), _T0_T1_cc)(void)
 {
     int count, eflags;
     target_ulong src;
@@ -313,7 +313,7 @@ void OPPROTO glue(glue(glue(op_rcr, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(vo
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(glue(op_shl, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_shl, MEM_SUFFIX), _T0_T1_cc)(void)
 {
     int count;
     target_long src;
@@ -338,7 +338,7 @@ void OPPROTO glue(glue(glue(op_shl, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(vo
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(glue(op_shr, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_shr, MEM_SUFFIX), _T0_T1_cc)(void)
 {
     int count;
     target_long src;
@@ -364,7 +364,7 @@ void OPPROTO glue(glue(glue(op_shr, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(vo
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(glue(op_sar, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_sar, MEM_SUFFIX), _T0_T1_cc)(void)
 {
     int count;
     target_long src;
@@ -392,7 +392,7 @@ void OPPROTO glue(glue(glue(op_sar, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(vo
 
 #if DATA_BITS == 16
 /* XXX: overflow flag might be incorrect in some cases in shldw */
-void OPPROTO glue(glue(glue(op_shld, MEM_SUFFIX), _T0_T1_im_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_shld, MEM_SUFFIX), _T0_T1_im_cc)(void)
 {
     int count;
     unsigned int res, tmp;
@@ -417,7 +417,7 @@ void OPPROTO glue(glue(glue(op_shld, MEM_SUFFIX), _T0_T1_im_cc),IFERRET_LOGTHING
     CC_DST = T0;
 }
 
-void OPPROTO glue(glue(glue(op_shld, MEM_SUFFIX), _T0_T1_ECX_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_shld, MEM_SUFFIX), _T0_T1_ECX_cc)(void)
 {
     int count;
     unsigned int res, tmp;
@@ -446,7 +446,7 @@ void OPPROTO glue(glue(glue(op_shld, MEM_SUFFIX), _T0_T1_ECX_cc),IFERRET_LOGTHIN
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_im_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_im_cc)(void)
 {
     int count;
     unsigned int res, tmp;
@@ -471,7 +471,7 @@ void OPPROTO glue(glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_im_cc),IFERRET_LOGTHING
 }
 
 
-void OPPROTO glue(glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_ECX_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_ECX_cc)(void)
 {
     int count;
     unsigned int res, tmp;
@@ -502,7 +502,7 @@ void OPPROTO glue(glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_ECX_cc),IFERRET_LOGTHIN
 #endif
 
 #if DATA_BITS >= 32
-void OPPROTO glue(glue(glue(op_shld, MEM_SUFFIX), _T0_T1_im_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_shld, MEM_SUFFIX), _T0_T1_im_cc)(void)
 {
     int count;
     target_long tmp;
@@ -522,7 +522,7 @@ void OPPROTO glue(glue(glue(op_shld, MEM_SUFFIX), _T0_T1_im_cc),IFERRET_LOGTHING
     CC_DST = T0;
 }
 
-void OPPROTO glue(glue(glue(op_shld, MEM_SUFFIX), _T0_T1_ECX_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_shld, MEM_SUFFIX), _T0_T1_ECX_cc)(void)
 {
     int count;
     target_long tmp;
@@ -549,7 +549,7 @@ void OPPROTO glue(glue(glue(op_shld, MEM_SUFFIX), _T0_T1_ECX_cc),IFERRET_LOGTHIN
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_im_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_im_cc)(void)
 {
     int count;
     target_long tmp;
@@ -572,7 +572,7 @@ void OPPROTO glue(glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_im_cc),IFERRET_LOGTHING
 }
 
 
-void OPPROTO glue(glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_ECX_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_ECX_cc)(void)
 {
     int count;
     target_long tmp;
@@ -602,7 +602,7 @@ void OPPROTO glue(glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_ECX_cc),IFERRET_LOGTHIN
 
 /* carry add/sub (we only need to set CC_OP differently) */
 
-void OPPROTO glue(glue(glue(op_adc, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_adc, MEM_SUFFIX), _T0_T1_cc)(void)
 {
     int cf;
 
@@ -621,7 +621,7 @@ void OPPROTO glue(glue(glue(op_adc, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(vo
     CC_OP = CC_OP_ADDB + SHIFT + cf * 4;
 }
 
-void OPPROTO glue(glue(glue(op_sbb, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_sbb, MEM_SUFFIX), _T0_T1_cc)(void)
 {
     int cf;
 
@@ -641,7 +641,7 @@ void OPPROTO glue(glue(glue(op_sbb, MEM_SUFFIX), _T0_T1_cc),IFERRET_LOGTHING)(vo
 }
 
 //we're ignoring the condition codes for now
-void OPPROTO glue(glue(glue(op_cmpxchg, MEM_SUFFIX), _T0_T1_EAX_cc),IFERRET_LOGTHING)(void)
+void OPPROTO glue(glue(op_cmpxchg, MEM_SUFFIX), _T0_T1_EAX_cc)(void)
 {
     target_ulong src, dst;
 

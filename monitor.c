@@ -379,6 +379,7 @@ static void do_info_cpu_stats (void)
 static void do_quit(void)
 {
     iferret_log_rollup("do_quit");
+    printf("Stack hits: %lu misses: %lu\n", iferret_syscall_hits, iferret_syscall_misses);
     exit(0);
 }
 

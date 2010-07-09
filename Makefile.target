@@ -303,7 +303,7 @@ OBJS+= libqemu.a
 
 # cpu emulator library
 LIBOBJS=exec.o kqemu.o translate-op.o translate-all.o cpu-exec.o\
-        translate.o op.o op_iferret_info_flow.o host-utils.o
+        translate.o op.o host-utils.o
 ifdef CONFIG_SOFTFLOAT
 LIBOBJS+=fpu/softfloat.o
 else
@@ -312,7 +312,7 @@ endif
 CPPFLAGS+=-I$(SRC_PATH)/fpu
 
 ifeq ($(TARGET_ARCH), i386)
-LIBOBJS+=helper.o helper2.o iferret_op_str.o vslht.o int_set.o
+LIBOBJS+=helper.o helper2.o iferret_syscall.o iferret_syscall_switch_linux.o  iferret_syscall_switch_xpsp2.o iferret_socketcall.o iferret_op_str.o iferret_syscall_stack.o vslht.o int_set.o
 endif
 
 ifeq ($(TARGET_ARCH), x86_64)
@@ -599,20 +599,14 @@ libqemu.a: $(LIBOBJS)
 	rm -f $@
 	$(AR) rcs $@ $(LIBOBJS)
 
-translate.o: translate.c gen-op.h opc.h opc_iferret_info_flow.h cpu.h
+translate.o: translate.c gen-op.h opc.h cpu.h
 
-translate-all.o: translate-all.c opc.h opc_iferret_info_flow.h cpu.h
+translate-all.o: translate-all.c opc.h cpu.h
 
-translate-op.o: translate-all.c op.h op_iferret_info_flow.h opc.h opc_iferret_info_flow.h cpu.h
+translate-op.o: translate-all.c op.h opc.h cpu.h
 
 op.h: op.o $(DYNGEN)
 	$(DYNGEN) -o $@ $<
-
-op_iferret_info_flow.h: op_iferret_info_flow.o $(DYNGEN)
-	$(DYNGEN) -o $@ -l _info_flow $<
-
-opc_iferret_info_flow.h: op_iferret_info_flow.o $(DYNGEN)
-	$(DYNGEN) -c -o $@ $<
 
 opc.h: op.o $(DYNGEN)
 	$(DYNGEN) -c -o $@ $<
@@ -622,9 +616,6 @@ gen-op.h: op.o $(DYNGEN)
 
 op.o: op.c
 	$(CC) $(OP_CFLAGS) $(CPPFLAGS) -c -o $@ $<
-
-op_iferret_info_flow.o: op.c
-	$(CC) $(OP_CFLAGS) $(CPPFLAGS) -c -o $@ $<  -DIFERRET_LOGTHING_ON
 
 # HELPER_CFLAGS is used for all the code compiled with static register
 # variables
@@ -668,7 +659,7 @@ signal.o: signal.c
 	$(CC) $(CPPFLAGS) -c -o $@ $<
 
 clean:
-	rm -f *.o *.a *~ $(PROGS) gen-op.h opc.h opc_iferret_info_flow.h op.h op_iferret_info_flow.h nwfpe/*.o fpu/*.o
+	rm -f *.o *.a *~ $(PROGS) gen-op.h opc.h op.h nwfpe/*.o fpu/*.o
 	rm -f *.d */*.d
 
 install: all

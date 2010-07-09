@@ -318,7 +318,6 @@ static uint32_t kbd_read_data(void *opaque, uint32_t addr)
       // if keyboard label has changed, we need
       // to push the new label to the info-flow log
       // before adding any new keyboard input to the log.
-#if 0
       if (iferret_keyboard_label_changed) {
 	//	unsigned int i,l;
 	iferret_keyboard_label_changed = 0;
@@ -339,7 +338,6 @@ static uint32_t kbd_read_data(void *opaque, uint32_t addr)
       //      IFLW_KEYBOARD_INPUT(rv);
 
       iferret_log_info_flow_op_write_4(IFLO_KEYBOARD_INPUT, rv);
-#endif
     }
 
     return (rv);

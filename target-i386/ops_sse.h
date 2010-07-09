@@ -35,7 +35,7 @@
 #define SUFFIX _xmm
 #endif
 
-void OPPROTO glue(glue(op_psrlw, SUFFIX),IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_psrlw, SUFFIX)(void)
 {
     Reg *d, *s;
     int shift;
@@ -64,7 +64,7 @@ void OPPROTO glue(glue(op_psrlw, SUFFIX),IFERRET_LOGTHING)(void)
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(op_psraw, SUFFIX),IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_psraw, SUFFIX)(void)
 {
     Reg *d, *s;
     int shift;
@@ -89,7 +89,7 @@ void OPPROTO glue(glue(op_psraw, SUFFIX),IFERRET_LOGTHING)(void)
 #endif
 }
 
-void OPPROTO glue(glue(op_psllw, SUFFIX),IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_psllw, SUFFIX)(void)
 {
     Reg *d, *s;
     int shift;
@@ -118,7 +118,7 @@ void OPPROTO glue(glue(op_psllw, SUFFIX),IFERRET_LOGTHING)(void)
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(op_psrld, SUFFIX),IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_psrld, SUFFIX)(void)
 {
     Reg *d, *s;
     int shift;
@@ -143,7 +143,7 @@ void OPPROTO glue(glue(op_psrld, SUFFIX),IFERRET_LOGTHING)(void)
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(op_psrad, SUFFIX),IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_psrad, SUFFIX)(void)
 {
     Reg *d, *s;
     int shift;
@@ -164,7 +164,7 @@ void OPPROTO glue(glue(op_psrad, SUFFIX),IFERRET_LOGTHING)(void)
 #endif
 }
 
-void OPPROTO glue(glue(op_pslld, SUFFIX),IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_pslld, SUFFIX)(void)
 {
     Reg *d, *s;
     int shift;
@@ -189,7 +189,7 @@ void OPPROTO glue(glue(op_pslld, SUFFIX),IFERRET_LOGTHING)(void)
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(op_psrlq, SUFFIX),IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_psrlq, SUFFIX)(void)
 {
     Reg *d, *s;
     int shift;
@@ -212,7 +212,7 @@ void OPPROTO glue(glue(op_psrlq, SUFFIX),IFERRET_LOGTHING)(void)
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(op_psllq, SUFFIX),IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_psllq, SUFFIX)(void)
 {
     Reg *d, *s;
     int shift;
@@ -236,7 +236,7 @@ void OPPROTO glue(glue(op_psllq, SUFFIX),IFERRET_LOGTHING)(void)
 }
 
 #if SHIFT == 1
-void OPPROTO glue(glue(op_psrldq, SUFFIX),IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_psrldq, SUFFIX)(void)
 {
     Reg *d, *s;
     int shift, i;
@@ -253,7 +253,7 @@ void OPPROTO glue(glue(op_psrldq, SUFFIX),IFERRET_LOGTHING)(void)
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(op_pslldq, SUFFIX),IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_pslldq, SUFFIX)(void)
 {
     Reg *d, *s;
     int shift, i;
@@ -272,7 +272,7 @@ void OPPROTO glue(glue(op_pslldq, SUFFIX),IFERRET_LOGTHING)(void)
 #endif
 
 #define SSE_OP_B(name, F)\
-void OPPROTO glue(glue(name, SUFFIX) ,IFERRET_LOGTHING)(void)\
+void OPPROTO glue(name, SUFFIX) (void)\
 {\
     Reg *d, *s;\
     d = (Reg *)((char *)env + PARAM1);\
@@ -298,7 +298,7 @@ void OPPROTO glue(glue(name, SUFFIX) ,IFERRET_LOGTHING)(void)\
 }
 
 #define SSE_OP_W(name, F)\
-void OPPROTO glue(glue(name, SUFFIX) ,IFERRET_LOGTHING)(void)\
+void OPPROTO glue(name, SUFFIX) (void)\
 {\
     Reg *d, *s;\
     d = (Reg *)((char *)env + PARAM1);\
@@ -316,7 +316,7 @@ void OPPROTO glue(glue(name, SUFFIX) ,IFERRET_LOGTHING)(void)\
 }
 
 #define SSE_OP_L(name, F)\
-void OPPROTO glue(glue(name, SUFFIX) ,IFERRET_LOGTHING)(void)\
+void OPPROTO glue(name, SUFFIX) (void)\
 {\
     Reg *d, *s;\
     d = (Reg *)((char *)env + PARAM1);\
@@ -330,7 +330,7 @@ void OPPROTO glue(glue(name, SUFFIX) ,IFERRET_LOGTHING)(void)\
 }
 
 #define SSE_OP_Q(name, F)\
-void OPPROTO glue(glue(name, SUFFIX) ,IFERRET_LOGTHING)(void)\
+void OPPROTO glue(name, SUFFIX) (void)\
 {\
     Reg *d, *s;\
     d = (Reg *)((char *)env + PARAM1);\
@@ -461,7 +461,7 @@ SSE_OP_W(op_pmulhw, FMULHW)
 SSE_OP_B(op_pavgb, FAVG)
 SSE_OP_W(op_pavgw, FAVG)
 
-void OPPROTO glue(glue(op_pmuludq, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_pmuludq, SUFFIX) (void)
 {
     Reg *d, *s;
     d = (Reg *)((char *)env + PARAM1);
@@ -473,7 +473,7 @@ void OPPROTO glue(glue(op_pmuludq, SUFFIX) ,IFERRET_LOGTHING)(void)
 #endif
 }
 
-void OPPROTO glue(glue(op_pmaddwd, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_pmaddwd, SUFFIX) (void)
 {
     int i;
     Reg *d, *s;
@@ -496,7 +496,7 @@ static inline int abs1(int a)
         return a;
 }
 #endif
-void OPPROTO glue(glue(op_psadbw, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_psadbw, SUFFIX) (void)
 {
     unsigned int val;
     Reg *d, *s;
@@ -527,7 +527,7 @@ void OPPROTO glue(glue(op_psadbw, SUFFIX) ,IFERRET_LOGTHING)(void)
 #endif
 }
 
-void OPPROTO glue(glue(op_maskmov, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_maskmov, SUFFIX) (void)
 {
     int i;
     Reg *d, *s;
@@ -540,7 +540,7 @@ void OPPROTO glue(glue(op_maskmov, SUFFIX) ,IFERRET_LOGTHING)(void)
     FORCE_RET();
 }
 
-void OPPROTO glue(glue(op_movl_mm_T0, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_movl_mm_T0, SUFFIX) (void)
 {
     Reg *d;
     d = (Reg *)((char *)env + PARAM1);
@@ -551,7 +551,7 @@ void OPPROTO glue(glue(op_movl_mm_T0, SUFFIX) ,IFERRET_LOGTHING)(void)
 #endif
 }
 
-void OPPROTO glue(glue(op_movl_T0_mm, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_movl_T0_mm, SUFFIX) (void)
 {
     Reg *s;
     s = (Reg *)((char *)env + PARAM1);
@@ -559,7 +559,7 @@ void OPPROTO glue(glue(op_movl_T0_mm, SUFFIX) ,IFERRET_LOGTHING)(void)
 }
 
 #ifdef TARGET_X86_64
-void OPPROTO glue(glue(op_movq_mm_T0, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_movq_mm_T0, SUFFIX) (void)
 {
     Reg *d;
     d = (Reg *)((char *)env + PARAM1);
@@ -569,7 +569,7 @@ void OPPROTO glue(glue(op_movq_mm_T0, SUFFIX) ,IFERRET_LOGTHING)(void)
 #endif
 }
 
-void OPPROTO glue(glue(op_movq_T0_mm, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_movq_T0_mm, SUFFIX) (void)
 {
     Reg *s;
     s = (Reg *)((char *)env + PARAM1);
@@ -578,7 +578,7 @@ void OPPROTO glue(glue(op_movq_T0_mm, SUFFIX) ,IFERRET_LOGTHING)(void)
 #endif
 
 #if SHIFT == 0
-void OPPROTO glue(glue(op_pshufw, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_pshufw, SUFFIX) (void)
 {
     Reg r, *d, *s;
     int order;
@@ -592,7 +592,7 @@ void OPPROTO glue(glue(op_pshufw, SUFFIX) ,IFERRET_LOGTHING)(void)
     *d = r;
 }
 #else
-void OPPROTO glue(op_shufps,IFERRET_LOGTHING)(void)
+void OPPROTO op_shufps(void)
 {
     Reg r, *d, *s;
     int order;
@@ -606,7 +606,7 @@ void OPPROTO glue(op_shufps,IFERRET_LOGTHING)(void)
     *d = r;
 }
 
-void OPPROTO glue(op_shufpd,IFERRET_LOGTHING)(void)
+void OPPROTO op_shufpd(void)
 {
     Reg r, *d, *s;
     int order;
@@ -618,7 +618,7 @@ void OPPROTO glue(op_shufpd,IFERRET_LOGTHING)(void)
     *d = r;
 }
 
-void OPPROTO glue(glue(op_pshufd, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_pshufd, SUFFIX) (void)
 {
     Reg r, *d, *s;
     int order;
@@ -632,7 +632,7 @@ void OPPROTO glue(glue(op_pshufd, SUFFIX) ,IFERRET_LOGTHING)(void)
     *d = r;
 }
 
-void OPPROTO glue(glue(op_pshuflw, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_pshuflw, SUFFIX) (void)
 {
     Reg r, *d, *s;
     int order;
@@ -647,7 +647,7 @@ void OPPROTO glue(glue(op_pshuflw, SUFFIX) ,IFERRET_LOGTHING)(void)
     *d = r;
 }
 
-void OPPROTO glue(glue(op_pshufhw, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_pshufhw, SUFFIX) (void)
 {
     Reg r, *d, *s;
     int order;
@@ -668,7 +668,7 @@ void OPPROTO glue(glue(op_pshufhw, SUFFIX) ,IFERRET_LOGTHING)(void)
 /* XXX: not accurate */
 
 #define SSE_OP_S(name, F)\
-void OPPROTO glue(op_ ## name ## ps ,IFERRET_LOGTHING)(void)\
+void OPPROTO op_ ## name ## ps (void)\
 {\
     Reg *d, *s;\
     d = (Reg *)((char *)env + PARAM1);\
@@ -679,14 +679,14 @@ void OPPROTO glue(op_ ## name ## ps ,IFERRET_LOGTHING)(void)\
     d->XMM_S(3) = F(32, d->XMM_S(3), s->XMM_S(3));\
 }\
 \
-void OPPROTO glue(op_ ## name ## ss ,IFERRET_LOGTHING)(void)\
+void OPPROTO op_ ## name ## ss (void)\
 {\
     Reg *d, *s;\
     d = (Reg *)((char *)env + PARAM1);\
     s = (Reg *)((char *)env + PARAM2);\
     d->XMM_S(0) = F(32, d->XMM_S(0), s->XMM_S(0));\
 }\
-void OPPROTO glue(op_ ## name ## pd ,IFERRET_LOGTHING)(void)\
+void OPPROTO op_ ## name ## pd (void)\
 {\
     Reg *d, *s;\
     d = (Reg *)((char *)env + PARAM1);\
@@ -695,7 +695,7 @@ void OPPROTO glue(op_ ## name ## pd ,IFERRET_LOGTHING)(void)\
     d->XMM_D(1) = F(64, d->XMM_D(1), s->XMM_D(1));\
 }\
 \
-void OPPROTO glue(op_ ## name ## sd ,IFERRET_LOGTHING)(void)\
+void OPPROTO op_ ## name ## sd (void)\
 {\
     Reg *d, *s;\
     d = (Reg *)((char *)env + PARAM1);\
@@ -721,7 +721,7 @@ SSE_OP_S(sqrt, FPU_SQRT)
 
 
 /* float to float conversions */
-void OPPROTO glue(op_cvtps2pd,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtps2pd(void)
 {
     float32 s0, s1;
     Reg *d, *s;
@@ -733,7 +733,7 @@ void OPPROTO glue(op_cvtps2pd,IFERRET_LOGTHING)(void)
     d->XMM_D(1) = float32_to_float64(s1, &env->sse_status);
 }
 
-void OPPROTO glue(op_cvtpd2ps,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtpd2ps(void)
 {
     Reg *d, *s;
     d = (Reg *)((char *)env + PARAM1);
@@ -743,7 +743,7 @@ void OPPROTO glue(op_cvtpd2ps,IFERRET_LOGTHING)(void)
     d->Q(1) = 0;
 }
 
-void OPPROTO glue(op_cvtss2sd,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtss2sd(void)
 {
     Reg *d, *s;
     d = (Reg *)((char *)env + PARAM1);
@@ -751,7 +751,7 @@ void OPPROTO glue(op_cvtss2sd,IFERRET_LOGTHING)(void)
     d->XMM_D(0) = float32_to_float64(s->XMM_S(0), &env->sse_status);
 }
 
-void OPPROTO glue(op_cvtsd2ss,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtsd2ss(void)
 {
     Reg *d, *s;
     d = (Reg *)((char *)env + PARAM1);
@@ -760,7 +760,7 @@ void OPPROTO glue(op_cvtsd2ss,IFERRET_LOGTHING)(void)
 }
 
 /* integer to float */
-void OPPROTO glue(op_cvtdq2ps,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtdq2ps(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -770,7 +770,7 @@ void OPPROTO glue(op_cvtdq2ps,IFERRET_LOGTHING)(void)
     d->XMM_S(3) = int32_to_float32(s->XMM_L(3), &env->sse_status);
 }
 
-void OPPROTO glue(op_cvtdq2pd,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtdq2pd(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -781,7 +781,7 @@ void OPPROTO glue(op_cvtdq2pd,IFERRET_LOGTHING)(void)
     d->XMM_D(1) = int32_to_float64(l1, &env->sse_status);
 }
 
-void OPPROTO glue(op_cvtpi2ps,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtpi2ps(void)
 {
     XMMReg *d = (Reg *)((char *)env + PARAM1);
     MMXReg *s = (MMXReg *)((char *)env + PARAM2);
@@ -789,7 +789,7 @@ void OPPROTO glue(op_cvtpi2ps,IFERRET_LOGTHING)(void)
     d->XMM_S(1) = int32_to_float32(s->MMX_L(1), &env->sse_status);
 }
 
-void OPPROTO glue(op_cvtpi2pd,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtpi2pd(void)
 {
     XMMReg *d = (Reg *)((char *)env + PARAM1);
     MMXReg *s = (MMXReg *)((char *)env + PARAM2);
@@ -797,26 +797,26 @@ void OPPROTO glue(op_cvtpi2pd,IFERRET_LOGTHING)(void)
     d->XMM_D(1) = int32_to_float64(s->MMX_L(1), &env->sse_status);
 }
 
-void OPPROTO glue(op_cvtsi2ss,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtsi2ss(void)
 {
     XMMReg *d = (Reg *)((char *)env + PARAM1);
     d->XMM_S(0) = int32_to_float32(T0, &env->sse_status);
 }
 
-void OPPROTO glue(op_cvtsi2sd,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtsi2sd(void)
 {
     XMMReg *d = (Reg *)((char *)env + PARAM1);
     d->XMM_D(0) = int32_to_float64(T0, &env->sse_status);
 }
 
 #ifdef TARGET_X86_64
-void OPPROTO glue(op_cvtsq2ss,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtsq2ss(void)
 {
     XMMReg *d = (Reg *)((char *)env + PARAM1);
     d->XMM_S(0) = int64_to_float32(T0, &env->sse_status);
 }
 
-void OPPROTO glue(op_cvtsq2sd,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtsq2sd(void)
 {
     XMMReg *d = (Reg *)((char *)env + PARAM1);
     d->XMM_D(0) = int64_to_float64(T0, &env->sse_status);
@@ -824,7 +824,7 @@ void OPPROTO glue(op_cvtsq2sd,IFERRET_LOGTHING)(void)
 #endif
 
 /* float to integer */
-void OPPROTO glue(op_cvtps2dq,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtps2dq(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -834,7 +834,7 @@ void OPPROTO glue(op_cvtps2dq,IFERRET_LOGTHING)(void)
     d->XMM_L(3) = float32_to_int32(s->XMM_S(3), &env->sse_status);
 }
 
-void OPPROTO glue(op_cvtpd2dq,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtpd2dq(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -843,7 +843,7 @@ void OPPROTO glue(op_cvtpd2dq,IFERRET_LOGTHING)(void)
     d->XMM_Q(1) = 0;
 }
 
-void OPPROTO glue(op_cvtps2pi,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtps2pi(void)
 {
     MMXReg *d = (MMXReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -851,7 +851,7 @@ void OPPROTO glue(op_cvtps2pi,IFERRET_LOGTHING)(void)
     d->MMX_L(1) = float32_to_int32(s->XMM_S(1), &env->sse_status);
 }
 
-void OPPROTO glue(op_cvtpd2pi,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtpd2pi(void)
 {
     MMXReg *d = (MMXReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -859,26 +859,26 @@ void OPPROTO glue(op_cvtpd2pi,IFERRET_LOGTHING)(void)
     d->MMX_L(1) = float64_to_int32(s->XMM_D(1), &env->sse_status);
 }
 
-void OPPROTO glue(op_cvtss2si,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtss2si(void)
 {
     XMMReg *s = (XMMReg *)((char *)env + PARAM1);
     T0 = float32_to_int32(s->XMM_S(0), &env->sse_status);
 }
 
-void OPPROTO glue(op_cvtsd2si,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtsd2si(void)
 {
     XMMReg *s = (XMMReg *)((char *)env + PARAM1);
     T0 = float64_to_int32(s->XMM_D(0), &env->sse_status);
 }
 
 #ifdef TARGET_X86_64
-void OPPROTO glue(op_cvtss2sq,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtss2sq(void)
 {
     XMMReg *s = (XMMReg *)((char *)env + PARAM1);
     T0 = float32_to_int64(s->XMM_S(0), &env->sse_status);
 }
 
-void OPPROTO glue(op_cvtsd2sq,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvtsd2sq(void)
 {
     XMMReg *s = (XMMReg *)((char *)env + PARAM1);
     T0 = float64_to_int64(s->XMM_D(0), &env->sse_status);
@@ -886,7 +886,7 @@ void OPPROTO glue(op_cvtsd2sq,IFERRET_LOGTHING)(void)
 #endif
 
 /* float to integer truncated */
-void OPPROTO glue(op_cvttps2dq,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvttps2dq(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -896,7 +896,7 @@ void OPPROTO glue(op_cvttps2dq,IFERRET_LOGTHING)(void)
     d->XMM_L(3) = float32_to_int32_round_to_zero(s->XMM_S(3), &env->sse_status);
 }
 
-void OPPROTO glue(op_cvttpd2dq,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvttpd2dq(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -905,7 +905,7 @@ void OPPROTO glue(op_cvttpd2dq,IFERRET_LOGTHING)(void)
     d->XMM_Q(1) = 0;
 }
 
-void OPPROTO glue(op_cvttps2pi,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvttps2pi(void)
 {
     MMXReg *d = (MMXReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -913,7 +913,7 @@ void OPPROTO glue(op_cvttps2pi,IFERRET_LOGTHING)(void)
     d->MMX_L(1) = float32_to_int32_round_to_zero(s->XMM_S(1), &env->sse_status);
 }
 
-void OPPROTO glue(op_cvttpd2pi,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvttpd2pi(void)
 {
     MMXReg *d = (MMXReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -921,33 +921,33 @@ void OPPROTO glue(op_cvttpd2pi,IFERRET_LOGTHING)(void)
     d->MMX_L(1) = float64_to_int32_round_to_zero(s->XMM_D(1), &env->sse_status);
 }
 
-void OPPROTO glue(op_cvttss2si,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvttss2si(void)
 {
     XMMReg *s = (XMMReg *)((char *)env + PARAM1);
     T0 = float32_to_int32_round_to_zero(s->XMM_S(0), &env->sse_status);
 }
 
-void OPPROTO glue(op_cvttsd2si,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvttsd2si(void)
 {
     XMMReg *s = (XMMReg *)((char *)env + PARAM1);
     T0 = float64_to_int32_round_to_zero(s->XMM_D(0), &env->sse_status);
 }
 
 #ifdef TARGET_X86_64
-void OPPROTO glue(op_cvttss2sq,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvttss2sq(void)
 {
     XMMReg *s = (XMMReg *)((char *)env + PARAM1);
     T0 = float32_to_int64_round_to_zero(s->XMM_S(0), &env->sse_status);
 }
 
-void OPPROTO glue(op_cvttsd2sq,IFERRET_LOGTHING)(void)
+void OPPROTO op_cvttsd2sq(void)
 {
     XMMReg *s = (XMMReg *)((char *)env + PARAM1);
     T0 = float64_to_int64_round_to_zero(s->XMM_D(0), &env->sse_status);
 }
 #endif
 
-void OPPROTO glue(op_rsqrtps,IFERRET_LOGTHING)(void)
+void OPPROTO op_rsqrtps(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -957,14 +957,14 @@ void OPPROTO glue(op_rsqrtps,IFERRET_LOGTHING)(void)
     d->XMM_S(3) = approx_rsqrt(s->XMM_S(3));
 }
 
-void OPPROTO glue(op_rsqrtss,IFERRET_LOGTHING)(void)
+void OPPROTO op_rsqrtss(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
     d->XMM_S(0) = approx_rsqrt(s->XMM_S(0));
 }
 
-void OPPROTO glue(op_rcpps,IFERRET_LOGTHING)(void)
+void OPPROTO op_rcpps(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -974,14 +974,14 @@ void OPPROTO glue(op_rcpps,IFERRET_LOGTHING)(void)
     d->XMM_S(3) = approx_rcp(s->XMM_S(3));
 }
 
-void OPPROTO glue(op_rcpss,IFERRET_LOGTHING)(void)
+void OPPROTO op_rcpss(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
     d->XMM_S(0) = approx_rcp(s->XMM_S(0));
 }
 
-void OPPROTO glue(op_haddps,IFERRET_LOGTHING)(void)
+void OPPROTO op_haddps(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -993,7 +993,7 @@ void OPPROTO glue(op_haddps,IFERRET_LOGTHING)(void)
     *d = r;
 }
 
-void OPPROTO glue(op_haddpd,IFERRET_LOGTHING)(void)
+void OPPROTO op_haddpd(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -1003,7 +1003,7 @@ void OPPROTO glue(op_haddpd,IFERRET_LOGTHING)(void)
     *d = r;
 }
 
-void OPPROTO glue(op_hsubps,IFERRET_LOGTHING)(void)
+void OPPROTO op_hsubps(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -1015,7 +1015,7 @@ void OPPROTO glue(op_hsubps,IFERRET_LOGTHING)(void)
     *d = r;
 }
 
-void OPPROTO glue(op_hsubpd,IFERRET_LOGTHING)(void)
+void OPPROTO op_hsubpd(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -1025,7 +1025,7 @@ void OPPROTO glue(op_hsubpd,IFERRET_LOGTHING)(void)
     *d = r;
 }
 
-void OPPROTO glue(op_addsubps,IFERRET_LOGTHING)(void)
+void OPPROTO op_addsubps(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -1035,7 +1035,7 @@ void OPPROTO glue(op_addsubps,IFERRET_LOGTHING)(void)
     d->XMM_S(3) = d->XMM_S(3) + s->XMM_S(3);
 }
 
-void OPPROTO glue(op_addsubpd,IFERRET_LOGTHING)(void)
+void OPPROTO op_addsubpd(void)
 {
     XMMReg *d = (XMMReg *)((char *)env + PARAM1);
     XMMReg *s = (XMMReg *)((char *)env + PARAM2);
@@ -1045,7 +1045,7 @@ void OPPROTO glue(op_addsubpd,IFERRET_LOGTHING)(void)
 
 /* XXX: unordered */
 #define SSE_OP_CMP(name, F)\
-void OPPROTO glue(op_ ## name ## ps ,IFERRET_LOGTHING)(void)\
+void OPPROTO op_ ## name ## ps (void)\
 {\
     Reg *d, *s;\
     d = (Reg *)((char *)env + PARAM1);\
@@ -1056,14 +1056,14 @@ void OPPROTO glue(op_ ## name ## ps ,IFERRET_LOGTHING)(void)\
     d->XMM_L(3) = F(32, d->XMM_S(3), s->XMM_S(3));\
 }\
 \
-void OPPROTO glue(op_ ## name ## ss ,IFERRET_LOGTHING)(void)\
+void OPPROTO op_ ## name ## ss (void)\
 {\
     Reg *d, *s;\
     d = (Reg *)((char *)env + PARAM1);\
     s = (Reg *)((char *)env + PARAM2);\
     d->XMM_L(0) = F(32, d->XMM_S(0), s->XMM_S(0));\
 }\
-void OPPROTO glue(op_ ## name ## pd ,IFERRET_LOGTHING)(void)\
+void OPPROTO op_ ## name ## pd (void)\
 {\
     Reg *d, *s;\
     d = (Reg *)((char *)env + PARAM1);\
@@ -1072,7 +1072,7 @@ void OPPROTO glue(op_ ## name ## pd ,IFERRET_LOGTHING)(void)\
     d->XMM_Q(1) = F(64, d->XMM_D(1), s->XMM_D(1));\
 }\
 \
-void OPPROTO glue(op_ ## name ## sd ,IFERRET_LOGTHING)(void)\
+void OPPROTO op_ ## name ## sd (void)\
 {\
     Reg *d, *s;\
     d = (Reg *)((char *)env + PARAM1);\
@@ -1098,13 +1098,9 @@ SSE_OP_CMP(cmpnlt, FPU_CMPNLT)
 SSE_OP_CMP(cmpnle, FPU_CMPNLE)
 SSE_OP_CMP(cmpord, FPU_CMPORD)
 
-#ifndef IFERRET_LOGTHING_ON
 const int comis_eflags[4] = {CC_C, CC_Z, 0, CC_Z | CC_P | CC_C};
-#else
-extern const int comis_eflags[];
-#endif
 
-void OPPROTO glue(op_ucomiss,IFERRET_LOGTHING)(void)
+void OPPROTO op_ucomiss(void)
 {
     int ret;
     float32 s0, s1;
@@ -1119,7 +1115,7 @@ void OPPROTO glue(op_ucomiss,IFERRET_LOGTHING)(void)
     FORCE_RET();
 }
 
-void OPPROTO glue(op_comiss,IFERRET_LOGTHING)(void)
+void OPPROTO op_comiss(void)
 {
     int ret;
     float32 s0, s1;
@@ -1134,7 +1130,7 @@ void OPPROTO glue(op_comiss,IFERRET_LOGTHING)(void)
     FORCE_RET();
 }
 
-void OPPROTO glue(op_ucomisd,IFERRET_LOGTHING)(void)
+void OPPROTO op_ucomisd(void)
 {
     int ret;
     float64 d0, d1;
@@ -1149,7 +1145,7 @@ void OPPROTO glue(op_ucomisd,IFERRET_LOGTHING)(void)
     FORCE_RET();
 }
 
-void OPPROTO glue(op_comisd,IFERRET_LOGTHING)(void)
+void OPPROTO op_comisd(void)
 {
     int ret;
     float64 d0, d1;
@@ -1164,7 +1160,7 @@ void OPPROTO glue(op_comisd,IFERRET_LOGTHING)(void)
     FORCE_RET();
 }
 
-void OPPROTO glue(op_movmskps,IFERRET_LOGTHING)(void)
+void OPPROTO op_movmskps(void)
 {
     int b0, b1, b2, b3;
     Reg *s;
@@ -1176,7 +1172,7 @@ void OPPROTO glue(op_movmskps,IFERRET_LOGTHING)(void)
     T0 = b0 | (b1 << 1) | (b2 << 2) | (b3 << 3);
 }
 
-void OPPROTO glue(op_movmskpd,IFERRET_LOGTHING)(void)
+void OPPROTO op_movmskpd(void)
 {
     int b0, b1;
     Reg *s;
@@ -1188,7 +1184,7 @@ void OPPROTO glue(op_movmskpd,IFERRET_LOGTHING)(void)
 
 #endif
 
-void OPPROTO glue(glue(op_pmovmskb, SUFFIX),IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_pmovmskb, SUFFIX)(void)
 {
     Reg *s;
     s = (Reg *)((char *)env + PARAM1);
@@ -1213,7 +1209,7 @@ void OPPROTO glue(glue(op_pmovmskb, SUFFIX),IFERRET_LOGTHING)(void)
 #endif
 }
 
-void OPPROTO glue(glue(op_pinsrw, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_pinsrw, SUFFIX) (void)
 {
     Reg *d = (Reg *)((char *)env + PARAM1);
     int pos = PARAM2;
@@ -1221,7 +1217,7 @@ void OPPROTO glue(glue(op_pinsrw, SUFFIX) ,IFERRET_LOGTHING)(void)
     d->W(pos) = T0;
 }
 
-void OPPROTO glue(glue(op_pextrw, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_pextrw, SUFFIX) (void)
 {
     Reg *s = (Reg *)((char *)env + PARAM1);
     int pos = PARAM2;
@@ -1229,7 +1225,7 @@ void OPPROTO glue(glue(op_pextrw, SUFFIX) ,IFERRET_LOGTHING)(void)
     T0 = s->W(pos);
 }
 
-void OPPROTO glue(glue(op_packsswb, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_packsswb, SUFFIX) (void)
 {
     Reg r, *d, *s;
     d = (Reg *)((char *)env + PARAM1);
@@ -1258,7 +1254,7 @@ void OPPROTO glue(glue(op_packsswb, SUFFIX) ,IFERRET_LOGTHING)(void)
     *d = r;
 }
 
-void OPPROTO glue(glue(op_packuswb, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_packuswb, SUFFIX) (void)
 {
     Reg r, *d, *s;
     d = (Reg *)((char *)env + PARAM1);
@@ -1287,7 +1283,7 @@ void OPPROTO glue(glue(op_packuswb, SUFFIX) ,IFERRET_LOGTHING)(void)
     *d = r;
 }
 
-void OPPROTO glue(glue(op_packssdw, SUFFIX) ,IFERRET_LOGTHING)(void)
+void OPPROTO glue(op_packssdw, SUFFIX) (void)
 {
     Reg r, *d, *s;
     d = (Reg *)((char *)env + PARAM1);
@@ -1310,7 +1306,7 @@ void OPPROTO glue(glue(op_packssdw, SUFFIX) ,IFERRET_LOGTHING)(void)
 
 #define UNPCK_OP(base_name, base)                               \
                                                                 \
-void OPPROTO glue(glue(op_punpck ## base_name ## bw, SUFFIX) ,IFERRET_LOGTHING)(void)   \
+void OPPROTO glue(op_punpck ## base_name ## bw, SUFFIX) (void)   \
 {                                                               \
     Reg r, *d, *s;                                              \
     d = (Reg *)((char *)env + PARAM1);                          \
@@ -1337,7 +1333,7 @@ XMM_ONLY(                                                       \
     *d = r;                                                     \
 }                                                               \
                                                                 \
-void OPPROTO glue(glue(op_punpck ## base_name ## wd, SUFFIX) ,IFERRET_LOGTHING)(void)   \
+void OPPROTO glue(op_punpck ## base_name ## wd, SUFFIX) (void)   \
 {                                                               \
     Reg r, *d, *s;                                              \
     d = (Reg *)((char *)env + PARAM1);                          \
@@ -1356,7 +1352,7 @@ XMM_ONLY(                                                       \
     *d = r;                                                     \
 }                                                               \
                                                                 \
-void OPPROTO glue(glue(op_punpck ## base_name ## dq, SUFFIX) ,IFERRET_LOGTHING)(void)   \
+void OPPROTO glue(op_punpck ## base_name ## dq, SUFFIX) (void)   \
 {                                                               \
     Reg r, *d, *s;                                              \
     d = (Reg *)((char *)env + PARAM1);                          \
@@ -1372,7 +1368,7 @@ XMM_ONLY(                                                       \
 }                                                               \
                                                                 \
 XMM_ONLY(                                                       \
-void OPPROTO glue(glue(op_punpck ## base_name ## qdq, SUFFIX) ,IFERRET_LOGTHING)(void)  \
+void OPPROTO glue(op_punpck ## base_name ## qdq, SUFFIX) (void)  \
 {                                                               \
     Reg r, *d, *s;                                              \
     d = (Reg *)((char *)env + PARAM1);                          \

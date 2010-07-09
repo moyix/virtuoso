@@ -34,11 +34,6 @@ extern int dyngen_code(uint8_t *gen_code_buf,
                        uint16_t *label_offsets, uint16_t *jmp_offsets,
                        const uint16_t *opc_buf, const uint32_t *opparam_buf, const long *gen_labels);
 
-extern int dyngen_code__info_flow(uint8_t *gen_code_buf,
-                  uint16_t *label_offsets, uint16_t *jmp_offsets,
-                  const uint16_t *opc_buf, const uint32_t *opparam_buf,
-                  const long *gen_labels);
-
 enum {
 #define DEF(s, n, copy_size) INDEX_op_ ## s,
 #include "opc.h"
@@ -80,12 +75,6 @@ static uint8_t op_nb_args[] = {
 static const unsigned short opc_copy_size[] = {
 #define DEF(s, n, copy_size) copy_size,
 #include "opc.h"
-#undef DEF
-};
-
-static const unsigned short opc_iferret_info_flow_copy_size[] = {
-#define DEF(s, n, copy_size) copy_size,
-#include "opc_iferret_info_flow.h"
 #undef DEF
 };
 
@@ -168,35 +157,6 @@ static void dyngen_labels(long *gen_labels, int nb_gen_labels,
     }
 }
 
-/* compute label info for info-flow case */
-static void dyngen_labels__info_flow(long *gen_labels, int nb_gen_labels,
-                                     uint8_t *gen_code_buf, const uint16_t *opc_buf)
-{
-    uint8_t *gen_code_ptr;
-    int c, i;
-    unsigned long gen_code_addr[OPC_BUF_SIZE];
-
-    if (nb_gen_labels == 0)
-        return;
-    /* compute the address of each op code */
-
-    gen_code_ptr = gen_code_buf;
-    i = 0;
-    for(;;) {
-        c = opc_buf[i];
-        gen_code_addr[i] =(unsigned long)gen_code_ptr;
-        if (c == INDEX_op_end)
-            break;
-    gen_code_ptr += opc_iferret_info_flow_copy_size[c];
-        i++;
-    }
-
-    /* compute the address of each label */
-    for(i = 0; i < nb_gen_labels; i++) {
-        gen_labels[i] = gen_code_addr[gen_labels[i]];
-    }
-}
-
 unsigned long code_gen_max_block_size(void)
 {
     static unsigned long max;
@@ -234,31 +194,15 @@ int cpu_gen_code(CPUState *env, TranslationBlock *tb, int *gen_code_size_ptr)
     tb->tb_jmp_offset[2] = 0xffff;
     tb->tb_jmp_offset[3] = 0xffff;
 #endif
-
-    if (iferret_info_flow) {
-      dyngen_labels__info_flow(gen_labels, nb_gen_labels, gen_code_buf, gen_opc_buf);
-      gen_code_size = dyngen_code__info_flow
-    (gen_code_buf, tb->tb_next_offset,
-#ifdef USE_DIRECT_JUMP
-     tb->tb_jmp_offset,
-#else
-     NULL,
-#endif
-     gen_opc_buf, gen_opparam_buf, gen_labels);
-    }
-    else {
-      dyngen_labels(gen_labels, nb_gen_labels, gen_code_buf, gen_opc_buf);
-
-      gen_code_size = dyngen_code(gen_code_buf, tb->tb_next_offset,
+    dyngen_labels(gen_labels, nb_gen_labels, gen_code_buf, gen_opc_buf);
+    
+    gen_code_size = dyngen_code(gen_code_buf, tb->tb_next_offset,
 #ifdef USE_DIRECT_JUMP
                                 tb->tb_jmp_offset,
 #else
                                 NULL,
 #endif
                                 gen_opc_buf, gen_opparam_buf, gen_labels);
-    }
-
-
     *gen_code_size_ptr = gen_code_size;
 #ifdef DEBUG_DISAS
     if (loglevel & CPU_LOG_TB_OUT_ASM) {
@@ -294,12 +238,7 @@ int cpu_restore_state(TranslationBlock *tb,
         c = *opc_ptr;
         if (c == INDEX_op_end)
             return -1;
-        if (iferret_info_flow) {
-            tc_ptr += opc_iferret_info_flow_copy_size[c];
-        }
-        else {
-            tc_ptr += opc_copy_size[c];
-        }
+        tc_ptr += opc_copy_size[c];
         if (searched_pc < tc_ptr)
             break;
         opc_ptr++;

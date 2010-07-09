@@ -36,8 +36,6 @@ my %win_types = (
     "UNICODE_STRING" => 1, "USHORT" => 1, "WAIT_TYPE" => 1, "WSTR" => 1, "PROCESSINFOCLASS" => 1
 );
 
-
-
 # Windows types that are just 4-byte ints
 my %win_int_types = (
     "ACCESS_MASK" => 1, "ATOM_INFORMATION_CLASS" => 1, "BOOLEAN" => 1, "DEBUGOBJECTINFOCLASS" => 1,
@@ -57,10 +55,6 @@ my %win_int_types = (
     "TOKEN_INFORMATION_CLASS" => 1, "TOKEN_TYPE" => 1, "ULONG" => 1, "ULONG_PTR" => 1, "USHORT" => 1,
     "WAIT_TYPE" => 1, "PVOID" => 1
 );
-
-# Windows types that are 8-bytes of data 
-my % win_int64_types = ( "IO_STATUS_BLOCK" => 1 );
-
 
 # Handlers we have defined for specific types
 # Maps between the type name and the pair (function, format_specifier)
@@ -87,127 +81,6 @@ my @syscallRegArgs = ("EBX", "ECX", "EDX", "ESI", "EDI", "EBP");
 my @v = ("a1", "a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9", "a10", "a11", "a12", "a13", "a14", "a15", "a16", "a17", "a18", "a19", "a20", "a21", "a22", "a23", "a24", "a25", "a26", "a27", "a28", "a29");
 
 my %iferret_fmts;
-
-#mz this will get called by File::Find()
-use File::Find();
-
-my %ops;
-
-# $_ filename
-# $File::Find::name is complete path
-sub handle_file {
-    #mz we only care about .c and .h files
-    if (/^.*\.[ch]\z/s) {
-        my $filename = $_;
-        if ($filename =~    /iferret_log_arg_fmt.h/
-            || $filename =~ /iferret_ops.h/
-            || $filename =~ /iferret_log.c/
-            || $filename =~ /iferret.c/
-            || $filename =~ /iferret_op_str.c/
-            || $filename =~ /iferret_syscall_switch/
-            || $filename =~ /iferret_socketcall.c/
-            || $filename =~ /iferret_log_simp.h/
-            ) {
-            print "Skipping $filename.\n";
-            return;
-        }
-
-#        if ($filename =~ /softmmu_header.h/) {
-#            print "foo\n";
-#        }
-        my @lines;
-        open F, "$File::Find::name";
-        while (<F>) {
-            if (/iferret_log_info_flow_op_write/
-                || /iferret_log_syscall_op_write/
-                || /iferret_log_sysret_op_write/
-                || /iferret_log_op_write/) {
-                push @lines, $_;
-            }
-        }
-        close F;
-
-        #@lines = `cd $iferretDir; grep \"iferret_log_info_flow_op_write\" $filename`;
-        #push @lines, `cd $iferretDir; grep \"iferret_log_syscall_op_write\" $filename`; 
-        #push @lines, `cd $iferretDir; grep \"iferret_log_sysret_op_write\" $filename`; 
-        #push @lines, `cd $iferretDir; grep \"iferret_log_op_write\" $filename`; 
-
-        if (scalar @lines > 0) {
-            print "examining file $filename\n";
-        }
-
-#       my $filename = "none";
-        foreach my $line (@lines) {
-            
-#            if ($line =~ /IFLO_HD_TRANSFER_PART2/) {
-#                print "foo\n";
-#            }
-
-            chomp $line;
-            # skip commented lines (c++ style)
-            if ($line =~ /^(\s*)\/\//) {
-                next;
-            }
-
-#           if ($line =~ /IFLO_HD_TRANSFER/) {
-#               print "foo\n";
-#           }
-            if ($line =~ /iferret_log_info_flow_op_write/
-                || $line =~ /iferret_log_syscall_op_write/
-                || $line =~ /iferret_log_sysret_op_write/
-                || $line =~ /iferret_log_op_write/
-                ) {     
-#               if ($skip == 1) {
-#                   next;
-#               }
-                if ($line =~ /iferret_log_info_flow_op_write_([01248s]+)\((.*)\)\;/
-                    || $line =~ /iferret_log_syscall_op_write_([01248s]+)\((.*)\)\;/ 
-                    || $line =~ /iferret_log_sysret_op_write_([01248s]+)\((.*)\)\;/ 
-                    || $line =~ /iferret_log_op_write_([01248s]+)\((.*)\)\;/
-                    ) {
-                    # format is specified by the suffix of the write function name. 
-                    my $fmt = $1;
-                    $iferret_fmts{$fmt} = 1;
-                    my $inside = $2;
-                    if ($inside =~ /^glue\((.*),CSUFFIX\),(.*)$/) {
-                        # yuck.  hate that glue shit.  
-                        # produce all permutations of this. CSUFFIX={Q,L,W,B} 
-                        my $name_prefix = $1;
-                        my $args = $2;
-                        &add_op(\%ops, "$name_prefix"."Q", $args, $filename, $line, $fmt);
-                        &add_op(\%ops, "$name_prefix"."L", $args, $filename, $line, $fmt);
-                        &add_op(\%ops, "$name_prefix"."W", $args, $filename, $line, $fmt);
-                        &add_op(\%ops, "$name_prefix"."B", $args, $filename, $line, $fmt);
-                    }
-                    else {
-                        my ($opname, @rest) = split ',', $inside;
-                        my $args = join ',', @rest;
-                        print "$opname, $args\n";
-                        &add_op(\%ops, $opname, $args, $filename, $line, $fmt);
-                    }
-                }
-                else {
-                    unless ($line =~ /\)(\s*)\{/ 
-                            || $line =~ /iferret_log_op_write_prologue/) {
-                        die "can't parse $line\n";
-                    }
-                }
-            }
-#           else {
-#           $filename = $line;
-#           if ($filename eq "/home/tleek/hg/iferret-light/iferret-logging-new/target-i386/iferret_log_arg_fmt.h"
-#               || $filename eq "/home/tleek/hg/iferret-light/iferret-logging-new/target-i386/iferret_ops.h"
-#               || $filename eq "/home/tleek/hg/iferret-light/iferret-logging-new/target-i386/iferret_op_str.c"
-#               
-#               ) {
-#               $skip = 1;
-#           }
-#           else {
-#               $skip = 0;
-#           }
-        }
-    }
-}
 
 # main
 {    
@@ -409,11 +282,106 @@ sub handle_file {
     print "iferret dir is $iferretDir\n";
     
 # examine all the source files looking for iferret_log_info_flow_op_write calls
+    my %ops;
     
-    #mz TODO write this code in PERL!
-    #my @files = `cd $iferretDir; find . -name \"*.[ch]\"`;
-    File::Find::find({wanted => \&handle_file, follow => 1 }, $iferretDir);
+    my @files = `cd $iferretDir; find . -name \"*.[ch]\"`;
+    foreach my $filename (@files) {
+        if ($filename =~    /iferret_log_arg_fmt.h/
+            || $filename =~ /iferret_ops.h/
+            || $filename =~ /iferret_log.c/
+            || $filename =~ /iferret.c/
+            || $filename =~ /iferret_op_str.c/
+            || $filename =~ /iferret_syscall_switch/
+            || $filename =~ /iferret_socketcall.c/
+            || $filename =~ /iferret_log_simp.h/
+            ) {
+            print "Skipping $filename.\n";
+            next;
+        }
 
+        if ($filename =~ /softmmu_header.h/) {
+            print "foo\n";
+        }
+        my @lines = `cd $iferretDir; grep \"iferret_log_info_flow_op_write\" $filename`;
+        push @lines, `cd $iferretDir; grep \"iferret_log_syscall_op_write\" $filename`; 
+        push @lines, `cd $iferretDir; grep \"iferret_log_sysret_op_write\" $filename`; 
+        push @lines, `cd $iferretDir; grep \"iferret_log_op_write\" $filename`; 
+
+        if (scalar @lines > 0) {
+            print "examining file $filename\n";
+        }
+
+#       my $filename = "none";
+        foreach my $line (@lines) {
+            
+            if ($line =~ /IFLO_HD_TRANSFER_PART2/) {
+                print "foo\n";
+            }
+
+            chomp $line;
+            # skip commented lines (c++ style)
+            if ($line =~ /^(\s*)\/\//) {
+                next;
+            }
+
+#           if ($line =~ /IFLO_HD_TRANSFER/) {
+#               print "foo\n";
+#           }
+            if ($line =~ /iferret_log_info_flow_op_write/
+                || $line =~ /iferret_log_syscall_op_write/
+                || $line =~ /iferret_log_sysret_op_write/
+                || $line =~ /iferret_log_op_write/
+                ) {     
+#               if ($skip == 1) {
+#                   next;
+#               }
+                if ($line =~ /iferret_log_info_flow_op_write_([01248s]+)\((.*)\)\;/
+                    || $line =~ /iferret_log_syscall_op_write_([01248s]+)\((.*)\)\;/ 
+                    || $line =~ /iferret_log_sysret_op_write_([01248s]+)\((.*)\)\;/ 
+                    || $line =~ /iferret_log_op_write_([01248s]+)\((.*)\)\;/
+                    ) {
+                    # format is specified by the suffix of the write function name. 
+                    my $fmt = $1;
+                    $iferret_fmts{$fmt} = 1;
+                    my $inside = $2;
+                    if ($inside =~ /^glue\((.*),CSUFFIX\),(.*)$/) {
+                        # yuck.  hate that glue shit.  
+                        # produce all permutations of this. CSUFFIX={Q,L,W,B} 
+                        my $name_prefix = $1;
+                        my $args = $2;
+                        &add_op(\%ops, "$name_prefix"."Q", $args, $filename, $line, $fmt);
+                        &add_op(\%ops, "$name_prefix"."L", $args, $filename, $line, $fmt);
+                        &add_op(\%ops, "$name_prefix"."W", $args, $filename, $line, $fmt);
+                        &add_op(\%ops, "$name_prefix"."B", $args, $filename, $line, $fmt);
+                    }
+                    else {
+                        my ($opname, @rest) = split ',', $inside;
+                        my $args = join ',', @rest;
+                        print "$opname, $args\n";
+                        &add_op(\%ops, $opname, $args, $filename, $line, $fmt);
+                    }
+                }
+                else {
+                    unless ($line =~ /\)(\s*)\{/ 
+                            || $line =~ /iferret_log_op_write_prologue/) {
+                        die "can't parse $line\n";
+                    }
+                }
+            }
+#           else {
+#           $filename = $line;
+#           if ($filename eq "/home/tleek/hg/iferret-light/iferret-logging-new/target-i386/iferret_log_arg_fmt.h"
+#               || $filename eq "/home/tleek/hg/iferret-light/iferret-logging-new/target-i386/iferret_ops.h"
+#               || $filename eq "/home/tleek/hg/iferret-light/iferret-logging-new/target-i386/iferret_op_str.c"
+#               
+#               ) {
+#               $skip = 1;
+#           }
+#           else {
+#               $skip = 0;
+#           }
+        }
+    }
     my $numOps = scalar keys %ops;
     print "$numOps unique info flow ops\n";
     
@@ -470,15 +438,14 @@ EOF
     print SW "switch (scp->eax) {\n";
     for (my $i=0; $i<=$maxSyscallNum; $i++) {
         if (exists $syscall[$i]) {
-
             if ($i == 102) {
                 # don't bother with socketcall
                 next;
             }
 
-#            if ($i == 4) {
-#                print "foobar\n";
-#            }
+            if ($i == 4) {
+                print "foobar\n";
+            }
 
             print "case $i: // $i $syscall[$i]{proto}\n";
             print SW "case $i: // $i $syscall[$i]{proto}\n";
@@ -507,8 +474,8 @@ EOF
                         $numStrings ++;
                     }
                     elsif ($t eq "p") {
-                        print ",ram_addr($syscallRegArgs[$j])";
-                        print SW ",ram_addr($syscallRegArgs[$j])";
+                        print ",phys_addr($syscallRegArgs[$j])";
+                        print SW ",phys_addr($syscallRegArgs[$j])";
                     }
                     else {
                         print ",$syscallRegArgs[$j]";
@@ -548,11 +515,6 @@ EOF
     print SW "switch (scp->eax) {\n";
     print "switch (scp->eax) {\n";
     for (my $i=0; $i<=$maxSyscallNum_win; $i++) {
-
-            if ($i == 183) {
-               print "foo\n";
-            }
-
         if (exists $syscall_win[$i]) {
             print SW "case $i: // $i $syscall_win[$i]{proto}\n";
             print "case $i: // $i $syscall_win[$i]{proto}\n";
@@ -623,8 +585,8 @@ EOF
                 for (my $j = 0; $j < $n; $j++) {
                     my $fmt = $syscall_win[$i]{fmt_list}[$j];
                     if ($fmt eq "s") {
-                        print SW "my_free(arg$j, strlen(arg$j)+1, poolid_syscall);\n";
-                        print "my_free(arg$j, strlen(arg$j)+1, poolid_syscall);\n";
+                        print SW "free(arg$j);\n";
+                        print "free(arg$j);\n";
                     }
                 }
             }
@@ -655,7 +617,6 @@ EOF
         foreach my $filename (sort keys %{$ops{$opname}{files}}) {
             $comment .= "// $filename\n";
             foreach my $line (sort @{$ops{$opname}{files}{$filename}}) {
-		$line =~ s/\\//g;
                 $comment .= "// --> $line\n";
             }
         }
@@ -878,10 +839,10 @@ my %win_call_names = ();
     print $fnsfh "// NB: This code is auto-generated by make_iferret_code.pl. \n";
     print $fnsfh "// It contains a large number of functions that write an op plus\n";
     print $fnsfh "// a standard argument list.\n";
-    print $fnsfh "\#ifndef __IFERRET_LOG_SIMP_H_\n";
-    print $fnsfh "\#define __IFERRET_LOG_SIMP_H_\n";
-    print $fnsfh "\#define TRUE 1\n";
-    print $fnsfh "extern uint8_t iferret_info_flow;\n";
+# NB: Don't do this -- this isn't really an include file!
+#    print $fnsfh "\#ifndef __IFERRET_LOG_SIMP_H_\n";
+#    print $fnsfh "\#define __IFERRET_LOG_SIMP_H_\n";
+#    print $fnsfh "\#include <iferret_log.h>\n";
 
     foreach my $fmt (sort keys %iferret_fmts) {
         
@@ -899,11 +860,9 @@ my %win_call_names = ();
         print $fnsfh "  iferret_log_op_enum_t op_num";
         &write_formals($fnsfh, $fmt);
         print $fnsfh ")\n{\n";
-        print $fnsfh "\#ifdef IFERRET_LOGTHING_ON\n";
-        #print $fnsfh "  if (iferret_info_flow == TRUE) {\n";
+        print $fnsfh "\#ifdef IFERRET_INFO_FLOW \n";
         print $fnsfh "  iferret_log_op_write_prologue(op_num);\n";
         &write_log_calls($fnsfh, $fmt);
-        #print $fnsfh "  }\n";
         print $fnsfh "\#endif\n";
         print $fnsfh "}\n\n";
 
@@ -915,7 +874,7 @@ my %win_call_names = ();
         print $fnsfh ")\n{\n";
         print $fnsfh "\#ifdef IFERRET_SYSCALL \n";
         print $fnsfh "  iferret_log_op_write_prologue(op_num);\n";
-        #print $fnsfh "  iferret_log_syscall_commoner(sc);\n";
+        print $fnsfh "  iferret_log_syscall_commoner(sc);\n";
         &write_log_calls($fnsfh, $fmt);
         print $fnsfh "\#endif\n";
         print $fnsfh "}\n\n";
@@ -932,7 +891,7 @@ my %win_call_names = ();
         print $fnsfh ")\n{\n";
         print $fnsfh "\#ifdef IFERRET_SYSCALL \n";
         print $fnsfh "  iferret_log_op_write_prologue(sc->op_num);\n";
-        #print $fnsfh "  iferret_log_syscall_commoner(sc);\n";
+        print $fnsfh "  iferret_log_syscall_commoner(sc);\n";
         &write_log_calls($fnsfh, $fmt);
         print $fnsfh "\#endif\n";
         print $fnsfh "}\n\n";
@@ -949,7 +908,7 @@ my %win_call_names = ();
         print $fnsfh "}\n\n";
         
     }
-    print $fnsfh "\#endif\n";
+#    print $fnsfh "\#endif\n";
     close $fnsfh;
 } # main
 
@@ -1246,11 +1205,8 @@ sub get_win_arg_fmt {
     $argType =~ s/^ *(IN|OUT) +//;
     print "get_win_arg_fmt: Base Type: [$argType]\n";
     if (exists $win_types{$argType}) {
-        if (exists $win_int_types{$argType}) {
+        if(exists $win_int_types{$argType}) {
             return "4";
-        }
-        elsif (exists $win_int64_types{$argType}) {
-            return "8";
         }
         elsif (exists $win_type_handlers{$argType}) {
             return $win_type_handlers{$argType}[1];
@@ -1281,11 +1237,8 @@ sub build_win_arg_extractor {
     $argType =~ s/^ *(IN|OUT) +//;
     print "build_win_arg_extractor: Base Type: [$argType]\n";
     if (exists $win_types{$argType}) {
-        if (exists $win_int_types{$argType}) {
+        if(exists $win_int_types{$argType}) {
             return ("cpu_virtual_memory_read(env, arg_temp, (char *) $varName, 4);\n", $depth);
-        }
-        elsif (exists $win_int64_types{$argType}) {
-            return ("cpu_virtual_memory_read(env, arg_temp, (char *) $varName, 8);\n", $depth);
         }
         elsif (exists $win_type_handlers{$argType}) {
             print "build_win_arg_extractor: using handler " . $win_type_handlers{$argType}[0] . "\n";
