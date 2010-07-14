@@ -12,6 +12,8 @@
 #include "iferret_log.h"
 #include "target-i386/iferret_log_arg_fmt.h"
 
+uint8_t iferret_info_flow = 0;  // TRUE means info flow logging is on.  FALSE means it is off.
+
 // turn info-flow logging on or off
 uint8_t iferret_info_flow_on = 0;
 

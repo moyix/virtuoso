@@ -3300,7 +3300,8 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         count = get_instruction_string(&inst, FORMAT_INTEL, pc_start, disas_string, sizeof(disas_string));
     }
 
-    iferret_log_op_write_4s(IFLO_INSN_DIS, pc_start, disas_string);
+    if(iferret_info_flow)
+        iferret_log_op_write_4s(IFLO_INSN_DIS, pc_start, disas_string);
     gen_op_log_insn(pc_start, inst.length);
 
     /* Ok, now move on to the real stuff... */
@@ -6890,7 +6891,8 @@ static inline int gen_intermediate_code_internal(CPUState *env,
     pc_ptr = pc_start;
     lj = -1;
     
-    iferret_log_op_write_4(IFLO_TB_ID, pc_start);
+    if(iferret_info_flow)
+        iferret_log_op_write_4(IFLO_TB_ID, pc_start);
 
     // TRL 0901 add a prologue to head of every translation block
     // to manage info-flow stuff. 

@@ -29,6 +29,7 @@
 #include <inttypes.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <assert.h>
 
 #include "config-host.h"
 
@@ -231,6 +232,10 @@ enum {
 #define OP_PREFIX "op_"
 
 int do_swap;
+
+//mz 11.17.2009  Additional label for iFerret purposes
+char *label = NULL;
+size_t label_length = 0;
 
 static void __attribute__((noreturn)) __attribute__((format (printf, 1, 2))) error(const char *fmt, ...)
 {
@@ -1431,6 +1436,58 @@ int arm_emit_ldr_info(const char *name, unsigned long start_offset,
 
 #define MAX_ARGS 3
 
+
+// make a copy of this.  
+// search for this in the copy of that.  
+// at first occurrence of this, discard remainder of string, 
+// i.e. null terminate right there.  Return new string.
+const char *discard_label_suffix(const char *str) {
+  if (label_length == 0) {
+      return str;
+  }
+  else {
+      int len = strlen(str);
+      if (len < label_length) {
+          return str;
+      }
+      else {
+          char *new_str = strdup(str);
+          assert(new_str != NULL);
+          char *p = new_str + (len - label_length);
+
+          if (strcmp(p, label) == 0) {
+              *p = '\0';
+              return new_str;
+          }
+          else {
+              free(new_str);
+              return str;
+          }
+      }
+  }
+#if 0
+  int l = strlen(that);
+  char *that2 = (char *) malloc (l);
+  strncpy(that2,(const char *) that, l+1);
+  if (this != NULL && (strlen(label)) > 0) {
+    // discard label suffix if its there -- a truly ugly hack
+    // we don't want it in the case part.
+    char *pp;
+    pp = that2;
+    int i;
+    for (i=0; i<l; i++) {
+      if ((strcmp(pp,label)) == 0) {
+	*pp = 0;
+	break;
+      }
+      pp++;
+    }
+  }
+  return that2;
+#endif
+}
+    
+
 /* generate op code */
 void gen_code(const char *name, host_ulong offset, host_ulong size,
               FILE *outfile, int gen_switch)
@@ -1710,11 +1767,20 @@ void gen_code(const char *name, host_ulong offset, host_ulong size,
     }
 
     if (gen_switch == 2) {
-        fprintf(outfile, "DEF(%s, %d, %d)\n", name + 3, nb_args, copy_size);
+	// discard label suffix if its there -- a truly ugly hack
+	// we don't want it in the case part.
+	const char *name2 = discard_label_suffix(name);
+        fprintf(outfile, "DEF(%s, %d, %d)\n", name2 + 3, nb_args, copy_size);
     } else if (gen_switch == 1) {
 
         /* output C code */
-        fprintf(outfile, "case INDEX_%s: {\n", name);
+      {
+	// discard label suffix if its there -- a truly ugly hack
+	// we don't want it in the case part.
+	const char *name2 = discard_label_suffix(name);
+        fprintf(outfile, "case INDEX_%s: {\n", name2);
+      }
+
         if (nb_args > 0) {
             fprintf(outfile, "    long ");
             for(i = 0; i < nb_args; i++) {
@@ -1724,6 +1790,7 @@ void gen_code(const char *name, host_ulong offset, host_ulong size,
             }
             fprintf(outfile, ";\n");
         }
+      
 #if defined(HOST_IA64)
         fprintf(outfile, "    extern char %s;\n", name);
 #else
@@ -2648,7 +2715,7 @@ int gen_file(FILE *outfile, int out_type)
             const char *name;
             name = get_sym_name(sym);
             if (strstart(name, OP_PREFIX, NULL)) {
-                gen_code(name, sym->st_value, sym->st_size, outfile, 2);
+	      gen_code(name, sym->st_value, sym->st_size, outfile, 2);
             }
         }
     } else if (out_type == OUT_GEN_OP) {
@@ -2690,8 +2757,15 @@ fprintf(outfile,
 "};\n");
 #endif
 
+ if (label != NULL) {
+   fprintf(outfile,"int dyngen_code_%s(uint8_t *gen_code_buf,\n", label);
+ }
+ else {
+   fprintf(outfile,"int dyngen_code(uint8_t *gen_code_buf,\n");
+ }
+
 fprintf(outfile,
-"int dyngen_code(uint8_t *gen_code_buf,\n"
+	// "int dyngen_code(uint8_t *gen_code_buf,\n"
 "                uint16_t *label_offsets, uint16_t *jmp_offsets,\n"
 "                const uint16_t *opc_buf, const uint32_t *opparam_buf, const long *gen_labels)\n"
 "{\n"
@@ -2888,6 +2962,7 @@ void usage(void)
            "Generate a dynamic code generator from an object file\n"
            "-c     output enum of operations\n"
            "-g     output gen_op_xx() functions\n"
+	   "-l prefix\n"
            );
     exit(1);
 }
@@ -2901,7 +2976,7 @@ int main(int argc, char **argv)
     outfilename = "out.c";
     out_type = OUT_CODE;
     for(;;) {
-        c = getopt(argc, argv, "ho:cg");
+        c = getopt(argc, argv, "ho:l:cg");
         if (c == -1)
             break;
         switch(c) {
@@ -2911,6 +2986,10 @@ int main(int argc, char **argv)
         case 'o':
             outfilename = optarg;
             break;
+	case 'l':
+  	    label = strdup(optarg);
+            label_length = strlen(label);
+	    break;
         case 'c':
             out_type = OUT_INDEX_OP;
             break;

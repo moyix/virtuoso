@@ -32,10 +32,14 @@
 
 #define PTR_TO_ADDR(ptr) ((uint64_t) ptr)
 
+#ifdef IFERRET_LOGTHING_ON
+#define IFERRET_LOGTHING _info_flow
+#else
+#define IFERRET_LOGTHING
+#endif
 
-void my_debug_print(unsigned long long value){
-  //        printf("Debug value is 0x%llx",value);
-}
+extern uint8_t iferret_says_flush;
+extern uint8_t iferret_info_flow;
 
 /* n must be a constant to be efficient */
 static inline target_long lshift(target_long x, int n)
@@ -51,9 +55,13 @@ target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 int cpu_get_pageinfo(CPUState *env, struct pageinfo_t *pinfo, target_ulong addr);
 
 // BDG 06222010
+#ifndef IFERRET_LOGTHING_ON
 struct pageinfo_t pinfo_glob = {0xffffffff, 0xffffffff, 0xffffffff};
+#else
+extern struct pageinfo_t pinfo_glob;
+#endif
 
-reset_pageinfo(struct pageinfo_t *pinfo) {
+static inline reset_pageinfo(struct pageinfo_t *pinfo) {
     pinfo->pdpe_addr = 0xffffffff;
     pinfo->pde_addr = 0xffffffff;
     pinfo->pte_addr = 0xffffffff;
@@ -212,18 +220,20 @@ static inline uint64_t phys_a0() {
 
 /* operations with flags */
 
+int cpu_virtual_memory_read(CPUState *env, uint32_t addr, char *out, uint32_t length);
+
 /* Log the actual instruction bytes */
-void OPPROTO op_log_insn(void) {
-  iferret_log_insn_bytes(PARAM1, PARAM2);  
+void OPPROTO glue(op_log_insn,IFERRET_LOGTHING)(void) {
+    iferret_log_insn_bytes(PARAM1,PARAM2);
 }
 
 /* So we can get the return value of arbitrary functions */
-void OPPROTO op_log_ret_EAX(void) {
+void OPPROTO glue(op_log_ret_EAX,IFERRET_LOGTHING)(void) {
   iferret_log_info_flow_op_write_4(IFLO_LOG_RET_EAX,EAX);
 }
 
 /* update flags with T0 and T1 (add/sub case) */
-void OPPROTO op_update2_cc(void)
+void OPPROTO glue(op_update2_cc,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_UPDATE2_CC);
     CC_SRC = T1;
@@ -231,34 +241,34 @@ void OPPROTO op_update2_cc(void)
 }
 
 /* update flags with T0 (logic operation case) */
-void OPPROTO op_update1_cc(void)
+void OPPROTO glue(op_update1_cc,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_UPDATE1_CC);
     CC_DST = T0;
 }
 
-void OPPROTO op_update_neg_cc(void)
+void OPPROTO glue(op_update_neg_cc,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_UPDATE_NEG_CC);
     CC_SRC = -T0;
     CC_DST = T0;
 }
 
-void OPPROTO op_cmpl_T0_T1_cc(void)
+void OPPROTO glue(op_cmpl_T0_T1_cc,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_CMPL_T0_T1_CC);
     CC_SRC = T1;
     CC_DST = T0 - T1;
 }
 
-void OPPROTO op_update_inc_cc(void)
+void OPPROTO glue(op_update_inc_cc,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_UPDATE_INC_CC);
     CC_SRC = cc_table[CC_OP].compute_c();
     CC_DST = T0;
 }
 
-void OPPROTO op_testl_T0_T1_cc(void)
+void OPPROTO glue(op_testl_T0_T1_cc,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_TESTL_T0_T1_CC);
     CC_DST = T0 & T1;
@@ -266,68 +276,68 @@ void OPPROTO op_testl_T0_T1_cc(void)
 
 /* operations without flags */
 
-void OPPROTO op_addl_T0_T1(void)
+void OPPROTO glue(op_addl_T0_T1,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ADDL_T0_T1);
     T0 += T1;
 }
 
-void OPPROTO op_orl_T0_T1(void)
+void OPPROTO glue(op_orl_T0_T1,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ORL_T0_T1);
     T0 |= T1;
 }
 
-void OPPROTO op_andl_T0_T1(void)
+void OPPROTO glue(op_andl_T0_T1,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ANDL_T0_T1);
     T0 &= T1;
 }
 
-void OPPROTO op_subl_T0_T1(void)
+void OPPROTO glue(op_subl_T0_T1,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_SUBL_T0_T1);
     T0 -= T1;
 }
 
-void OPPROTO op_xorl_T0_T1(void)
+void OPPROTO glue(op_xorl_T0_T1,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_XORL_T0_T1);
     T0 ^= T1;
 }
 
-void OPPROTO op_negl_T0(void)
+void OPPROTO glue(op_negl_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_NEGL_T0);
     T0 = -T0;
 }
 
-void OPPROTO op_incl_T0(void)
+void OPPROTO glue(op_incl_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_INCL_T0);
     T0++;
 }
 
-void OPPROTO op_decl_T0(void)
+void OPPROTO glue(op_decl_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_DECL_T0);
     T0--;
 }
 
-void OPPROTO op_notl_T0(void)
+void OPPROTO glue(op_notl_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_NOTL_T0);
     T0 = ~T0;
 }
 
-void OPPROTO op_bswapl_T0(void)
+void OPPROTO glue(op_bswapl_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_BSWAPL_T0);
     T0 = bswap32(T0);
 }
 
 #ifdef TARGET_X86_64
-void OPPROTO op_bswapq_T0(void)
+void OPPROTO glue(op_bswapq_T0,IFERRET_LOGTHING)(void)
 {
     helper_bswapq_T0();
 }
@@ -338,7 +348,7 @@ void OPPROTO op_bswapq_T0(void)
 /* XXX: add eflags optimizations */
 /* XXX: add non P4 style flags */
 
-void OPPROTO op_mulb_AL_T0(void)
+void OPPROTO glue(op_mulb_AL_T0,IFERRET_LOGTHING)(void)
 {
     unsigned int res;
     res = (uint8_t)EAX * (uint8_t)T0;
@@ -350,7 +360,7 @@ void OPPROTO op_mulb_AL_T0(void)
     CC_SRC = (res & 0xff00);
 }
 
-void OPPROTO op_imulb_AL_T0(void)
+void OPPROTO glue(op_imulb_AL_T0,IFERRET_LOGTHING)(void)
 {
     int res;
     res = (int8_t)EAX * (int8_t)T0;
@@ -362,7 +372,7 @@ void OPPROTO op_imulb_AL_T0(void)
     CC_SRC = (res != (int8_t)res);
 }
 
-void OPPROTO op_mulw_AX_T0(void)
+void OPPROTO glue(op_mulw_AX_T0,IFERRET_LOGTHING)(void)
 {
     unsigned int res;
     res = (uint16_t)EAX * (uint16_t)T0;
@@ -375,7 +385,7 @@ void OPPROTO op_mulw_AX_T0(void)
     CC_SRC = res >> 16;
 }
 
-void OPPROTO op_imulw_AX_T0(void)
+void OPPROTO glue(op_imulw_AX_T0,IFERRET_LOGTHING)(void)
 {
     int res;
     res = (int16_t)EAX * (int16_t)T0;
@@ -388,7 +398,7 @@ void OPPROTO op_imulw_AX_T0(void)
     CC_SRC = (res != (int16_t)res);
 }
 
-void OPPROTO op_mull_EAX_T0(void)
+void OPPROTO glue(op_mull_EAX_T0,IFERRET_LOGTHING)(void)
 {
     uint64_t res;
     res = (uint64_t)((uint32_t)EAX) * (uint64_t)((uint32_t)T0);
@@ -401,7 +411,7 @@ void OPPROTO op_mull_EAX_T0(void)
     CC_SRC = (uint32_t)(res >> 32);
 }
 
-void OPPROTO op_imull_EAX_T0(void)
+void OPPROTO glue(op_imull_EAX_T0,IFERRET_LOGTHING)(void)
 {
     int64_t res;
     res = (int64_t)((int32_t)EAX) * (int64_t)((int32_t)T0);
@@ -414,7 +424,7 @@ void OPPROTO op_imull_EAX_T0(void)
     CC_SRC = (res != (int32_t)res);
 }
 
-void OPPROTO op_imulw_T0_T1(void)
+void OPPROTO glue(op_imulw_T0_T1,IFERRET_LOGTHING)(void)
 {
     int res;
     res = (int16_t)T0 * (int16_t)T1;
@@ -426,7 +436,7 @@ void OPPROTO op_imulw_T0_T1(void)
     CC_SRC = (res != (int16_t)res);
 }
 
-void OPPROTO op_imull_T0_T1(void)
+void OPPROTO glue(op_imull_T0_T1,IFERRET_LOGTHING)(void)
 {
     int64_t res;
     res = (int64_t)((int32_t)T0) * (int64_t)((int32_t)T1);
@@ -439,17 +449,17 @@ void OPPROTO op_imull_T0_T1(void)
 }
 
 #ifdef TARGET_X86_64
-void OPPROTO op_mulq_EAX_T0(void)
+void OPPROTO glue(op_mulq_EAX_T0,IFERRET_LOGTHING)(void)
 {
     helper_mulq_EAX_T0();
 }
 
-void OPPROTO op_imulq_EAX_T0(void)
+void OPPROTO glue(op_imulq_EAX_T0,IFERRET_LOGTHING)(void)
 {
     helper_imulq_EAX_T0();
 }
 
-void OPPROTO op_imulq_T0_T1(void)
+void OPPROTO glue(op_imulq_T0_T1,IFERRET_LOGTHING)(void)
 {
     helper_imulq_T0_T1();
 }
@@ -457,7 +467,7 @@ void OPPROTO op_imulq_T0_T1(void)
 
 /* division, flags are undefined */
 
-void OPPROTO op_divb_AL_T0(void)
+void OPPROTO glue(op_divb_AL_T0,IFERRET_LOGTHING)(void)
 {
     unsigned int num, den, q, r;
 
@@ -477,7 +487,7 @@ void OPPROTO op_divb_AL_T0(void)
     EAX = (EAX & ~0xffff) | (r << 8) | q;
 }
 
-void OPPROTO op_idivb_AL_T0(void)
+void OPPROTO glue(op_idivb_AL_T0,IFERRET_LOGTHING)(void)
 {
     int num, den, q, r;
 
@@ -497,7 +507,7 @@ void OPPROTO op_idivb_AL_T0(void)
     EAX = (EAX & ~0xffff) | (r << 8) | q;
 }
 
-void OPPROTO op_divw_AX_T0(void)
+void OPPROTO glue(op_divw_AX_T0,IFERRET_LOGTHING)(void)
 {
     unsigned int num, den, q, r;
 
@@ -518,7 +528,7 @@ void OPPROTO op_divw_AX_T0(void)
     EDX = (EDX & ~0xffff) | r;
 }
 
-void OPPROTO op_idivw_AX_T0(void)
+void OPPROTO glue(op_idivw_AX_T0,IFERRET_LOGTHING)(void)
 {
     int num, den, q, r;
 
@@ -539,25 +549,25 @@ void OPPROTO op_idivw_AX_T0(void)
     EDX = (EDX & ~0xffff) | r;
 }
 
-void OPPROTO op_divl_EAX_T0(void)
+void OPPROTO glue(op_divl_EAX_T0,IFERRET_LOGTHING)(void)
 {
   // info-flow stuff in helper.c
     helper_divl_EAX_T0();
 }
 
-void OPPROTO op_idivl_EAX_T0(void)
+void OPPROTO glue(op_idivl_EAX_T0,IFERRET_LOGTHING)(void)
 {
   // info-flow stuff in helper.c
     helper_idivl_EAX_T0();
 }
 
 #ifdef TARGET_X86_64
-void OPPROTO op_divq_EAX_T0(void)
+void OPPROTO glue(op_divq_EAX_T0,IFERRET_LOGTHING)(void)
 {
     helper_divq_EAX_T0();
 }
 
-void OPPROTO op_idivq_EAX_T0(void)
+void OPPROTO glue(op_idivq_EAX_T0,IFERRET_LOGTHING)(void)
 {
     helper_idivq_EAX_T0();
 }
@@ -568,7 +578,7 @@ void OPPROTO op_idivq_EAX_T0(void)
 
 
 /* XXX: consistent names */
-void OPPROTO op_movl_T0_imu(void)
+void OPPROTO glue(op_movl_T0_imu,IFERRET_LOGTHING)(void)
 {
 
   iferret_log_info_flow_op_write_4(IFLO_MOVL_T0_IMU,PARAM1);
@@ -576,35 +586,35 @@ void OPPROTO op_movl_T0_imu(void)
     T0 = (uint32_t)PARAM1;
 }
 
-void OPPROTO op_movl_T0_im(void)
+void OPPROTO glue(op_movl_T0_im,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_MOVL_T0_IM,PARAM1);
 
     T0 = (int32_t)PARAM1;
 }
 
-void OPPROTO op_addl_T0_im(void)
+void OPPROTO glue(op_addl_T0_im,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_ADDL_T0_IM,PARAM1);
 
     T0 += PARAM1;
 }
 
-void OPPROTO op_andl_T0_ffff(void)
+void OPPROTO glue(op_andl_T0_ffff,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ANDL_T0_FFFF);
 
     T0 = T0 & 0xffff;
 }
 
-void OPPROTO op_andl_T0_im(void)
+void OPPROTO glue(op_andl_T0_im,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_ANDL_T0_IM,PARAM1);
 
     T0 = T0 & PARAM1;
 }
 
-void OPPROTO op_movl_T0_T1(void)
+void OPPROTO glue(op_movl_T0_T1,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_T1);
 
@@ -614,28 +624,28 @@ void OPPROTO op_movl_T0_T1(void)
 
 
 
-void OPPROTO op_movl_T1_imu(void)
+void OPPROTO glue(op_movl_T1_imu,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_MOVL_T1_IMU,PARAM1);
 
     T1 = (uint32_t)PARAM1;
 }
 
-void OPPROTO op_movl_T1_im(void)
+void OPPROTO glue(op_movl_T1_im,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_MOVL_T1_IM,PARAM1);
 
     T1 = (int32_t)PARAM1;
 }
 
-void OPPROTO op_addl_T1_im(void)
+void OPPROTO glue(op_addl_T1_im,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_ADDL_T1_IM,PARAM1);
 
     T1 += PARAM1;
 }
 
-void OPPROTO op_movl_T1_A0(void)
+void OPPROTO glue(op_movl_T1_A0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVL_T1_A0);
 
@@ -645,7 +655,7 @@ void OPPROTO op_movl_T1_A0(void)
 
 
 
-void OPPROTO op_movl_A0_im(void)
+void OPPROTO glue(op_movl_A0_im,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_MOVL_A0_IM,PARAM1);
 
@@ -654,7 +664,7 @@ void OPPROTO op_movl_A0_im(void)
 
 // TRL0806: These next few are dereferencing memory directly,
 // so we're going to push that address right to the blinking info-flow log.  
-void OPPROTO op_addl_A0_im(void)
+void OPPROTO glue(op_addl_A0_im,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_ADDL_A0_IM,PARAM1);
 
@@ -663,7 +673,7 @@ void OPPROTO op_addl_A0_im(void)
 
 
 
-void OPPROTO op_movl_A0_seg(void)
+void OPPROTO glue(op_movl_A0_seg,IFERRET_LOGTHING)(void)
 {
   
   iferret_log_info_flow_op_write_84(IFLO_MOVL_A0_SEG, PTR_TO_ADDR(env) + PARAM1, PARAM1);
@@ -671,14 +681,14 @@ void OPPROTO op_movl_A0_seg(void)
     A0 = (uint32_t)*(target_ulong *)((char *)env + PARAM1);
 }
 
-void OPPROTO op_addl_A0_seg(void)
+void OPPROTO glue(op_addl_A0_seg,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_84(IFLO_ADDL_A0_SEG, PTR_TO_ADDR(env) + PARAM1, PARAM1);
 
     A0 = (uint32_t)(A0 + *(target_ulong *)((char *)env + PARAM1));
 }
 
-void OPPROTO op_addl_A0_AL(void)
+void OPPROTO glue(op_addl_A0_AL,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ADDL_A0_AL);
 
@@ -709,54 +719,54 @@ typedef union UREG64 {
 
 #ifdef TARGET_X86_64
 
-void OPPROTO op_movq_T0_im64(void)
+void OPPROTO glue(op_movq_T0_im64,IFERRET_LOGTHING)(void)
 {
     T0 = PARAMQ1;
 }
 
-void OPPROTO op_movq_T1_im64(void)
+void OPPROTO glue(op_movq_T1_im64,IFERRET_LOGTHING)(void)
 {
     T1 = PARAMQ1;
 }
 
-void OPPROTO op_movq_A0_im(void)
+void OPPROTO glue(op_movq_A0_im,IFERRET_LOGTHING)(void)
 {
     A0 = (int32_t)PARAM1;
 }
 
-void OPPROTO op_movq_A0_im64(void)
+void OPPROTO glue(op_movq_A0_im64,IFERRET_LOGTHING)(void)
 {
     A0 = PARAMQ1;
 }
 
-void OPPROTO op_addq_A0_im(void)
+void OPPROTO glue(op_addq_A0_im,IFERRET_LOGTHING)(void)
 {
     A0 = (A0 + (int32_t)PARAM1);
 }
 
-void OPPROTO op_addq_A0_im64(void)
+void OPPROTO glue(op_addq_A0_im64,IFERRET_LOGTHING)(void)
 {
     A0 = (A0 + PARAMQ1);
 }
 
-void OPPROTO op_movq_A0_seg(void)
+void OPPROTO glue(op_movq_A0_seg,IFERRET_LOGTHING)(void)
 {
     A0 = *(target_ulong *)((char *)env + PARAM1);
 }
 
-void OPPROTO op_addq_A0_seg(void)
+void OPPROTO glue(op_addq_A0_seg,IFERRET_LOGTHING)(void)
 {
     A0 += *(target_ulong *)((char *)env + PARAM1);
 }
 
-void OPPROTO op_addq_A0_AL(void)
+void OPPROTO glue(op_addq_A0_AL,IFERRET_LOGTHING)(void)
 {
     A0 = (A0 + (EAX & 0xff));
 }
 
 #endif
 
-void OPPROTO op_andl_A0_ffff(void)
+void OPPROTO glue(op_andl_A0_ffff,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ANDL_A0_FFFF);
 
@@ -787,14 +797,14 @@ void OPPROTO op_andl_A0_ffff(void)
 
 /* indirect jump */
 
-void OPPROTO op_jmp_T0(void)
+void OPPROTO glue(op_jmp_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_JMP_T0,T0);
 
     EIP = T0;
 }
 
-void OPPROTO op_movl_eip_im(void)
+void OPPROTO glue(op_movl_eip_im,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_MOVL_EIP_IM,PARAM1);
 
@@ -802,42 +812,42 @@ void OPPROTO op_movl_eip_im(void)
 }
 
 #ifdef TARGET_X86_64
-void OPPROTO op_movq_eip_im(void)
+void OPPROTO glue(op_movq_eip_im,IFERRET_LOGTHING)(void)
 {
     EIP = (int32_t)PARAM1;
 }
 
-void OPPROTO op_movq_eip_im64(void)
+void OPPROTO glue(op_movq_eip_im64,IFERRET_LOGTHING)(void)
 {
     EIP = PARAMQ1;
 }
 #endif
 
-void OPPROTO op_hlt(void)
+void OPPROTO glue(op_hlt,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_HLT);  
     helper_hlt();
 }
 
-void OPPROTO op_monitor(void)
+void OPPROTO glue(op_monitor,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MONITOR);
     helper_monitor();
 }
 
-void OPPROTO op_mwait(void)
+void OPPROTO glue(op_mwait,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MWAIT);
     helper_mwait();
 }
 
-void OPPROTO op_debug(void)
+void OPPROTO glue(op_debug,IFERRET_LOGTHING)(void)
 {
     env->exception_index = EXCP_DEBUG;
     cpu_loop_exit();
 }
 
-void OPPROTO op_raise_interrupt(void)
+void OPPROTO glue(op_raise_interrupt,IFERRET_LOGTHING)(void)
 {
     int intno, next_eip_addend;
   iferret_log_info_flow_op_write_0(IFLO_RAISE_INTERRUPT);
@@ -846,7 +856,7 @@ void OPPROTO op_raise_interrupt(void)
     raise_interrupt(intno, 1, 0, next_eip_addend);
 }
 
-void OPPROTO op_raise_exception(void)
+void OPPROTO glue(op_raise_exception,IFERRET_LOGTHING)(void)
 {
     int exception_index;
   iferret_log_info_flow_op_write_0(IFLO_RAISE_EXCEPTION);
@@ -854,7 +864,7 @@ void OPPROTO op_raise_exception(void)
     raise_exception(exception_index);
 }
 
-void OPPROTO op_into(void)
+void OPPROTO glue(op_into,IFERRET_LOGTHING)(void)
 {
     int eflags;
   iferret_log_info_flow_op_write_0(IFLO_INTO);
@@ -865,31 +875,31 @@ void OPPROTO op_into(void)
     FORCE_RET();
 }
 
-void OPPROTO op_cli(void)
+void OPPROTO glue(op_cli,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_CLI);
     env->eflags &= ~IF_MASK;
 }
 
-void OPPROTO op_sti(void)
+void OPPROTO glue(op_sti,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_STI);
     env->eflags |= IF_MASK;
 }
 
-void OPPROTO op_set_inhibit_irq(void)
+void OPPROTO glue(op_set_inhibit_irq,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_SET_INHIBIT_IRQ);
     env->hflags |= HF_INHIBIT_IRQ_MASK;
 }
 
-void OPPROTO op_reset_inhibit_irq(void)
+void OPPROTO glue(op_reset_inhibit_irq,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_RESET_INHIBIT_IRQ);
     env->hflags &= ~HF_INHIBIT_IRQ_MASK;
 }
 
-void OPPROTO op_rsm(void)
+void OPPROTO glue(op_rsm,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_HELPER_RSM);
     helper_rsm();
@@ -897,12 +907,12 @@ void OPPROTO op_rsm(void)
 
 #if 0
 /* vm86plus instructions */
-void OPPROTO op_cli_vm(void)
+void OPPROTO glue(op_cli_vm,IFERRET_LOGTHING)(void)
 {
     env->eflags &= ~VIF_MASK;
 }
 
-void OPPROTO op_sti_vm(void)
+void OPPROTO glue(op_sti_vm,IFERRET_LOGTHING)(void)
 {
     env->eflags |= VIF_MASK;
     if (env->eflags & VIP_MASK) {
@@ -913,7 +923,7 @@ void OPPROTO op_sti_vm(void)
 }
 #endif
 
-void OPPROTO op_boundw(void)
+void OPPROTO glue(op_boundw,IFERRET_LOGTHING)(void)
 {
     int low, high, v;
   iferret_log_info_flow_op_write_0(IFLO_BOUNDW);
@@ -926,7 +936,7 @@ void OPPROTO op_boundw(void)
     FORCE_RET();
 }
 
-void OPPROTO op_boundl(void)
+void OPPROTO glue(op_boundl,IFERRET_LOGTHING)(void)
 {
     int low, high, v;
   iferret_log_info_flow_op_write_0(IFLO_BOUNDL);
@@ -939,26 +949,26 @@ void OPPROTO op_boundl(void)
     FORCE_RET();
 }
 
-void OPPROTO op_cmpxchg8b(void)
+void OPPROTO glue(op_cmpxchg8b,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_CMPXCHG8B);
     helper_cmpxchg8b();
 }
 
-void OPPROTO op_single_step(void)
+void OPPROTO glue(op_single_step,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_SINGLE_STEP);
     helper_single_step();
 }
 
-void OPPROTO op_movl_T0_0(void)
+void OPPROTO glue(op_movl_T0_0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVL_T0_0);
 
     T0 = 0;
 }
 
-void OPPROTO op_exit_tb(void)
+void OPPROTO glue(op_exit_tb,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_EXIT_TB);
     EXIT_TB();
@@ -990,35 +1000,35 @@ void OPPROTO op_exit_tb(void)
 
 /* sign extend */
 
-void OPPROTO op_movsbl_T0_T0(void)
+void OPPROTO glue(op_movsbl_T0_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVSBL_T0_T0);
 
     T0 = (int8_t)T0;
 }
 
-void OPPROTO op_movzbl_T0_T0(void)
+void OPPROTO glue(op_movzbl_T0_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVZBL_T0_T0);
 
     T0 = (uint8_t)T0;
 }
 
-void OPPROTO op_movswl_T0_T0(void)
+void OPPROTO glue(op_movswl_T0_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVSWL_T0_T0);
 
     T0 = (int16_t)T0;
 }
 
-void OPPROTO op_movzwl_T0_T0(void)
+void OPPROTO glue(op_movzwl_T0_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVZWL_T0_T0);
 
     T0 = (uint16_t)T0;
 }
 
-void OPPROTO op_movswl_EAX_AX(void)
+void OPPROTO glue(op_movswl_EAX_AX,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVSWL_EAX_AX);
 
@@ -1026,38 +1036,38 @@ void OPPROTO op_movswl_EAX_AX(void)
 }
 
 #ifdef TARGET_X86_64
-void OPPROTO op_movslq_T0_T0(void)
+void OPPROTO glue(op_movslq_T0_T0,IFERRET_LOGTHING)(void)
 {
     T0 = (int32_t)T0;
 }
 
-void OPPROTO op_movslq_RAX_EAX(void)
+void OPPROTO glue(op_movslq_RAX_EAX,IFERRET_LOGTHING)(void)
 {
     EAX = (int32_t)EAX;
 }
 #endif
 
-void OPPROTO op_movsbw_AX_AL(void)
+void OPPROTO glue(op_movsbw_AX_AL,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVSBW_AX_AL);
 
     EAX = (EAX & ~0xffff) | ((int8_t)EAX & 0xffff);
 }
 
-void OPPROTO op_movslq_EDX_EAX(void)
+void OPPROTO glue(op_movslq_EDX_EAX,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVSLQ_EDX_EAX);
     EDX = (uint32_t)((int32_t)EAX >> 31);
 }
 
-void OPPROTO op_movswl_DX_AX(void)
+void OPPROTO glue(op_movswl_DX_AX,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVSWL_DX_AX);
     EDX = (EDX & ~0xffff) | (((int16_t)EAX >> 15) & 0xffff);
 }
 
 #ifdef TARGET_X86_64
-void OPPROTO op_movsqo_RDX_RAX(void)
+void OPPROTO glue(op_movsqo_RDX_RAX,IFERRET_LOGTHING)(void)
 {
     EDX = (int64_t)EAX >> 63;
 }
@@ -1065,55 +1075,55 @@ void OPPROTO op_movsqo_RDX_RAX(void)
 
 /* string ops helpers */
 
-void OPPROTO op_addl_ESI_T0(void)
+void OPPROTO glue(op_addl_ESI_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ADDL_ESI_T0);
     ESI = (uint32_t)(ESI + T0);
 }
 
-void OPPROTO op_addw_ESI_T0(void)
+void OPPROTO glue(op_addw_ESI_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ADDW_ESI_T0);
     ESI = (ESI & ~0xffff) | ((ESI + T0) & 0xffff);
 }
 
-void OPPROTO op_addl_EDI_T0(void)
+void OPPROTO glue(op_addl_EDI_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ADDL_EDI_T0);
 
     EDI = (uint32_t)(EDI + T0);
 }
 
-void OPPROTO op_addw_EDI_T0(void)
+void OPPROTO glue(op_addw_EDI_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ADDW_EDI_T0);
     EDI = (EDI & ~0xffff) | ((EDI + T0) & 0xffff);
 }
 
-void OPPROTO op_decl_ECX(void)
+void OPPROTO glue(op_decl_ECX,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_DECL_ECX);
     ECX = (uint32_t)(ECX - 1);
 }
 
-void OPPROTO op_decw_ECX(void)
+void OPPROTO glue(op_decw_ECX,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_DECW_ECX);
     ECX = (ECX & ~0xffff) | ((ECX - 1) & 0xffff);
 }
 
 #ifdef TARGET_X86_64
-void OPPROTO op_addq_ESI_T0(void)
+void OPPROTO glue(op_addq_ESI_T0,IFERRET_LOGTHING)(void)
 {
     ESI = (ESI + T0);
 }
 
-void OPPROTO op_addq_EDI_T0(void)
+void OPPROTO glue(op_addq_EDI_T0,IFERRET_LOGTHING)(void)
 {
     EDI = (EDI + T0);
 }
 
-void OPPROTO op_decq_ECX(void)
+void OPPROTO glue(op_decq_ECX,IFERRET_LOGTHING)(void)
 {
     ECX--;
 }
@@ -1126,91 +1136,91 @@ void OPPROTO op_decq_ECX(void)
   So this just adds the base addr of the stack to A0. 
   So whatever A0 was is an index into the stack. 
 */
-void op_addl_A0_SS(void)
+void glue(op_addl_A0_SS,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_8(IFLO_ADDL_A0_SS,env->segs[R_SS].base);
 
     A0 = (uint32_t)(A0 + env->segs[R_SS].base);
 }
 
-void op_subl_A0_2(void)
+void glue(op_subl_A0_2,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_SUBL_A0_2);
     A0 = (uint32_t)(A0 - 2);
 }
 
-void op_subl_A0_4(void)
+void glue(op_subl_A0_4,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_SUBL_A0_4);
     A0 = (uint32_t)(A0 - 4);
 }
 
-void op_addl_ESP_4(void)
+void glue(op_addl_ESP_4,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ADDL_ESP_4);
     ESP = (uint32_t)(ESP + 4);
 }
 
-void op_addl_ESP_2(void)
+void glue(op_addl_ESP_2,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ADDL_ESP_2);
     ESP = (uint32_t)(ESP + 2);
 }
 
-void op_addw_ESP_4(void)
+void glue(op_addw_ESP_4,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ADDW_ESP_4);
     ESP = (ESP & ~0xffff) | ((ESP + 4) & 0xffff);
 }
 
-void op_addw_ESP_2(void)
+void glue(op_addw_ESP_2,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ADDW_ESP_2);
     ESP = (ESP & ~0xffff) | ((ESP + 2) & 0xffff);
 }
 
-void op_addl_ESP_im(void)
+void glue(op_addl_ESP_im,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_ADDL_ESP_IM,PARAM1);
     ESP = (uint32_t)(ESP + PARAM1);
 }
 
-void op_addw_ESP_im(void)
+void glue(op_addw_ESP_im,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_ADDW_ESP_IM,PARAM1);
     ESP = (ESP & ~0xffff) | ((ESP + PARAM1) & 0xffff);
 }
 
 #ifdef TARGET_X86_64
-void op_subq_A0_2(void)
+void glue(op_subq_A0_2,IFERRET_LOGTHING)(void)
 {
     A0 -= 2;
 }
 
-void op_subq_A0_8(void)
+void glue(op_subq_A0_8,IFERRET_LOGTHING)(void)
 {
     A0 -= 8;
 }
 
-void op_addq_ESP_8(void)
+void glue(op_addq_ESP_8,IFERRET_LOGTHING)(void)
 {
     ESP += 8;
 }
 
-void op_addq_ESP_im(void)
+void glue(op_addq_ESP_im,IFERRET_LOGTHING)(void)
 {
     ESP += PARAM1;
 }
 #endif
 
 // read time stamp counter into edx/eax
-void OPPROTO op_rdtsc(void)
+void OPPROTO glue(op_rdtsc,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_RDTSC);
     helper_rdtsc();
 }
 
-void OPPROTO op_rdpmc(void)
+void OPPROTO glue(op_rdpmc,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_RDPMC);
     helper_rdpmc();
@@ -1218,68 +1228,68 @@ void OPPROTO op_rdpmc(void)
 
 void vm_stop(int);
 
-void OPPROTO op_cpuid(void)
+void OPPROTO glue(op_cpuid,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_CPUID);
   // BDG : Magic instruction -- allows a guest userland program
   // to notify us that a buffer is to be monitored.
   if (EAX == 0) {
     if(EBX == MAGIC_IN) {
-        iferret_log_info_flow_op_write_44(IFLO_LABEL_INPUT, phys_addr(ECX), EDX);
+        helper_setlogstate(1);
         //vm_stop(EXCP_INTERRUPT);
     }
     else if (EBX == MAGIC_OUT) {
-        iferret_log_info_flow_op_write_44(IFLO_LABEL_OUTPUT, phys_addr(ECX), EDX);
+        helper_setlogstate(0);
     }
   }
 
   helper_cpuid();
 }
 
-void OPPROTO op_enter_level(void)
+void OPPROTO glue(op_enter_level,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_ENTER_LEVEL);
     helper_enter_level(PARAM1, PARAM2);
 }
 
 #ifdef TARGET_X86_64
-void OPPROTO op_enter64_level(void)
+void OPPROTO glue(op_enter64_level,IFERRET_LOGTHING)(void)
 {
     helper_enter64_level(PARAM1, PARAM2);
 }
 #endif
 
-void OPPROTO op_sysenter(void)
+void OPPROTO glue(op_sysenter,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_SYSENTER);
     helper_sysenter();
 }
 
-void OPPROTO op_sysexit(void)
+void OPPROTO glue(op_sysexit,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_SYSEXIT); 
     helper_sysexit();
 }
 
 #ifdef TARGET_X86_64
-void OPPROTO op_syscall(void)
+void OPPROTO glue(op_syscall,IFERRET_LOGTHING)(void)
 {
     helper_syscall(PARAM1);
 }
 
-void OPPROTO op_sysret(void)
+void OPPROTO glue(op_sysret,IFERRET_LOGTHING)(void)
 {
     helper_sysret(PARAM1);
 }
 #endif
 
-void OPPROTO op_rdmsr(void)
+void OPPROTO glue(op_rdmsr,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_RDMSR);
     helper_rdmsr();
 }
 
-void OPPROTO op_wrmsr(void)
+void OPPROTO glue(op_wrmsr,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_WRMSR);
     helper_wrmsr();
@@ -1288,7 +1298,7 @@ void OPPROTO op_wrmsr(void)
 /* bcd */
 
 /* XXX: exception */
-void OPPROTO op_aam(void)
+void OPPROTO glue(op_aam,IFERRET_LOGTHING)(void)
 {
     int base = PARAM1;
     int al, ah;
@@ -1302,7 +1312,7 @@ void OPPROTO op_aam(void)
     CC_DST = al;
 }
 
-void OPPROTO op_aad(void)
+void OPPROTO glue(op_aad,IFERRET_LOGTHING)(void)
 {
     int base = PARAM1;
     int al, ah;
@@ -1316,7 +1326,7 @@ void OPPROTO op_aad(void)
     CC_DST = al;
 }
 
-void OPPROTO op_aaa(void)
+void OPPROTO glue(op_aaa,IFERRET_LOGTHING)(void)
 {
     int icarry;
     int al, ah, af;
@@ -1343,7 +1353,7 @@ void OPPROTO op_aaa(void)
     FORCE_RET();
 }
 
-void OPPROTO op_aas(void)
+void OPPROTO glue(op_aas,IFERRET_LOGTHING)(void)
 {
     int icarry;
     int al, ah, af;
@@ -1370,7 +1380,7 @@ void OPPROTO op_aas(void)
     FORCE_RET();
 }
 
-void OPPROTO op_daa(void)
+void OPPROTO glue(op_daa,IFERRET_LOGTHING)(void)
 {
     int al, af, cf;
     int eflags;
@@ -1400,7 +1410,7 @@ void OPPROTO op_daa(void)
     FORCE_RET();
 }
 
-void OPPROTO op_das(void)
+void OPPROTO glue(op_das,IFERRET_LOGTHING)(void)
 {
     int al, al1, af, cf;
     int eflags;
@@ -1436,14 +1446,14 @@ void OPPROTO op_das(void)
 /* segment handling */
 
 /* never use it with R_CS */
-void OPPROTO op_movl_seg_T0(void)
+void OPPROTO glue(op_movl_seg_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_MOVL_SEG_T0,PARAM1);
     load_seg(PARAM1, T0);
 }
 
 /* faster VM86 version */
-void OPPROTO op_movl_seg_T0_vm(void)
+void OPPROTO glue(op_movl_seg_T0_vm,IFERRET_LOGTHING)(void)
 {
     int selector;
     SegmentCache *sc;
@@ -1458,37 +1468,37 @@ void OPPROTO op_movl_seg_T0_vm(void)
     sc->base = (selector << 4);
 }
 
-void OPPROTO op_movl_T0_seg(void)
+void OPPROTO glue(op_movl_T0_seg,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_MOVL_T0_SEG,PARAM1);
     T0 = env->segs[PARAM1].selector;
 }
 
-void OPPROTO op_lsl(void)
+void OPPROTO glue(op_lsl,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_LSL,T0);
     helper_lsl();
 }
 
-void OPPROTO op_lar(void)
+void OPPROTO glue(op_lar,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_LAR,T0);
     helper_lar();
 }
 
-void OPPROTO op_verr(void)
+void OPPROTO glue(op_verr,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_VERR);
     helper_verr();
 }
 
-void OPPROTO op_verw(void)
+void OPPROTO glue(op_verw,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_VERW);
     helper_verw();
 }
 
-void OPPROTO op_arpl(void)
+void OPPROTO glue(op_arpl,IFERRET_LOGTHING)(void)
 {
   if ((T0 & 3) < (T1 & 3)) {
     /* XXX: emulate bug or 0xff3f0000 oring as in bochs ? */
@@ -1502,7 +1512,7 @@ void OPPROTO op_arpl(void)
   FORCE_RET();
 }
 
-void OPPROTO op_arpl_update(void)
+void OPPROTO glue(op_arpl_update,IFERRET_LOGTHING)(void)
 {
     int eflags;
     iferret_log_info_flow_op_write_0(IFLO_ARPL_UPDATE);
@@ -1511,84 +1521,84 @@ void OPPROTO op_arpl_update(void)
 }
 
 /* T0: segment, T1:eip */
-void OPPROTO op_ljmp_protected_T0_T1(void)
+void OPPROTO glue(op_ljmp_protected_T0_T1,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_LJMP_PROTECTED_T0_T1);
     helper_ljmp_protected_T0_T1(PARAM1);
 }
 
-void OPPROTO op_lcall_real_T0_T1(void)
+void OPPROTO glue(op_lcall_real_T0_T1,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_LCALL_REAL_T0_T1);
     helper_lcall_real_T0_T1(PARAM1, PARAM2);
 }
 
-void OPPROTO op_lcall_protected_T0_T1(void)
+void OPPROTO glue(op_lcall_protected_T0_T1,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_LCALL_PROTECTED_T0_T1);
     helper_lcall_protected_T0_T1(PARAM1, PARAM2);
 }
 
-void OPPROTO op_iret_real(void)
+void OPPROTO glue(op_iret_real,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_IRET_REAL);
     helper_iret_real(PARAM1);
 }
 
-void OPPROTO op_iret_protected(void)
+void OPPROTO glue(op_iret_protected,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_IRET_PROTECTED);
     helper_iret_protected(PARAM1, PARAM2);
 }
 
-void OPPROTO op_lret_protected(void)
+void OPPROTO glue(op_lret_protected,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_LRET_PROTECTED);
     helper_lret_protected(PARAM1, PARAM2);
 }
 
-void OPPROTO op_lldt_T0(void)
+void OPPROTO glue(op_lldt_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_LLDT_T0);
     helper_lldt_T0();
 }
 
-void OPPROTO op_ltr_T0(void)
+void OPPROTO glue(op_ltr_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_LTR_T0);
     helper_ltr_T0();
 }
 
 /* CR registers access */
-void OPPROTO op_movl_crN_T0(void)
+void OPPROTO glue(op_movl_crN_T0,IFERRET_LOGTHING)(void)
 {
-    iferret_log_info_flow_op_write_44(IFLO_MOVL_CRN_T0,PARAM1,T0);
+  iferret_log_info_flow_op_write_44(IFLO_MOVL_CRN_T0,PARAM1,T0);
     helper_movl_crN_T0(PARAM1);
 }
 
 /* These pseudo-opcodes check for SVM intercepts. */
-void OPPROTO op_svm_check_intercept(void)
+void OPPROTO glue(op_svm_check_intercept,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_SVM_CHECK_INTERCEPT);
     A0 = PARAM1 & PARAM2;
     svm_check_intercept(PARAMQ1);
 }
 
-void OPPROTO op_svm_check_intercept_param(void)
+void OPPROTO glue(op_svm_check_intercept_param,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_SVM_CHECK_INTERCEPT_PARAM);
     A0 = PARAM1 & PARAM2;
     svm_check_intercept_param(PARAMQ1, T1);
 }
 
-void OPPROTO op_svm_vmexit(void)
+void OPPROTO glue(op_svm_vmexit,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_SVM_VMEXIT);
     A0 = PARAM1 & PARAM2;
     vmexit(PARAMQ1, T1);
 }
 
-void OPPROTO op_geneflags(void)
+void OPPROTO glue(op_geneflags,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_GENEFLAGS);
     CC_SRC = cc_table[CC_OP].compute_all();
@@ -1596,7 +1606,7 @@ void OPPROTO op_geneflags(void)
 
 /* This pseudo-opcode checks for IO intercepts. */
 #if !defined(CONFIG_USER_ONLY)
-void OPPROTO op_svm_check_intercept_io(void)
+void OPPROTO glue(op_svm_check_intercept_io,IFERRET_LOGTHING)(void)
 {
     A0 = PARAM1 & PARAM2;
     /* PARAMQ1 = TYPE (0 = OUT, 1 = IN; 4 = STRING; 8 = REP)
@@ -1611,7 +1621,7 @@ void OPPROTO op_svm_check_intercept_io(void)
 #endif
 
 #if !defined(CONFIG_USER_ONLY)
-void OPPROTO op_movtl_T0_cr8(void)
+void OPPROTO glue(op_movtl_T0_cr8,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVTL_T0_CR8);
 
@@ -1620,13 +1630,13 @@ void OPPROTO op_movtl_T0_cr8(void)
 #endif
 
 /* DR registers access */
-void OPPROTO op_movl_drN_T0(void)
+void OPPROTO glue(op_movl_drN_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_MOVL_DRN_T0);
     helper_movl_drN_T0(PARAM1);
 }
 
-void OPPROTO op_lmsw_T0(void)
+void OPPROTO glue(op_lmsw_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_LMSW_T0);
 
@@ -1636,56 +1646,56 @@ void OPPROTO op_lmsw_T0(void)
     helper_movl_crN_T0(0);
 }
 
-void OPPROTO op_invlpg_A0(void)
+void OPPROTO glue(op_invlpg_A0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_INVLPG_A0);
     helper_invlpg(A0);
 }
 
-void OPPROTO op_movl_T0_env(void)
+void OPPROTO glue(op_movl_T0_env,IFERRET_LOGTHING)(void)
 {
   //printf("IFLO_MOVL_T0_ENV, PTR_TO_ADDR(env) + PARAM1 = 0x%lx\n", PTR_TO_ADDR(env) + PARAM1);
   iferret_log_info_flow_op_write_84(IFLO_MOVL_T0_ENV, PTR_TO_ADDR(env) + PARAM1, PARAM1);
     T0 = *(uint32_t *)((char *)env + PARAM1);
 }
 
-void OPPROTO op_movl_env_T0(void)
+void OPPROTO glue(op_movl_env_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_84(IFLO_MOVL_ENV_T0, PTR_TO_ADDR(env) + PARAM1, PARAM1);
     *(uint32_t *)((char *)env + PARAM1) = T0;
 }
 
-void OPPROTO op_movl_env_T1(void)
+void OPPROTO glue(op_movl_env_T1,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_84(IFLO_MOVL_ENV_T1, PTR_TO_ADDR(env) + PARAM1, PARAM1);
     *(uint32_t *)((char *)env + PARAM1) = T1;
 }
 
-void OPPROTO op_movtl_T0_env(void)
+void OPPROTO glue(op_movtl_T0_env,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_84(IFLO_MOVTL_T0_ENV, PTR_TO_ADDR(env) + PARAM1, PARAM1);
     T0 = *(target_ulong *)((char *)env + PARAM1);
 }
 
-void OPPROTO op_movtl_env_T0(void)
+void OPPROTO glue(op_movtl_env_T0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_84(IFLO_MOVTL_ENV_T0, PTR_TO_ADDR(env) + PARAM1, PARAM1);
     *(target_ulong *)((char *)env + PARAM1) = T0;
 }
 
-void OPPROTO op_movtl_T1_env(void)
+void OPPROTO glue(op_movtl_T1_env,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_84(IFLO_MOVTL_T1_ENV, PTR_TO_ADDR(env) + PARAM1, PARAM1);
     T1 = *(target_ulong *)((char *)env + PARAM1);
 }
 
-void OPPROTO op_movtl_env_T1(void)
+void OPPROTO glue(op_movtl_env_T1,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_84(IFLO_MOVTL_ENV_T1, PTR_TO_ADDR(env) + PARAM1, PARAM1);
     *(target_ulong *)((char *)env + PARAM1) = T1;
 }
 
-void OPPROTO op_clts(void)
+void OPPROTO glue(op_clts,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_0(IFLO_CLTS);
     env->cr[0] &= ~CR0_TS_MASK;
@@ -1694,25 +1704,25 @@ void OPPROTO op_clts(void)
 
 /* flags handling */
 
-void OPPROTO op_goto_tb0(void)
+void OPPROTO glue(op_goto_tb0,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_GOTO_TB0,PARAM1);
     GOTO_TB(op_goto_tb0, PARAM1, 0);
 }
 
-void OPPROTO op_goto_tb1(void)
+void OPPROTO glue(op_goto_tb1,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_GOTO_TB1,PARAM1);
     GOTO_TB(op_goto_tb1, PARAM1, 1);
 }
 
-void OPPROTO op_jmp_label(void)
+void OPPROTO glue(op_jmp_label,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_JMP_LABEL,PARAM1);
     GOTO_LABEL_PARAM(1);
 }
 
-void OPPROTO op_jnz_T0_label(void)
+void OPPROTO glue(op_jnz_T0_label,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_JNZ_T0_LABEL,T0);
     if (T0)
@@ -1720,7 +1730,7 @@ void OPPROTO op_jnz_T0_label(void)
     FORCE_RET();
 }
 
-void OPPROTO op_jz_T0_label(void)
+void OPPROTO glue(op_jz_T0_label,IFERRET_LOGTHING)(void)
 {
   iferret_log_info_flow_op_write_4(IFLO_JZ_LABEL,!T0);
     if (!T0)
@@ -1730,7 +1740,7 @@ void OPPROTO op_jz_T0_label(void)
 
 // SETcc set byte on condition 
 /* slow set cases (compute x86 flags) */
-void OPPROTO op_seto_T0_cc(void)
+void OPPROTO glue(op_seto_T0_cc,IFERRET_LOGTHING)(void)
 {
     int eflags;
     eflags = cc_table[CC_OP].compute_all();
@@ -1740,14 +1750,14 @@ void OPPROTO op_seto_T0_cc(void)
     T0 = (eflags >> 11) & 1;
 }
 
-void OPPROTO op_setb_T0_cc(void)
+void OPPROTO glue(op_setb_T0_cc,IFERRET_LOGTHING)(void)
 {
     iferret_log_info_flow_op_write_0(IFLO_SETB_T0_CC);
 
     T0 = cc_table[CC_OP].compute_c();
 }
 
-void OPPROTO op_setz_T0_cc(void)
+void OPPROTO glue(op_setz_T0_cc,IFERRET_LOGTHING)(void)
 {
     int eflags;
     eflags = cc_table[CC_OP].compute_all();
@@ -1757,7 +1767,7 @@ void OPPROTO op_setz_T0_cc(void)
     T0 = (eflags >> 6) & 1;
 }
 
-void OPPROTO op_setbe_T0_cc(void)
+void OPPROTO glue(op_setbe_T0_cc,IFERRET_LOGTHING)(void)
 {
     int eflags;
     eflags = cc_table[CC_OP].compute_all();
@@ -1767,7 +1777,7 @@ void OPPROTO op_setbe_T0_cc(void)
     T0 = (eflags & (CC_Z | CC_C)) != 0;
 }
 
-void OPPROTO op_sets_T0_cc(void)
+void OPPROTO glue(op_sets_T0_cc,IFERRET_LOGTHING)(void)
 {
     int eflags;
     eflags = cc_table[CC_OP].compute_all();
@@ -1777,7 +1787,7 @@ void OPPROTO op_sets_T0_cc(void)
     T0 = (eflags >> 7) & 1;
 }
 
-void OPPROTO op_setp_T0_cc(void)
+void OPPROTO glue(op_setp_T0_cc,IFERRET_LOGTHING)(void)
 {
     int eflags;
     eflags = cc_table[CC_OP].compute_all();
@@ -1787,7 +1797,7 @@ void OPPROTO op_setp_T0_cc(void)
     T0 = (eflags >> 2) & 1;
 }
 
-void OPPROTO op_setl_T0_cc(void)
+void OPPROTO glue(op_setl_T0_cc,IFERRET_LOGTHING)(void)
 {
     int eflags;
     eflags = cc_table[CC_OP].compute_all();
@@ -1797,7 +1807,7 @@ void OPPROTO op_setl_T0_cc(void)
     T0 = ((eflags ^ (eflags >> 4)) >> 7) & 1;
 }
 
-void OPPROTO op_setle_T0_cc(void)
+void OPPROTO glue(op_setle_T0_cc,IFERRET_LOGTHING)(void)
 {
     int eflags;
     eflags = cc_table[CC_OP].compute_all();
@@ -1808,20 +1818,20 @@ void OPPROTO op_setle_T0_cc(void)
 }
 
 // flip 0 bit
-void OPPROTO op_xor_T0_1(void)
+void OPPROTO glue(op_xor_T0_1,IFERRET_LOGTHING)(void)
 {
     iferret_log_info_flow_op_write_0(IFLO_XOR_T0_1);
 
     T0 ^= 1;
 }
 
-void OPPROTO op_set_cc_op(void)
+void OPPROTO glue(op_set_cc_op,IFERRET_LOGTHING)(void)
 {
     iferret_log_info_flow_op_write_4(IFLO_SET_CC_OP,PARAM1);
     CC_OP = PARAM1;
 }
 
-void OPPROTO op_mov_T0_cc(void)
+void OPPROTO glue(op_mov_T0_cc,IFERRET_LOGTHING)(void)
 {
     iferret_log_info_flow_op_write_0(IFLO_MOV_T0_CC);
 
@@ -1830,42 +1840,42 @@ void OPPROTO op_mov_T0_cc(void)
 
 /* XXX: clear VIF/VIP in all ops ? */
 
-void OPPROTO op_movl_eflags_T0(void)
+void OPPROTO glue(op_movl_eflags_T0,IFERRET_LOGTHING)(void)
 {
     iferret_log_info_flow_op_write_0(IFLO_MOVL_EFLAGS_T0);
 
     load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK));
 }
 
-void OPPROTO op_movw_eflags_T0(void)
+void OPPROTO glue(op_movw_eflags_T0,IFERRET_LOGTHING)(void)
 {
     iferret_log_info_flow_op_write_0(IFLO_MOVW_EFLAGS_T0);
 
     load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK) & 0xffff);
 }
 
-void OPPROTO op_movl_eflags_T0_io(void)
+void OPPROTO glue(op_movl_eflags_T0_io,IFERRET_LOGTHING)(void)
 {
     iferret_log_info_flow_op_write_0(IFLO_MOVL_EFLAGS_T0_IO);
 
     load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK | IF_MASK));
 }
 
-void OPPROTO op_movw_eflags_T0_io(void)
+void OPPROTO glue(op_movw_eflags_T0_io,IFERRET_LOGTHING)(void)
 {
     iferret_log_info_flow_op_write_0(IFLO_MOVW_EFLAGS_T0_IO);
 
     load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK | IF_MASK) & 0xffff);
 }
 
-void OPPROTO op_movl_eflags_T0_cpl0(void)
+void OPPROTO glue(op_movl_eflags_T0_cpl0,IFERRET_LOGTHING)(void)
 {
     iferret_log_info_flow_op_write_0(IFLO_MOVL_EFLAGS_T0_CPL0);
 
     load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK | IF_MASK | IOPL_MASK));
 }
 
-void OPPROTO op_movw_eflags_T0_cpl0(void)
+void OPPROTO glue(op_movw_eflags_T0_cpl0,IFERRET_LOGTHING)(void)
 {
     iferret_log_info_flow_op_write_0(IFLO_MOVW_EFLAGS_T0_CPL0);
 
@@ -1874,7 +1884,7 @@ void OPPROTO op_movw_eflags_T0_cpl0(void)
 
 #if 0
 /* vm86plus version */
-void OPPROTO op_movw_eflags_T0_vm(void)
+void OPPROTO glue(op_movw_eflags_T0_vm,IFERRET_LOGTHING)(void)
 {
     int eflags;
     eflags = T0;
@@ -1893,7 +1903,7 @@ void OPPROTO op_movw_eflags_T0_vm(void)
     FORCE_RET();
 }
 
-void OPPROTO op_movl_eflags_T0_vm(void)
+void OPPROTO glue(op_movl_eflags_T0_vm,IFERRET_LOGTHING)(void)
 {
     int eflags;
     eflags = T0;
@@ -1914,7 +1924,7 @@ void OPPROTO op_movl_eflags_T0_vm(void)
 #endif
 
 /* XXX: compute only O flag */
-void OPPROTO op_movb_eflags_T0(void)
+void OPPROTO glue(op_movb_eflags_T0,IFERRET_LOGTHING)(void)
 {
     int of;
 
@@ -1924,7 +1934,7 @@ void OPPROTO op_movb_eflags_T0(void)
     CC_SRC = (T0 & (CC_S | CC_Z | CC_A | CC_P | CC_C)) | of;
 }
 
-void OPPROTO op_movl_T0_eflags(void)
+void OPPROTO glue(op_movl_T0_eflags,IFERRET_LOGTHING)(void)
 {
     int eflags;
 
@@ -1938,7 +1948,7 @@ void OPPROTO op_movl_T0_eflags(void)
 
 /* vm86plus version */
 #if 0
-void OPPROTO op_movl_T0_eflags_vm(void)
+void OPPROTO glue(op_movl_T0_eflags_vm,IFERRET_LOGTHING)(void)
 {
     int eflags;
     eflags = cc_table[CC_OP].compute_all();
@@ -1950,17 +1960,17 @@ void OPPROTO op_movl_T0_eflags_vm(void)
 }
 #endif
 
-void OPPROTO op_cld(void)
+void OPPROTO glue(op_cld,IFERRET_LOGTHING)(void)
 {
     DF = 1;
 }
 
-void OPPROTO op_std(void)
+void OPPROTO glue(op_std,IFERRET_LOGTHING)(void)
 {
     DF = -1;
 }
 
-void OPPROTO op_clc(void)
+void OPPROTO glue(op_clc,IFERRET_LOGTHING)(void)
 {
     int eflags;
   iferret_log_info_flow_op_write_0(IFLO_CLC);
@@ -1969,7 +1979,7 @@ void OPPROTO op_clc(void)
     CC_SRC = eflags;
 }
 
-void OPPROTO op_stc(void)
+void OPPROTO glue(op_stc,IFERRET_LOGTHING)(void)
 {
     int eflags;
   iferret_log_info_flow_op_write_0(IFLO_STC);
@@ -1978,7 +1988,7 @@ void OPPROTO op_stc(void)
     CC_SRC = eflags;
 }
 
-void OPPROTO op_cmc(void)
+void OPPROTO glue(op_cmc,IFERRET_LOGTHING)(void)
 {
     int eflags;
   iferret_log_info_flow_op_write_0(IFLO_CMC);
@@ -1987,7 +1997,7 @@ void OPPROTO op_cmc(void)
     CC_SRC = eflags;
 }
 
-void OPPROTO op_salc(void)
+void OPPROTO glue(op_salc,IFERRET_LOGTHING)(void)
 {
     int cf;
     cf = cc_table[CC_OP].compute_c();
@@ -1999,16 +2009,15 @@ void OPPROTO op_salc(void)
 
 static int compute_all_eflags(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_COMPUTE_ALL_EFLAGS);
     return CC_SRC;
 }
 
 static int compute_c_eflags(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_COMPUTE_C_EFLAGS);
     return CC_SRC & CC_C;
 }
 
+#ifndef IFERRET_LOGTHING_ON
 CCTable cc_table[CC_OP_NB] = {
     [CC_OP_DYNAMIC] = { /* should never happen */ },
 
@@ -2076,6 +2085,9 @@ CCTable cc_table[CC_OP_NB] = {
     [CC_OP_SARQ] = { compute_all_sarq, compute_c_sarl },
 #endif
 };
+#else
+extern CCTable cc_table[];
+#endif
 
 /* floating point support. Some of the code for complicated x87
    functions comes from the LGPL'ed x86 emulator found in the Willows
@@ -2083,7 +2095,7 @@ CCTable cc_table[CC_OP_NB] = {
 
 /* fp load FT0 */
 
-void OPPROTO op_flds_FT0_A0(void)
+void OPPROTO glue(op_flds_FT0_A0,IFERRET_LOGTHING)(void)
 {
 #ifdef USE_FP_CONVERT
     FP_CONVERT.i32 = ldl(A0);
@@ -2093,7 +2105,7 @@ void OPPROTO op_flds_FT0_A0(void)
 #endif
 }
 
-void OPPROTO op_fldl_FT0_A0(void)
+void OPPROTO glue(op_fldl_FT0_A0,IFERRET_LOGTHING)(void)
 {
 #ifdef USE_FP_CONVERT
     FP_CONVERT.i64 = ldq(A0);
@@ -2121,24 +2133,24 @@ void helper_fildll_FT0_A0(void)
     FT0 = (CPU86_LDouble)((int64_t)ldq(A0));
 }
 
-void OPPROTO op_fild_FT0_A0(void)
+void OPPROTO glue(op_fild_FT0_A0,IFERRET_LOGTHING)(void)
 {
     helper_fild_FT0_A0();
 }
 
-void OPPROTO op_fildl_FT0_A0(void)
+void OPPROTO glue(op_fildl_FT0_A0,IFERRET_LOGTHING)(void)
 {
     helper_fildl_FT0_A0();
 }
 
-void OPPROTO op_fildll_FT0_A0(void)
+void OPPROTO glue(op_fildll_FT0_A0,IFERRET_LOGTHING)(void)
 {
     helper_fildll_FT0_A0();
 }
 
 #else
 
-void OPPROTO op_fild_FT0_A0(void)
+void OPPROTO glue(op_fild_FT0_A0,IFERRET_LOGTHING)(void)
 {
 #ifdef USE_FP_CONVERT
     FP_CONVERT.i32 = ldsw(A0);
@@ -2148,7 +2160,7 @@ void OPPROTO op_fild_FT0_A0(void)
 #endif
 }
 
-void OPPROTO op_fildl_FT0_A0(void)
+void OPPROTO glue(op_fildl_FT0_A0,IFERRET_LOGTHING)(void)
 {
 #ifdef USE_FP_CONVERT
     FP_CONVERT.i32 = (int32_t) ldl(A0);
@@ -2158,7 +2170,7 @@ void OPPROTO op_fildl_FT0_A0(void)
 #endif
 }
 
-void OPPROTO op_fildll_FT0_A0(void)
+void OPPROTO glue(op_fildll_FT0_A0,IFERRET_LOGTHING)(void)
 {
 #ifdef USE_FP_CONVERT
     FP_CONVERT.i64 = (int64_t) ldq(A0);
@@ -2171,7 +2183,7 @@ void OPPROTO op_fildll_FT0_A0(void)
 
 /* fp load ST0 */
 
-void OPPROTO op_flds_ST0_A0(void)
+void OPPROTO glue(op_flds_ST0_A0,IFERRET_LOGTHING)(void)
 {
     int new_fpstt;
     new_fpstt = (env->fpstt - 1) & 7;
@@ -2185,7 +2197,7 @@ void OPPROTO op_flds_ST0_A0(void)
     env->fptags[new_fpstt] = 0; /* validate stack entry */
 }
 
-void OPPROTO op_fldl_ST0_A0(void)
+void OPPROTO glue(op_fldl_ST0_A0,IFERRET_LOGTHING)(void)
 {
     int new_fpstt;
     new_fpstt = (env->fpstt - 1) & 7;
@@ -2199,7 +2211,7 @@ void OPPROTO op_fldl_ST0_A0(void)
     env->fptags[new_fpstt] = 0; /* validate stack entry */
 }
 
-void OPPROTO op_fldt_ST0_A0(void)
+void OPPROTO glue(op_fldt_ST0_A0,IFERRET_LOGTHING)(void)
 {
     helper_fldt_ST0_A0();
 }
@@ -2234,24 +2246,24 @@ void helper_fildll_ST0_A0(void)
     env->fptags[new_fpstt] = 0; /* validate stack entry */
 }
 
-void OPPROTO op_fild_ST0_A0(void)
+void OPPROTO glue(op_fild_ST0_A0,IFERRET_LOGTHING)(void)
 {
     helper_fild_ST0_A0();
 }
 
-void OPPROTO op_fildl_ST0_A0(void)
+void OPPROTO glue(op_fildl_ST0_A0,IFERRET_LOGTHING)(void)
 {
     helper_fildl_ST0_A0();
 }
 
-void OPPROTO op_fildll_ST0_A0(void)
+void OPPROTO glue(op_fildll_ST0_A0,IFERRET_LOGTHING)(void)
 {
     helper_fildll_ST0_A0();
 }
 
 #else
 
-void OPPROTO op_fild_ST0_A0(void)
+void OPPROTO glue(op_fild_ST0_A0,IFERRET_LOGTHING)(void)
 {
     int new_fpstt;
     new_fpstt = (env->fpstt - 1) & 7;
@@ -2265,7 +2277,7 @@ void OPPROTO op_fild_ST0_A0(void)
     env->fptags[new_fpstt] = 0; /* validate stack entry */
 }
 
-void OPPROTO op_fildl_ST0_A0(void)
+void OPPROTO glue(op_fildl_ST0_A0,IFERRET_LOGTHING)(void)
 {
     int new_fpstt;
     new_fpstt = (env->fpstt - 1) & 7;
@@ -2279,7 +2291,7 @@ void OPPROTO op_fildl_ST0_A0(void)
     env->fptags[new_fpstt] = 0; /* validate stack entry */
 }
 
-void OPPROTO op_fildll_ST0_A0(void)
+void OPPROTO glue(op_fildll_ST0_A0,IFERRET_LOGTHING)(void)
 {
     int new_fpstt;
     new_fpstt = (env->fpstt - 1) & 7;
@@ -2297,7 +2309,7 @@ void OPPROTO op_fildll_ST0_A0(void)
 
 /* fp store */
 
-void OPPROTO op_fsts_ST0_A0(void)
+void OPPROTO glue(op_fsts_ST0_A0,IFERRET_LOGTHING)(void)
 {
 #ifdef USE_FP_CONVERT
     FP_CONVERT.f = (float)ST0;
@@ -2308,18 +2320,18 @@ void OPPROTO op_fsts_ST0_A0(void)
     FORCE_RET();
 }
 
-void OPPROTO op_fstl_ST0_A0(void)
+void OPPROTO glue(op_fstl_ST0_A0,IFERRET_LOGTHING)(void)
 {
     stfq(A0, (double)ST0);
     FORCE_RET();
 }
 
-void OPPROTO op_fstt_ST0_A0(void)
+void OPPROTO glue(op_fstt_ST0_A0,IFERRET_LOGTHING)(void)
 {
     helper_fstt_ST0_A0();
 }
 
-void OPPROTO op_fist_ST0_A0(void)
+void OPPROTO glue(op_fist_ST0_A0,IFERRET_LOGTHING)(void)
 {
 #if defined(__sparc__) && !defined(__sparc_v9__)
     register CPU86_LDouble d asm("o0");
@@ -2336,7 +2348,7 @@ void OPPROTO op_fist_ST0_A0(void)
     FORCE_RET();
 }
 
-void OPPROTO op_fistl_ST0_A0(void)
+void OPPROTO glue(op_fistl_ST0_A0,IFERRET_LOGTHING)(void)
 {
 #if defined(__sparc__) && !defined(__sparc_v9__)
     register CPU86_LDouble d asm("o0");
@@ -2351,7 +2363,7 @@ void OPPROTO op_fistl_ST0_A0(void)
     FORCE_RET();
 }
 
-void OPPROTO op_fistll_ST0_A0(void)
+void OPPROTO glue(op_fistll_ST0_A0,IFERRET_LOGTHING)(void)
 {
 #if defined(__sparc__) && !defined(__sparc_v9__)
     register CPU86_LDouble d asm("o0");
@@ -2366,7 +2378,7 @@ void OPPROTO op_fistll_ST0_A0(void)
     FORCE_RET();
 }
 
-void OPPROTO op_fistt_ST0_A0(void)
+void OPPROTO glue(op_fistt_ST0_A0,IFERRET_LOGTHING)(void)
 {
 #if defined(__sparc__) && !defined(__sparc_v9__)
     register CPU86_LDouble d asm("o0");
@@ -2383,7 +2395,7 @@ void OPPROTO op_fistt_ST0_A0(void)
     FORCE_RET();
 }
 
-void OPPROTO op_fisttl_ST0_A0(void)
+void OPPROTO glue(op_fisttl_ST0_A0,IFERRET_LOGTHING)(void)
 {
 #if defined(__sparc__) && !defined(__sparc_v9__)
     register CPU86_LDouble d asm("o0");
@@ -2398,7 +2410,7 @@ void OPPROTO op_fisttl_ST0_A0(void)
     FORCE_RET();
 }
 
-void OPPROTO op_fisttll_ST0_A0(void)
+void OPPROTO glue(op_fisttll_ST0_A0,IFERRET_LOGTHING)(void)
 {
 #if defined(__sparc__) && !defined(__sparc_v9__)
     register CPU86_LDouble d asm("o0");
@@ -2413,66 +2425,66 @@ void OPPROTO op_fisttll_ST0_A0(void)
     FORCE_RET();
 }
 
-void OPPROTO op_fbld_ST0_A0(void)
+void OPPROTO glue(op_fbld_ST0_A0,IFERRET_LOGTHING)(void)
 {
     helper_fbld_ST0_A0();
 }
 
-void OPPROTO op_fbst_ST0_A0(void)
+void OPPROTO glue(op_fbst_ST0_A0,IFERRET_LOGTHING)(void)
 {
     helper_fbst_ST0_A0();
 }
 
 /* FPU move */
 
-void OPPROTO op_fpush(void)
+void OPPROTO glue(op_fpush,IFERRET_LOGTHING)(void)
 {
     fpush();
 }
 
-void OPPROTO op_fpop(void)
+void OPPROTO glue(op_fpop,IFERRET_LOGTHING)(void)
 {
     fpop();
 }
 
-void OPPROTO op_fdecstp(void)
+void OPPROTO glue(op_fdecstp,IFERRET_LOGTHING)(void)
 {
     env->fpstt = (env->fpstt - 1) & 7;
     env->fpus &= (~0x4700);
 }
 
-void OPPROTO op_fincstp(void)
+void OPPROTO glue(op_fincstp,IFERRET_LOGTHING)(void)
 {
     env->fpstt = (env->fpstt + 1) & 7;
     env->fpus &= (~0x4700);
 }
 
-void OPPROTO op_ffree_STN(void)
+void OPPROTO glue(op_ffree_STN,IFERRET_LOGTHING)(void)
 {
     env->fptags[(env->fpstt + PARAM1) & 7] = 1;
 }
 
-void OPPROTO op_fmov_ST0_FT0(void)
+void OPPROTO glue(op_fmov_ST0_FT0,IFERRET_LOGTHING)(void)
 {
     ST0 = FT0;
 }
 
-void OPPROTO op_fmov_FT0_STN(void)
+void OPPROTO glue(op_fmov_FT0_STN,IFERRET_LOGTHING)(void)
 {
     FT0 = ST(PARAM1);
 }
 
-void OPPROTO op_fmov_ST0_STN(void)
+void OPPROTO glue(op_fmov_ST0_STN,IFERRET_LOGTHING)(void)
 {
     ST0 = ST(PARAM1);
 }
 
-void OPPROTO op_fmov_STN_ST0(void)
+void OPPROTO glue(op_fmov_STN_ST0,IFERRET_LOGTHING)(void)
 {
     ST(PARAM1) = ST0;
 }
 
-void OPPROTO op_fxchg_ST0_STN(void)
+void OPPROTO glue(op_fxchg_ST0_STN,IFERRET_LOGTHING)(void)
 {
     CPU86_LDouble tmp;
     tmp = ST(PARAM1);
@@ -2482,9 +2494,13 @@ void OPPROTO op_fxchg_ST0_STN(void)
 
 /* FPU operations */
 
+#ifndef IFERRET_LOGTHING_ON
 const int fcom_ccval[4] = {0x0100, 0x4000, 0x0000, 0x4500};
+#else
+extern int fcom_ccval[];
+#endif
 
-void OPPROTO op_fcom_ST0_FT0(void)
+void OPPROTO glue(op_fcom_ST0_FT0,IFERRET_LOGTHING)(void)
 {
     int ret;
 
@@ -2493,7 +2509,7 @@ void OPPROTO op_fcom_ST0_FT0(void)
     FORCE_RET();
 }
 
-void OPPROTO op_fucom_ST0_FT0(void)
+void OPPROTO glue(op_fucom_ST0_FT0,IFERRET_LOGTHING)(void)
 {
     int ret;
 
@@ -2502,9 +2518,13 @@ void OPPROTO op_fucom_ST0_FT0(void)
     FORCE_RET();
 }
 
+#ifndef IFERRET_LOGTHING_ON
 const int fcomi_ccval[4] = {CC_C, CC_Z, 0, CC_Z | CC_P | CC_C};
+#else
+extern int fcomi_ccval[];
+#endif
 
-void OPPROTO op_fcomi_ST0_FT0(void)
+void OPPROTO glue(op_fcomi_ST0_FT0,IFERRET_LOGTHING)(void)
 {
     int eflags;
     int ret;
@@ -2516,7 +2536,7 @@ void OPPROTO op_fcomi_ST0_FT0(void)
     FORCE_RET();
 }
 
-void OPPROTO op_fucomi_ST0_FT0(void)
+void OPPROTO glue(op_fucomi_ST0_FT0,IFERRET_LOGTHING)(void)
 {
     int eflags;
     int ret;
@@ -2528,7 +2548,7 @@ void OPPROTO op_fucomi_ST0_FT0(void)
     FORCE_RET();
 }
 
-void OPPROTO op_fcmov_ST0_STN_T0(void)
+void OPPROTO glue(op_fcmov_ST0_STN_T0,IFERRET_LOGTHING)(void)
 {
     if (T0) {
         ST0 = ST(PARAM1);
@@ -2536,68 +2556,68 @@ void OPPROTO op_fcmov_ST0_STN_T0(void)
     FORCE_RET();
 }
 
-void OPPROTO op_fadd_ST0_FT0(void)
+void OPPROTO glue(op_fadd_ST0_FT0,IFERRET_LOGTHING)(void)
 {
     ST0 += FT0;
 }
 
-void OPPROTO op_fmul_ST0_FT0(void)
+void OPPROTO glue(op_fmul_ST0_FT0,IFERRET_LOGTHING)(void)
 {
     ST0 *= FT0;
 }
 
-void OPPROTO op_fsub_ST0_FT0(void)
+void OPPROTO glue(op_fsub_ST0_FT0,IFERRET_LOGTHING)(void)
 {
     ST0 -= FT0;
 }
 
-void OPPROTO op_fsubr_ST0_FT0(void)
+void OPPROTO glue(op_fsubr_ST0_FT0,IFERRET_LOGTHING)(void)
 {
     ST0 = FT0 - ST0;
 }
 
-void OPPROTO op_fdiv_ST0_FT0(void)
+void OPPROTO glue(op_fdiv_ST0_FT0,IFERRET_LOGTHING)(void)
 {
     ST0 = helper_fdiv(ST0, FT0);
 }
 
-void OPPROTO op_fdivr_ST0_FT0(void)
+void OPPROTO glue(op_fdivr_ST0_FT0,IFERRET_LOGTHING)(void)
 {
     ST0 = helper_fdiv(FT0, ST0);
 }
 
 /* fp operations between STN and ST0 */
 
-void OPPROTO op_fadd_STN_ST0(void)
+void OPPROTO glue(op_fadd_STN_ST0,IFERRET_LOGTHING)(void)
 {
     ST(PARAM1) += ST0;
 }
 
-void OPPROTO op_fmul_STN_ST0(void)
+void OPPROTO glue(op_fmul_STN_ST0,IFERRET_LOGTHING)(void)
 {
     ST(PARAM1) *= ST0;
 }
 
-void OPPROTO op_fsub_STN_ST0(void)
+void OPPROTO glue(op_fsub_STN_ST0,IFERRET_LOGTHING)(void)
 {
     ST(PARAM1) -= ST0;
 }
 
-void OPPROTO op_fsubr_STN_ST0(void)
+void OPPROTO glue(op_fsubr_STN_ST0,IFERRET_LOGTHING)(void)
 {
     CPU86_LDouble *p;
     p = &ST(PARAM1);
     *p = ST0 - *p;
 }
 
-void OPPROTO op_fdiv_STN_ST0(void)
+void OPPROTO glue(op_fdiv_STN_ST0,IFERRET_LOGTHING)(void)
 {
     CPU86_LDouble *p;
     p = &ST(PARAM1);
     *p = helper_fdiv(*p, ST0);
 }
 
-void OPPROTO op_fdivr_STN_ST0(void)
+void OPPROTO glue(op_fdivr_STN_ST0,IFERRET_LOGTHING)(void)
 {
     CPU86_LDouble *p;
     p = &ST(PARAM1);
@@ -2605,57 +2625,57 @@ void OPPROTO op_fdivr_STN_ST0(void)
 }
 
 /* misc FPU operations */
-void OPPROTO op_fchs_ST0(void)
+void OPPROTO glue(op_fchs_ST0,IFERRET_LOGTHING)(void)
 {
     ST0 = floatx_chs(ST0);
 }
 
-void OPPROTO op_fabs_ST0(void)
+void OPPROTO glue(op_fabs_ST0,IFERRET_LOGTHING)(void)
 {
     ST0 = floatx_abs(ST0);
 }
 
-void OPPROTO op_fxam_ST0(void)
+void OPPROTO glue(op_fxam_ST0,IFERRET_LOGTHING)(void)
 {
     helper_fxam_ST0();
 }
 
-void OPPROTO op_fld1_ST0(void)
+void OPPROTO glue(op_fld1_ST0,IFERRET_LOGTHING)(void)
 {
     ST0 = f15rk[1];
 }
 
-void OPPROTO op_fldl2t_ST0(void)
+void OPPROTO glue(op_fldl2t_ST0,IFERRET_LOGTHING)(void)
 {
     ST0 = f15rk[6];
 }
 
-void OPPROTO op_fldl2e_ST0(void)
+void OPPROTO glue(op_fldl2e_ST0,IFERRET_LOGTHING)(void)
 {
     ST0 = f15rk[5];
 }
 
-void OPPROTO op_fldpi_ST0(void)
+void OPPROTO glue(op_fldpi_ST0,IFERRET_LOGTHING)(void)
 {
     ST0 = f15rk[2];
 }
 
-void OPPROTO op_fldlg2_ST0(void)
+void OPPROTO glue(op_fldlg2_ST0,IFERRET_LOGTHING)(void)
 {
     ST0 = f15rk[3];
 }
 
-void OPPROTO op_fldln2_ST0(void)
+void OPPROTO glue(op_fldln2_ST0,IFERRET_LOGTHING)(void)
 {
     ST0 = f15rk[4];
 }
 
-void OPPROTO op_fldz_ST0(void)
+void OPPROTO glue(op_fldz_ST0,IFERRET_LOGTHING)(void)
 {
     ST0 = f15rk[0];
 }
 
-void OPPROTO op_fldz_FT0(void)
+void OPPROTO glue(op_fldz_FT0,IFERRET_LOGTHING)(void)
 {
     FT0 = f15rk[0];
 }
@@ -2663,78 +2683,78 @@ void OPPROTO op_fldz_FT0(void)
 /* associated heplers to reduce generated code length and to simplify
    relocation (FP constants are usually stored in .rodata section) */
 
-void OPPROTO op_f2xm1(void)
+void OPPROTO glue(op_f2xm1,IFERRET_LOGTHING)(void)
 {
     helper_f2xm1();
 }
 
-void OPPROTO op_fyl2x(void)
+void OPPROTO glue(op_fyl2x,IFERRET_LOGTHING)(void)
 {
     helper_fyl2x();
 }
 
-void OPPROTO op_fptan(void)
+void OPPROTO glue(op_fptan,IFERRET_LOGTHING)(void)
 {
     helper_fptan();
 }
 
-void OPPROTO op_fpatan(void)
+void OPPROTO glue(op_fpatan,IFERRET_LOGTHING)(void)
 {
     helper_fpatan();
 }
 
-void OPPROTO op_fxtract(void)
+void OPPROTO glue(op_fxtract,IFERRET_LOGTHING)(void)
 {
     helper_fxtract();
 }
 
-void OPPROTO op_fprem1(void)
+void OPPROTO glue(op_fprem1,IFERRET_LOGTHING)(void)
 {
     helper_fprem1();
 }
 
 
-void OPPROTO op_fprem(void)
+void OPPROTO glue(op_fprem,IFERRET_LOGTHING)(void)
 {
     helper_fprem();
 }
 
-void OPPROTO op_fyl2xp1(void)
+void OPPROTO glue(op_fyl2xp1,IFERRET_LOGTHING)(void)
 {
     helper_fyl2xp1();
 }
 
-void OPPROTO op_fsqrt(void)
+void OPPROTO glue(op_fsqrt,IFERRET_LOGTHING)(void)
 {
     helper_fsqrt();
 }
 
-void OPPROTO op_fsincos(void)
+void OPPROTO glue(op_fsincos,IFERRET_LOGTHING)(void)
 {
     helper_fsincos();
 }
 
-void OPPROTO op_frndint(void)
+void OPPROTO glue(op_frndint,IFERRET_LOGTHING)(void)
 {
     helper_frndint();
 }
 
-void OPPROTO op_fscale(void)
+void OPPROTO glue(op_fscale,IFERRET_LOGTHING)(void)
 {
     helper_fscale();
 }
 
-void OPPROTO op_fsin(void)
+void OPPROTO glue(op_fsin,IFERRET_LOGTHING)(void)
 {
     helper_fsin();
 }
 
-void OPPROTO op_fcos(void)
+void OPPROTO glue(op_fcos,IFERRET_LOGTHING)(void)
 {
     helper_fcos();
 }
 
-void OPPROTO op_fnstsw_A0(void)
+void OPPROTO glue(op_fnstsw_A0,IFERRET_LOGTHING)(void)
 {
     int fpus;
     fpus = (env->fpus & ~0x3800) | (env->fpstt & 0x7) << 11;
@@ -2742,7 +2762,7 @@ void OPPROTO op_fnstsw_A0(void)
     FORCE_RET();
 }
 
-void OPPROTO op_fnstsw_EAX(void)
+void OPPROTO glue(op_fnstsw_EAX,IFERRET_LOGTHING)(void)
 {
     int fpus;
     fpus = (env->fpus & ~0x3800) | (env->fpstt & 0x7) << 11;
@@ -2752,31 +2772,31 @@ void OPPROTO op_fnstsw_EAX(void)
     EAX = (EAX & ~0xffff) | fpus;
 }
 
-void OPPROTO op_fnstcw_A0(void)
+void OPPROTO glue(op_fnstcw_A0,IFERRET_LOGTHING)(void)
 {
     stw(A0, env->fpuc);
     FORCE_RET();
 }
 
-void OPPROTO op_fldcw_A0(void)
+void OPPROTO glue(op_fldcw_A0,IFERRET_LOGTHING)(void)
 {
     env->fpuc = lduw(A0);
     update_fp_status();
 }
 
-void OPPROTO op_fclex(void)
+void OPPROTO glue(op_fclex,IFERRET_LOGTHING)(void)
 {
     env->fpus &= 0x7f00;
 }
 
-void OPPROTO op_fwait(void)
+void OPPROTO glue(op_fwait,IFERRET_LOGTHING)(void)
 {
     if (env->fpus & FPUS_SE)
         fpu_raise_exception();
     FORCE_RET();
 }
 
-void OPPROTO op_fninit(void)
+void OPPROTO glue(op_fninit,IFERRET_LOGTHING)(void)
 {
     env->fpus = 0;
     env->fpstt = 0;
@@ -2793,33 +2813,33 @@ void OPPROTO op_fninit(void)
 }
 
 // NB: A0 is a ptr to location from/to which to load/store stuff. 
-void OPPROTO op_fnstenv_A0(void)
+void OPPROTO glue(op_fnstenv_A0,IFERRET_LOGTHING)(void)
 {
     helper_fstenv(A0, PARAM1);
 }
 
-void OPPROTO op_fldenv_A0(void)
+void OPPROTO glue(op_fldenv_A0,IFERRET_LOGTHING)(void)
 {
     helper_fldenv(A0, PARAM1);
 }
 
-void OPPROTO op_fnsave_A0(void)
+void OPPROTO glue(op_fnsave_A0,IFERRET_LOGTHING)(void)
 {
     helper_fsave(A0, PARAM1);
 }
 
-void OPPROTO op_frstor_A0(void)
+void OPPROTO glue(op_frstor_A0,IFERRET_LOGTHING)(void)
 {
     helper_frstor(A0, PARAM1);
 }
 
 /* threading support */
-void OPPROTO op_lock(void)
+void OPPROTO glue(op_lock,IFERRET_LOGTHING)(void)
 {
     cpu_lock();
 }
 
-void OPPROTO op_unlock(void)
+void OPPROTO glue(op_unlock,IFERRET_LOGTHING)(void)
 {
     cpu_unlock();
 }
@@ -2833,7 +2853,7 @@ static inline void memcpy16(void *d, void *s)
     ((uint32_t *)d)[3] = ((uint32_t *)s)[3];
 }
 
-void OPPROTO op_movo(void)
+void OPPROTO glue(op_movo,IFERRET_LOGTHING)(void)
 {
     /* XXX: badly generated code */
     XMMReg *d, *s;
@@ -2842,7 +2862,7 @@ void OPPROTO op_movo(void)
     memcpy16(d, s);
 }
 
-void OPPROTO op_movq(void)
+void OPPROTO glue(op_movq,IFERRET_LOGTHING)(void)
 {
     uint64_t *d, *s;
     d = (uint64_t *)((char *)env + PARAM1);
@@ -2850,7 +2870,7 @@ void OPPROTO op_movq(void)
     *d = *s;
 }
 
-void OPPROTO op_movl(void)
+void OPPROTO glue(op_movl,IFERRET_LOGTHING)(void)
 {
     uint32_t *d, *s;
     d = (uint32_t *)((char *)env + PARAM1);
@@ -2858,32 +2878,32 @@ void OPPROTO op_movl(void)
     *d = *s;
 }
 
-void OPPROTO op_movq_env_0(void)
+void OPPROTO glue(op_movq_env_0,IFERRET_LOGTHING)(void)
 {
     uint64_t *d;
     d = (uint64_t *)((char *)env + PARAM1);
     *d = 0;
 }
 
-void OPPROTO op_fxsave_A0(void)
+void OPPROTO glue(op_fxsave_A0,IFERRET_LOGTHING)(void)
 {
     helper_fxsave(A0, PARAM1);
 }
 
-void OPPROTO op_fxrstor_A0(void)
+void OPPROTO glue(op_fxrstor_A0,IFERRET_LOGTHING)(void)
 {
     helper_fxrstor(A0, PARAM1);
 }
 
 /* XXX: optimize by storing fptt and fptags in the static cpu state */
-void OPPROTO op_enter_mmx(void)
+void OPPROTO glue(op_enter_mmx,IFERRET_LOGTHING)(void)
 {
     env->fpstt = 0;
     *(uint32_t *)(env->fptags) = 0;
     *(uint32_t *)(env->fptags + 4) = 0;
 }
 
-void OPPROTO op_emms(void)
+void OPPROTO glue(op_emms,IFERRET_LOGTHING)(void)
 {
     /* set to empty state */
     *(uint32_t *)(env->fptags) = 0x01010101;
@@ -2898,61 +2918,61 @@ void OPPROTO op_emms(void)
 
 /* Secure Virtual Machine ops */
 
-void OPPROTO op_vmrun(void)
+void OPPROTO glue(op_vmrun,IFERRET_LOGTHING)(void)
 {
     helper_vmrun(EAX);
 }
 
-void OPPROTO op_vmmcall(void)
+void OPPROTO glue(op_vmmcall,IFERRET_LOGTHING)(void)
 {
     helper_vmmcall();
 }
 
-void OPPROTO op_vmload(void)
+void OPPROTO glue(op_vmload,IFERRET_LOGTHING)(void)
 {
     helper_vmload(EAX);
 }
 
-void OPPROTO op_vmsave(void)
+void OPPROTO glue(op_vmsave,IFERRET_LOGTHING)(void)
 {
     helper_vmsave(EAX);
 }
 
-void OPPROTO op_stgi(void)
+void OPPROTO glue(op_stgi,IFERRET_LOGTHING)(void)
 {
     helper_stgi();
 }
 
-void OPPROTO op_clgi(void)
+void OPPROTO glue(op_clgi,IFERRET_LOGTHING)(void)
 {
     helper_clgi();
 }
 
-void OPPROTO op_skinit(void)
+void OPPROTO glue(op_skinit,IFERRET_LOGTHING)(void)
 {
     helper_skinit();
 }
 
-void OPPROTO op_invlpga(void)
+void OPPROTO glue(op_invlpga,IFERRET_LOGTHING)(void)
 {
     helper_invlpga();
 }
 
 void check_rollup_op(void);
 void write_eip_to_iferret_log(target_ulong pc);
-void helper_manage_pid_stuff(void);
+//void helper_manage_pid_stuff(void);
 
 // Note: The fn calls within this op need to take no 
 // parameters.  That's why all the work is delegated to
 // inside helper.c and involves global variables.
-void OPPROTO op_iferret_prologue(void) 
+void OPPROTO glue(op_iferret_prologue,IFERRET_LOGTHING)(void) 
 {
   // check if info flow log is anywhere near overflow
   check_rollup_op();
   // write eip of head of this tb
   write_eip_to_iferret_log(PARAM1);
   // manage PID stuff.  
-  helper_manage_pid_stuff();
+//  helper_manage_pid_stuff();
 }
 
 

@@ -33,6 +33,8 @@
 target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 int cpu_virtual_memory_read(CPUState *env, uint32_t addr, char *out, uint32_t length);
 
+extern uint8_t iferret_says_flush;
+
 /*
 // addr is a 32-bit address.  
 static inline uint32_t phys_addr(uint32_t addr) {
@@ -63,8 +65,6 @@ static inline uint32_t phys_a0() {
 //#define stdout stdout
 //#define stderr stderr
 
-extern pid_t current_pid;
-extern uid_t current_uid;
 extern char *current_command;
 extern pid_t parent_pid;
 extern uid_t parent_uid;
@@ -76,10 +76,11 @@ void get_current_pid_uid(void);
 // from helper2.c
 target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 
-
+/*
 extern pid_t current_pid, last_pid;
 extern uid_t current_uid, last_uid;
 extern uint8_t no_pid_flag, no_uid_flag;
+*/
 
 extern uint32_t iferret_target_os;
 
@@ -185,6 +186,8 @@ void iferret_log_insn_bytes(target_ulong addr, int count) {
     int i;
     unsigned char insn_bytes[16];
     unsigned char insn_hex[32];
+
+    if(!iferret_info_flow) return;
     
     cpu_virtual_memory_read(env, addr, insn_bytes, count);
     
@@ -193,7 +196,7 @@ void iferret_log_insn_bytes(target_ulong addr, int count) {
     }
     insn_hex[count*2] = '\0';
     
-    iferret_log_info_flow_op_write_4s(IFLO_INSN_BYTES, addr, insn_hex);
+    iferret_log_op_write_4s(IFLO_INSN_BYTES, addr, insn_hex);
 }
 
 /* thread support */
@@ -478,14 +481,14 @@ static void switch_tss(int tss_selector,
 /*         IFLW_SAVE_REG(IFRN_EDI); */
 
 
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_EAX);
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_ECX);
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_EDX);
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_EBX);
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_ESP);
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_EBP);
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_ESI);
-	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_EDI);
+//	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_EAX);
+//	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_ECX);
+//	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_EDX);
+//	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_EBX);
+//	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_ESP);
+//	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_EBP);
+//	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_ESI);
+//	iferret_log_info_flow_op_write_4(IFLO_SAVE_REG,IFRN_EDI);
 
         for(i = 0; i < 6; i++)
             stw_kernel(env->tr.base + (0x48 + i * 4), env->segs[i].selector);
@@ -943,16 +946,19 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
     }
     env->eflags &= ~(TF_MASK | VM_MASK | RF_MASK | NT_MASK);
 
-    iferret_log_op_write_441(IFLO_INTERRUPT, intno, next_eip, is_int);
+    if(iferret_info_flow)
+        iferret_log_op_write_441(IFLO_INTERRUPT, intno, next_eip, is_int);
 
+#if 0
     if (intno == 0x80) {
       /*
       printf ("do_interrupt_protected iferret_log_syscall_enter env->eip=0x%x old_eip=0x%x next_eip=0x%x\n",
       	      env->eip, old_eip, next_eip);
       */
-      iferret_log_syscall_enter(0, old_eip);
+      //iferret_log_syscall_enter(0, old_eip);
     } // if (intno == 0x80)
-	
+#endif
+
     /*
     free(tempbuf);
     free(command);
@@ -1796,7 +1802,8 @@ void helper_divl_EAX_T0(void)
         raise_exception(EXCP00_DIVZ);
 
     //  IFLW(DIVL_EAX_T0);
-    iferret_log_info_flow_op_write_0(IFLO_DIVL_EAX_T0);
+    if(iferret_info_flow)
+        iferret_log_op_write_0(IFLO_DIVL_EAX_T0);
 
     EAX = (uint32_t)q;
     EDX = (uint32_t)r;
@@ -1822,7 +1829,8 @@ void helper_idivl_EAX_T0(void)
         raise_exception(EXCP00_DIVZ);
 
     //  IFLW(IDIVL_EAX_T0);
-    iferret_log_info_flow_op_write_0(IFLO_IDIVL_EAX_T0);
+    if(iferret_info_flow)
+        iferret_log_op_write_0(IFLO_IDIVL_EAX_T0);
     
     EAX = (uint32_t)q;
     EDX = (uint32_t)r;
@@ -1838,7 +1846,8 @@ void helper_cmpxchg8b(void)
     if (d == (((uint64_t)EDX << 32) | EAX)) {
 
       //      IFLW(CMPXCHG8B_PART1);
-      iferret_log_info_flow_op_write_4(IFLO_CMPXCHG8B_PART1, phys_a0());
+        if(iferret_info_flow)
+          iferret_log_op_write_4(IFLO_CMPXCHG8B_PART1, phys_a0());
 
         stq(A0, ((uint64_t)ECX << 32) | EBX);
 	// NB: we'll expect this stq to resolve to some cpu-all.h stX_p thingey.
@@ -1850,7 +1859,8 @@ void helper_cmpxchg8b(void)
         EAX = d;
 
 	//	IFLW(CMPXCHG8B_PART2);	
-	iferret_log_info_flow_op_write_4(IFLO_CMPXCHG8B_PART2, phys_a0());
+    if(iferret_info_flow)
+        iferret_log_op_write_4(IFLO_CMPXCHG8B_PART2, phys_a0());
 
 	// no addr necessary here -- we are just setting EDX/EAX to the 64bits that 
 	// we loaded from addr A0.  Right?
@@ -2808,7 +2818,7 @@ static inline void helper_ret_protected(int shift, int is_iret, int addend)
 
     //    printf("helper_ret_protected, iferret_log_syscall_iret old_esp=0x%x env->eip=0x%x\n",
     //	   old_esp, env->eip);
-    iferret_log_syscall_ret_iret(old_esp, env->eip);
+    //iferret_log_syscall_ret_iret(old_esp, env->eip);
 
     //    iferret_spit_stack(ESP, "helper_ret_protected (ESP)");
     //IRET returning to EIP:0x%08x EAX:%d\n",env->eip,EAX);
@@ -2953,6 +2963,7 @@ void helper_sysenter(void)
   saved_esp = ESP;
   SET_ESP(esp, sp_mask);
   
+#if 0
   {
     uint32_t eip_for_callsite;
     // The location of the callsite on the stack varies between OSes
@@ -2963,6 +2974,7 @@ void helper_sysenter(void)
     //    iferret_spit_stack(ESP, "helper_sysenter (ESP)");
     iferret_log_syscall_enter(1, eip_for_callsite);
   }
+#endif
 
     /*
     free(tempbuf);
@@ -3047,7 +3059,7 @@ void helper_sysexit(void)
 
     //    printf ("helper_sysexit iferret_log_syscall_ret_sysexit ESP=0x%x\n", 
     //	    ESP);
-    iferret_log_syscall_ret_sysexit(ESP);
+    //iferret_log_syscall_ret_sysexit(ESP);
 
     ESP = saved_esp;
 
@@ -4827,11 +4839,24 @@ void write_eip_to_iferret_log(target_ulong pc) {
   addr = cpu_get_phys_addr(env,EIP);
   if (addr != -1) {
     //iferret_log_op_write_4(IFLO_TB_HEAD_EIP, addr);
-    iferret_log_op_write_4(IFLO_TB_HEAD_EIP, pc);
+    if(iferret_info_flow)
+        iferret_log_op_write_4(IFLO_TB_HEAD_EIP, pc);
   }
 #endif // IFERRET_PHYS_EIP
 }
 
+void helper_setlogstate(int state) {
+    iferret_says_flush = 1;
+    iferret_info_flow = state;
+    if(state == 1) {
+        iferret_log_op_write_44(IFLO_LABEL_INPUT, phys_addr(ECX), EDX);
+        printf("Enabled iferret logging.\n");
+    }
+    else {
+        iferret_log_op_write_44(IFLO_LABEL_OUTPUT, phys_addr(ECX), EDX);
+        printf("Disabled iferret logging.\n");
+    }
+}
 
 uint8_t iferret_in_kernel() {
   /*
@@ -4843,7 +4868,7 @@ uint8_t iferret_in_kernel() {
   return ((env->hflags & HF_CPL_MASK) == 0);
 }
 
-
+#if 0
 static inline int current_pid_valid() {
   return (current_pid>0 && current_pid<=32768);
 }
@@ -4878,7 +4903,7 @@ void helper_manage_pid_stuff() {
   iferret_get_current_pid_uid();    
 #endif
 }
-
+#endif
 
 
 void iferret_debug_log_rollup() {
@@ -4905,7 +4930,6 @@ void check_rollup(char *label) {
     iferret_log_rollup(label);
   }   
 } 
-
 
 void check_rollup_op() {
 #ifdef IFERRET_INFO_FLOW

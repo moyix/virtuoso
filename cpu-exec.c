@@ -171,7 +171,7 @@ static TranslationBlock *tb_find_slow(target_ulong pc,
  not_found:
     /* if no translated code available, then translate it now */
     tb = tb_alloc(pc);
-    if (!tb || iferret_says_flush==1) {
+    if (!tb) {
       iferret_says_flush = 0;
         /* flush must be done */
         tb_flush(env);
@@ -269,6 +269,21 @@ static inline TranslationBlock *tb_find_fast(void)
 #else
 #error unsupported CPU
 #endif
+
+    // TRL 2009 10 29.  Why is this here instead of earlier in fn? 
+    // because it needs the value of pc, you idiot, which we now have.
+    
+    if (iferret_says_flush==1) {
+      iferret_says_flush = 0;  
+      /* flush must be done */
+      tb_flush(env);
+      /* cannot fail at this point */
+      tb = tb_alloc(pc);
+      /* don't forget to invalidate previous TB info */
+      tb_invalidated_flag = 1;
+      printf ("TB cache flushed by request. \n");
+    }
+
     tb = env->tb_jmp_cache[tb_jmp_cache_hash_func(pc)];
     if (__builtin_expect(!tb || tb->pc != pc || tb->cs_base != cs_base ||
                          tb->flags != flags, 0)) {
@@ -688,6 +703,7 @@ int cpu_exec(CPUState *env1)
 	    
 
                 gen_func();
+
 
 	 	check_rollup("cpu_exec.c 2 ");
 
