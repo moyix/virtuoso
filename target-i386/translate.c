@@ -5850,6 +5850,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         if (gen_svm_check_intercept(s, pc_start, SVM_EXIT_CPUID))
             break;
         gen_op_cpuid();
+        gen_jmp_im(s->pc - s->cs_base);
         gen_eob(s);
         break;
     case 0xf4: /* hlt */
