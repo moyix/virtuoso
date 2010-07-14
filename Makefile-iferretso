@@ -1,5 +1,4 @@
-
-all: oiferret
+all: iferret.so
 
 TD=target-i386
 QEMUDIR=$(HOME)/llstuff/iferret-logging-new
@@ -7,18 +6,17 @@ QEMUDIR=$(HOME)/llstuff/iferret-logging-new
 INCDIRS = -I . -I $(QEMUDIR)/target-i386
 LIBDIRS = 
 
-
 OBJS = iferret.o iferret_log.o iferret_op_str.o
 
 SRCS = $(OBJS,.o=.c) 
 
-CFLAGS = -g $(INCDIRS) $(LIBDIRS) -DIFERRET_BACKEND -DIFDEBUG
+CFLAGS = -g -fPIC $(INCDIRS) $(LIBDIRS) -DIFERRET_BACKEND
 
 iferret_op_str.o: $(TD)/iferret_op_str.c
 	$(CC) $(CFLAGS) -c $(TD)/iferret_op_str.c 
 
-oiferret: $(OBJS)
-	gcc  -o oiferret  $(INCDIRS) $(LIBDIRS) -I $(QEMUDIR)/target-i386 $(OBJS)
+iferret.so: $(OBJS)
+	gcc -shared -o iferret.so  $(INCDIRS) $(LIBDIRS) -I $(QEMUDIR)/target-i386 $(OBJS)
 
 clean:
 	rm -f $(OBJS)
