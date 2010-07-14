@@ -875,8 +875,7 @@ inline void if_st(iferret_t *iferret, uint32_t msn, uint32_t rn, uint32_t n, uin
 	  && op->arg[2].type == IFLAT_UI32 \
 	  && op->arg[3].type == IFLAT_UI32);
 
-
-
+#if 0
 void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {  
   iferret_op_arg_t *arg;
   uint8_t a0_8, a1_8, a2_8, a3_8, a4_8;
@@ -2395,3 +2394,4 @@ void iferret_info_flow_process_op(iferret_t *iferret,  iferret_op_t *op) {
 
 
 }
+#endif

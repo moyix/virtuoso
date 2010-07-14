@@ -120,7 +120,7 @@ typedef struct iferret_syscall_struct_t {
 
 typedef struct iferret_op_struct_t {
   iferret_log_op_enum_t num;     // the number of the op
-  iferret_op_arg_t arg[IFERRET_OP_MAX_NUM_ARGS];     // up to 100 arguments
+  iferret_op_arg_t *arg;
   uint32_t num_args;             // number of arguments 
   iferret_syscall_t *syscall;
 } iferret_op_t;
