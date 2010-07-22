@@ -63,29 +63,9 @@ defines_uses = {
         lambda args: ['T0'],
         lambda args: ["REGS_%d" % args[0]],
     ],
-    'IFLO_OPREG_TEMPL_MOVH_R_T0': [
-        lambda args: ["REGS_%d" % args[0]],
-        lambda args: ['T0'],
-    ],
-    'IFLO_OPREG_TEMPL_MOVW_R_T1': [
-        lambda args: ["REGS_%d" % args[0]],
-        lambda args: ['T1'],
-    ],
-    'IFLO_OPREG_TEMPL_MOVW_R_T0': [
-        lambda args: ["REGS_%d" % args[0]],
-        lambda args: ['T0'],
-    ],
     'IFLO_OPREG_TEMPL_MOVL_T1_R': [
         lambda args: ['T1'],
         lambda args: ["REGS_%d" % args[0]],
-    ],
-    'IFLO_OPREG_TEMPL_MOVB_R_T1': [
-        lambda args: ["REGS_%d" % args[0]],
-        lambda args: ['T1'],
-    ],
-    'IFLO_OPREG_TEMPL_MOVB_R_T0': [
-        lambda args: ["REGS_%d" % args[0]],
-        lambda args: ['T0'],
     ],
     'IFLO_OPS_TEMPLATE_MOVL_T0_DSHIFT': [
         lambda args: ['T0'],
@@ -97,6 +77,10 @@ defines_uses = {
     ],
     'IFLO_MOVL_SEG_T0': [
         lambda args: ['SEGS_%d.%s' % (args[0], part) for part in "base", "limit", "selector", "flags"],
+        lambda args: ['T0'],
+    ],
+    'IFLO_LLDT_T0': [
+        lambda args: ['LDT.%s' % part for part in "base", "limit", "selector", "flags"],
         lambda args: ['T0'],
     ],
     'IFLO_MOVTL_T0_ENV': [
@@ -683,6 +667,40 @@ defines_uses = {
         lambda args: ['T0', 'T1', "REGS_%d" % qemu_regs['EAX'], 'A0'],
     ],
 
+    'IFLO_INVLPG_A0': IGNORE,
+    'IFLO_JMP_LABEL': IGNORE,
+    'IFLO_MOVL_CRN_T0': [
+        lambda args: ['CR_%d' % args[0]],
+        lambda args: ['T0'],
+    ],
+    'IFLO_OPS_MEM_LDSW_T0_A0': LOAD('T0', 2),
+
+    # These preserve part of the original register
+    'IFLO_OPREG_TEMPL_MOVH_R_T1' : [
+        lambda args: ["REGS_%d" % args[0]],
+        lambda args: ['T1', "REGS_%d" % args[0]],
+    ],
+    'IFLO_OPREG_TEMPL_MOVH_R_T0': [
+        lambda args: ["REGS_%d" % args[0]],
+        lambda args: ['T0', "REGS_%d" % args[0]],
+    ],
+    'IFLO_OPREG_TEMPL_MOVW_R_T1': [
+        lambda args: ["REGS_%d" % args[0]],
+        lambda args: ['T1', "REGS_%d" % args[0]],
+    ],
+    'IFLO_OPREG_TEMPL_MOVW_R_T0': [
+        lambda args: ["REGS_%d" % args[0]],
+        lambda args: ['T0', "REGS_%d" % args[0]],
+    ],
+    'IFLO_OPREG_TEMPL_MOVB_R_T1': [
+        lambda args: ["REGS_%d" % args[0]],
+        lambda args: ['T1', "REGS_%d" % args[0]],
+    ],
+    'IFLO_OPREG_TEMPL_MOVB_R_T0': [
+        lambda args: ["REGS_%d" % args[0]],
+        lambda args: ['T0', "REGS_%d" % args[0]],
+    ],
+
 #    # These just raise an interrupt
 #    'IFLO_INTO'
 #    'IFLO_RAISE_EXCEPTION'
@@ -711,7 +729,6 @@ defines_uses = {
 #    'IFLO_LCALL_PROTECTED_T0_T1'
 #    'IFLO_LCALL_REAL_T0_T1'
 #    'IFLO_LJMP_PROTECTED_T0_T1'
-#    'IFLO_LLDT_T0'
 #    'IFLO_LRET_PROTECTED'
 #    'IFLO_LTR_T0'
 #    'IFLO_SINGLE_STEP'

@@ -5,13 +5,13 @@ import csv
 """Stuff to parse instruction traces produced by oiferret """
 
 class TraceEntry(object):
+    __slots__ = ["op", "args", "label", "is_output", "in_slice"]
     """A single entry in the trace"""
     def __init__(self, insn):
         self.op, self.args = insn
         self.label = None
         self.is_output = False
         # Tuple: (address of TB, micro-instruction offset)
-        self.location = (0,0)
         
         self.in_slice  = False
 
@@ -80,6 +80,5 @@ def get_trace(infile, codeloc=False):
             if t.op == 'IFLO_TB_HEAD_EIP':
                 j = 0
                 head_eip = t.args[0]
-            t.location = (head_eip, j)
             j += 1
     return trace

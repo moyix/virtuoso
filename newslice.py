@@ -111,6 +111,7 @@ def multislice(insns, worklist, output_track=False, debug=False):
     #return slice
 
 class TB(object):
+    __slots__ = ["label", "body", "prev", "next"]
     """Represents a Translation Block"""
     def __init__(self, label):
         self.label = label
@@ -207,6 +208,8 @@ def load_trace(infile):
     print "Loading trace into memory..."
     trace = get_insns(infile)
 
+    #print "about to find outputs",time.ctime()
+
     # TODO: both output and input should probably not be thrown into
     # the same big buffer; instead we should do something like
     #   outbufs[label] = memrange(...)
@@ -239,7 +242,7 @@ def load_trace(infile):
         last_op, last_args = trace.pop(0)
     trace.insert(0, (last_op, last_args) )
 
-    print "Converting trace to TraceEntrys"
+    #print "Converting trace to TraceEntrys",time.ctime()
     # Turn the trace into a list of TraceEntry objects
     trace = list(enumerate(TraceEntry(t) for t in trace))
 
@@ -673,11 +676,18 @@ if __name__ == "__main__":
     if not args:
         parser.error('Trace file is required')
     
+    #print "about to load trace",time.ctime()
     infile = open(args[0])
     trace, inbufs, outbufs = load_trace(infile)
+    #print "about to make tbs",time.ctime()
     tbs = make_tbs(trace)
+    #print "about to make tbdict",time.ctime()
     tbdict = make_tbdict(tbs)
+    #print "about to make cfg",time.ctime()
     cfg = make_cfg(tbs)
+
+    embedshell = IPython.Shell.IPShellEmbed(argv=[])
+    #embedshell()
 
     print "Size of trace before surgery: %d" % len(trace)
 
@@ -698,7 +708,6 @@ if __name__ == "__main__":
     # Perform slicing and control dependency analysis
     trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)
 
-    embedshell = IPython.Shell.IPShellEmbed(argv=[])
     embedshell()
 
     # Get user memory state
