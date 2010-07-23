@@ -2,6 +2,7 @@
 
 import sys
 import IPython
+from immutablelist import ImmutableList
 from iferret_ops import iferret_log_op_enum_r
 from ctypes import *
 
@@ -11,6 +12,9 @@ IFLAT_UI16 = ord('2')
 IFLAT_UI32 = ord('4')
 IFLAT_UI64 = ord('8')
 IFLAT_STR = ord('s')
+
+OP_IN_SLICE  = 0x1
+OP_IS_OUTPUT = 0x2
 
 class CArray(object):
     def __init__(self, cptr, n):
@@ -88,8 +92,31 @@ class iferret_op_t(Structure):
         ("num", c_uint),
         ("_args", POINTER(iferret_op_arg_t)),
         ("num_args", c_uint),
+        ("flags", c_uint),
         ("syscall", c_void_p),
     ]
+
+    @property
+    def in_slice(self):
+        return bool(self.flags & OP_IN_SLICE)
+
+    @in_slice.setter
+    def in_slice(self, value):
+        if value:
+            self.flags |= OP_IN_SLICE
+        else:
+            self.flags &= ~OP_IN_SLICE
+
+    @property
+    def is_output(self):
+        return bool(self.flags & OP_IS_OUTPUT)
+
+    @is_output.setter
+    def is_output(self, value):
+        if value:
+            self.flags |= OP_IS_OUTPUT
+        else:
+            self.flags &= ~OP_IS_OUTPUT
 
     @property
     def args(self):
@@ -98,6 +125,12 @@ class iferret_op_t(Structure):
     @property
     def op(self):
         return iferret_log_op_enum_r[self.num]
+
+    def mark(self):
+        self.in_slice = True
+    
+    def set_output_label(self, label):
+        self.is_output = True
 
     def __str__(self):
         return "%s(%s)" % (self.op, ",".join(repr(x) for x in CArray(self._args, self.num_args)))
@@ -115,10 +148,14 @@ class op_arr_t(Structure):
     def ops(self):
         return CArray(self._ops, self.num)
 
-iferret = cdll.LoadLibrary("./iferret.so")
-iferret.init(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]))
-oa = op_arr_t.in_dll(iferret, "op_arr")
+def load_trace(base, start=0, num=1):
+    iferret = cdll.LoadLibrary("./iferret.so")
+    iferret.init(base, start, num)
+    oa = op_arr_t.in_dll(iferret, "op_arr")
+    trace = ImmutableList(oa.ops)
+    return trace
 
-embedshell = IPython.Shell.IPShellEmbed(argv=[])
-embedshell()
-
+if __name__ == "__main__":
+    trace = load_trace(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]))
+    embedshell = IPython.Shell.IPShellEmbed(argv=[])
+    embedshell()

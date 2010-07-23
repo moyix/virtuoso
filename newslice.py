@@ -8,6 +8,8 @@ import time, datetime
 
 import pydasm
 
+import iferretpy
+
 from fixedint import UInt
 from summary_functions import malloc_summary, null_summary, copyarg_summary
 from predict_insn import get_next_from_trace, x86_branches
@@ -27,7 +29,7 @@ memrex = re.compile('IFLO_OPS_MEM_(ST|LD)[US]?([BWLQ])')
 # Stupid instructions
 junk = set(['IFLO_EXIT_TB', 'IFLO_GOTO_TB0', 'IFLO_GOTO_TB1',
             'IFLO_MOVL_T0_IM', 'IFLO_MOVL_EIP_IM', 'IFLO_TB_ID',
-            'IFLO_MOVL_T0_0'])
+            'IFLO_MOVL_T0_0', 'IFLO_INSN_DIS'])
 
 # Some small utility functions
 
@@ -53,7 +55,7 @@ def dynslice(insns, bufs, start=-1, output_track=False, debug=False):
        buffers. This is basically the algorithm described in the
        K-Tracer paper.
 
-       insns: a list of tuples: (index, TraceEntry)
+       insns: a list of TraceEntries/ops (from C or Python)
        bufs: a list of outputs to be tracked
        start: an optional point in the trace at which to begin analysis.
            By default, analysis begins at the last instruction in the
@@ -81,6 +83,8 @@ def multislice(insns, worklist, output_track=False, debug=False):
     work = set(bufs)
     if debug: print "Initial working set:", work
     for i, insn in reversed(insns[:start+1]):
+    for i in range(start+1, -1, -1):
+        insn = insns[i]
         if i == next_i:
             work = work | set(next_bufs)
             if wlist:
@@ -111,17 +115,15 @@ def multislice(insns, worklist, output_track=False, debug=False):
     #return slice
 
 class TB(object):
-    __slots__ = ["label", "body", "prev", "next"]
+    __slots__ = ["trace", "label", "start", "end", "prev", "next"]
     """Represents a Translation Block"""
-    def __init__(self, label):
+    def __init__(self, trace, label, start, end):
+        self.trace = trace
         self.label = label
-        self.body = []
+        self.start = start
+        self.end = end
     def range(self):
-        return (self.start(), self.end())
-    def start(self):
-        return self.body[0][0]
-    def end(self):
-        return self.body[-1][0]
+        return (self.start, self.end)
     def has_slice(self):
         return any(ins.in_slice for _, ins in self.body)
     def has_dynjump(self):
@@ -131,7 +133,7 @@ class TB(object):
     def get_branch(self):
         return [ins for _, ins in self.body if is_jcc(ins.op) or is_dynjump(ins.op)][0]
     def _label_str(self):
-        return hex(self.label) if isinstance(self.label, int) else "'%s'" % self.label
+        return "'%s'" % self.label if isinstance(self.label, str) else hex(self.label)
     def __str__(self):
         s = repr(self)
         for _, insn in self.body:
@@ -141,6 +143,10 @@ class TB(object):
         return self.body.__iter__()
     def __repr__(self):
         return ("[TB @%s%s]" % (self._label_str(), " *" if self.has_slice() else ""))
+
+    @property
+    def body(self):
+        return zip(range(self.start,self.end),self.trace[self.start:self.end])
 
 # Some utility functions for dealing with the trace:
 # Loading it from a file, splitting it into TBs, etc.
@@ -154,21 +160,18 @@ def make_tbs(trace):
     Returns a list of TB objects.
     """
     tbs = []
-    current_tb = TB("START")
+    current_tb = TB(trace, "START", 0, 0)
     current_tb.prev = None
-    for i, insn in trace:
+    for i, insn in enumerate(trace):
         if insn.op == "IFLO_TB_HEAD_EIP":
-            if current_tb: tbs.append(current_tb)
-            current_tb = TB(insn.args[0])
+            tbs.append(current_tb)
+            current_tb = TB(trace, insn.args[0], current_tb.end, current_tb.end+1)
             
             # Maintain forward and back pointers
             current_tb.prev = tbs[-1]
             tbs[-1].next = current_tb
-
-            current_tb.body.append((i, insn))
         else:
-            if current_tb:
-                current_tb.body.append((i, insn))
+            current_tb.end += 1
     tbs.append(current_tb)
     return tbs
 
@@ -180,7 +183,6 @@ def make_tbdict(tbs):
     return tbdict
 
 def remake_trace(trace):
-    trace = list(enumerate(t for i, t in trace))
     tbs = make_tbs(trace)
     tbdict = make_tbdict(tbs)
     cfg = make_cfg(tbs)
@@ -195,56 +197,28 @@ def make_cfg(tbs):
 
 def set_input(trace, inbufs):
     inbufs = set(inbufs)
-    for i, te in trace:
+    for i, te in enumerate(trace):
         uses_set = set(uses(te))
         if uses_set & inbufs:
             defs = defines(te)
             assert len(defs) == 1
             print "Replacing", `te`, "with SET_INPUT at", i
-            te.op = "IFLO_SET_INPUT"
-            te.args = [defs[0], 0]
+            new_te = TraceEntry(("IFLO_SET_INPUT", [defs[0], 0]))
+            trace[i] = new_te
 
-def load_trace(infile):
+def load_trace(infile, start=0, num=1):
     print "Loading trace into memory..."
-    trace = get_insns(infile)
-
-    #print "about to find outputs",time.ctime()
-
-    # TODO: both output and input should probably not be thrown into
-    # the same big buffer; instead we should do something like
-    #   outbufs[label] = memrange(...)
-    # This would allow us to handle multiple ins/outs
+    trace = iferretpy.load_trace(infile, start, num)
 
     print "Finding output buffers"
-    # Find the outputs
-    outbufs = []
-    output_insns = []
-    last_op, last_args = trace.pop()
-    while last_op != 'IFLO_LABEL_OUTPUT':
-        last_op, last_args = trace.pop()
-    while last_op == 'IFLO_LABEL_OUTPUT':
-        print "Final output stored in: %#x-%#x" % (last_args[0], last_args[0]+last_args[1])
-        outbufs += memrange(last_args[0], last_args[1])
-        output_insns.append( (last_op, last_args) )
-        last_op, last_args = trace.pop()
-    trace.append( (last_op, last_args) )
+    out_idx = first(lambda i: trace[i].op == 'IFLO_LABEL_OUTPUT', (i for i in range(len(trace), -1, -1)))
+    out_op = trace[out_idx]
+    outbufs = memrange(out_op.args[0], out_op.args[1])
 
     print "Finding input buffers"
-    # Find the inputs
-    inbufs = []
-    input_insns = []
-    last_op, last_args = trace.pop(0)
-    while last_op != 'IFLO_LABEL_INPUT':
-        last_op, last_args = trace.pop(0)
-    while last_op == 'IFLO_LABEL_INPUT':
-        inbufs += memrange(last_args[0], last_args[1])
-        input_insns.append( (last_op, last_args) )
-        last_op, last_args = trace.pop(0)
-    trace.insert(0, (last_op, last_args) )
-
-    #print "Converting trace to TraceEntrys",time.ctime()
-    # Turn the trace into a list of TraceEntry objects
-    trace = list(enumerate(TraceEntry(t) for t in trace))
+    in_idx = first(lambda i: trace[i].op == 'IFLO_LABEL_INPUT', (i for i in range(len(trace))))
+    in_op = trace[in_idx]
+    inbufs = memrange(in_op.args[0], in_op.args[1])
 
     # Set up the inputs
     set_input(trace, inbufs)
@@ -677,8 +651,7 @@ if __name__ == "__main__":
         parser.error('Trace file is required')
     
     #print "about to load trace",time.ctime()
-    infile = open(args[0])
-    trace, inbufs, outbufs = load_trace(infile)
+    trace, inbufs, outbufs = load_trace(args[0])
     #print "about to make tbs",time.ctime()
     tbs = make_tbs(trace)
     #print "about to make tbdict",time.ctime()
@@ -687,7 +660,7 @@ if __name__ == "__main__":
     cfg = make_cfg(tbs)
 
     embedshell = IPython.Shell.IPShellEmbed(argv=[])
-    #embedshell()
+    embedshell()
 
     print "Size of trace before surgery: %d" % len(trace)
 
