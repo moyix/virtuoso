@@ -83,9 +83,8 @@ void op_arr_movedown(int s, int n) {
     if (op_arr.num + n > op_arr.max) {
         op_arr_grow();
     }
-    for (i = op_arr.num-1; i >= s; i--) {
-        op_arr.ops[i+n] = op_arr.ops[i];
-    }
+
+    memmove(&op_arr.ops[s+n], &op_arr.ops[s], (op_arr.num - s)*sizeof(iferret_op_t));
 
     op_arr.num += n;
 }
@@ -93,9 +92,7 @@ void op_arr_movedown(int s, int n) {
 void op_arr_moveup(int s, int n) {
     int i;
 
-    for(i=s; i < op_arr.num; i++) {
-        op_arr.ops[i-n] = op_arr.ops[i];
-    }
+    memmove(&op_arr.ops[s-n], &op_arr.ops[s], (op_arr.num - s)*sizeof(iferret_op_t));
 
     op_arr.num -= n;     
 }
