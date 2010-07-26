@@ -10,7 +10,7 @@ OBJS = iferret.o iferret_log.o iferret_op_str.o
 
 SRCS = $(OBJS,.o=.c) 
 
-CFLAGS = -g -fPIC $(INCDIRS) $(LIBDIRS) -DIFERRET_BACKEND
+CFLAGS = -O3 -fPIC $(INCDIRS) $(LIBDIRS) -DIFERRET_BACKEND
 
 iferret_op_str.o: $(TD)/iferret_op_str.c
 	$(CC) $(CFLAGS) -c $(TD)/iferret_op_str.c 
