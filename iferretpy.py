@@ -6,6 +6,8 @@ from immutablelist import ImmutableList
 from iferret_ops import iferret_log_op_enum_r
 from ctypes import *
 
+iferret = cdll.LoadLibrary("./iferret.so")
+
 IFLAT_NONE = ord('0')
 IFLAT_UI8 = ord('1')
 IFLAT_UI16 = ord('2')
@@ -13,8 +15,9 @@ IFLAT_UI32 = ord('4')
 IFLAT_UI64 = ord('8')
 IFLAT_STR = ord('s')
 
-OP_IN_SLICE  = 0x1
-OP_IS_OUTPUT = 0x2
+OP_IS_VALID  = 0x1
+OP_IN_SLICE  = 0x2
+OP_IS_OUTPUT = 0x4 
 
 class CArray(object):
     def __init__(self, cptr, n):
@@ -29,19 +32,19 @@ class CArray(object):
             raise IndexError(i)
     def __getslice__(self,start,stop):
         return [self[i] for i in range(start,stop)]
-    def __iter__(self):
-        class It(object):
-            def __init__(sub):
-                sub.i = 0
-            def next(sub):
-                n = sub.i
-                if n >= self.n:
-                    raise StopIteration()
-                sub.i += 1
-                return self.cptr[n]
-            def __iter__(sub):
-                return sub
-        return It()
+#    def __iter__(self):
+#        class It(object):
+#            def __init__(sub):
+#                sub.i = 0
+#            def next(sub):
+#                n = sub.i
+#                if n >= self.n:
+#                    raise StopIteration()
+#                sub.i += 1
+#                return self.cptr[n]
+#            def __iter__(sub):
+#                return sub
+#        return It()
     def __str__(self):
         return str(list(self))
     def __repr__(self):
@@ -108,6 +111,17 @@ class iferret_op_t(Structure):
             self.flags &= ~OP_IN_SLICE
 
     @property
+    def is_valid(self):
+        return bool(self.flags & OP_IS_VALID)
+
+    @is_valid.setter
+    def is_valid(self, value):
+        if value:
+            self.flags |= OP_IS_VALID
+        else:
+            self.flags &= ~OP_IS_VALID
+
+    @property
     def is_output(self):
         return bool(self.flags & OP_IS_OUTPUT)
 
@@ -133,9 +147,13 @@ class iferret_op_t(Structure):
         self.is_output = True
 
     def __str__(self):
-        return "%s(%s)" % (self.op, ",".join(repr(x) for x in CArray(self._args, self.num_args)))
+        raise RuntimeError("oh no you di'int")
+        return repr(self)
+
     def __repr__(self):
-        return str(self)
+        return "%s(%s)" % (self.op, ",".join(repr(x) for x in CArray(self._args, self.num_args)))
+
+shadow = {}
 
 class op_arr_t(Structure):
     _fields_ = [
@@ -144,16 +162,80 @@ class op_arr_t(Structure):
         ("_ops", POINTER(iferret_op_t)),
     ]
     
-    @property
-    def ops(self):
-        return CArray(self._ops, self.num)
+    def __getitem__(self, i):
+        if isinstance(i, slice):
+            start, stop, step = i.start, i.stop, i.step
+            if start is None: start = 0
+            if stop is None: stop = len(self)
+            if step is None: step = 1
+            return [self[j] for j in range(start, stop, step)]
+        if i < 0: i = self.num + i
+        if not 0 <= i < self.num: raise IndexError(i)
+
+        e = self._ops[i]
+        return e if e.is_valid else shadow[i]
+
+    def __setitem__(self, i, v):
+        #print "Setting", i, "to", `v`
+        iferret.op_arr_clear(i, 1)
+        shadow[i] = v
+
+    def __setslice__(self, i, j, seq):
+        #print "Setting %d-%d to %s" % (i,j,seq)
+        n = len(seq)
+
+        if j - i < n:
+            #print "Moving array down by %d starting at %d" % (n-(j-i),j)
+            iferret.op_arr_movedown(j, n-(j-i))
+
+        iferret.op_arr_clear(i, n)
+
+        if j - i > n:
+            #print "Moving array up by %d starting at %d" % ((j-i)-n,j)
+            iferret.op_arr_moveup(j, (j - i) - n)
+
+        # Move the shadow entries
+        self._shad_move(j, n - (j - i))
+        
+        for x,v in enumerate(seq, start=i):
+            shadow[x] = v
+
+    def __delitem__(self, i):
+        del self[i:i+1]    
+
+    def _shad_move(self, i, n):
+        updates = []
+        for k in shadow.keys():
+            if k >= i:
+                updates.append( ((k+n), shadow[k]) )
+                del shadow[k]
+        shadow.update(updates)
+
+    def __delslice__(self, i, j):
+        if i < 0: i = self.num + i
+        if j > self.num: j = self.num
+        if not 0 <= i < self.num: raise IndexError(i)
+        #print "Deleting from %d-%d" % (i,j)
+
+        #print "Moving array up by %d starting at %d" % (j-i, j)
+        iferret.op_arr_moveup(j, j-i)
+        
+        for x in range(i, j):
+            if x in shadow: del shadow[x]
+
+        self._shad_move(i, -(j-i))
+
+    def __len__(self):
+        return self.num
+
+    def optimize(self):
+        iferret.op_arr_fit()
 
 def load_trace(base, start=0, num=1):
-    iferret = cdll.LoadLibrary("./iferret.so")
     iferret.init(base, start, num)
     oa = op_arr_t.in_dll(iferret, "op_arr")
-    trace = ImmutableList(oa.ops)
-    return trace
+    #trace = ImmutableList(oa.ops)
+    return oa
 
 if __name__ == "__main__":
     trace = load_trace(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]))

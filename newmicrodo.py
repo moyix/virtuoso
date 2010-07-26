@@ -1115,6 +1115,7 @@ class newmicrodo(forensics.commands.command):
                 import pdb
                 pdb.post_mortem(sys.exc_info()[2])
         t2 = time.time()
+        print "Time taken: %f ms" % ((t2-t1)*1000)
         if self.opts.debug:
             print
             print "Time taken: %f ms" % ((t2-t1)*1000)

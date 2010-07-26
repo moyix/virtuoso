@@ -4,12 +4,11 @@ IN_SHADOW = object()
 def get_interval(intervals, x):
     """Return a the interval that contains x.
     """
-    starts = [s for s,_ in intervals]
-    index = bisect_right(starts, x) - 1
+    index = bisect_right(intervals, (x,)) - 1
     if x < intervals[index][1]:
-        return index
+        return max(0,index)
     elif x == intervals[index][1]:
-        return index+1
+        return max(0,index+1)
     
 def overlapping(intervals, val):
     """Return a subset of intervals that overlap val.
@@ -150,10 +149,10 @@ class ImmutableList(object):
         self.shadow.update(shadow_updates)
         
     def __delslice__(self, i, j):
-        self.remove(i,j)        
+        self.remove(i, min(j,len(self)))
 
     def __setslice__(self, i, j, seq):
-        self.remove(i,j)
+        del self[i:j]
         self.insert(i,seq)
 
     def __setitem__(self, i, x):
@@ -185,81 +184,111 @@ class ImmutableList(object):
             center = char.center(j-i-2)
             s+= '[' + center + ']'
         return s
+    
+    def dbg_interval_split(self,n):
+        step = self.size / n
+        self.intervals = [ (step*i, step*(i+1)) for i in range(n) ]
+        self.intervals[-1] = self.intervals[-1][0], self.size
+        self.offsets = [0]*n
+
+    def reset(self):
+        self.intervals = [(0, self.size)]
+        self.offsets = [0]
+        self.shadow = {}
 
 if __name__ == "__main__":
     import string
+    import random
+    import time
+    
+    l = ImmutableList(string.letters*50000)
+    for i in range(100,2500,100):
+        l.reset()
+        l.dbg_interval_split(i)
+        st = time.time()
+        for _ in range(100000): random.choice(l)
+        ed = time.time()
+        print i, ed-st
 
+    print "---"
 
-    trace = ImmutableList(string.ascii_letters)
+    l = list(string.letters*50000)
+    for i in range(100,2500,100):
+        st = time.time()
+        for _ in range(100000): random.choice(l)
+        ed = time.time()
+        print i, ed-st
 
-    trace.remove(13,26)
-    assert len(trace) == (len(string.ascii_letters)-13)
-    assert trace[13] == 'A'
-
-    trace.remove(26,39)
-    assert trace[:13] == list(string.lowercase[:13])
-    assert trace[13:] == list(string.uppercase[:13])
-
-    trace.insert(13, "XXX")
-    assert trace[13:16] == ['X']*3
-
-    trace.remove(12,16)
-    assert len(trace) == 25
-    assert trace[12] == 'A'
-
-    # Test out the various slice-based operators
-    trace = ImmutableList(string.ascii_letters)
-
-    del trace[13:26]
-    assert len(trace) == (len(string.ascii_letters)-13)
-    assert trace[13] == 'A'
-
-    del trace[26:39]
-    assert trace[:13] == list(string.lowercase[:13])
-    assert trace[13:] == list(string.uppercase[:13])
-
-    trace.insert(13, "XXX")
-    assert trace[13:16] == ['X']*3
-
-    trace[13:16] = "YYY"
-    assert trace[13:16] == ['Y']*3
-
-    trace[14] = "Z"
-
-    bk = list(trace)
-    trace.optimize()
-    assert bk == list(trace)
-    trace.optimize()
-    assert bk == list(trace)
-
-    trace.remove(12,16)
-    assert len(trace) == 25
-    assert trace[12] == 'A'
-
-    trace = ImmutableList(string.ascii_letters)
-    assert list(trace) == list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-    trace[21:43] =                                  'hhhhhhhhhhhhhhhhhhhhhh'
-    assert list(trace) == list('abcdefghijklmnopqrstuhhhhhhhhhhhhhhhhhhhhhhRSTUVWXYZ')
-    trace[6:34] =                    'RRRRRRRRRRRRRRRRRRRRRRRRRRRR'
-    assert list(trace) == list('abcdefRRRRRRRRRRRRRRRRRRRRRRRRRRRRhhhhhhhhhRSTUVWXYZ')
-    trace[0:12] =              'RRRRRRRRRRRR'
-    assert list(trace) == list('RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRhhhhhhhhhRSTUVWXYZ')
-    trace[13:29] =                          'jjjjjjjjjjjjjjjj'
-    assert list(trace) == list('RRRRRRRRRRRRRjjjjjjjjjjjjjjjjRRRRRhhhhhhhhhRSTUVWXYZ')
-    trace[15:46] =                            'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'
-    assert list(trace) == list('RRRRRRRRRRRRRjjzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzUVWXYZ')
-
-    from random import randint, choice
-
-    trace = ImmutableList(string.ascii_letters)
-    for i in range(100000):
-        a,b = randint(0,len(trace)), randint(0,len(trace))
-        if a == b: continue
-        a,b = sorted((a,b))
-        c = choice(string.letters)
-        trace[a:b] = c*(b-a)
-        assert trace[a:b] == list(c*(b-a))
-
-    print trace.interval_string()
-    trace.optimize()
-    print trace.interval_string()
+#    trace = ImmutableList(string.ascii_letters)
+#
+#    trace.remove(13,26)
+#    assert len(trace) == (len(string.ascii_letters)-13)
+#    assert trace[13] == 'A'
+#
+#    trace.remove(26,39)
+#    assert trace[:13] == list(string.lowercase[:13])
+#    assert trace[13:] == list(string.uppercase[:13])
+#
+#    trace.insert(13, "XXX")
+#    assert trace[13:16] == ['X']*3
+#
+#    trace.remove(12,16)
+#    assert len(trace) == 25
+#    assert trace[12] == 'A'
+#
+#    # Test out the various slice-based operators
+#    trace = ImmutableList(string.ascii_letters)
+#
+#    del trace[13:26]
+#    assert len(trace) == (len(string.ascii_letters)-13)
+#    assert trace[13] == 'A'
+#
+#    del trace[26:39]
+#    assert trace[:13] == list(string.lowercase[:13])
+#    assert trace[13:] == list(string.uppercase[:13])
+#
+#    trace.insert(13, "XXX")
+#    assert trace[13:16] == ['X']*3
+#
+#    trace[13:16] = "YYY"
+#    assert trace[13:16] == ['Y']*3
+#
+#    trace[14] = "Z"
+#
+#    bk = list(trace)
+#    trace.optimize()
+#    assert bk == list(trace)
+#    trace.optimize()
+#    assert bk == list(trace)
+#
+#    trace.remove(12,16)
+#    assert len(trace) == 25
+#    assert trace[12] == 'A'
+#
+#    trace = ImmutableList(string.ascii_letters)
+#    assert list(trace) == list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+#    trace[21:43] =                                  'hhhhhhhhhhhhhhhhhhhhhh'
+#    assert list(trace) == list('abcdefghijklmnopqrstuhhhhhhhhhhhhhhhhhhhhhhRSTUVWXYZ')
+#    trace[6:34] =                    'RRRRRRRRRRRRRRRRRRRRRRRRRRRR'
+#    assert list(trace) == list('abcdefRRRRRRRRRRRRRRRRRRRRRRRRRRRRhhhhhhhhhRSTUVWXYZ')
+#    trace[0:12] =              'RRRRRRRRRRRR'
+#    assert list(trace) == list('RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRhhhhhhhhhRSTUVWXYZ')
+#    trace[13:29] =                          'jjjjjjjjjjjjjjjj'
+#    assert list(trace) == list('RRRRRRRRRRRRRjjjjjjjjjjjjjjjjRRRRRhhhhhhhhhRSTUVWXYZ')
+#    trace[15:46] =                            'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'
+#    assert list(trace) == list('RRRRRRRRRRRRRjjzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzUVWXYZ')
+#
+#    from random import randint, choice
+#
+#    trace = ImmutableList(string.ascii_letters)
+#    for i in range(100000):
+#        a,b = randint(0,len(trace)), randint(0,len(trace))
+#        if a == b: continue
+#        a,b = sorted((a,b))
+#        c = choice(string.letters)
+#        trace[a:b] = c*(b-a)
+#        assert trace[a:b] == list(c*(b-a))
+#
+#    print trace.interval_string()
+#    trace.optimize()
+#    print trace.interval_string()

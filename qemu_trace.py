@@ -24,6 +24,7 @@ class TraceEntry(object):
         self.in_slice = True
 
     def __str__(self):
+        raise RuntimeError("oh no you di'int")
         s = uop_to_py(self)
         if not is_jcc(self.op): s += " # %s" % repr(self)
         if self.is_output:

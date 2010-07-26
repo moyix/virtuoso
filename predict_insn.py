@@ -42,21 +42,21 @@ def predict_next(addr, insn):
 
 def get_next_from_trace(trace, i):
     # Find the most recent instruction
-    while trace[i][1].op != 'IFLO_INSN_BYTES':
+    while trace[i].op != 'IFLO_INSN_BYTES':
         i -= 1
     
-    addr, insn = trace[i][1].args
+    addr, insn = trace[i].args
     insn = pydasm.get_instruction(insn.decode('hex'), pydasm.MODE_32)
     next = predict_next(addr, insn)
 
     if next == [-1]:
         # Based on dynamic information
-        while trace[i][1].op != 'IFLO_JMP_T0':
+        while trace[i].op != 'IFLO_JMP_T0':
             i += 1
-            if trace[i][1].op == 'IFLO_INSN_BYTES':
+            if trace[i].op == 'IFLO_INSN_BYTES':
                 # We reached the next instruction before finding
                 # a JMP_T0 -- utter failure
                 raise PredictionFailure("Missing JMP_T0 before next instruction")
-        next = [trace[i][1].args[0]]
+        next = [trace[i].args[0]]
 
     return next

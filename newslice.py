@@ -33,6 +33,13 @@ junk = set(['IFLO_EXIT_TB', 'IFLO_GOTO_TB0', 'IFLO_GOTO_TB1',
 
 # Some small utility functions
 
+def tr(op):
+    s = uop_to_py(op)
+    if not is_jcc(op.op): s += " # %s" % repr(op)
+    if op.is_output:
+        s += "\n" + uop_to_py_out(op, "out") 
+    return s
+
 def first(cond, l):
     """Return the first item in L for which cond is true.
        Return None if cond is not true for any item"""
@@ -82,8 +89,7 @@ def multislice(insns, worklist, output_track=False, debug=False):
     
     work = set(bufs)
     if debug: print "Initial working set:", work
-    for i, insn in reversed(insns[:start+1]):
-    for i in range(start+1, -1, -1):
+    for i in range(start, -1, -1):
         insn = insns[i]
         if i == next_i:
             work = work | set(next_bufs)
@@ -211,7 +217,7 @@ def load_trace(infile, start=0, num=1):
     trace = iferretpy.load_trace(infile, start, num)
 
     print "Finding output buffers"
-    out_idx = first(lambda i: trace[i].op == 'IFLO_LABEL_OUTPUT', (i for i in range(len(trace), -1, -1)))
+    out_idx = first(lambda i: trace[i].op == 'IFLO_LABEL_OUTPUT', (i for i in range(len(trace)-1, -1, -1)))
     out_op = trace[out_idx]
     outbufs = memrange(out_op.args[0], out_op.args[1])
 
@@ -220,8 +226,13 @@ def load_trace(infile, start=0, num=1):
     in_op = trace[in_idx]
     inbufs = memrange(in_op.args[0], in_op.args[1])
 
+    print "Found input at %d, output at %d" % (in_idx, out_idx)
+
     # Set up the inputs
     set_input(trace, inbufs)
+
+    del trace[out_idx:]
+    del trace[:in_idx+1]
 
     return trace, inbufs, outbufs
 
@@ -289,13 +300,13 @@ def get_branch_target(tbs):
         return "unknown"
 
 def set_outlabel(insns):
-    outlabel = None
+    outlabel = False
     for _, ins in insns:
         if ins.is_output:
-            outlabel = ins.label
+            outlabel = True
             break
     if outlabel:
-        for _, ins in insns: ins.set_output_label(outlabel)
+        for _, ins in insns: ins.set_output_label("out")
 
 def simple_translate(tbs):
     """Translate a set of TBs at once.
@@ -311,7 +322,7 @@ def simple_translate(tbs):
     for insns in zip(*[t.body for t in tbs]):
         set_outlabel(insns)
         if any( insn.in_slice for _, insn in insns ):
-            s.append(str(insns[0][1]))
+            s.append(tr(insns[0][1]))
     return s
 
 def slice_trace(trace, inbufs, outbufs):
@@ -399,17 +410,17 @@ def nop_functions(trace, tbs, tbdict, cfg):
             retaddr = find_retaddr(callsite)
             esp_p, esp_v = get_callsite_esp(callsite)
 
-            retsite = min((t for t in tbdict[retaddr]), key=lambda x: len(trace) if x.start() < callsite.end() else x.start() - callsite.end())
+            retsite = min((t for t in tbdict[retaddr]), key=lambda x: len(trace) if x.start < callsite.end else x.start - callsite.end)
 
-            print "Call to %#x (%s) at callsite %s.%d returns to %s.%d" % (n, name, callsite._label_str(), callsite.start(), retsite._label_str(), retsite.start())
-            remove_start, remove_end = callsite.end() + 1, retsite.start()
+            print "Call to %#x (%s) at callsite %s.%d returns to %s.%d" % (n, name, callsite._label_str(), callsite.start, retsite._label_str(), retsite.start)
+            remove_start, remove_end = callsite.end + 1, retsite.start
             surgery_sites.append( (remove_start, remove_end, esp_p, esp_v) )
 
             # Alter the callsite so that it goes to the redirected function
             for i, te in reversed(callsite.body):
                 if te.op == 'IFLO_JMP_T0':
-                    te.op = 'IFLO_CALL'
-                    te.args = [summary_name]
+                    new_te = TraceEntry(('IFLO_CALL', [summary_name]))
+                    trace[i] = new_te
                     break
 
         surgery_sites.sort()
@@ -442,12 +453,12 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
             esp_p, esp_v = get_callsite_esp(callsite)
             
             # Find the closest return site instance to this callsite
-            retsite = min((t for t in tbdict[retaddr]), key=lambda x: len(trace) if x.start() < callsite.end() else x.start() - callsite.end())
+            retsite = min((t for t in tbdict[retaddr]), key=lambda x: len(trace) if x.start < callsite.end else x.start - callsite.end)
 
-            print "Call to %#x (%s) at callsite %s.%d returns to %s.%d" % (m, name, callsite._label_str(), callsite.start(), retsite._label_str(), retsite.start())
+            print "Call to %#x (%s) at callsite %s.%d returns to %s.%d" % (m, name, callsite._label_str(), callsite.start, retsite._label_str(), retsite.start)
             #print "  `->   SIZE: [%#x]" % get_function_arg(trace, size_arg, esp_v, callsite.end())
             #print "  `-> RETURN: [%#x]" % get_tb_retval(retsite.prev)
-            remove_start, remove_end = callsite.end() + 1, retsite.start()
+            remove_start, remove_end = callsite.end + 1, retsite.start
             surgery_sites.append( (remove_start, remove_end, esp_p, esp_v) )
             alloc_label = summary_name
             alloc_rets.append((alloc_label, retsite.label))
@@ -456,8 +467,8 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
             # Alter the callsite so that it goes to the redirected function
             for i, te in reversed(callsite.body):
                 if te.op == 'IFLO_JMP_T0':
-                    te.op = 'IFLO_CALL'
-                    te.args = [summary_name]
+                    new_te = TraceEntry(('IFLO_CALL', [summary_name]))
+                    trace[i] = new_te
                     break
 
         # By doing them from the bottom up we can defer recalculating
@@ -487,39 +498,47 @@ def fix_reps(trace):
         return label
     labels = defaultdict(labelmaker)
 
-    newtrace = []
+    edits = []
     current_tb = 'START'
-    while trace:
-        i, t = trace.pop(0)
+    for i in range(len(trace)):
+        t = trace[i]
         if t.op == 'IFLO_TB_HEAD_EIP':
-            newtrace.append((i, t))
             current_tb = t.args[0]
-        elif t.op == 'IFLO_INSN_BYTES' and is_rep(t) and newtrace[-1][1].op != 'IFLO_TB_HEAD_EIP':
-            if trace[0][1].op == 'IFLO_SET_CC_OP':
-                newtrace.append(trace.pop(0))
-            newtrace.append((None, TraceEntry(('IFLO_TB_HEAD_EIP', [t.args[0]]))))
-            newtrace.append((i, t))
+        elif t.op == 'IFLO_INSN_BYTES' and is_rep(t) and trace[i-1].op != 'IFLO_TB_HEAD_EIP':
+            new_te = TraceEntry(('IFLO_TB_HEAD_EIP', [t.args[0]]))
+
+            if trace[i+1].op == 'IFLO_SET_CC_OP':
+                edit = ((i, i+2), [trace[i+1], t, new_te])   # IFLO_INSN_BYTES, IFLO_SET_CC_OP => IFLO_SET_CC_OP, IFLO_TB_HEAD_EIP, IFLO_INSN_BYTES
+            else:
+                edit = ((i, i+1), [t, new_te])                      # IFLO_INSN_BYTES                 =>                 IFLO_TB_HEAD_EIP, IFLO_INSN_BYTES
+
+            edits.append(edit)
             current_tb = t.args[0]
         elif t.op == 'IFLO_OPS_TEMPLATE_JNZ_ECX' and t.args[-1]:
-            newtrace.append((i, t))
-            newtrace.append((None, TraceEntry(('IFLO_TB_HEAD_EIP', [labels[current_tb]]))))
-            current_tb = labels[current_tb]
-        else:
-            newtrace.append((i, t))
+            new_te = TraceEntry(('IFLO_TB_HEAD_EIP', [labels[current_tb]]))
+            edit = ((i,i+1), [t,new_te])
 
-    return remake_trace(newtrace)
+            edits.append(edit)
+            current_tb = labels[current_tb]
+    
+    edits.sort()
+    while edits:
+        (st, ed), repl = edits.pop()
+        trace[st:ed] = repl
+
+    return remake_trace(trace)
 
 def filter_interrupts(trace):
     to_remove = []
     i = 0
     while i < len(trace):
-        _, e = trace[i]
+        e = trace[i]
         if e.op == 'IFLO_INTERRUPT' and e.args[-1] == 0:
             j = i
-            while trace[j][1].op != 'IFLO_INSN_BYTES':
+            while trace[j].op != 'IFLO_INSN_BYTES':
                 j -= 1
-            fault_eip = trace[j][1].args[0]
-            fault_insn = pydasm.get_instruction(trace[j][1].args[1].decode('hex'), pydasm.MODE_32)
+            fault_eip = trace[j].args[0]
+            fault_insn = pydasm.get_instruction(trace[j].args[1].decode('hex'), pydasm.MODE_32)
             next = get_next_from_trace(trace, i)
             if e.args[1] == fault_eip:
                 #print "Faulting instruction: %s" % (trace[j], )
@@ -544,7 +563,7 @@ def filter_interrupts(trace):
             #                                                          "YES" if end_marker == 'IFLO_TB_HEAD_EIP' else "NO") 
             
             i += 1
-            while not (trace[i][1].op == end_marker and trace[i][1].args[0] in next):
+            while not (trace[i].op == end_marker and trace[i].args[0] in next):
                 i += 1
             #print "Found end marker %s" % repr(trace[i][1])
             end = i
@@ -612,9 +631,9 @@ def translate_code(trace, tbs, tbdict, cfg):
                 if any( insn.in_slice for _, insn in insns ):
                     insn = insns[0][1]
                     if is_jcc(insn.op):
-                        s.append("if (%s): raise Goto(%s)\n" % (insn, taken))
+                        s.append("if (%s): raise Goto(%s)\n" % (tr(insn), taken))
                     else:
-                        s.append(str(insn))
+                        s.append(tr(insn))
             s.append("raise Goto(%s)" % succ)
             transdict[cur[0].label] = "\n".join(s)
 
@@ -629,7 +648,7 @@ def get_user_memory(trace, kernel=0x80000000):
     }
     mem = {}
     for i in range(len(trace)-1, -1, -1):
-        _, insn = trace[i]
+        insn = trace[i]
         m = memrex.search(insn.op)
         if m:
             addr = insn.args[2]
@@ -660,7 +679,6 @@ if __name__ == "__main__":
     cfg = make_cfg(tbs)
 
     embedshell = IPython.Shell.IPShellEmbed(argv=[])
-    embedshell()
 
     print "Size of trace before surgery: %d" % len(trace)
 
@@ -670,6 +688,8 @@ if __name__ == "__main__":
     # Kill functions that just need to be stubbed out entirely
     trace, tbs, tbdict, cfg = nop_functions(trace, tbs, tbdict, cfg)
 
+    embedshell()
+    
     # Replace mallocs with summaries
     trace, tbs, tbdict, cfg = detect_mallocs(trace, tbs, tbdict, cfg)
 
@@ -678,20 +698,26 @@ if __name__ == "__main__":
 
     print "Size of trace after surgery:  %d" % len(trace)
 
+    print "Optimizing trace..."
+    trace.optimize()
+
     # Perform slicing and control dependency analysis
     trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)
-
-    embedshell()
 
     # Get user memory state
     mem = get_user_memory(trace)
 
+    embedshell()
+
     # Translate it
     transdict = translate_code(trace, tbs, tbdict, cfg)
 
-    fname, ext = args[0].rsplit('.', 1)
+    import os.path
+    dname, fname = os.path.split(args[0])
+    fname = fname.rsplit('.', 1)[0]
     fname = fname + '.pkl'
+    fname = os.path.join(dname, fname)
     print "Saving translated code to", fname
     f = open(fname, 'w')
-    pickle.dump((transdict, mem), f)
+    pickle.dump((transdict, mem), f, pickle.HIGHEST_PROTOCOL)
     f.close()
