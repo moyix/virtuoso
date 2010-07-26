@@ -32,19 +32,6 @@ class CArray(object):
             raise IndexError(i)
     def __getslice__(self,start,stop):
         return [self[i] for i in range(start,stop)]
-#    def __iter__(self):
-#        class It(object):
-#            def __init__(sub):
-#                sub.i = 0
-#            def next(sub):
-#                n = sub.i
-#                if n >= self.n:
-#                    raise StopIteration()
-#                sub.i += 1
-#                return self.cptr[n]
-#            def __iter__(sub):
-#                return sub
-#        return It()
     def __str__(self):
         return str(list(self))
     def __repr__(self):

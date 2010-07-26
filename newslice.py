@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import IPython
+#import IPython
 from collections import defaultdict
 import cPickle as pickle
 
@@ -413,7 +413,7 @@ def nop_functions(trace, tbs, tbdict, cfg):
             retsite = min((t for t in tbdict[retaddr]), key=lambda x: len(trace) if x.start < callsite.end else x.start - callsite.end)
 
             print "Call to %#x (%s) at callsite %s.%d returns to %s.%d" % (n, name, callsite._label_str(), callsite.start, retsite._label_str(), retsite.start)
-            remove_start, remove_end = callsite.end + 1, retsite.start
+            remove_start, remove_end = callsite.end, retsite.start
             surgery_sites.append( (remove_start, remove_end, esp_p, esp_v) )
 
             # Alter the callsite so that it goes to the redirected function
@@ -458,7 +458,7 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
             print "Call to %#x (%s) at callsite %s.%d returns to %s.%d" % (m, name, callsite._label_str(), callsite.start, retsite._label_str(), retsite.start)
             #print "  `->   SIZE: [%#x]" % get_function_arg(trace, size_arg, esp_v, callsite.end())
             #print "  `-> RETURN: [%#x]" % get_tb_retval(retsite.prev)
-            remove_start, remove_end = callsite.end + 1, retsite.start
+            remove_start, remove_end = callsite.end, retsite.start
             surgery_sites.append( (remove_start, remove_end, esp_p, esp_v) )
             alloc_label = summary_name
             alloc_rets.append((alloc_label, retsite.label))
@@ -506,17 +506,20 @@ def fix_reps(trace):
             current_tb = t.args[0]
         elif t.op == 'IFLO_INSN_BYTES' and is_rep(t) and trace[i-1].op != 'IFLO_TB_HEAD_EIP':
             new_te = TraceEntry(('IFLO_TB_HEAD_EIP', [t.args[0]]))
+            new_t = TraceEntry((t.op,t.args))
 
             if trace[i+1].op == 'IFLO_SET_CC_OP':
-                edit = ((i, i+2), [trace[i+1], t, new_te])   # IFLO_INSN_BYTES, IFLO_SET_CC_OP => IFLO_SET_CC_OP, IFLO_TB_HEAD_EIP, IFLO_INSN_BYTES
+                cc_te = TraceEntry((trace[i+1].op, trace[i+1].args))
+                edit = ((i, i+2), [cc_te, new_te, new_t])   # IFLO_INSN_BYTES, IFLO_SET_CC_OP => IFLO_SET_CC_OP, IFLO_TB_HEAD_EIP, IFLO_INSN_BYTES
             else:
-                edit = ((i, i+1), [t, new_te])                      # IFLO_INSN_BYTES                 =>                 IFLO_TB_HEAD_EIP, IFLO_INSN_BYTES
+                edit = ((i, i+1), [new_te, new_t])                      # IFLO_INSN_BYTES                 =>                 IFLO_TB_HEAD_EIP, IFLO_INSN_BYTES
 
             edits.append(edit)
             current_tb = t.args[0]
         elif t.op == 'IFLO_OPS_TEMPLATE_JNZ_ECX' and t.args[-1]:
+            new_t = TraceEntry((t.op,t.args))
             new_te = TraceEntry(('IFLO_TB_HEAD_EIP', [labels[current_tb]]))
-            edit = ((i,i+1), [t,new_te])
+            edit = ((i,i+1), [new_t,new_te])
 
             edits.append(edit)
             current_tb = labels[current_tb]
@@ -678,7 +681,8 @@ if __name__ == "__main__":
     #print "about to make cfg",time.ctime()
     cfg = make_cfg(tbs)
 
-    embedshell = IPython.Shell.IPShellEmbed(argv=[])
+    #embedshell = IPython.Shell.IPShellEmbed(argv=[])
+    #embedshell = lambda: None
 
     print "Size of trace before surgery: %d" % len(trace)
 
@@ -688,8 +692,6 @@ if __name__ == "__main__":
     # Kill functions that just need to be stubbed out entirely
     trace, tbs, tbdict, cfg = nop_functions(trace, tbs, tbdict, cfg)
 
-    embedshell()
-    
     # Replace mallocs with summaries
     trace, tbs, tbdict, cfg = detect_mallocs(trace, tbs, tbdict, cfg)
 
@@ -706,8 +708,6 @@ if __name__ == "__main__":
 
     # Get user memory state
     mem = get_user_memory(trace)
-
-    embedshell()
 
     # Translate it
     transdict = translate_code(trace, tbs, tbdict, cfg)
