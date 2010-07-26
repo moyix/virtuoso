@@ -148,6 +148,8 @@ void iferret_log_op_args_read(iferret_op_t *op) {
 
   // NB: we've already read the op and checked the sentinel...
 
+  op->flags = 1;
+
   if (op->num >= IFLO_SYS_CALLS_START) {
     // its a syscall.  read in the other stuff.
     op->syscall->is_sysenter = iferret_log_uint8_t_read();

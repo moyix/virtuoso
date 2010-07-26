@@ -117,11 +117,15 @@ typedef struct iferret_syscall_struct_t {
   iferret_op_arg_t arg[IFERRET_OP_MAX_NUM_ARGS];
 } iferret_syscall_t;
 
+#define OP_VALID      0x1
+#define OP_IN_SLICE   0x2
+#define OP_IS_OUTPUT  0x4
 
 typedef struct iferret_op_struct_t {
   iferret_log_op_enum_t num;     // the number of the op
   iferret_op_arg_t *arg;
   uint32_t num_args;             // number of arguments 
+  uint32_t flags;
   iferret_syscall_t *syscall;
 } iferret_op_t;
 

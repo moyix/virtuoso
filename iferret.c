@@ -69,6 +69,35 @@ void op_arr_grow() {
 
 void op_arr_fit() {
     op_arr.ops = (iferret_op_t *) realloc(op_arr.ops, op_arr.num*sizeof (iferret_op_t));
+    op_arr.max = op_arr.num;
+}
+
+void op_arr_clear(int s, int n) {
+    //printf("Zeroing out %d entries starting at %d\n", n, s);
+    memset(&op_arr.ops[s], 0, sizeof(iferret_op_t)*n);
+}
+
+void op_arr_movedown(int s, int n) {
+    int i;
+
+    if (op_arr.num + n > op_arr.max) {
+        op_arr_grow();
+    }
+    for (i = op_arr.num-1; i >= s; i--) {
+        op_arr.ops[i+n] = op_arr.ops[i];
+    }
+
+    op_arr.num += n;
+}
+
+void op_arr_moveup(int s, int n) {
+    int i;
+
+    for(i=s; i < op_arr.num; i++) {
+        op_arr.ops[i-n] = op_arr.ops[i];
+    }
+
+    op_arr.num -= n;     
 }
 
 void op_arr_destroy() {
@@ -221,9 +250,17 @@ void iferret_log_process(char *filename) {
     op_pos_arr->pos[i%OP_POS_CIRC_BUFF_SIZE].end = iferret_log_ptr-1;
     i++;
 
-    op_arr.num ++;
+    if (op->num != IFLO_INSN_DIS && op->num < IFLO_SYS_CALLS_START)
+        op_arr.num++;
+    else {
+#ifdef IFDEBUG
+        op_arr.num++;
+#endif
+    }
+
     if (op_arr.num >= op_arr.max)
         op_arr_grow();
+
     op = &op_arr.ops[op_arr.num];
     op->syscall = &syscall;
     op->syscall->command = command;
