@@ -103,20 +103,15 @@ void op_arr_destroy() {
 
 int op_arr_find_interrupt(int s, int *start, int *end) {
     int i;
-    int lv = 0;
+    uint32_t addr;
     for (i=s; i < op_arr.num; i++) {
         if (op_arr.ops[i].num == IFLO_INTERRUPT) {
             *start = i;
-            lv++;
+            addr = op_arr.ops[i].arg[1].val.u32;
             while (i < op_arr.num) {
                 i++;
-                if (op_arr.ops[i].num == IFLO_INTERRUPT) {
-                    lv++;
-                }
-                else if (op_arr.ops[i].num == IFLO_IRET_PROTECTED) {
-                    lv--;
-                }
-                if (lv == 0) {
+                if (op_arr.ops[i].num == IFLO_TB_HEAD_EIP &&
+                    op_arr.ops[i].arg[0].val.u32 == addr) {
                     *end = i;
                     return 1;   // Success
                 }
@@ -125,6 +120,27 @@ int op_arr_find_interrupt(int s, int *start, int *end) {
         }
     }
     return 0; // No more interrupts
+}
+
+int op_arr_find_input(int s, uint32_t addr, int *t) {
+    int i;
+    for (i=s; i < op_arr.num; i++) {
+        switch (op_arr.ops[i].num) {
+            case IFLO_OPS_MEM_LDL_T0_A0:
+                if (op_arr.ops[i].arg[1].val.u32 == addr) {
+                    *t = 0;
+                    return i;
+                }
+                break;
+            case IFLO_OPS_MEM_LDL_T1_A0:
+                if (op_arr.ops[i].arg[1].val.u32 == addr) {
+                    *t = 0;
+                    return i;
+                }
+                break;
+        }
+    }
+    return -1;
 }
 
 op_pos_arr_t *op_pos_arr = NULL;

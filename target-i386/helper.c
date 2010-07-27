@@ -766,6 +766,9 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
     else
         old_eip = env->eip;
 
+    if(iferret_info_flow)
+        iferret_log_op_write_441(IFLO_INTERRUPT, intno, old_eip, is_int);
+
     dt = &env->idt;
     if (intno * 8 + 7 > dt->limit)
         raise_exception_err(EXCP0D_GPF, intno * 8 + 2);
@@ -945,9 +948,6 @@ static void do_interrupt_protected(int intno, int is_int, int error_code,
         env->eflags &= ~IF_MASK;
     }
     env->eflags &= ~(TF_MASK | VM_MASK | RF_MASK | NT_MASK);
-
-    if(iferret_info_flow)
-        iferret_log_op_write_441(IFLO_INTERRUPT, intno, next_eip, is_int);
 
 #if 0
     if (intno == 0x80) {
