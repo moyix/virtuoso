@@ -101,6 +101,32 @@ void op_arr_destroy() {
     free(op_arr.ops);
 }
 
+int op_arr_find_interrupt(int s, int *start, int *end) {
+    int i;
+    int lv = 0;
+    for (i=s; i < op_arr.num; i++) {
+        if (op_arr.ops[i].num == IFLO_INTERRUPT) {
+            *start = i;
+            lv++;
+            while (i < op_arr.num) {
+                i++;
+                if (op_arr.ops[i].num == IFLO_INTERRUPT) {
+                    lv++;
+                }
+                else if (op_arr.ops[i].num == IFLO_IRET_PROTECTED) {
+                    lv--;
+                }
+                if (lv == 0) {
+                    *end = i;
+                    return 1;   // Success
+                }
+            }
+            return -1;  // Unbalanced interrupts
+        }
+    }
+    return 0; // No more interrupts
+}
+
 op_pos_arr_t *op_pos_arr = NULL;
 
 void op_hex_dump_aux(uint32_t opnum, unsigned char *p1, unsigned char *p2, char *label) {
