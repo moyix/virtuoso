@@ -10,6 +10,7 @@ import pydasm
 
 import iferretpy
 
+from progressbar import *
 from fixedint import UInt
 from summary_functions import malloc_summary, null_summary, copyarg_summary
 from predict_insn import get_next_from_trace, x86_branches
@@ -201,16 +202,11 @@ def make_cfg(tbs):
     cfg[tbs[-1].label] = set()
     return dict(cfg)
 
-def set_input(trace, inbufs):
-    inbufs = set(inbufs)
-    for i, te in enumerate(trace):
-        uses_set = set(uses(te))
-        if uses_set & inbufs:
-            defs = defines(te)
-            assert len(defs) == 1
-            print "Replacing", `te`, "with SET_INPUT at", i
-            new_te = TraceEntry(("IFLO_SET_INPUT", [defs[0], 0]))
-            trace[i] = new_te
+def set_input(trace, in_addr):
+    for var, i in trace.find_inputs(in_addr):
+        print "Replacing", `trace[i]`, "with SET_INPUT at", i
+        new_te = TraceEntry(("IFLO_SET_INPUT", [var, 0]))
+        trace[i] = new_te
 
 def load_trace(infile, start=0, num=1):
     print "Loading trace into memory..."
@@ -229,7 +225,8 @@ def load_trace(infile, start=0, num=1):
     print "Found input at %d, output at %d" % (in_idx, out_idx)
 
     # Set up the inputs
-    set_input(trace, inbufs)
+    #set_input(trace, inbufs)
+    set_input(trace, in_op.args[0])
 
     del trace[out_idx:]
     del trace[:in_idx+1]
@@ -401,9 +398,9 @@ def nop_functions(trace, tbs, tbdict, cfg):
         (0x8054af07,  8, 'ExFreePoolWithTag'),
     ]
 
+    surgery_sites = []
     for n, argbytes, name in nops:
         if n not in tbdict: continue
-        surgery_sites = []
         summary_name = "NOP_%d" % argbytes
         for tb in tbdict[n]:
             callsite = tb.prev
@@ -414,7 +411,7 @@ def nop_functions(trace, tbs, tbdict, cfg):
 
             print "Call to %#x (%s) at callsite %s.%d returns to %s.%d" % (n, name, callsite._label_str(), callsite.start, retsite._label_str(), retsite.start)
             remove_start, remove_end = callsite.end, retsite.start
-            surgery_sites.append( (remove_start, remove_end, esp_p, esp_v) )
+            surgery_sites.append( (remove_start, remove_end, esp_p, esp_v, argbytes, summary_name) )
 
             # Alter the callsite so that it goes to the redirected function
             for i, te in reversed(callsite.body):
@@ -423,26 +420,26 @@ def nop_functions(trace, tbs, tbdict, cfg):
                     trace[i] = new_te
                     break
 
-        surgery_sites.sort()
-        while surgery_sites:
-            st, ed, esp_p, esp_v = surgery_sites.pop()
-            summary = null_summary(summary_name, argbytes, esp_p, esp_v)
-            trace[st:ed] =  summary
+    surgery_sites.sort()
+    while surgery_sites:
+        st, ed, esp_p, esp_v, argbytes, summary_name = surgery_sites.pop()
+        summary = null_summary(summary_name, argbytes, esp_p, esp_v)
+        trace[st:ed] =  summary
 
-        trace, tbs, tbdict, cfg = remake_trace(trace)
+    trace, tbs, tbdict, cfg = remake_trace(trace)
 
     return trace, tbs, tbdict, cfg
 
 def detect_mallocs(trace, tbs, tbdict, cfg):
     EAX = "REGS_0"
 
+    surgery_sites = []
     # Replace the mallocs with summary functions
     alloc_calls = defaultdict(list)
     alloc_rets = []
     for m, argbytes, size_arg, name in mallocs:
         if m not in tbdict: continue
         summary_name = "ALLOC_%d_%d" % (argbytes, size_arg)
-        surgery_sites = []
         for tb in tbdict[m]:
             callsite = tb.prev
             
@@ -459,7 +456,7 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
             #print "  `->   SIZE: [%#x]" % get_function_arg(trace, size_arg, esp_v, callsite.end())
             #print "  `-> RETURN: [%#x]" % get_tb_retval(retsite.prev)
             remove_start, remove_end = callsite.end, retsite.start
-            surgery_sites.append( (remove_start, remove_end, esp_p, esp_v) )
+            surgery_sites.append( (remove_start, remove_end, esp_p, esp_v, argbytes, size_arg, summary_name) )
             alloc_label = summary_name
             alloc_rets.append((alloc_label, retsite.label))
             alloc_calls[(m, argbytes)].append(callsite.label)
@@ -471,14 +468,14 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
                     trace[i] = new_te
                     break
 
-        # By doing them from the bottom up we can defer recalculating
-        # the indices until we're all done.
-        surgery_sites.sort()
-        while surgery_sites:
-            st, ed, esp_p, esp_v = surgery_sites.pop()
-            summary = malloc_summary(summary_name, argbytes, esp_p, esp_v, size_arg)
-            trace[st:ed] =  summary
-        trace, tbs, tbdict, cfg = remake_trace(trace)
+    # By doing them from the bottom up we can defer recalculating
+    # the indices until we're all done.
+    surgery_sites.sort()
+    while surgery_sites:
+        st, ed, esp_p, esp_v, argbytes, size_arg, summary_name = surgery_sites.pop()
+        summary = malloc_summary(summary_name, argbytes, esp_p, esp_v, size_arg)
+        trace[st:ed] =  summary
+    trace, tbs, tbdict, cfg = remake_trace(trace)
 
     alloc_calls = dict(alloc_calls)
 
@@ -524,14 +521,21 @@ def fix_reps(trace):
             edits.append(edit)
             current_tb = labels[current_tb]
     
+    widgets = ['Fixing reps: ', Percentage(), ' ', Bar(marker=RotatingMarker()), ' ', ETA()]
+
     edits.sort()
+    print "About to make %d edits to split TBs" % len(edits)
+    pbar = ProgressBar(widgets=widgets, maxval=len(edits)).start()
+    i = 0
     while edits:
+        i += 1
+        pbar.update(i)
         (st, ed), repl = edits.pop()
         trace[st:ed] = repl
 
     return remake_trace(trace)
 
-def new_filter_interrupts(trace):
+def filter_interrupts(trace):
     to_remove = []
     
     ints = trace.find_interrupts()
@@ -561,55 +565,10 @@ def new_filter_interrupts(trace):
             end = i
         
         to_remove.append((start,end))
-    return to_remove
 
-def filter_interrupts(trace):
-    to_remove = []
-    i = 0
-    while i < len(trace):
-        e = trace[i]
-        if e.op == 'IFLO_INTERRUPT' and e.args[-1] == 0:
-            j = i
-            while trace[j].op != 'IFLO_INSN_BYTES':
-                j -= 1
-            fault_eip = trace[j].args[0]
-            fault_insn = pydasm.get_instruction(trace[j].args[1].decode('hex'), pydasm.MODE_32)
-            if e.args[1] == fault_eip:
-                start = j
-                next = [fault_eip]
-                retry_insn = True
-            else:
-                start = i
-                next = get_next_from_trace(trace, i)
-                retry_insn = False
-            
-            if not retry_insn and fault_insn.type in x86_branches:
-                # We will want to start a new TB, so include the TB_HEAD_EIP
-                end_marker = 'IFLO_TB_HEAD_EIP'
-            else:
-                # We are either retrying a faulting instruction, or the last instruction
-                # would not have ended the TB. so we want to merge it with our pre-interrupt
-                # TB, excluding the IFLO_TB_HEAD_EIP marker.
-                end_marker = 'IFLO_INSN_BYTES'
-
-            #print "Retrying instruction: %s   Starting new TB: %s" % ("YES" if retry_insn else "NO",
-            #                                                          "YES" if end_marker == 'IFLO_TB_HEAD_EIP' else "NO") 
-            
-            i += 1
-            while not (trace[i].op == end_marker and trace[i].args[0] in next):
-                i += 1
-            #print "Found end marker %s" % repr(trace[i][1])
-            end = i
-            
-            print "Will remove interrupt from %#x to %s (%d-%d)" % (fault_eip, ", ".join("%#x" % n for n in next), start, end)
-            to_remove.append( (start, end) )
-        i += 1
-
-    to_remove.sort()
     while to_remove:
-        st, ed = to_remove.pop()
-        #print "Removing %d:%d" % (st, ed)
-        del trace[st:ed]
+        a,b = to_remove.pop()
+        del trace[a:b]
 
     return remake_trace(trace)
 
@@ -718,6 +677,7 @@ if __name__ == "__main__":
     print "Size of trace before surgery: %d" % len(trace)
 
     # Get rid of interrupts
+    print "Filtering interrupts..."
     trace, tbs, tbdict, cfg = filter_interrupts(trace)
     
     # Kill functions that just need to be stubbed out entirely
@@ -727,6 +687,7 @@ if __name__ == "__main__":
     trace, tbs, tbdict, cfg = detect_mallocs(trace, tbs, tbdict, cfg)
 
     # Fix QEMU's REP craziness
+    print "Splitting TBs with reps..."
     trace, tbs, tbdict, cfg = fix_reps(trace)
 
     print "Size of trace after surgery:  %d" % len(trace)

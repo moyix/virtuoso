@@ -148,7 +148,7 @@ class op_arr_t(Structure):
         ("max", c_ulong),
         ("_ops", POINTER(iferret_op_t)),
     ]
-    
+
     def __getitem__(self, i):
         if isinstance(i, slice):
             start, stop, step = i.start, i.stop, i.step
@@ -182,6 +182,7 @@ class op_arr_t(Structure):
             iferret.op_arr_moveup(j, (j - i) - n)
 
         # Move the shadow entries
+        #print "Adjusting shadow..."
         self._shad_move(j, n - (j - i))
         
         for x,v in enumerate(seq, start=i):
@@ -191,6 +192,7 @@ class op_arr_t(Structure):
         del self[i:i+1]    
 
     def _shad_move(self, i, n):
+        if n == 0: return
         updates = []
         for k in shadow.keys():
             if k >= i:
@@ -231,6 +233,15 @@ class op_arr_t(Structure):
             raise ValueError("Unbalanced interrupts")
         else:
             return ints
+
+    def find_inputs(self, addr):
+        ins = []
+        t = c_int()
+        ret = iferret.op_arr_find_input(0, addr, pointer(t))
+        while ret != -1:
+            ins.append( ("T%d" % t.value, ret) )
+            ret = iferret.op_arr_find_input(ret+1, addr, pointer(t))
+        return ins
 
 def load_trace(base, start=0, num=1):
     iferret.init(base, start, num)
