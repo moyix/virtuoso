@@ -218,6 +218,20 @@ class op_arr_t(Structure):
     def optimize(self):
         iferret.op_arr_fit()
 
+    def find_interrupts(self):
+        ints = []
+        a, b = c_int(), c_int()
+
+        ret = iferret.op_arr_find_interrupt(0, pointer(a), pointer(b))
+        while ret == 1:
+            ints.append( (a.value, b.value) )
+            ret = iferret.op_arr_find_interrupt(b, pointer(a), pointer(b))
+
+        if ret == -1:
+            raise ValueError("Unbalanced interrupts")
+        else:
+            return ints
+
 def load_trace(base, start=0, num=1):
     iferret.init(base, start, num)
     oa = op_arr_t.in_dll(iferret, "op_arr")

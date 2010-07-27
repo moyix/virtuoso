@@ -531,6 +531,38 @@ def fix_reps(trace):
 
     return remake_trace(trace)
 
+def new_filter_interrupts(trace):
+    to_remove = []
+    
+    ints = trace.find_interrupts()
+    for a,b in ints:
+        i = a
+        while trace[i].op != 'IFLO_INSN_BYTES':
+            i -= 1
+        fault_idx = i
+        fault_eip = trace[i].args[0]
+        fault_insn = pydasm.get_instruction(trace[i].args[1].decode('hex'), pydasm.MODE_32)
+
+        i = b
+        while trace[i].op != 'IFLO_TB_HEAD_EIP':
+            i += 1
+        ret_eip = trace[i].args[0]
+        end = i # Default: delete up to the HEAD_EIP (i.e. start a new block)
+        
+        if fault_eip == ret_eip:
+            start = fault_idx
+        else:
+            start = a
+
+        if fault_eip == ret_eip or fault_insn.type not in x86_branches:
+            # We want to merge the new TB in with this one
+            while trace[i].op != "IFLO_INSN_BYTES":
+                i += 1
+            end = i
+        
+        to_remove.append((start,end))
+    return to_remove
+
 def filter_interrupts(trace):
     to_remove = []
     i = 0
@@ -542,14 +574,13 @@ def filter_interrupts(trace):
                 j -= 1
             fault_eip = trace[j].args[0]
             fault_insn = pydasm.get_instruction(trace[j].args[1].decode('hex'), pydasm.MODE_32)
-            next = get_next_from_trace(trace, i)
             if e.args[1] == fault_eip:
-                #print "Faulting instruction: %s" % (trace[j], )
                 start = j
                 next = [fault_eip]
                 retry_insn = True
             else:
                 start = i
+                next = get_next_from_trace(trace, i)
                 retry_insn = False
             
             if not retry_insn and fault_insn.type in x86_branches:
@@ -561,7 +592,6 @@ def filter_interrupts(trace):
                 # TB, excluding the IFLO_TB_HEAD_EIP marker.
                 end_marker = 'IFLO_INSN_BYTES'
 
-            print "Will remove interrupt from %#x to %s" % (fault_eip, ", ".join("%#x" % n for n in next))
             #print "Retrying instruction: %s   Starting new TB: %s" % ("YES" if retry_insn else "NO",
             #                                                          "YES" if end_marker == 'IFLO_TB_HEAD_EIP' else "NO") 
             
@@ -571,6 +601,7 @@ def filter_interrupts(trace):
             #print "Found end marker %s" % repr(trace[i][1])
             end = i
             
+            print "Will remove interrupt from %#x to %s (%d-%d)" % (fault_eip, ", ".join("%#x" % n for n in next), start, end)
             to_remove.append( (start, end) )
         i += 1
 
