@@ -150,55 +150,29 @@ class op_arr_t(Structure):
     ]
 
     def __getitem__(self, i):
-        if isinstance(i, slice):
-            start, stop, step = i.start, i.stop, i.step
-            if start is None: start = 0
-            if stop is None: stop = len(self)
-            if step is None: step = 1
-            return [self[j] for j in range(start, stop, step)]
         if i < 0: i = self.num + i
         if not 0 <= i < self.num: raise IndexError(i)
 
-        e = self._ops[i]
-        return e if e.is_valid else shadow[i]
+        return self._ops[i]
 
     def __setitem__(self, i, v):
         #print "Setting", i, "to", `v`
         iferret.op_arr_clear(i, 1)
-        shadow[i] = v
 
     def __setslice__(self, i, j, seq):
         #print "Setting %d-%d to %s" % (i,j,seq)
         n = len(seq)
 
         if j - i < n:
-            #print "Moving array down by %d starting at %d" % (n-(j-i),j)
             iferret.op_arr_movedown(j, n-(j-i))
 
         iferret.op_arr_clear(i, n)
 
         if j - i > n:
-            #print "Moving array up by %d starting at %d" % ((j-i)-n,j)
             iferret.op_arr_moveup(j, (j - i) - n)
-
-        # Move the shadow entries
-        #print "Adjusting shadow..."
-        self._shad_move(j, n - (j - i))
-        
-        for x,v in enumerate(seq, start=i):
-            shadow[x] = v
 
     def __delitem__(self, i):
         del self[i:i+1]    
-
-    def _shad_move(self, i, n):
-        if n == 0: return
-        updates = []
-        for k in shadow.keys():
-            if k >= i:
-                updates.append( ((k+n), shadow[k]) )
-                del shadow[k]
-        shadow.update(updates)
 
     def __delslice__(self, i, j):
         if i < 0: i = self.num + i
@@ -206,13 +180,7 @@ class op_arr_t(Structure):
         if not 0 <= i < self.num: raise IndexError(i)
         #print "Deleting from %d-%d" % (i,j)
 
-        #print "Moving array up by %d starting at %d" % (j-i, j)
         iferret.op_arr_moveup(j, j-i)
-        
-        for x in range(i, j):
-            if x in shadow: del shadow[x]
-
-        self._shad_move(i, -(j-i))
 
     def __len__(self):
         return self.num
@@ -243,11 +211,49 @@ class op_arr_t(Structure):
             ret = iferret.op_arr_find_input(ret+1, addr, pointer(t))
         return ins
 
+class py_op_arr:
+    def __init__(self, trace):
+        self.trace = trace
+        self.shadow = [0]*len(trace)
+    def __getitem__(self, i):
+        if isinstance(i, slice):
+            start, stop, step = i.start, i.stop, i.step
+            if start is None: start = 0
+            if stop is None: stop = len(self)
+            if step is None: step = 1
+            return [self[j] for j in range(start, stop, step)]
+
+        e = self.trace[i]
+        if e.is_valid:
+            return e
+        else:
+            return self.shadow[i]
+    def __setitem__(self, i, v):
+        self.trace[i] = v
+        self.shadow[i] = v
+    def __delitem__(self, i):
+        del self[i:i+1]    
+    def __setslice__(self, i, j, seq):
+        self.trace[i:j] = seq
+        self.shadow[i:j] = seq
+    def __delslice__(self, i, j):
+        del self.trace[i:j]
+        del self.shadow[i:j]
+    def __len__(self):
+        return len(self.trace)
+    def optimize(self):
+        self.trace.optimize()
+    def find_interrupts(self):
+        return self.trace.find_interrupts()
+    def find_inputs(self, addr):
+        return self.trace.find_inputs(addr)
+
 def load_trace(base, start=0, num=1):
     iferret.init(base, start, num)
     oa = op_arr_t.in_dll(iferret, "op_arr")
     #trace = ImmutableList(oa.ops)
-    return oa
+    trace = py_op_arr(oa)
+    return trace
 
 if __name__ == "__main__":
     trace = load_trace(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]))

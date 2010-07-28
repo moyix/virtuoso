@@ -88,12 +88,17 @@ def multislice(insns, worklist, output_track=False, debug=False):
     if start == -1: start = len(insns) - 1
     if output_track: outbufs = set(bufs)
     
+    widgets = ['Slicing: ', Percentage(), ' ', Bar(marker=RotatingMarker()), ' ', ETA()]
+    pbar = ProgressBar(widgets=widgets, maxval=start+1).start()
+
     work = set(bufs)
     if debug: print "Initial working set:", work
     for i in range(start, -1, -1):
+        #print "Examining instruction",i,"(working set: %d)" % len(work)
+        pbar.update(start-i+1)
         insn = insns[i]
         if i == next_i:
-            work = work | set(next_bufs)
+            work |= set(next_bufs)
             if wlist:
                 next_i, next_bufs = wlist.pop()
 
@@ -104,7 +109,8 @@ def multislice(insns, worklist, output_track=False, debug=False):
 
         if defs_set & work:
             if debug: print "Overlap with working set: %s" % (defs_set & work)
-            work = (work - defs_set) | uses_set
+            work -= defs_set
+            work |= uses_set
             if debug: print "Adding to slice: %s" % repr(insn)
             if debug: print "Current WS:", work
             
@@ -521,10 +527,9 @@ def fix_reps(trace):
             edits.append(edit)
             current_tb = labels[current_tb]
     
-    widgets = ['Fixing reps: ', Percentage(), ' ', Bar(marker=RotatingMarker()), ' ', ETA()]
-
     edits.sort()
     print "About to make %d edits to split TBs" % len(edits)
+    widgets = ['Fixing reps: ', Percentage(), ' ', Bar(marker=RotatingMarker()), ' ', ETA()]
     pbar = ProgressBar(widgets=widgets, maxval=len(edits)).start()
     i = 0
     while edits:
