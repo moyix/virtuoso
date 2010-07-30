@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-#import IPython
+import IPython
 from collections import defaultdict
 import cPickle as pickle
 
@@ -161,6 +161,10 @@ class TB(object):
     def body(self):
         return zip(range(self.start,self.end),self.trace[self.start:self.end])
 
+    @property
+    def rbody(self):
+        return self.trace[self.start:self.end]
+
 # Some utility functions for dealing with the trace:
 # Loading it from a file, splitting it into TBs, etc.
 
@@ -208,10 +212,10 @@ def make_cfg(tbs):
     cfg[tbs[-1].label] = set()
     return dict(cfg)
 
-def set_input(trace, in_addr):
+def set_input(trace, in_addr, idx):
     for var, i in trace.find_inputs(in_addr):
-        print "Replacing", `trace[i]`, "with SET_INPUT at", i
-        new_te = TraceEntry(("IFLO_SET_INPUT", [var, 0]))
+        print "Replacing", `trace[i]`, "with SET_INPUT[%d] at %d" % (idx, i)
+        new_te = TraceEntry(("IFLO_SET_INPUT", [var, idx]))
         trace[i] = new_te
 
 def load_trace(infile, start=0, num=1):
@@ -224,16 +228,18 @@ def load_trace(infile, start=0, num=1):
     outbufs = memrange(out_op.args[0], out_op.args[1])
 
     print "Finding input buffers"
-    in_idx = first(lambda i: trace[i].op == 'IFLO_LABEL_INPUT', (i for i in range(len(trace))))
-    in_op = trace[in_idx]
-    inbufs = memrange(in_op.args[0], in_op.args[1])
-
-    print "Found input at %d, output at %d" % (in_idx, out_idx)
+    inbufs = []
+    in_insns = [(i,ins) for i, ins in enumerate(trace[:100]) if ins.op == 'IFLO_LABEL_INPUT']
+    for i, ins in in_insns:
+        inbufs += memrange(ins.args[0], ins.args[1])
+    in_idx = max((i for i,_ in in_insns))
+    print "Found input at %s, output at %d" % (", ".join(str(i) for i,_ in in_insns), out_idx)
 
     # Set up the inputs
     #set_input(trace, inbufs)
-    set_input(trace, in_op.args[0])
-
+    for i, (_, ins) in enumerate(in_insns):
+        set_input(trace, ins.args[0], i)
+    
     del trace[out_idx:]
     del trace[:in_idx+1]
 
@@ -396,6 +402,9 @@ mempairs = ((mallocs[0], frees[0]),
             (mallocs[1], frees[1]),
             (mallocs[2], frees[1]), )
 
+# Note: We can't do all the replacements for these at once, as some
+#       might be nested.
+
 def nop_functions(trace, tbs, tbdict, cfg):
     # No-ops. Format: address, number of argument bytes, name
     nops = [
@@ -404,9 +413,9 @@ def nop_functions(trace, tbs, tbdict, cfg):
         (0x8054af07,  8, 'ExFreePoolWithTag'),
     ]
 
-    surgery_sites = []
     for n, argbytes, name in nops:
         if n not in tbdict: continue
+        surgery_sites = []
         summary_name = "NOP_%d" % argbytes
         for tb in tbdict[n]:
             callsite = tb.prev
@@ -426,25 +435,23 @@ def nop_functions(trace, tbs, tbdict, cfg):
                     trace[i] = new_te
                     break
 
-    surgery_sites.sort()
-    while surgery_sites:
-        st, ed, esp_p, esp_v, argbytes, summary_name = surgery_sites.pop()
-        summary = null_summary(summary_name, argbytes, esp_p, esp_v)
-        trace[st:ed] =  summary
+        surgery_sites.sort()
+        while surgery_sites:
+            st, ed, esp_p, esp_v, argbytes, summary_name = surgery_sites.pop()
+            summary = null_summary(summary_name, argbytes, esp_p, esp_v)
+            trace[st:ed] =  summary
 
-    trace, tbs, tbdict, cfg = remake_trace(trace)
+        trace, tbs, tbdict, cfg = remake_trace(trace)
 
     return trace, tbs, tbdict, cfg
 
 def detect_mallocs(trace, tbs, tbdict, cfg):
     EAX = "REGS_0"
 
-    surgery_sites = []
     # Replace the mallocs with summary functions
-    alloc_calls = defaultdict(list)
-    alloc_rets = []
     for m, argbytes, size_arg, name in mallocs:
         if m not in tbdict: continue
+        surgery_sites = []
         summary_name = "ALLOC_%d_%d" % (argbytes, size_arg)
         for tb in tbdict[m]:
             callsite = tb.prev
@@ -463,9 +470,6 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
             #print "  `-> RETURN: [%#x]" % get_tb_retval(retsite.prev)
             remove_start, remove_end = callsite.end, retsite.start
             surgery_sites.append( (remove_start, remove_end, esp_p, esp_v, argbytes, size_arg, summary_name) )
-            alloc_label = summary_name
-            alloc_rets.append((alloc_label, retsite.label))
-            alloc_calls[(m, argbytes)].append(callsite.label)
 
             # Alter the callsite so that it goes to the redirected function
             for i, te in reversed(callsite.body):
@@ -474,16 +478,14 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
                     trace[i] = new_te
                     break
 
-    # By doing them from the bottom up we can defer recalculating
-    # the indices until we're all done.
-    surgery_sites.sort()
-    while surgery_sites:
-        st, ed, esp_p, esp_v, argbytes, size_arg, summary_name = surgery_sites.pop()
-        summary = malloc_summary(summary_name, argbytes, esp_p, esp_v, size_arg)
-        trace[st:ed] =  summary
-    trace, tbs, tbdict, cfg = remake_trace(trace)
-
-    alloc_calls = dict(alloc_calls)
+        # By doing them from the bottom up we can defer recalculating
+        # the indices until we're all done.
+        surgery_sites.sort()
+        while surgery_sites:
+            st, ed, esp_p, esp_v, argbytes, size_arg, summary_name = surgery_sites.pop()
+            summary = malloc_summary(summary_name, argbytes, esp_p, esp_v, size_arg)
+            trace[st:ed] =  summary
+        trace, tbs, tbdict, cfg = remake_trace(trace)
 
     return trace, tbs, tbdict, cfg
 
@@ -540,7 +542,7 @@ def fix_reps(trace):
 
     return remake_trace(trace)
 
-def filter_interrupts(trace):
+def find_interrupts(trace):
     to_remove = []
     
     ints = trace.find_interrupts()
@@ -570,6 +572,11 @@ def filter_interrupts(trace):
             end = i
         
         to_remove.append((start,end))
+
+    return to_remove
+
+def filter_interrupts(trace):
+    to_remove = find_interrupts(trace)
 
     while to_remove:
         a,b = to_remove.pop()
@@ -705,6 +712,8 @@ if __name__ == "__main__":
 
     # Get user memory state
     mem = get_user_memory(trace)
+
+    #embedshell()
 
     # Translate it
     transdict = translate_code(trace, tbs, tbdict, cfg)

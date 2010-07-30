@@ -110,15 +110,27 @@ op_handler = {
     "IFLO_JNZ_T0_LABEL": lambda args: "T0",
     "IFLO_OPS_TEMPLATE_JNZ_ECX": lambda args: "ECX != 0",
     "IFLO_OPS_TEMPLATE_JZ_SUB": lambda args: "%s(CC_DST) == 0" % shift2fixed[args[0]],
-    "IFLO_OPS_TEMPLATE_JL_SUB": lambda args: "%s(CC_DST + CC_SRC) < %s(CC_SRC)" % (shift2fixed_sign[args[0]], shift2fixed_sign[args[0]]),
+    "IFLO_OPS_TEMPLATE_JL_SUB": lambda args: "%s(CC_DST + CC_SRC) < %s(CC_SRC)" % (shift2fixed_sign[args[0]],  shift2fixed_sign[args[0]]),
     "IFLO_OPS_TEMPLATE_JLE_SUB": lambda args: "%s(CC_DST + CC_SRC) < %s(CC_SRC)" % (shift2fixed_sign[args[0]], shift2fixed_sign[args[0]]),
-    "IFLO_OPS_TEMPLATE_JB_SUB": lambda args: "%s(CC_DST + CC_SRC) < %s(CC_SRC)" % (shift2fixed[args[0]],      shift2fixed[args[0]]),
-    "IFLO_OPS_TEMPLATE_JBE_SUB": lambda args: "%s(CC_DST + CC_SRC) <= %s(CC_SRC)" % (shift2fixed[args[0]],      shift2fixed[args[0]]),
+    "IFLO_OPS_TEMPLATE_JB_SUB": lambda args: "%s(CC_DST + CC_SRC) < %s(CC_SRC)" % (shift2fixed[args[0]],       shift2fixed[args[0]]),
+    "IFLO_OPS_TEMPLATE_JBE_SUB": lambda args: "%s(CC_DST + CC_SRC) <= %s(CC_SRC)" % (shift2fixed[args[0]],     shift2fixed[args[0]]),
+    "IFLO_OPS_TEMPLATE_JS_SUB": lambda args: "(CC_DST & SHIFT_MASK(%d))" % (args[0],),
 
     "IFLO_SYSENTER": lambda args: "ESP = sysenter_cs",
     "IFLO_SYSEXIT": lambda args: "ESP = ECX; raise Goto(int(EDX))",
 
     # These guys are ugly, no two ways about it
+    "IFLO_OPS_TEMPLATE_ROL_T0_T1_CC": lambda args: ("""
+count = T1 & SHIFT1_MASK(DATA_BITS(%d))
+
+if (count):
+    src = T0
+    T0 &= DATA_MASK(%d)
+    T0 = (T0 << count) | (T0 >> (DATA_BITS(%d) - count))
+    CC_SRC = (cc_table[CC_OP].compute_all() & ~(CC_O | CC_C)) | (lshift(src ^ T0, 11 - (DATA_BITS(%d) - 1)) & CC_O) | (T0 & CC_C)
+    CC_OP = CC_OP_EFLAGS
+"""),
+
     "IFLO_OPS_TEMPLATE_SHL_T0_T1_CC": lambda args: ("""
 count = T1 & SHIFT1_MASK(DATA_BITS(%d))
 if (count):

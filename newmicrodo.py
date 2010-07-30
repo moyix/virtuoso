@@ -90,6 +90,9 @@ def SLInt8(buf):
 def DATA_BITS(SHIFT):
     return (1 << (3 + SHIFT))
 
+def SHIFT_MASK(SHIFT):
+    return DATA_BITS(SHIFT) - 1
+
 def DATA_MASK(SHIFT):
     return { 0: 0xff,
              1: 0xffff,
