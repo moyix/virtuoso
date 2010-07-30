@@ -1,3 +1,5 @@
 #!/bin/bash
 
-genisoimage -J -r -o ${1}.iso $1
+nm=`basename ${1}`.iso
+genisoimage -J -r -o ${nm} $1
+echo "Saved to ${nm}"
