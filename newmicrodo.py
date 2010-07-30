@@ -37,6 +37,19 @@ import cPickle as pickle
 
 from forensics.win32.obj import *
 
+from curses.ascii import isprint
+FILTER=''.join([ chr(x) if (isprint(chr(x)) and chr(x) != '\n') else '.' for x in range(256)])
+
+def dump(src, length=16, start=0):
+    N=start; result=''
+    while src:
+       s,src = src[:length],src[length:]
+       hexa = ' '.join(["%02X"%ord(x) for x in s])
+       s = s.translate(FILTER)
+       result += "%08x   %-*s   %s\n" % (N, length*3, hexa, s)
+       N+=length
+    return result
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -758,8 +771,8 @@ class PCOW(object):
         return data
 
     def dump_scratch(self):
-        for start, buf in self.get_scratch().items():
-            print hex(start),":",buf.encode('hex')
+        for start, buf in sorted(self.get_scratch().items()):
+            print dump(buf,start=start)
     
     def dd(self,addr,length=0x80):
         for x in range(0,length,16):
@@ -1121,6 +1134,10 @@ class newmicrodo(forensics.commands.command):
             print "Time taken: %f ms" % ((t2-t1)*1000)
 
         print
+
+        if self.opts.debug:
+            print "Debug dump of scratch:"
+            mem.base.base.dump_scratch()
 
         # TODO: multiple outputs
         data = out.get_output('out')
