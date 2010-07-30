@@ -3282,7 +3282,8 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         data[i] = ldub_code(pc_start+i);
 
     // Hack around libdasm bug
-    if (data[0] == 0x0f && data[1] == 0x18 && data[2] == 0x06) {
+    if (data[0] == 0x0f && data[1] == 0x18 && (data[2] == 0x06 ||
+                                               data[2] == 0x08)) {
         inst.length = 3;
         strcpy(disas_string, "prefetch crap (3 byte)");
     }

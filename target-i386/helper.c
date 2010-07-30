@@ -4846,7 +4846,9 @@ void write_eip_to_iferret_log(target_ulong pc) {
 }
 
 void helper_setlogstate(int state) {
-    iferret_says_flush = 1;
+    if(state != iferret_info_flow)
+        iferret_says_flush = 1;
+
     iferret_info_flow = state;
     if(state == 1) {
         iferret_log_op_write_44(IFLO_LABEL_INPUT, phys_addr(ECX), EDX);
