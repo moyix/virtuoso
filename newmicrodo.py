@@ -1116,10 +1116,12 @@ class newmicrodo(forensics.commands.command):
         label = 'START'
         import time
         t1 = time.time()
+        isncount = 0
         while True:
             if self.opts.debug:
                 print "Executing block %s" % (hex(label) if isinstance(label,int) else label)
                 print "\n".join("  " + l for l in code[label].splitlines())
+                isncount += len([l for l in code[label].splitlines() if l.strip()])
             try:
                 exec(code[label])
             except Goto, g:
@@ -1134,7 +1136,7 @@ class newmicrodo(forensics.commands.command):
         print "Time taken: %f ms" % ((t2-t1)*1000)
         if self.opts.debug:
             print
-            print "Time taken: %f ms" % ((t2-t1)*1000)
+            print "Executed %d instructions, uMIPS: %f" % (isncount, isncount / float(t2-t1))
 
         print
 
