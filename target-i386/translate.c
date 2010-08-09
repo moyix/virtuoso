@@ -3282,12 +3282,41 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         data[i] = ldub_code(pc_start+i);
 
     // Hack around libdasm bug
-    if (data[0] == 0x0f && data[1] == 0x18 && (data[2] == 0x06 ||
-                                               data[2] == 0x08)) {
+    if (data[0] == 0x0f && data[1] == 0x18 && (data[2] == 0x00 ||
+                                               data[2] == 0x01 ||
+                                               data[2] == 0x02 ||
+                                               data[2] == 0x03 ||
+                                               data[2] == 0x06 ||
+                                               data[2] == 0x07 ||
+                                               data[2] == 0x08 ||
+                                               data[2] == 0x09 ||
+                                               data[2] == 0x0a ||
+                                               data[2] == 0x0b ||
+                                               data[2] == 0x0e ||
+                                               data[2] == 0x0f)) {
         inst.length = 3;
         strcpy(disas_string, "prefetch crap (3 byte)");
     }
-    else if (data[0] == 0x0f && data[1] == 0x18 && data[2] == 0x46) {
+    else if (data[0] == 0x0f && data[1] == 0xae && data[2] == 0xe8) {
+        inst.length = 3;
+        strcpy(disas_string, "lfence");
+    }
+    else if (data[0] == 0x0f && data[1] == 0xae && data[2] == 0xf0) {
+        inst.length = 3;
+        strcpy(disas_string, "mfence");
+    }
+    else if (data[0] == 0x0f && data[1] == 0x18 && (data[2] == 0x40 ||
+                                                    data[2] == 0x41 ||
+                                                    data[2] == 0x42 ||
+                                                    data[2] == 0x43 ||
+                                                    data[2] == 0x46 ||
+                                                    data[2] == 0x47 ||
+                                                    data[2] == 0x48 ||
+                                                    data[2] == 0x49 ||
+                                                    data[2] == 0x4a ||
+                                                    data[2] == 0x4b ||
+                                                    data[2] == 0x4e ||
+                                                    data[2] == 0x4f)) {
         inst.length = 4;
         strcpy(disas_string, "prefetch crap (4 byte)");
     }

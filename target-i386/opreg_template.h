@@ -140,8 +140,8 @@ void OPPROTO glue(glue(glue(op_movq,REGNAME),_A0),IFERRET_LOGTHING)(void)
 /* mov T1 to REG if T0 is true */
 void OPPROTO glue(glue(glue(op_cmovw,REGNAME),_T1_T0),IFERRET_LOGTHING)(void)
 {
+  iferret_log_info_flow_op_write_14(IFLO_OPREG_TEMPL_CMOVW_R_T1_T0,REGNUM,T0);
   if (T0) {
-    iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVW_R_T1_T0,REGNUM);
         REG = (REG & ~0xffff) | (T1 & 0xffff);
   }
     FORCE_RET();
@@ -149,8 +149,8 @@ void OPPROTO glue(glue(glue(op_cmovw,REGNAME),_T1_T0),IFERRET_LOGTHING)(void)
 
 void OPPROTO glue(glue(glue(op_cmovl,REGNAME),_T1_T0),IFERRET_LOGTHING)(void)
 {
+  iferret_log_info_flow_op_write_14(IFLO_OPREG_TEMPL_CMOVL_R_T1_T0,REGNUM,T0);
   if (T0) {
-    iferret_log_info_flow_op_write_1(IFLO_OPREG_TEMPL_CMOVL_R_T1_T0,REGNUM);
         REG = (uint32_t)T1;
   }
     FORCE_RET();
