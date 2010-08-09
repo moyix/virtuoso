@@ -35,6 +35,7 @@ def ARITH(dest, src):
 
 # Transfer functions
 defines_uses = {
+    'IFLO_MOVL_T1_A0': MOV('T1', 'A0'),
     'IFLO_OPREG_TEMPL_MOVL_A0_R': [
         lambda args: ['A0'],
         lambda args: ["REGS_%d" % args[0]],
@@ -114,6 +115,7 @@ defines_uses = {
     'IFLO_ADDL_ESI_T0':                 ARITH("REGS_%d" % qemu_regs["ESI"], 'T0'),
     'IFLO_OPS_TEMPLATE_BTS_T0_T1_CC':   ARITH('T0', 'T1'),
     'IFLO_OPS_TEMPLATE_BTR_T0_T1_CC':   ARITH('T0', 'T1'),
+    'IFLO_OPS_TEMPLATE_ADD_BIT_A0_T1':  ARITH('A0', 'T1'),
 
     # These can't be called with ARITH because they use args :(
     'IFLO_ADDL_A0_SEG': [
@@ -174,6 +176,7 @@ defines_uses = {
     'IFLO_SUBL_A0_4': IDENT('A0'),
     'IFLO_SUBL_A0_2': IDENT('A0'),
     'IFLO_ADDL_A0_IM': IDENT('A0'),
+    'IFLO_ADDL_T1_IM': IDENT('T1'),
     'IFLO_NEGL_T0': IDENT('T0'),
     'IFLO_NOTL_T0': IDENT('T0'),
     'IFLO_INCL_T0': IDENT('T0'),
@@ -189,6 +192,16 @@ defines_uses = {
     'IFLO_MOVL_T0_IM': OBLIT('T0'),
     'IFLO_MOVL_T1_IM': OBLIT('T1'),
     'IFLO_MOVL_T0_0': OBLIT('T0'),
+
+    'IFLO_OPREG_TEMPL_CMOVL_R_T1_T0': [
+        lambda args: ["REGS_%d" % args[0]] if args[1] else [],
+        lambda args: ["T0"] + (["T1"] if args[1] else []),
+    ],
+
+    'IFLO_OPREG_TEMPL_CMOVW_R_T1_T0': [
+        lambda args: ["REGS_%d" % args[0]] if args[1] else [],
+        lambda args: ["T0"] + (["T1"] if args[1] else []),
+    ],
 
     # Special "set the input" pseudo-op
     'IFLO_SET_INPUT': [

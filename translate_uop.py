@@ -25,6 +25,7 @@ shift2fixed_sign = {
 }
 
 op_handler = {
+    "IFLO_OPREG_TEMPL_CMOVL_R_T1_T0": lambda args: "if(T0): %s = UInt(T1)" % qemu_regs_r[args[0]],
     "IFLO_LABEL_OUTPUT": lambda args: "print mem.read(%#x,%d).encode('hex')" % (args[0],args[1]),
     "IFLO_OPREG_TEMPL_ADDL_A0_R": lambda args: "A0 += %s" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVL_R_T0": lambda args: "%s = T0" % qemu_regs_r[args[0]],
@@ -46,10 +47,15 @@ op_handler = {
     "IFLO_OPREG_TEMPL_MOVL_A0_R": lambda args: "A0 = %s" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVL_R_A0": lambda args: "%s = A0" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVW_R_T0": lambda args: "%s = T0 & 0xFFFF" % qemu_regs_r[args[0]],
+    "IFLO_OPREG_TEMPL_MOVH_R_T0": lambda args: "%s = (%s & ~0xff00) | ((T0 & 0xff) << 8)" % (qemu_regs_r[args[0]],qemu_regs_r[args[0]]),
+    "IFLO_OPREG_TEMPL_MOVH_T0_R": lambda args: "T0 = %s >> 8" % qemu_regs_r[args[0],
+    "IFLO_OPREG_TEMPL_MOVH_T1_R": lambda args: "T1 = %s >> 8" % qemu_regs_r[args[0],
     "IFLO_MOVL_A0_IM": lambda args: "A0 = UInt(%#x)" % args[0],
     "IFLO_MOVL_T0_IM": lambda args: "T0 = UInt(%#x)" % args[0],
+    "IFLO_MOVL_T1_A0": lambda args: "T1 = A0",
     "IFLO_MOVL_T1_IM": lambda args: "T1 = UInt(%#x)" % args[0],
     "IFLO_ADDL_A0_IM": lambda args: "A0 += UInt(%#x)" % args[0],
+    "IFLO_ADDL_T1_IM": lambda args: "T1 += UInt(%#x)" % args[0],
     "IFLO_ADDL_T0_T1": lambda args: "T0 += T1",
     "IFLO_SUBL_T0_T1": lambda args: "T0 -= T1",
     "IFLO_SUBL_A0_4": lambda args: "A0 -= UInt(4)",
@@ -81,9 +87,6 @@ op_handler = {
     "IFLO_MOVZWL_T0_T0": lambda args: "T0 = UInt(UShort(T0))",
     "IFLO_MOVZBL_T0_T0": lambda args: "T0 = UInt(Byte(T0))",
     "IFLO_MOVSBL_T0_T0": lambda args: "T0 = UInt(SByte(T0))",
-    "IFLO_OPS_TEMPLATE_SETZ_T0_CC": lambda args: "eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST) ; T0 = UInt((eflags >> 6) & 1)",
-    "IFLO_OPS_TEMPLATE_SETZ_T0_SUB": lambda args: "T0 = UInt(%s(CC_DST) == 0)" % shift2fixed[args[0]],
-    "IFLO_OPS_TEMPLATE_SBB_T0_T1_CC": lambda args: "cf = cc_table[int(CC_OP)].compute_c(CC_SRC,CC_DST) ; T0 = T0 - T1 - cf; CC_SRC = T1; CC_DST = T0; CC_OP = CC_OP_SUBB + %d + cf * 4" % args[0],
     "IFLO_CMPXCHG8B_PART1": lambda args: "mem.write(A0, ECX << 32 | EBX, 'Q')",
     "IFLO_OPS_TEMPLATE_SAR_T0_T1": lambda args: "T0 = T0 >> T1",
     "IFLO_TESTL_T0_T1_CC": lambda args: "CC_DST = T0 & T1",
@@ -94,7 +97,9 @@ op_handler = {
     "IFLO_UPDATE_NEG_CC": lambda args: "CC_SRC = -T0 ; CC_DST = T0",
     "IFLO_UPDATE_INC_CC": lambda args: "CC_SRC = cc_table[CC_OP].compute_c(CC_SRC,CC_DST); CC_DST = T0",
 
+    "IFLO_IMULL_EAX_T0": lambda args: "res = int(EAX)*int(T0); EAX = CC_DST = UInt(res); EDX = UInt(res >> 32); CC_SRC = UInt(res) != res",
     "IFLO_IMULL_T0_T1": lambda args: "res = int(T0)*int(T1) ; T0 = CC_DST = UInt(res) ; CC_SRC = UInt(res) != res",
+    "IFLO_MULL_EAX_T0": lambda args: "res = int(EAX)*int(T0); EAX = CC_DST = UInt(res) ; EDX = CC_SRC = UInt(res >> 32)",
     "IFLO_XORL_T0_T1": lambda args: "T0 ^= T1",
     "IFLO_SET_CC_OP": lambda args: "CC_OP = %#x" % args[0],
 
@@ -116,10 +121,77 @@ op_handler = {
     "IFLO_OPS_TEMPLATE_JBE_SUB": lambda args: "%s(CC_DST + CC_SRC) <= %s(CC_SRC)" % (shift2fixed[args[0]],     shift2fixed[args[0]]),
     "IFLO_OPS_TEMPLATE_JS_SUB": lambda args: "(CC_DST & SHIFT_MASK(%d))" % (args[0],),
 
-    "IFLO_SYSENTER": lambda args: "ESP = sysenter_cs",
+    "IFLO_SYSENTER": lambda args: "ESP = sysenter_esp",
     "IFLO_SYSEXIT": lambda args: "ESP = ECX; raise Goto(int(EDX))",
 
+    "IFLO_RDTSC": lambda args: "tsc.next()",
+
     # These guys are ugly, no two ways about it
+    "IFLO_OPS_TEMPLATE_ADC_T0_T1_CC_MEMWRITE": lambda args: ("""
+cf = cc_table[CC_OP].compute_c(CC_SRC,CC_DST)
+T0 = T0 + T1 + cf
+mem.write(A0, T0, '%s')
+CC_SRC = T1;
+CC_DST = T0;
+CC_OP = CC_OP_ADDB + %d + cf * 4
+""" % (width[args[0]], args[0])),
+
+    "IFLO_OPS_TEMPLATE_BSF_T0_CC": lambda args: ("""
+res = Int(T0 & DATA_MASK(%d))
+if (res != 0):
+    count = 0
+    while ((res & 1) == 0):
+        count += 1
+        res = res >> 1
+
+    T1 = UInt(count)
+    CC_DST = UInt(1)
+else:
+    CC_DST = UInt(0)
+""" % args[0]),
+
+    "IFLO_OPS_TEMPLATE_SBB_T0_T1_CC": lambda args: ("""
+cf = cc_table[int(CC_OP)].compute_c(CC_SRC,CC_DST) 
+T0 = T0 - T1 - cf
+CC_SRC = T1
+CC_DST = T0
+CC_OP = CC_OP_SUBB + %d + cf * 4""" % args[0]),
+
+    "IFLO_OPS_TEMPLATE_SBB_T0_T1_CC_MEMWRITE": lambda args: ("""
+cf = cc_table[int(CC_OP)].compute_c(CC_SRC,CC_DST) 
+T0 = T0 - T1 - cf
+mem.write(A0, T0, '%s')
+CC_SRC = T1
+CC_DST = T0
+CC_OP = CC_OP_SUBB + %d + cf * 4""" % (width[args[0]], args[0])),
+
+    "IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC": lambda args: ("""
+count = Int(ECX & 0x1f)
+if (count):
+    T1 &= 0xffff;
+    res = T1 | (T0 << 16)
+    tmp = res >> (32 - count)
+    res <<= count
+    if (count > 16):
+        res |= T1 << (count - 16)
+    T0 = res >> 16
+    CC_SRC = tmp
+    CC_DST = T0
+    CC_OP = CC_OP_SARB + %d
+""" % args[0]),
+
+    "IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC": lambda args: ("""
+count = Int(%d)
+res = (T0 & 0xffff) | (T1 << 16)
+tmp = res >> (count - 1)
+res >>= count
+if (count > 16):
+    res |= T1 << (32 - count)
+T0 = res
+CC_SRC = tmp
+CC_DST = T0
+""" % args[1]),
+
     "IFLO_OPS_TEMPLATE_ROL_T0_T1_CC": lambda args: ("""
 count = T1 & SHIFT1_MASK(DATA_BITS(%d))
 
@@ -199,7 +271,17 @@ CC_DST = T0
 CC_OP = CC_OP_ADDB + %d + cf * 4
 """ % (args[0],)),
     "IFLO_MOVL_EFLAGS_T0_CPL0": lambda args: "CC_SRC, DF, EFL = load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK | IF_MASK | IOPL_MASK), EFL)",
-    "IFLO_SETL_T0_CC": lambda args: "eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST); T0 = UInt(((eflags ^ (eflags >> 4)) >> 7) & 1)",
+
+    # SET{Z,B,LE?}
+    "IFLO_SETLE_T0_CC": lambda args: "eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST); T0 = UInt((((eflags ^ (eflags >> 4)) & 0x80) or (eflags & CC_Z)) != 0)",
+    "IFLO_SETL_T0_CC":  lambda args: "eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST); T0 = UInt(((eflags ^ (eflags >> 4)) >> 7) & 1)",
+    "IFLO_SETZ_T0":  lambda args: "eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST); T0 = UInt((eflags >> 6) & 1)",
+    "IFLO_SETB_T0_CC": lambda args: "T0 = cc_table[CC_OP].compute_c(CC_SRC,CC_DST)",
+    "IFLO_OPS_TEMPLATE_SETZ_T0_CC": lambda args: "eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST) ; T0 = UInt((eflags >> 6) & 1)",
+    "IFLO_OPS_TEMPLATE_SETZ_T0_SUB": lambda args: "T0 = UInt(%s(CC_DST) == 0)" % shift2fixed[args[0]],
+    "IFLO_OPS_TEMPLATE_SETBE_T0_SUB": lambda args: "src1 = Int(CC_DST + CC_SRC); src2 = Int(CC_SRC); T0 = UInt(%s(src1) <= %s(src2))" % (shift2fixed[args[0]],shift2fixed[args[0]]),
+    "IFLO_OPS_TEMPLATE_SETB_T0_SUB": lambda args: "src1 = Int(CC_DST + CC_SRC); src2 = Int(CC_SRC); T0 = UInt(%s(src1) < %s(src2))" % (shift2fixed[args[0]],shift2fixed[args[0]]),
+    "IFLO_OPS_TEMPLATE_SETLE_T0_SUB": lambda args: "src1 = Int(CC_DST + CC_SRC); src2 = Int(CC_SRC); T0 = UInt(%s(src1) <= %s(src2))" % (shift2fixed_sign[args[0]],shift2fixed_sign[args[0]]),
     
 }
 
@@ -207,16 +289,6 @@ outop_handler = {
     "IFLO_OPS_MEM_STL_T0_A0": lambda args, label: "out.write(A0,T0,'L', '%s')" % label,
     "IFLO_OPS_MEM_STB_T0_A0": lambda args, label: "out.write(A0,T0,'B', '%s')" % label,
 }
-
-#bufop_handler = {
-#    "IFLO_OPS_MEM_STL_T0_A0":  lambda args: "bufs.write(A0,T0,'L')",
-#    "IFLO_OPS_MEM_STW_T0_A0":  lambda args: "bufs.write(A0,T0,'H')",
-#    "IFLO_OPS_MEM_STB_T0_A0":  lambda args: "bufs.write(A0,T0,'B')",
-#    "IFLO_OPS_MEM_LDL_T0_A0":  lambda args: "T0 = ULInt32(bufs.read(A0,4))",
-#    "IFLO_OPS_MEM_LDL_T1_A0":  lambda args: "T1 = ULInt32(bufs.read(A0,4))",
-#    "IFLO_OPS_MEM_LDUB_T0_A0": lambda args: "T0 = ULInt8(bufs.read(A0,1))",
-#    "IFLO_OPS_MEM_LDUW_T0_A0": lambda args: "T0 = ULInt16(bufs.read(A0,2))",
-#}
 
 def fieldname(s):
     reg,field = s.split('.')
@@ -227,14 +299,6 @@ def fieldname(s):
         return "%s.%s" % (qemu_segs_r[int(idx)], field)
     else:
         raise ValueError("Invalid register class: %s" % kind)
-
-#def uop_to_py_buf(insn):
-#    try:
-#        return bufop_handler[insn.op](insn.args)
-#    except KeyError, e:
-#        print "Key not found:",e
-#        print "No dynbuf handler defined for %s" % insn.op
-#        sys.exit(1)
 
 def uop_to_py_out(insn, label):
     try:

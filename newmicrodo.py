@@ -1001,6 +1001,12 @@ def load_env(env_file):
 
     return regs
 
+def tscgen():
+    i = 0x1000
+    while True:
+        yield i
+        i += 0x1000
+
 PAE_SHIFT = 5
 PAE_FLAG = 1 << PAE_SHIFT
 DF_SHIFT = 10
@@ -1069,6 +1075,9 @@ class newmicrodo(forensics.commands.command):
         if not self.opts.micro:
             self.op.error('We need some code to execute')
 
+        # For RDTSC
+        tsc = tscgen()
+
         # Load the CPU environment
         env = load_env(open(self.opts.env))
         if self.opts.debug:
@@ -1119,7 +1128,7 @@ class newmicrodo(forensics.commands.command):
         isncount = 0
         while True:
             if self.opts.debug:
-                print "Executing block %s" % (hex(label) if isinstance(label,int) else label)
+                print "Executing block %s" % (label if isinstance(label,str) else hex(int(label)))
                 print "\n".join("  " + l for l in code[label].splitlines())
                 isncount += len([l for l in code[label].splitlines() if l.strip()])
             try:

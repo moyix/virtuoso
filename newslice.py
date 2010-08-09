@@ -493,6 +493,7 @@ def is_rep(insn):
     assert insn.op == 'IFLO_INSN_BYTES'
     PREFIX_REP = 0x03000000
     xi = pydasm.get_instruction(insn.args[1].decode('hex'), pydasm.MODE_32)
+    if not xi: return False
     return bool(xi.flags & PREFIX_REP)
 
 def fix_reps(trace):
@@ -539,6 +540,36 @@ def fix_reps(trace):
         pbar.update(i)
         (st, ed), repl = edits.pop()
         trace[st:ed] = repl
+
+    return remake_trace(trace)
+
+def fix_sti(trace, tbdict):
+    tbs_to_fix = []
+    for t in tbdict:
+        for tb in tbdict[t]:
+            if any(i.op == 'IFLO_RESET_INHIBIT_IRQ' for i in tb.rbody):
+                tbs_to_fix.append(tb)
+    edits = []
+    for tb in tbs_to_fix:
+        i, _ = first(lambda x: x[1].op == 'IFLO_RESET_INHIBIT_IRQ', tb.body)
+        assert trace[i].op   == 'IFLO_RESET_INHIBIT_IRQ'
+        assert trace[i+1].op == 'IFLO_MOVL_T0_0'
+        assert trace[i+2].op == 'IFLO_EXIT_TB'
+
+        if trace[i+3].op == 'IFLO_TB_HEAD_EIP':
+            ep = i+3
+        elif trace[i+3].op == 'IFLO_TB_ID' and trace[i+4].op == 'IFLO_TB_HEAD_EIP':
+            ep = i+4
+        else:
+            ep = i+2
+
+        print "Will heal TB %s by removing trace entry %d" % (`tb`, ep)
+        edits.append((i,ep))
+
+    edits.sort()
+    while edits:
+        a,b = edits.pop()
+        del trace[a:b+1]
 
     return remake_trace(trace)
 
@@ -683,7 +714,7 @@ if __name__ == "__main__":
     #print "about to make cfg",time.ctime()
     cfg = make_cfg(tbs)
 
-    #embedshell = IPython.Shell.IPShellEmbed(argv=[])
+    embedshell = IPython.Shell.IPShellEmbed(argv=[])
     #embedshell = lambda: None
 
     print "Size of trace before surgery: %d" % len(trace)
@@ -702,18 +733,23 @@ if __name__ == "__main__":
     print "Splitting TBs with reps..."
     trace, tbs, tbdict, cfg = fix_reps(trace)
 
+    print "Healing sti splits..."
+    trace, tbs, tbdict, cfg = fix_sti(trace, tbdict)
+
     print "Size of trace after surgery:  %d" % len(trace)
 
     print "Optimizing trace..."
     trace.optimize()
 
+    embedshell()
+
     # Perform slicing and control dependency analysis
     trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)
 
+    embedshell()
+
     # Get user memory state
     mem = get_user_memory(trace)
-
-    #embedshell()
 
     # Translate it
     transdict = translate_code(trace, tbs, tbdict, cfg)
