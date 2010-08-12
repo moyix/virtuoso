@@ -27,6 +27,19 @@ def malloc_summary(name, argbytes, esp_p, esp_v, size_arg):
 
     return summary
 
+def realloc_summary(name, argbytes, esp_p, esp_v, ptr_arg, size_arg):
+    ptr_arg_p, ptr_arg_v = (esp_p + (4*ptr_arg) + 4, esp_v + (4*ptr_arg) + 4)
+    size_arg_p, size_arg_v = (esp_p + (4*size_arg) + 4, esp_v + (4*size_arg) + 4)
+    summary = [
+        TraceEntry(('IFLO_TB_HEAD_EIP',              [name])),
+        TraceEntry(('IFLO_GET_ARG',                  [ptr_arg,ptr_arg_p,ptr_arg_v])),
+        TraceEntry(('IFLO_MOVL_T0_ARG',              [])),
+        TraceEntry(('IFLO_GET_ARG',                  [size_arg,size_arg_p,size_arg_v])),
+        TraceEntry(('IFLO_REALLOC',                  ['T0', 'ARG'])),
+    ] + ret(esp_p, esp_v, argbytes)
+
+    return summary
+
 # Do nothing but return
 def null_summary(name, argbytes, esp_p, esp_v):
     summary = [
