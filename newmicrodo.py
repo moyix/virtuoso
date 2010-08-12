@@ -23,7 +23,6 @@
 @organization: Georgia Institute of Technology / MIT Lincoln Laboratory
 """
 
-from interval import Interval, IntervalSet
 from fixedint import *
 from forensics.object2 import *
 from forensics.object import *
@@ -802,7 +801,7 @@ class VCOW:
         self.debug = False
         self.userland = {}
         self.reserved = []
-        self.allocated = IntervalSet()
+        self.allocated = {}
         self.heap_ptr = self.reserve_addr_space()
 
     def init_userland(self, userland):
@@ -878,13 +877,26 @@ class VCOW:
         else:
             self.heap_ptr += size
 
-        self.allocated.add(Interval(vaddr,vaddr+size-1))
+        self.allocated[vaddr] = (vaddr,size)
 
         if self.debug: print "DEBUG: Allocating %#x bytes at %#010x" % (size, vaddr)
 
         if zfill: self.base.write(vaddr, "\x00" * size)
 
         return UInt(vaddr)
+
+    def realloc(self, ptr, size):
+        ptr, size = int(ptr), int(size)
+        if not ptr in self.allocated:
+            raise ValueError("No existing allocation found for %#x" % ptr)
+        if not size: raise ValueError("Invalid size %d for malloc" % size)
+
+        old_ptr_st, old_size = self.allocated[ptr]
+        new_alloc = self.alloc(size)
+        if self.debug: print "DEBUG: Reallocating buffer at %#010x (%#x bytes) to %#010x (%#x bytes)" % (old_ptr, old_size, new_alloc, size)
+        self.base.write(new_alloc, self.read(old_ptr,old_size))
+
+        return new_alloc
 
 #    def get_scratch(self):
 #        data = {}
@@ -935,6 +947,24 @@ def seg_limit(e1, e2):
     if (e2 & DESC_G_MASK):
         limit = (limit << 12) | 0xfff
     return limit
+
+def load_seg_raw(mem, selector, GDT, LDT):
+    selector &= 0xffff
+    if (selector & 0x4):
+        DT = LDT
+    else:
+        DT = GDT
+
+    index = selector & ~7
+    assert (index + 7) <= DT.limit
+    
+    ptr = DT.base + index
+    
+    # GDT/LDT entries are 64 bits. Load each half.
+    e1 = ULInt32(mem.read(ptr,   4))
+    e2 = ULInt32(mem.read(ptr+4, 4))
+
+    return e1,e2
 
 def load_seg(mem, selector, GDT, LDT):
     selector &= 0xffff
