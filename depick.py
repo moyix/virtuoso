@@ -7,7 +7,7 @@ transdict,userland = load(open(sys.argv[1]))
 print "transdict = {}"
 print
 for k in transdict:
-    print 'transdict[%s] = """' % ("%#x" % k if isinstance(k, int) else "'%s'" % k,)
+    print 'transdict[%s] = """' % ("'%s'" % k if isinstance(k,str) else "%#x" % k,)
     print transdict[k]
     print '"""'
     print
