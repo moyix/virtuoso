@@ -2790,6 +2790,11 @@ static inline void helper_ret_protected(int shift, int is_iret, int addend)
 
         sp += addend;
     }
+
+    if (is_iret && iferret_info_flow) {
+        iferret_log_op_write_41(IFLO_IRET_PROTECTED,phys_addr(old_esp),rpl != cpl);
+    }
+
     SET_ESP(sp, sp_mask);
     env->eip = new_eip;
     
@@ -2836,6 +2841,7 @@ static inline void helper_ret_protected(int shift, int is_iret, int addend)
             eflags_mask &= 0xffff;
         load_eflags(new_eflags, eflags_mask);
     }
+
     return;
 
  return_to_vm86:
