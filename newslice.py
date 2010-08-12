@@ -12,8 +12,8 @@ import iferretpy
 
 from progressbar import *
 from fixedint import UInt
-from summary_functions import malloc_summary, null_summary, copyarg_summary
-from predict_insn import get_next_from_trace, x86_branches
+from summary_functions import malloc_summary, null_summary, realloc_summary
+from predict_insn import get_next_from_trace, is_branch 
 from qemu_trace import get_insns, TraceEntry
 from translate_uop import uop_to_py, uop_to_py_out
 from qemu_data import defines, uses, is_jcc, is_dynjump, is_memop, memrange
@@ -26,6 +26,9 @@ import sys, csv
 
 import re
 memrex = re.compile('IFLO_OPS_MEM_(ST|LD)[US]?([BWLQ])')
+
+# Default -- can be changed by option
+target_os = "xpsp2"
 
 # Stupid instructions
 junk = set(['IFLO_EXIT_TB', 'IFLO_GOTO_TB0', 'IFLO_GOTO_TB1',
@@ -237,8 +240,9 @@ def load_trace(infile, start=0, num=1):
 
     # Set up the inputs
     #set_input(trace, inbufs)
-    for i, (_, ins) in enumerate(in_insns):
-        set_input(trace, ins.args[0], i)
+    if len(in_insns) > 1 or in_insns[0][1].args[0] != 0:
+        for i, (_, ins) in enumerate(in_insns):
+            set_input(trace, ins.args[0], i)
     
     del trace[out_idx:]
     del trace[:in_idx+1]
@@ -267,8 +271,8 @@ def get_tb_retval(tb):
 def get_last_write(trace, addr, site):
     i = site
     while i > 0:
-        if (trace[i][1].op.startswith('IFLO_OPS_MEM_ST') and
-            trace[i][1].args[2] == addr):
+        if (trace[i].op.startswith('IFLO_OPS_MEM_ST') and
+            trace[i].args[2] == addr):
             return trace[i]
         i -= 1
     return None
@@ -282,8 +286,7 @@ def get_function_arg(trace, arg, esp, callsite):
     arg_mem = esp + (4*arg) + 4
     wr = get_last_write(trace, arg_mem, callsite)
     if wr:
-        i, t = wr
-        return t.args[-1]
+        return wr.args[-1]
     else:
         return None
 
@@ -387,31 +390,49 @@ def slice_trace(trace, inbufs, outbufs):
 
 # Domain knowledge: a list of memory allocation functions
 # Format: address, number of argument bytes, size_param, name
-mallocs = [
-    (0x7c9105d4, 12, 2, 'RtlAllocateHeap'),
-    (0x804e72c4, 12, 1, 'ExAllocatePoolWithQuotaTag'),
-    (0x8054b044, 12, 1, 'ExAllocatePoolWithTag'),
-]
+all_mallocs = {
+    "xpsp2": [
+        (0x7c9105d4, 12, 2, 'RtlAllocateHeap'),
+        (0x804e72c4, 12, 1, 'ExAllocatePoolWithQuotaTag'),
+        (0x8054b044, 12, 1, 'ExAllocatePoolWithTag'),
+    ],
+    "osx": [
+        (0x00001f7a,  0, 0, 'malloc'),
+    ],
+    "haiku": [],
+    "linux": [
+        (0x08048a20,  0, 0, 'malloc'),
+        (0x080488d0,  0, 1, 'calloc'),
+    ],
+}
 
-frees = [
-    (0x7c91043d, 12, 2, 'RtlFreeHeap'),
-    (0x8054af07,  8, 0, 'ExFreePoolWithTag'),
-]
+all_reallocs = {
+    "xpsp2": [],
+    "osx": [],
+    "haiku": [],
+    "linux": [
+        (0x080488b0,  0, 0, 1, 'realloc'),
+    ],
+}
 
-mempairs = ((mallocs[0], frees[0]),
-            (mallocs[1], frees[1]),
-            (mallocs[2], frees[1]), )
+all_nops = {
+    "xpsp2": [
+        (0x7c91043d, 12, 'RtlFreeHeap'),
+        (0x8054af07,  8, 'ExFreePoolWithTag'),
+    ],
+    "osx": [],
+    "haiku": [],
+    "linux": [
+        (0x08048960,  0, 'free'),
+    ],
+}
 
 # Note: We can't do all the replacements for these at once, as some
 #       might be nested.
 
 def nop_functions(trace, tbs, tbdict, cfg):
     # No-ops. Format: address, number of argument bytes, name
-    nops = [
-        (0x7c91043d, 12, 'RtlFreeHeap'),
-#        (0x80503f0a,  4, 'ExUnlockUserBuffer'),
-        (0x8054af07,  8, 'ExFreePoolWithTag'),
-    ]
+    nops = all_nops[target_os]
 
     for n, argbytes, name in nops:
         if n not in tbdict: continue
@@ -446,7 +467,7 @@ def nop_functions(trace, tbs, tbdict, cfg):
     return trace, tbs, tbdict, cfg
 
 def detect_mallocs(trace, tbs, tbdict, cfg):
-    EAX = "REGS_0"
+    mallocs = all_mallocs[target_os]
 
     # Replace the mallocs with summary functions
     for m, argbytes, size_arg, name in mallocs:
@@ -466,8 +487,8 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
             retsite = min((t for t in tbdict[retaddr]), key=lambda x: len(trace) if x.start < callsite.end else x.start - callsite.end)
 
             print "Call to %#x (%s) at callsite %s.%d returns to %s.%d" % (m, name, callsite._label_str(), callsite.start, retsite._label_str(), retsite.start)
-            #print "  `->   SIZE: [%#x]" % get_function_arg(trace, size_arg, esp_v, callsite.end())
-            #print "  `-> RETURN: [%#x]" % get_tb_retval(retsite.prev)
+            print "  `->   SIZE: [%#x]" % get_function_arg(trace, size_arg, esp_v, callsite.end)
+            print "  `-> RETURN: [%#x]" % get_tb_retval(retsite.prev)
             remove_start, remove_end = callsite.end, retsite.start
             surgery_sites.append( (remove_start, remove_end, esp_p, esp_v, argbytes, size_arg, summary_name) )
 
@@ -484,6 +505,51 @@ def detect_mallocs(trace, tbs, tbdict, cfg):
         while surgery_sites:
             st, ed, esp_p, esp_v, argbytes, size_arg, summary_name = surgery_sites.pop()
             summary = malloc_summary(summary_name, argbytes, esp_p, esp_v, size_arg)
+            trace[st:ed] =  summary
+        trace, tbs, tbdict, cfg = remake_trace(trace)
+
+    return trace, tbs, tbdict, cfg
+
+def detect_reallocs(trace, tbs, tbdict, cfg):
+    reallocs = all_reallocs[target_os]
+
+    # Replace the reallocs with summary functions
+    for m, argbytes, ptr_arg, size_arg, name in reallocs:
+        if m not in tbdict: continue
+        surgery_sites = []
+        summary_name = "ALLOC_%d_%d" % (argbytes, size_arg)
+        for tb in tbdict[m]:
+            callsite = tb.prev
+            
+            # Find the return address and get its TB object
+            # Note: this might fail if we have nested calls, but worry
+            # about that later. The "right" solution is a shadow stack
+            retaddr = find_retaddr(callsite)
+            esp_p, esp_v = get_callsite_esp(callsite)
+            
+            # Find the closest return site instance to this callsite
+            retsite = min((t for t in tbdict[retaddr]), key=lambda x: len(trace) if x.start < callsite.end else x.start - callsite.end)
+
+            print "Call to %#x (%s) at callsite %s.%d returns to %s.%d" % (m, name, callsite._label_str(), callsite.start, retsite._label_str(), retsite.start)
+            print "  `->    PTR: [%#x]" % get_function_arg(trace, ptr_arg, esp_v, callsite.end)
+            print "  `->   SIZE: [%#x]" % get_function_arg(trace, size_arg, esp_v, callsite.end)
+            print "  `-> RETURN: [%#x]" % get_tb_retval(retsite.prev)
+            remove_start, remove_end = callsite.end, retsite.start
+            surgery_sites.append( (remove_start, remove_end, esp_p, esp_v, argbytes, ptr_arg, size_arg, summary_name) )
+
+            # Alter the callsite so that it goes to the redirected function
+            for i, te in reversed(callsite.body):
+                if te.op == 'IFLO_JMP_T0':
+                    new_te = TraceEntry(('IFLO_CALL', [summary_name]))
+                    trace[i] = new_te
+                    break
+
+        # By doing them from the bottom up we can defer recalculating
+        # the indices until we're all done.
+        surgery_sites.sort()
+        while surgery_sites:
+            st, ed, esp_p, esp_v, argbytes, ptr_arg, size_arg, summary_name = surgery_sites.pop()
+            summary = realloc_summary(summary_name, argbytes, esp_p, esp_v, ptr_arg, size_arg)
             trace[st:ed] =  summary
         trace, tbs, tbdict, cfg = remake_trace(trace)
 
@@ -596,7 +662,9 @@ def find_interrupts(trace):
         else:
             start = a
 
-        if fault_eip == ret_eip or fault_insn.type not in x86_branches:
+        # MZ says I only need to worry about this if it's a page fault.
+        # Blame him if this breaks ;)
+        if trace[a].args[0] == 0xe and (fault_eip == ret_eip or not is_branch(fault_insn)):
             # We want to merge the new TB in with this one
             while trace[i].op != "IFLO_INSN_BYTES":
                 i += 1
@@ -701,9 +769,13 @@ def get_user_memory(trace, kernel=0x80000000):
 
 if __name__ == "__main__":
     parser = OptionParser()
+    parser.add_option('-o', '--os', help='OS that generated the trace (for malloc removal)', dest='os', default='xpsp2')
     options, args = parser.parse_args()
     if not args:
         parser.error('Trace file is required')
+
+    global target_os
+    target_os = options.os
     
     #print "about to load trace",time.ctime()
     trace, inbufs, outbufs = load_trace(args[0])
@@ -722,12 +794,15 @@ if __name__ == "__main__":
     # Get rid of interrupts
     print "Filtering interrupts..."
     trace, tbs, tbdict, cfg = filter_interrupts(trace)
+
+    embedshell()
     
     # Kill functions that just need to be stubbed out entirely
     trace, tbs, tbdict, cfg = nop_functions(trace, tbs, tbdict, cfg)
 
     # Replace mallocs with summaries
     trace, tbs, tbdict, cfg = detect_mallocs(trace, tbs, tbdict, cfg)
+    trace, tbs, tbdict, cfg = detect_reallocs(trace, tbs, tbdict, cfg)
 
     # Fix QEMU's REP craziness
     print "Splitting TBs with reps..."
