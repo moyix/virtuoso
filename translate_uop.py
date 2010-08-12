@@ -48,8 +48,8 @@ op_handler = {
     "IFLO_OPREG_TEMPL_MOVL_R_A0": lambda args: "%s = A0" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVW_R_T0": lambda args: "%s = T0 & 0xFFFF" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVH_R_T0": lambda args: "%s = (%s & ~0xff00) | ((T0 & 0xff) << 8)" % (qemu_regs_r[args[0]],qemu_regs_r[args[0]]),
-    "IFLO_OPREG_TEMPL_MOVH_T0_R": lambda args: "T0 = %s >> 8" % qemu_regs_r[args[0],
-    "IFLO_OPREG_TEMPL_MOVH_T1_R": lambda args: "T1 = %s >> 8" % qemu_regs_r[args[0],
+    "IFLO_OPREG_TEMPL_MOVH_T0_R": lambda args: "T0 = %s >> 8" % qemu_regs_r[args[0]],
+    "IFLO_OPREG_TEMPL_MOVH_T1_R": lambda args: "T1 = %s >> 8" % qemu_regs_r[args[0]],
     "IFLO_MOVL_A0_IM": lambda args: "A0 = UInt(%#x)" % args[0],
     "IFLO_MOVL_T0_IM": lambda args: "T0 = UInt(%#x)" % args[0],
     "IFLO_MOVL_T1_A0": lambda args: "T1 = A0",
@@ -78,6 +78,7 @@ op_handler = {
     "IFLO_OPREG_TEMPL_ADDL_A0_R_S2": lambda args: "A0 = A0 + (%s << 2)" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_ADDL_A0_R_S3": lambda args: "A0 = A0 + (%s << 3)" % qemu_regs_r[args[0]],
     "IFLO_ANDL_T0_T1": lambda args: "T0 &= T1",
+    "IFLO_ANDL_T0_FFFF": lambda args: "T0 &= 0xFFFF",
     "IFLO_ORL_T0_T1": lambda args: "T0 |= T1",
     "IFLO_XOR_T0_1": lambda args: "T0 ^= 1",
     "IFLO_DECL_T0": lambda args: "T0 -= 1",
@@ -107,6 +108,7 @@ op_handler = {
     "IFLO_MOVL_SEG_T0": lambda args: "%s = load_seg(mem, T0, GDT, LDT)" % qemu_segs_r[args[0]],
 
     "IFLO_MALLOC": lambda args: "EAX = mem.alloc(ARG)",
+    "IFLO_REALLOC": lambda args: "EAX = mem.realloc(%s,%s)" % (args[0], args[1]),
     "IFLO_GET_ARG": lambda args: "ARG = ULInt32(mem.read(ESP + (4*%d) + 4, 4))" % args[0],
     "IFLO_CALL": lambda args: "T0 = 0; raise Goto('%s')" % args[0],
     'IFLO_MOVL_T0_ARG': lambda args: "T0 = ARG",
@@ -121,8 +123,8 @@ op_handler = {
     "IFLO_OPS_TEMPLATE_JBE_SUB": lambda args: "%s(CC_DST + CC_SRC) <= %s(CC_SRC)" % (shift2fixed[args[0]],     shift2fixed[args[0]]),
     "IFLO_OPS_TEMPLATE_JS_SUB": lambda args: "(CC_DST & SHIFT_MASK(%d))" % (args[0],),
 
-    "IFLO_SYSENTER": lambda args: "ESP = sysenter_esp",
-    "IFLO_SYSEXIT": lambda args: "ESP = ECX; raise Goto(int(EDX))",
+    "IFLO_SYSENTER": lambda args: "ESP = sysenter_esp ; CPL = 0",
+    "IFLO_SYSEXIT": lambda args: "ESP = ECX; CPL = 3; raise Goto(int(EDX))",
 
     "IFLO_RDTSC": lambda args: "tsc.next()",
 
@@ -180,17 +182,28 @@ if (count):
     CC_OP = CC_OP_SARB + %d
 """ % args[0]),
 
-    "IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC": lambda args: ("""
-count = Int(%d)
-res = (T0 & 0xffff) | (T1 << 16)
-tmp = res >> (count - 1)
-res >>= count
-if (count > 16):
-    res |= T1 << (32 - count)
-T0 = res
+    "IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC": lambda args: ("""
+count = %d
+T0 &= DATA_MASK(%d)
+T1 &= DATA_MASK(%d)
+tmp = T0 >> (count - 1)
+T0 = (T0 >> count) | (T1 << (DATA_BITS(%d) - count))
 CC_SRC = tmp
 CC_DST = T0
-""" % args[1]),
+""" % (args[1], args[0], args[0], args[0])),
+
+    "IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC": lambda args: ("""
+count = ECX & SHIFT1_MASK(DATA_BITS(%d))
+if (count):
+    T0 &= DATA_MASK(%d)
+    T1 &= DATA_MASK(%d)
+    tmp = Int(T0 >> (count - 1))
+    T0 = (T0 >> count) | (T1 << (DATA_BITS(%d) - count))
+
+    CC_SRC = tmp
+    CC_DST = T0
+    CC_OP = CC_OP_SARB + %d
+""" % (args[0], args[0], args[0], args[0], args[0])),
 
     "IFLO_OPS_TEMPLATE_ROL_T0_T1_CC": lambda args: ("""
 count = T1 & SHIFT1_MASK(DATA_BITS(%d))
@@ -272,10 +285,40 @@ CC_OP = CC_OP_ADDB + %d + cf * 4
 """ % (args[0],)),
     "IFLO_MOVL_EFLAGS_T0_CPL0": lambda args: "CC_SRC, DF, EFL = load_eflags(T0, (TF_MASK | AC_MASK | ID_MASK | NT_MASK | IF_MASK | IOPL_MASK), EFL)",
 
+    # Protected mode IRET: we're ignoring a lot of error conditions here
+    "IFLO_IRET_PROTECTED": lambda args: ("""
+new_eip = ULInt32(mem.read(ESP, 4)); ESP += 4
+new_cs = ULInt32(mem.read(ESP, 4)); ESP += 4
+new_cs &= 0xffff
+new_eflags = ULInt32(mem.read(ESP, 4)); ESP += 4
+new_cs_seg = load_seg(mem, new_cs, GDL, LDT)
+rpl = new_cs & 3
+if rpl == CPL:
+    CS = new_cs_seg
+else:
+    new_esp = ULInt32(mem.read(ESP, 4)); ESP += 4
+    new_ss  = ULInt32(mem.read(ESP, 4)); ESP += 4
+    new_ss &= 0xffff
+    SS = load_seg(mem, new_ss, GDL, LDT)
+    ESP = new_esp
+    CS = new_cs_seg
+
+eflags_mask = TF_MASK | AC_MASK | ID_MASK | RF_MASK | NT_MASK
+if (CPL == 0):
+    eflags_mask |= IOPL_MASK
+iopl = (EFL >> IOPL_SHIFT) & 3
+if (CPL <= iopl)
+    eflags_mask |= IF_MASK
+CC_SRC, DF, EFL = load_eflags(new_eflags, eflags_mask, EFL)
+
+CPL = rpl
+
+raise Goto(int(new_eip))"""),
+
     # SET{Z,B,LE?}
     "IFLO_SETLE_T0_CC": lambda args: "eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST); T0 = UInt((((eflags ^ (eflags >> 4)) & 0x80) or (eflags & CC_Z)) != 0)",
     "IFLO_SETL_T0_CC":  lambda args: "eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST); T0 = UInt(((eflags ^ (eflags >> 4)) >> 7) & 1)",
-    "IFLO_SETZ_T0":  lambda args: "eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST); T0 = UInt((eflags >> 6) & 1)",
+    "IFLO_SETZ_T0_CC":  lambda args: "eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST); T0 = UInt((eflags >> 6) & 1)",
     "IFLO_SETB_T0_CC": lambda args: "T0 = cc_table[CC_OP].compute_c(CC_SRC,CC_DST)",
     "IFLO_OPS_TEMPLATE_SETZ_T0_CC": lambda args: "eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST) ; T0 = UInt((eflags >> 6) & 1)",
     "IFLO_OPS_TEMPLATE_SETZ_T0_SUB": lambda args: "T0 = UInt(%s(CC_DST) == 0)" % shift2fixed[args[0]],
