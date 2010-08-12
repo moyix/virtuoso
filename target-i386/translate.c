@@ -6921,9 +6921,6 @@ static inline int gen_intermediate_code_internal(CPUState *env,
     pc_ptr = pc_start;
     lj = -1;
     
-    if(iferret_info_flow)
-        iferret_log_op_write_4(IFLO_TB_ID, pc_start);
-
     // TRL 0901 add a prologue to head of every translation block
     // to manage info-flow stuff. 
     // Look at op.c/op_info_flow_prologue() to know what this contains.
