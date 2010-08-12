@@ -562,10 +562,10 @@ void OPPROTO glue(glue(glue(op_shrd, MEM_SUFFIX), _T0_T1_im_cc),IFERRET_LOGTHING
     tmp = T0 >> (count - 1);
     T0 = (T0 >> count) | (T1 << (DATA_BITS - count));
 #ifdef MEM_WRITE
-    iferret_log_info_flow_op_write_14(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,phys_a0());
+    iferret_log_info_flow_op_write_144(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC_MEMWRITE,SHIFT,phys_a0(),PARAM1);
     glue(st, MEM_SUFFIX)(A0, T0);
 #else
-    iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC,SHIFT);
+    iferret_log_info_flow_op_write_14(IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC,SHIFT,PARAM1);
 #endif
     CC_SRC = tmp;
     CC_DST = T0;
