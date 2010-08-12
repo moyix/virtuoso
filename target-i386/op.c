@@ -1547,7 +1547,6 @@ void OPPROTO glue(op_iret_real,IFERRET_LOGTHING)(void)
 
 void OPPROTO glue(op_iret_protected,IFERRET_LOGTHING)(void)
 {
-  iferret_log_info_flow_op_write_0(IFLO_IRET_PROTECTED);
     helper_iret_protected(PARAM1, PARAM2);
 }
 
