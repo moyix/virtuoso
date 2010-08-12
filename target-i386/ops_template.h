@@ -643,7 +643,7 @@ void OPPROTO glue(glue(glue(op_out, SUFFIX), _T0_T1),IFERRET_LOGTHING)(void)
   }
 
   // apparently this is the port # for network out.    
-  if(T0 == 0xc110){
+  else if(T0 == 0xc110){
 #if SUFFIX_QUOTED == 'b'
     //	IFLW_NETWORK_OUTPUT_BYTE_T1();	
     iferret_log_info_flow_op_write_0(IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_BYTE_T1); 
@@ -654,6 +654,9 @@ void OPPROTO glue(glue(glue(op_out, SUFFIX), _T0_T1),IFERRET_LOGTHING)(void)
     //	IFLW_NETWORK_OUTPUT_LONG_T1();	
     iferret_log_info_flow_op_write_0(IFLO_OPS_TEMPLATE_NETWORK_OUTPUT_LONG_T1); 
 #endif	 
+  }
+  else {
+    iferret_log_info_flow_op_write_144(IFLO_OPS_TEMPLATE_OUT_T0_T1,SHIFT,T0,T1 & DATA_MASK);
   }
 
   glue(cpu_out, SUFFIX)(env, T0, T1 & DATA_MASK);
@@ -688,7 +691,7 @@ void OPPROTO glue(glue(glue(op_in, SUFFIX), _T0_T1),IFERRET_LOGTHING)(void)
     else {
       //  IFLW_SHIFT(IN_T0_T1);
       // log this just to be able to delete taint on T1.
-      iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_IN_T0_T1,SHIFT);
+      iferret_log_info_flow_op_write_144(IFLO_OPS_TEMPLATE_IN_T0_T1,SHIFT,T0,T1);
     }
   }  
 
@@ -731,7 +734,7 @@ void OPPROTO glue(glue(glue(op_in, SUFFIX), _DX_T0),IFERRET_LOGTHING)(void)
     else {
       //  IFLW_SHIFT(IN_DX_T0);
       // basically, we just want to know that T0 got overwritten here. 
-      iferret_log_info_flow_op_write_1(IFLO_OPS_TEMPLATE_IN_DX_T0,SHIFT);
+      iferret_log_info_flow_op_write_144(IFLO_OPS_TEMPLATE_IN_DX_T0,SHIFT,EDX & 0xffff,T0);
     }
   }
 
@@ -761,6 +764,7 @@ void OPPROTO glue(glue(glue(op_out, SUFFIX), _DX_T0),IFERRET_LOGTHING)(void)
 #endif
     }
     else {
+      iferret_log_info_flow_op_write_144(IFLO_OPS_TEMPLATE_OUT_DX_T0,SHIFT,EDX & 0xffff,T0);
       // ??
     }
   }
