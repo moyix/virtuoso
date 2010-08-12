@@ -7,6 +7,11 @@ qemu_segs_r = dict(enumerate([ 'ES', 'CS', 'SS', 'DS', 'FS', 'GS' ]))
 qemu_regs = dict((y,x) for x,y in qemu_regs_r.items())
 qemu_segs = dict((y,x) for x,y in qemu_segs_r.items())
 
+def REG(x):
+    return "REGS_%d" % qemu_regs[x]
+def SEG(x):
+    return ['SEGS_%d.%s' % (qemu_segs['CS'], part) for part in "base", "limit", "selector", "flags"]
+
 # Some generic definitions to make life easier
 IGNORE = [ lambda args: [], lambda args: [] ]
 def OBLIT(x):
@@ -89,16 +94,23 @@ defines_uses = {
         lambda args: [field_from_env(args[1])],
     ],
     'IFLO_DIVL_EAX_T0': [
-        lambda args: ["REGS_%d" % qemu_regs["EAX"], "REGS_%d" % qemu_regs["EDX"]],
-        lambda args: ["REGS_%d" % qemu_regs["EAX"], "REGS_%d" % qemu_regs["EDX"], 'T0'],
+        lambda args: [REG("EAX"), REG("EDX")],
+        lambda args: [REG("EAX"), REG("EDX"), 'T0'],
     ],
     'IFLO_IDIVL_EAX_T0': [
-        lambda args: ["REGS_%d" % qemu_regs["EAX"], "REGS_%d" % qemu_regs["EDX"]],
-        lambda args: ["REGS_%d" % qemu_regs["EAX"], "REGS_%d" % qemu_regs["EDX"], 'T0'],
+        lambda args: [REG("EAX"), REG("EDX")],
+        lambda args: [REG("EAX"), REG("EDX"), 'T0'],
     ],
+
+    # CPU INs and OUTs -- these are going to be stored in the pkl
+    # until a better idea comes along
     'IFLO_OPS_TEMPLATE_IN_T0_T1': [
         lambda args: ['T1'],
-        lambda args: ['T0'],
+        lambda args: ['T0', 'IO_%x' % args[1]],
+    ],
+    'IFLO_OPS_TEMPLATE_OUT_T0_T1': [
+        lambda args: ['IO_%x' % args[1]],
+        lambda args: ['T0', 'T1'],
     ],
     
     # Arithmentic operations, e.g. T0 += T1
@@ -111,8 +123,8 @@ defines_uses = {
     'IFLO_ORL_T0_T1':                   ARITH('T0', 'T1'),
     'IFLO_ADDL_T0_T1':                  ARITH('T0', 'T1'),
     'IFLO_ANDL_T0_T1':                  ARITH('T0', 'T1'),
-    'IFLO_ADDL_EDI_T0':                 ARITH("REGS_%d" % qemu_regs["EDI"], 'T0'),
-    'IFLO_ADDL_ESI_T0':                 ARITH("REGS_%d" % qemu_regs["ESI"], 'T0'),
+    'IFLO_ADDL_EDI_T0':                 ARITH(REG("EDI"), 'T0'),
+    'IFLO_ADDL_ESI_T0':                 ARITH(REG('ESI'), 'T0'),
     'IFLO_OPS_TEMPLATE_BTS_T0_T1_CC':   ARITH('T0', 'T1'),
     'IFLO_OPS_TEMPLATE_BTR_T0_T1_CC':   ARITH('T0', 'T1'),
     'IFLO_OPS_TEMPLATE_ADD_BIT_A0_T1':  ARITH('A0', 'T1'),
@@ -139,22 +151,18 @@ defines_uses = {
         lambda args: ['A0', "REGS_%d" % args[0]],
     ],
     'IFLO_MOVSLQ_EDX_EAX': [
-        lambda args: ["REGS_%d" % qemu_regs['EDX']],
-        lambda args: ["REGS_%d" % qemu_regs['EAX']],
+        lambda args: [REG('EDX')],
+        lambda args: [REG('EAX')],
     ],
     
     # Fast sytem call mechanism
     'IFLO_SYSENTER': [
-        lambda args: ['SEGS_%d.%s' % (qemu_segs['CS'], part) for part in "base", "limit", "selector", "flags"] + 
-                     ['SEGS_%d.%s' % (qemu_segs['SS'], part) for part in "base", "limit", "selector", "flags"] + 
-                     ["REGS_%d" % qemu_regs["ESP"]],
+        lambda args: SEG('CS') + SEG('SS') + [REG('ESP'), 'CPL'],
         lambda args: ["SYSENTER_ESP", "SYSENTER_CS"],
     ],
     'IFLO_SYSEXIT': [
-        lambda args: ['SEGS_%d.%s' % (qemu_segs['CS'], part) for part in "base", "limit", "selector", "flags"] + 
-                     ['SEGS_%d.%s' % (qemu_segs['SS'], part) for part in "base", "limit", "selector", "flags"] + 
-                     ["REGS_%d" % qemu_regs["ESP"]],
-        lambda args: ["SYSENTER_CS", "REGS_%d" % qemu_regs["ECX"], "REGS_%d" % qemu_regs["EDX"]],
+        lambda args: SEG('CS') + SEG('SS') + [REG('ESP'), 'CPL'],
+        lambda args: ["SYSENTER_CS", REG('ECX'), REG('EDX')],
     ],
 
     'IFLO_OPS_MEM_LDL_T0_A0':  LOAD('T0', 4),
@@ -183,14 +191,15 @@ defines_uses = {
     'IFLO_DECL_T0': IDENT('T0'),
     'IFLO_XOR_T0_1': IDENT('T0'),
     'IFLO_ANDL_T0_FFFF': IDENT('T0'),
-    'IFLO_DECL_ECX': IDENT("REGS_%d" % qemu_regs["ECX"]),
-    'IFLO_ADDL_ESP_4': IDENT("REGS_%d" % qemu_regs["ESP"]),
-    'IFLO_ADDL_ESP_2': IDENT("REGS_%d" % qemu_regs["ESP"]),
-    'IFLO_ADDL_ESP_IM': IDENT("REGS_%d" % qemu_regs["ESP"]),
+    'IFLO_DECL_ECX': IDENT(REG('ECX')),
+    'IFLO_ADDL_ESP_4': IDENT(REG('ESP')),
+    'IFLO_ADDL_ESP_2': IDENT(REG('ESP')),
+    'IFLO_ADDL_ESP_IM': IDENT(REG('ESP')),
 
     'IFLO_MOVL_A0_IM': OBLIT('A0'),
     'IFLO_MOVL_T0_IM': OBLIT('T0'),
     'IFLO_MOVL_T1_IM': OBLIT('T1'),
+    'IFLO_MOVL_T1_IMU': OBLIT('T1'),
     'IFLO_MOVL_T0_0': OBLIT('T0'),
 
     'IFLO_OPREG_TEMPL_CMOVL_R_T1_T0': [
@@ -211,12 +220,16 @@ defines_uses = {
 
     # Memory allocation pseudo-op
     'IFLO_MALLOC': [
-        lambda args: ["REGS_%d" % qemu_regs["EAX"]],
+        lambda args: [REG('EAX')],
         lambda args: ["ARG"],
+    ],
+    'IFLO_REALLOC': [
+        lambda args: [REG('EAX')],
+        lambda args: args,
     ],
     'IFLO_GET_ARG': [
         lambda args: ["ARG"],
-        lambda args: ["REGS_%d" % qemu_regs["ESP"]] + memrange(args[1],4),
+        lambda args: [REG('ESP')] + memrange(args[1],4),
     ],
     'IFLO_MOVL_T0_ARG': MOV('T0','ARG'),
     'IFLO_MOVL_A0_ARG': MOV('A0','ARG'),
@@ -227,11 +240,11 @@ defines_uses = {
     # in is_jcc()
     'IFLO_OPS_TEMPLATE_JNZ_ECX': [
         lambda args: [],
-        lambda args: ["REGS_%d" % qemu_regs["ECX"]],
+        lambda args: [REG('ECX')],
     ],
     'IFLO_OPS_TEMPLATE_JZ_ECX': [
         lambda args: [],
-        lambda args: ["REGS_%d" % qemu_regs["ECX"]],
+        lambda args: [REG('ECX')],
     ],
     'IFLO_JMP_T0': [
         lambda args: [],
@@ -246,6 +259,15 @@ defines_uses = {
         lambda args: ['T0'],
     ],
 
+    'IFLO_IRET_PROTECTED': [
+        lambda args: [REG('ESP'), 'EFLAGS', 'CPL', 'CC_SRC', 'DF'] + SEG('CS') + (SEG('SS') if args[1] else []),
+        lambda args: [REG('ESP'), 'CPL'] + SEG('SS') + memrange(args[0], 0x14 if args[1] else 0xc),
+    ],
+#    'IFLO_LCALL_PROTECTED_T0_T1': [
+#        lambda args: [],
+#        lambda args: ['T0', 'T1'],
+#    ],
+
     # Turns out this is legit to ignore, it's only used
     # in the introspection code :p
     'IFLO_CPU_PHYSICAL_MEMORY_RW': IGNORE,
@@ -254,7 +276,6 @@ defines_uses = {
     'IFLO_PID_CHANGE': IGNORE,
     'IFLO_UID_CHANGE': IGNORE,
     'IFLO_SYSEXIT_RET': IGNORE,
-    'IFLO_IRET_PROTECTED': IGNORE,
     'IFLO_INTERRUPT': IGNORE,
     'IFLO_LABEL_INPUT': IGNORE,
     'IFLO_LABEL_OUTPUT': IGNORE,
@@ -283,20 +304,20 @@ defines_uses = {
 
     # Conditionals: THE TIME IS NOW
     'IFLO_AAA': [
-        lambda args: ['CC_SRC', "REGS_%d" % qemu_regs['EAX']],
-        lambda args: ['CC_OP', 'CC_SRC', 'CC_DST', "REGS_%d" % qemu_regs['EAX']],
+        lambda args: ['CC_SRC', REG('EAX')],
+        lambda args: ['CC_OP', 'CC_SRC', 'CC_DST', REG('EAX')],
     ],
     'IFLO_AAD': [
-        lambda args: ["REGS_%d" % qemu_regs['EAX'], 'CC_DST'],
-        lambda args: ["REGS_%d" % qemu_regs['EAX']],
+        lambda args: [REG('EAX'), 'CC_DST'],
+        lambda args: [REG('EAX')],
     ],
     'IFLO_AAM': [
-        lambda args: ["REGS_%d" % qemu_regs['EAX'], 'CC_DST'],
-        lambda args: ["REGS_%d" % qemu_regs['EAX']],
+        lambda args: [REG('EAX'), 'CC_DST'],
+        lambda args: [REG('EAX')],
     ],
     'IFLO_AAS': [
-        lambda args: ['CC_SRC', "REGS_%d" % qemu_regs['EAX']],
-        lambda args: ['CC_OP', 'CC_SRC', 'CC_DST', "REGS_%d" % qemu_regs['EAX']],
+        lambda args: ['CC_SRC', REG('EAX')],
+        lambda args: ['CC_OP', 'CC_SRC', 'CC_DST', REG('EAX')],
     ],
     'IFLO_ARPL_UPDATE': [
         lambda args: ['CC_SRC'],
@@ -315,32 +336,32 @@ defines_uses = {
         lambda args: ['T0', 'T1'],
     ],
     'IFLO_DAA': [
-        lambda args: ['CC_SRC', "REGS_%d" % qemu_regs['EAX']],
-        lambda args: ['CC_OP', 'CC_SRC', 'CC_DST', "REGS_%d" % qemu_regs['EAX']],
+        lambda args: ['CC_SRC', REG('EAX')],
+        lambda args: ['CC_OP', 'CC_SRC', 'CC_DST', REG('EAX')],
     ],
     'IFLO_DAS': [
-        lambda args: ['CC_SRC', "REGS_%d" % qemu_regs['EAX']],
-        lambda args: ['CC_OP', 'CC_SRC', 'CC_DST', "REGS_%d" % qemu_regs['EAX']],
+        lambda args: ['CC_SRC', REG('EAX')],
+        lambda args: ['CC_OP', 'CC_SRC', 'CC_DST', REG('EAX')],
     ],
     'IFLO_GENEFLAGS': [
         lambda args: ['CC_SRC'],
         lambda args: ['CC_OP', 'CC_SRC', 'CC_DST'],
     ],
     'IFLO_IMULB_AL_T0': [
-        lambda args: ['CC_SRC', 'CC_DST', "REGS_%d" % qemu_regs['EAX']],
-        lambda args: ["REGS_%d" % qemu_regs['EAX'], 'T0'],
+        lambda args: ['CC_SRC', 'CC_DST', REG('EAX')],
+        lambda args: [REG('EAX'), 'T0'],
     ],
     'IFLO_IMULL_EAX_T0': [
-        lambda args: ["REGS_%d" % qemu_regs['EAX'], "REGS_%d" % qemu_regs['EDX'], 'CC_SRC', 'CC_DST'],
-        lambda args: ["REGS_%d" % qemu_regs['EAX'], 'T0'],
+        lambda args: [REG('EAX'), REG('EDX'), 'CC_SRC', 'CC_DST'],
+        lambda args: [REG('EAX'), 'T0'],
     ],
     'IFLO_IMULL_T0_T1': [
         lambda args: ['T0', 'CC_SRC', 'CC_DST'],
         lambda args: ['T0', 'T1'],
     ],
     'IFLO_IMULW_AX_T0': [
-        lambda args: ["REGS_%d" % qemu_regs['EAX'], "REGS_%d" % qemu_regs['EDX'], 'CC_SRC', 'CC_DST'],
-        lambda args: ["REGS_%d" % qemu_regs['EAX'], "REGS_%d" % qemu_regs['EDX'], 'T0'],
+        lambda args: [REG('EAX'), REG('EDX'), 'CC_SRC', 'CC_DST'],
+        lambda args: [REG('EAX'), REG('EDX'), 'T0'],
     ],
     'IFLO_IMULW_T0_T1': [
         lambda args: ['T0', 'CC_SRC', 'CC_DST'],
@@ -357,11 +378,11 @@ defines_uses = {
 
     'IFLO_CMPXCHG8B_PART1': [
         lambda args: ['CC_SRC'] + memrange(args[0], 8),
-        lambda args: ["REGS_%d" for r in [qemu_regs[n] for n in ["EAX","EBX","ECX","EDX"] ] ] + ['A0', 'CC_OP'] + memrange(args[0], 8),
+        lambda args: [REG(n) for n in ["EAX","EBX","ECX","EDX"] ] + ['A0', 'CC_OP'] + memrange(args[0], 8),
     ],
     'IFLO_CMPXCHG8B_PART2': [
-        lambda args: ['CC_SRC', "REGS_%d" % qemu_regs['EDX'], "REGS_%d" % qemu_regs['EAX']],
-        lambda args: ["REGS_%d" for r in [qemu_regs[n] for n in ["EAX","EBX","ECX","EDX"] ] ] + ['A0', 'CC_OP', 'CC_SRC', 'CC_DST'] + memrange(args[0], 8),
+        lambda args: ['CC_SRC', REG('EDX'), REG('EAX')],
+        lambda args: [REG(n) for n in ["EAX","EBX","ECX","EDX"] ] + ['A0', 'CC_OP', 'CC_SRC', 'CC_DST'] + memrange(args[0], 8),
     ],
 
     'IFLO_LAR': [
@@ -405,16 +426,16 @@ defines_uses = {
         lambda args: ['EFLAGS', 'T0'],
     ],
     'IFLO_MULB_AL_T0': [
-        lambda args: ['CC_DST', 'CC_SRC', "REGS_%d" % qemu_regs['EAX']],
-        lambda args: ["REGS_%d" % qemu_regs['EAX'], 'T0'],
+        lambda args: ['CC_DST', 'CC_SRC', REG('EAX')],
+        lambda args: [REG('EAX'), 'T0'],
     ],
     'IFLO_MULL_EAX_T0': [
-        lambda args: ['CC_DST', 'CC_SRC', "REGS_%d" % qemu_regs['EAX'], "REGS_%d" % qemu_regs['EDX']],
-        lambda args: ["REGS_%d" % qemu_regs['EAX'], 'T0'],
+        lambda args: ['CC_DST', 'CC_SRC', REG('EAX'), REG('EDX')],
+        lambda args: [REG('EAX'), 'T0'],
     ],
     'IFLO_MULW_AX_T0': [
-        lambda args: ['CC_DST', 'CC_SRC', "REGS_%d" % qemu_regs['EAX'], "REGS_%d" % qemu_regs['EDX']],
-        lambda args: ["REGS_%d" % qemu_regs['EAX'], "REGS_%d" % qemu_regs['EDX'], 'T0'],
+        lambda args: ['CC_DST', 'CC_SRC', REG('EAX'), REG('EDX')],
+        lambda args: [REG('EAX'), REG('EDX'), 'T0'],
     ],
 
     'IFLO_OPS_TEMPLATE_ADC_T0_T1_CC': [
@@ -538,11 +559,11 @@ defines_uses = {
 
     'IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC': [
         lambda args: ['CC_SRC', 'CC_DST', 'CC_OP', 'T0', 'T1'],
-        lambda args: ["REGS_%d" % qemu_regs['ECX'], 'T1', 'T0'],
+        lambda args: [REG('ECX'), 'T1', 'T0'],
     ],
     'IFLO_OPS_TEMPLATE_SHLD_T0_T1_ECX_CC_MEMWRITE': [
         lambda args: ['CC_SRC', 'CC_DST', 'CC_OP', 'T0', 'T1'] + memrange(args[1], 1 << args[0]),
-        lambda args: ["REGS_%d" % qemu_regs['ECX'], 'T1', 'T0', 'A0'],
+        lambda args: [REG('ECX'), 'T1', 'T0', 'A0'],
     ],
     'IFLO_OPS_TEMPLATE_SHLD_T0_T1_IM_CC': [
         lambda args: ['CC_SRC', 'CC_DST', 'CC_OP', 'T0', 'T1'],
@@ -562,11 +583,11 @@ defines_uses = {
     ],
     'IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC': [
         lambda args: ['CC_SRC', 'CC_DST', 'CC_OP', 'T0', 'T1'],
-        lambda args: ["REGS_%d" % qemu_regs['ECX'], 'T1', 'T0'],
+        lambda args: [REG('ECX'), 'T1', 'T0'],
     ],
     'IFLO_OPS_TEMPLATE_SHRD_T0_T1_ECX_CC_MEMWRITE': [
         lambda args: ['CC_SRC', 'CC_DST', 'CC_OP', 'T0', 'T1'] + memrange(args[1], 1 << args[0]),
-        lambda args: ["REGS_%d" % qemu_regs['ECX'], 'T1', 'T0', 'A0'],
+        lambda args: [REG('ECX'), 'T1', 'T0', 'A0'],
     ],
     'IFLO_OPS_TEMPLATE_SHRD_T0_T1_IM_CC': [
         lambda args: ['CC_SRC', 'CC_DST', 'CC_OP', 'T0', 'T1'],
@@ -586,12 +607,12 @@ defines_uses = {
     ],
 
     'IFLO_RDTSC': [
-        lambda args: ["REGS_%d" % qemu_regs['EAX'], "REGS_%d" % qemu_regs['EDX']],
+        lambda args: [REG('EAX'), REG('EDX')],
         lambda args: [],
     ],
     'IFLO_SALC': [
-        lambda args: ["REGS_%d" % qemu_regs['EAX']],
-        lambda args: ['CC_OP', 'CC_SRC', 'CC_DST', "REGS_%d" % qemu_regs['EAX']],
+        lambda args: [REG('EAX')],
+        lambda args: ['CC_OP', 'CC_SRC', 'CC_DST', REG('EAX')],
     ],
 
     'IFLO_SETBE_T0_CC': [
@@ -669,15 +690,15 @@ defines_uses = {
 
     'IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC': [
         lambda args: ['T0', 'CC_SRC', 'CC_DST'],
-        lambda args: ['T0', "REGS_%d" % qemu_regs['EAX'], 'T1'],
+        lambda args: ['T0', REG('EAX'), 'T1'],
     ],
     'IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_CASE2': [
-        lambda args: ["REGS_%d" % qemu_regs['EAX'], 'CC_SRC', 'CC_DST'],
-        lambda args: ['T0', "REGS_%d" % qemu_regs['EAX']],
+        lambda args: [REG('EAX'), 'CC_SRC', 'CC_DST'],
+        lambda args: ['T0', REG('EAX')],
     ],
     'IFLO_OPS_TEMPLATE_CMPXCHG_T0_T1_EAX_CC_MEMWRITE': [
-        lambda args: ["REGS_%d" % qemu_regs['EAX'], 'CC_SRC', 'CC_DST'] + memrange(args[1], 1 << args[0]),
-        lambda args: ['T0', 'T1', "REGS_%d" % qemu_regs['EAX'], 'A0'],
+        lambda args: [REG('EAX'), 'CC_SRC', 'CC_DST'] + memrange(args[1], 1 << args[0]),
+        lambda args: ['T0', 'T1', REG('EAX'), 'A0'],
     ],
 
     'IFLO_INVLPG_A0': IGNORE,
@@ -739,7 +760,6 @@ defines_uses = {
 #    'IFLO_HELPER_RSM'
 #    'IFLO_IRET_PROTECTED'
 #    'IFLO_IRET_REAL'
-#    'IFLO_LCALL_PROTECTED_T0_T1'
 #    'IFLO_LCALL_REAL_T0_T1'
 #    'IFLO_LJMP_PROTECTED_T0_T1'
 #    'IFLO_LRET_PROTECTED'
@@ -769,6 +789,8 @@ def is_dynjump(op):
         'IFLO_JMP_T0',
         'IFLO_CALL',
         'IFLO_SYSEXIT',
+        'IFLO_IRET_PROTECTED',
+        'IFLO_LCALL_PROTECTED_T0_T1',
     ]
 
 def is_memop(insn):
