@@ -517,7 +517,7 @@ def detect_reallocs(trace, tbs, tbdict, cfg):
     for m, argbytes, ptr_arg, size_arg, name in reallocs:
         if m not in tbdict: continue
         surgery_sites = []
-        summary_name = "ALLOC_%d_%d" % (argbytes, size_arg)
+        summary_name = "REALLOC_%d_%d" % (argbytes, size_arg)
         for tb in tbdict[m]:
             callsite = tb.prev
             

@@ -140,8 +140,6 @@ class iferret_op_t(Structure):
     def __repr__(self):
         return "%s(%s)" % (self.op, ",".join(repr(x) for x in CArray(self._args, self.num_args)))
 
-shadow = {}
-
 class op_arr_t(Structure):
     _fields_ = [
         ("num", c_ulong),
