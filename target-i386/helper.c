@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "exec.h"
 //#include "lookup_table.h"
@@ -4859,6 +4860,26 @@ void helper_setlogstate(int state) {
     if(state == 1) {
         iferret_log_op_write_44(IFLO_LABEL_INPUT, phys_addr(ECX), EDX);
         printf("Enabled iferret logging.\n");
+        {
+            int i;
+            FILE *f;
+            char name[256];
+            strcpy(name, iferret_log_prefix);
+            strcat(name, ".mem");
+            f = fopen(name, "w");
+            for (i = 0; i < phys_ram_size ; i += 0x1000) {
+                fwrite(phys_ram_base + i, 0x1000, 1, f);
+            }
+            printf("Done dumping RAM to %s\n", name);
+            fclose(f);
+
+            strcpy(name, iferret_log_prefix);
+            strcat(name, ".env");
+            f = fopen(name, "w");
+            cpu_dump_state(env, f, fprintf, X86_DUMP_FPU);
+            printf("Saved CPU env to %s\n", name);
+            fclose(f);
+        }
     }
     else {
         iferret_log_op_write_44(IFLO_LABEL_OUTPUT, phys_addr(ECX), EDX);
