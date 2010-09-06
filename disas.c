@@ -3,6 +3,7 @@
 #include "dis-asm.h"
 #include "elf.h"
 #include <errno.h>
+#include <stdio.h>
 
 #include "cpu.h"
 #include "exec-all.h"

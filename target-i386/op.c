@@ -1961,11 +1961,13 @@ void OPPROTO glue(op_movl_T0_eflags_vm,IFERRET_LOGTHING)(void)
 
 void OPPROTO glue(op_cld,IFERRET_LOGTHING)(void)
 {
+    iferret_log_info_flow_op_write_0(IFLO_CLD);
     DF = 1;
 }
 
 void OPPROTO glue(op_std,IFERRET_LOGTHING)(void)
 {
+    iferret_log_info_flow_op_write_0(IFLO_STD);
     DF = -1;
 }
 

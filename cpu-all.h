@@ -26,6 +26,7 @@
 
 
 #include "iferret_log.h"
+#include <stdio.h>
 
 /* some important defines:
  *

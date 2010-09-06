@@ -20,17 +20,11 @@
 #if !defined(__DYNGEN_EXEC_H__)
 #define __DYNGEN_EXEC_H__
 
-/* prevent Solaris from trying to typedef FILE in gcc's
-   include/floatingpoint.h which will conflict with the
-   definition down below */
-#ifdef __sun__
-#define _FILEDEFED
-#endif
-
 /* NOTE: standard headers should be used with special care at this
    point because host CPU registers are used as global variables. Some
    host headers do not allow that. */
 #include <stddef.h>
+#include <stdio.h>
 
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
@@ -89,14 +83,6 @@ typedef void * host_reg_t;
 #define UINT64_MAX		((uint64_t)(18446744073709551615))
 #endif
 
-#ifdef _BSD
-typedef struct __sFILE FILE;
-#else
-typedef struct FILE FILE;
-#endif
-extern int fprintf(FILE *, const char *, ...);
-extern int fputs(const char *, FILE *);
-extern int printf(const char *, ...);
 #undef NULL
 #define NULL 0
 

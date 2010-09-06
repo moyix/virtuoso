@@ -35,6 +35,7 @@ target_phys_addr_t cpu_get_phys_addr(CPUState *env, target_ulong addr);
 int cpu_virtual_memory_read(CPUState *env, uint32_t addr, char *out, uint32_t length);
 
 extern uint8_t iferret_says_flush;
+extern char *iferret_log_prefix;
 
 /*
 // addr is a 32-bit address.  

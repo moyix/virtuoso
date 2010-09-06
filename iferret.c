@@ -103,11 +103,19 @@ void op_arr_destroy() {
 
 int op_arr_find_interrupt(int s, int *start, int *end) {
     int i;
+    int balance;
     uint32_t addr;
     for (i=s; i < op_arr.num; i++) {
         if (op_arr.ops[i].num == IFLO_INTERRUPT) {
-            *start = i;
+            balance = 1;
             addr = op_arr.ops[i].arg[1].val.u32;
+            *start = i;
+            while(i < op_arr.num) {
+                i++;
+                if (op_arr.ops[i].num == IFLO_INTERRUPT) balance++;
+                else if (op_arr.ops[i].num == IFLO_IRET_PROTECTED) balance--;
+                if (balance == 0) break;
+            }
             while (i < op_arr.num) {
                 i++;
                 if (op_arr.ops[i].num == IFLO_TB_HEAD_EIP &&
