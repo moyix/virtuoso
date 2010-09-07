@@ -1,10 +1,11 @@
 #!/usr/bin/env python2.6
 
 import IPython
+
 from collections import defaultdict
 import cPickle as pickle
-
 import time, datetime
+import sys, csv, os.path
 
 import pydasm
 
@@ -21,8 +22,6 @@ from pprint import pprint
 from optparse import OptionParser
 from gzip import GzipFile
 from struct import pack
-
-import sys, csv
 
 import re
 memrex = re.compile('IFLO_OPS_MEM_(ST|LD)[US]?([BWLQ])')
@@ -810,9 +809,12 @@ def get_user_memory(trace, kernel=0x80000000):
 if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option('-o', '--os', help='OS that generated the trace (for malloc removal)', dest='os', default='xpsp2')
+    parser.add_option('-s', '--stats', help='print stats at end', dest='stats', default=False, action='store_true')
     options, args = parser.parse_args()
     if not args:
         parser.error('Trace file is required')
+    elif not os.path.isfile(args[0]+"-0"):
+        parser.error('No such file')
 
     target_os = options.os
     
@@ -858,7 +860,7 @@ if __name__ == "__main__":
     print "Optimizing trace..."
     trace.optimize()
 
-    embedshell()
+    #embedshell()
 
     # Perform slicing and control dependency analysis
     trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)
@@ -866,7 +868,7 @@ if __name__ == "__main__":
     # Get user memory state
     mem = get_user_memory(trace,kmem[target_os])
 
-    embedshell()
+    #embedshell()
 
     # Translate it
     transdict = translate_code(trace, tbs, tbdict, cfg)
@@ -880,3 +882,11 @@ if __name__ == "__main__":
     f = open(fname, 'w')
     pickle.dump((transdict, mem), f, pickle.HIGHEST_PROTOCOL)
     f.close()
+    
+    if options.stats:
+        total = sum(1 for x in trace if x.op not in junk)
+        slice = sum(1 for x in trace if x.op not in junk and x.in_slice)
+        print "Sliced/Total: %d/%d" % (slice, total)
+        tbmarked = sum(1 for t in tbs if t.has_slice())
+        tbtotal = len(tbs)
+        print "TB sliced/total: %d/%d" % (tbmarked,tbtotal)
