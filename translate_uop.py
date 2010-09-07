@@ -47,6 +47,7 @@ op_handler = {
     "IFLO_OPREG_TEMPL_MOVL_A0_R": lambda args: "A0 = %s" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVL_R_A0": lambda args: "%s = A0" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVW_R_T0": lambda args: "%s = T0 & 0xFFFF" % qemu_regs_r[args[0]],
+    "IFLO_OPREG_TEMPL_MOVW_R_T1": lambda args: "%s = T1 & 0xFFFF" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVH_R_T0": lambda args: "%s = (%s & ~0xff00) | ((T0 & 0xff) << 8)" % (qemu_regs_r[args[0]],qemu_regs_r[args[0]]),
     "IFLO_OPREG_TEMPL_MOVH_T0_R": lambda args: "T0 = %s >> 8" % qemu_regs_r[args[0]],
     "IFLO_OPREG_TEMPL_MOVH_T1_R": lambda args: "T1 = %s >> 8" % qemu_regs_r[args[0]],
@@ -116,15 +117,21 @@ op_handler = {
 
     "IFLO_JNZ_T0_LABEL": lambda args: "T0",
     "IFLO_OPS_TEMPLATE_JNZ_ECX": lambda args: "ECX != 0",
-    "IFLO_OPS_TEMPLATE_JZ_SUB": lambda args: "%s(CC_DST) == 0" % shift2fixed[args[0]],
+    "IFLO_OPS_TEMPLATE_JZ_SUB":  lambda args: "%s(CC_DST) == 0" % shift2fixed[args[0]],
+    "IFLO_OPS_TEMPLATE_JNZ_SUB": lambda args: "%s(CC_DST) != 0" % shift2fixed[args[0]],
     "IFLO_OPS_TEMPLATE_JL_SUB": lambda args: "%s(CC_DST + CC_SRC) < %s(CC_SRC)" % (shift2fixed_sign[args[0]],  shift2fixed_sign[args[0]]),
-    "IFLO_OPS_TEMPLATE_JLE_SUB": lambda args: "%s(CC_DST + CC_SRC) < %s(CC_SRC)" % (shift2fixed_sign[args[0]], shift2fixed_sign[args[0]]),
+    "IFLO_OPS_TEMPLATE_JLE_SUB": lambda args: "%s(CC_DST + CC_SRC) <= %s(CC_SRC)" % (shift2fixed_sign[args[0]], shift2fixed_sign[args[0]]),
     "IFLO_OPS_TEMPLATE_JB_SUB": lambda args: "%s(CC_DST + CC_SRC) < %s(CC_SRC)" % (shift2fixed[args[0]],       shift2fixed[args[0]]),
     "IFLO_OPS_TEMPLATE_JBE_SUB": lambda args: "%s(CC_DST + CC_SRC) <= %s(CC_SRC)" % (shift2fixed[args[0]],     shift2fixed[args[0]]),
-    "IFLO_OPS_TEMPLATE_JS_SUB": lambda args: "(CC_DST & SHIFT_MASK(%d))" % (args[0],),
+    "IFLO_OPS_TEMPLATE_JS_SUB": lambda args: "(CC_DST & SIGN_MASK(%d))" % (args[0],),
 
-    "IFLO_SYSENTER": lambda args: "ESP = sysenter_esp ; CPL = 0",
-    "IFLO_SYSEXIT": lambda args: "ESP = ECX; CPL = 3; raise Goto(int(EDX))",
+    "IFLO_SYSENTER_DATA": lambda args: "ESP = sysenter_esp ; CPL = 0",
+    "IFLO_SYSEXIT_DATA": lambda args: "ESP = ECX; CPL = 3",
+    "IFLO_SYSENTER_CONTROL": lambda args: "raise Goto(int(sysenter_eip))",
+    "IFLO_SYSEXIT_CONTROL": lambda args: "raise Goto(int(EDX))",
+
+    "IFLO_STD": lambda args: "DF = -1",
+    "IFLO_CLD": lambda args: "DF = 1",
 
     "IFLO_RDTSC": lambda args: "tsc.next()",
 
@@ -330,6 +337,7 @@ raise Goto(int(new_eip))"""),
 
 outop_handler = {
     "IFLO_OPS_MEM_STL_T0_A0": lambda args, label: "out.write(A0,T0,'L', '%s')" % label,
+    "IFLO_OPS_MEM_STW_T0_A0": lambda args, label: "out.write(A0,T0,'H', '%s')" % label,
     "IFLO_OPS_MEM_STB_T0_A0": lambda args, label: "out.write(A0,T0,'B', '%s')" % label,
 }
 
