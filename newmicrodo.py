@@ -89,6 +89,9 @@ def SLInt8(buf):
 def DATA_BITS(SHIFT):
     return (1 << (3 + SHIFT))
 
+def SIGN_MASK(SHIFT):
+    return ((UInt(1)) << (DATA_BITS(SHIFT) - 1))
+
 def SHIFT_MASK(SHIFT):
     return DATA_BITS(SHIFT) - 1
 
@@ -816,6 +819,7 @@ class VCOW:
             cr3 = self.base.pgd_vaddr
             entries = unpack("<1024I", pcow.read(cr3, 0x1000))
             for i, e in enumerate(entries):
+                if i == 0: continue
                 vaddr = i << 22
                 if not e & 1 and not vaddr in self.reserved:
                     self.reserved.append(vaddr)
@@ -877,7 +881,7 @@ class VCOW:
         else:
             self.heap_ptr += size
 
-        self.allocated[vaddr] = (vaddr,size)
+        self.allocated[int(vaddr)] = (int(vaddr),int(size))
 
         if self.debug: print "DEBUG: Allocating %#x bytes at %#010x" % (size, vaddr)
 
@@ -887,14 +891,17 @@ class VCOW:
 
     def realloc(self, ptr, size):
         ptr, size = int(ptr), int(size)
+
+        if not ptr: return self.alloc(size)
+
         if not ptr in self.allocated:
             raise ValueError("No existing allocation found for %#x" % ptr)
         if not size: raise ValueError("Invalid size %d for malloc" % size)
 
-        old_ptr_st, old_size = self.allocated[ptr]
+        old_ptr, old_size = self.allocated[ptr]
         new_alloc = self.alloc(size)
         if self.debug: print "DEBUG: Reallocating buffer at %#010x (%#x bytes) to %#010x (%#x bytes)" % (old_ptr, old_size, new_alloc, size)
-        self.base.write(new_alloc, self.read(old_ptr,old_size))
+        self.base.write(int(new_alloc), self.read(old_ptr,old_size))
 
         return new_alloc
 
@@ -997,8 +1004,8 @@ def load_env(env_file):
             regs[var] = UInt(int(val, 16))
     # EIP and EFLAGS
     current = env_file.readline().strip()
-    eip,efl,_ = current.split(" ", 2)
-    for c in [eip,efl]:
+    eip,efl,_,cpl,_ = current.split(" ", 4)
+    for c in [eip,efl,cpl]:
         var,val = c.split('=')
         regs[var] = UInt(int(val, 16))
     # Segment registers
@@ -1168,7 +1175,7 @@ class newmicrodo(forensics.commands.command):
                 else: label = g.label
             except Exception, e:
                 print ">>>> ERROR:",e,"<<<<"
-                print code[label]
+                #print code[label]
                 import pdb
                 pdb.post_mortem(sys.exc_info()[2])
         t2 = time.time()
