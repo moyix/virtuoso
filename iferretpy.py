@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import sys
-import IPython
 from immutablelist import ImmutableList
 from iferret_ops import iferret_log_op_enum_r
 from ctypes import *
@@ -255,5 +254,6 @@ def load_trace(base, start=0, num=1):
 
 if __name__ == "__main__":
     trace = load_trace(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]))
+    import IPython
     embedshell = IPython.Shell.IPShellEmbed(argv=[])
     embedshell()
