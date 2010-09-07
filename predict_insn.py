@@ -11,11 +11,15 @@ PREFIX_REP = 0x03000000
 x86_branches = set([pydasm.INSTRUCTION_TYPE_RET,
                     pydasm.INSTRUCTION_TYPE_JMP,
                     pydasm.INSTRUCTION_TYPE_JMPC,
-                    pydasm.INSTRUCTION_TYPE_CALL])
+                    pydasm.INSTRUCTION_TYPE_CALL,
+                    pydasm.INSTRUCTION_TYPE_INT,
+                    pydasm.INSTRUCTION_TYPE_SYSENTER])
 
 def is_branch(insn):
     # One of the branch types or an IRET
-    return insn.type in x86_branches or insn.opcode == 0xcf
+    return (insn.type in x86_branches 
+             or pydasm.get_mnemonic_string(insn, pydasm.FORMAT_INTEL) == 'iret'
+             or pydasm.get_mnemonic_string(insn, pydasm.FORMAT_INTEL) == 'sysexit')
 
 def predict_next(addr, insn):
     fall_through = addr+insn.length
