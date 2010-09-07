@@ -142,7 +142,7 @@ int op_arr_find_input(int s, uint32_t addr, int *t) {
                 break;
             case IFLO_OPS_MEM_LDL_T1_A0:
                 if (op_arr.ops[i].arg[1].val.u32 == addr) {
-                    *t = 0;
+                    *t = 1;
                     return i;
                 }
                 break;
