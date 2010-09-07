@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.6
 
 import IPython
 from collections import defaultdict
@@ -217,7 +217,7 @@ def make_cfg(tbs):
 
 def set_input(trace, in_addr, idx):
     for var, i in trace.find_inputs(in_addr):
-        print "Replacing", `trace[i]`, "with SET_INPUT[%d] at %d" % (idx, i)
+        #print "Replacing", `trace[i]`, "with SET_INPUT[%d] at %d" % (idx, i)
         new_te = TraceEntry(("IFLO_SET_INPUT", [var, idx]))
         trace[i] = new_te
 
@@ -393,14 +393,16 @@ def slice_trace(trace, inbufs, outbufs):
 all_mallocs = {
     "xpsp2": [
         (0x7c9105d4, 12, 2, 'RtlAllocateHeap'),
-        (0x804e72c4, 12, 1, 'ExAllocatePoolWithQuotaTag'),
-        (0x8054b044, 12, 1, 'ExAllocatePoolWithTag'),
+#        (0x804e72c4, 12, 1, 'ExAllocatePoolWithQuotaTag'),
+#        (0x8054b044, 12, 1, 'ExAllocatePoolWithTag'),
     ],
     "osx": [
         (0x00001f7a,  0, 0, 'malloc'),
     ],
     "haiku": [],
     "linux": [
+        #(0x080483f8,  0, 0, 'malloc'),
+        #(0x080483ec,  0, 0, 'malloc'),
         (0x08048a20,  0, 0, 'malloc'),
         (0x080488d0,  0, 1, 'calloc'),
     ],
@@ -418,7 +420,7 @@ all_reallocs = {
 all_nops = {
     "xpsp2": [
         (0x7c91043d, 12, 'RtlFreeHeap'),
-        (0x8054af07,  8, 'ExFreePoolWithTag'),
+ #       (0x8054af07,  8, 'ExFreePoolWithTag'),
     ],
     "osx": [],
     "haiku": [],
@@ -595,7 +597,7 @@ def fix_reps(trace):
 
             edits.append(edit)
             current_tb = labels[current_tb]
-    
+
     edits.sort()
     print "About to make %d edits to split TBs" % len(edits)
     widgets = ['Fixing reps: ', Percentage(), ' ', Bar(marker=RotatingMarker()), ' ', ETA()]
@@ -618,18 +620,28 @@ def fix_sti(trace, tbdict):
     edits = []
     for tb in tbs_to_fix:
         i, _ = first(lambda x: x[1].op == 'IFLO_RESET_INHIBIT_IRQ', tb.body)
+
+        j = i
+        while trace[j].op != 'IFLO_INSN_BYTES':
+            j -= 1
+        last_idx = j
+        last_eip = trace[j].args[0]
+        last_insn = pydasm.get_instruction(trace[j].args[1].decode('hex'), pydasm.MODE_32)
+
         assert trace[i].op   == 'IFLO_RESET_INHIBIT_IRQ'
         assert trace[i+1].op == 'IFLO_MOVL_T0_0'
         assert trace[i+2].op == 'IFLO_EXIT_TB'
 
-        if trace[i+3].op == 'IFLO_TB_HEAD_EIP':
+        if is_branch(last_insn):
+            ep = i+2
+        elif trace[i+3].op == 'IFLO_TB_HEAD_EIP':
             ep = i+3
         elif trace[i+3].op == 'IFLO_TB_ID' and trace[i+4].op == 'IFLO_TB_HEAD_EIP':
             ep = i+4
         else:
             ep = i+2
 
-        print "Will heal TB %s by removing trace entry %d" % (`tb`, ep)
+        #print "Will heal TB %s by removing trace entry %d" % (`tb`, ep)
         edits.append((i,ep))
 
     edits.sort()
@@ -657,7 +669,7 @@ def find_interrupts(trace):
         ret_eip = trace[i].args[0]
         end = i # Default: delete up to the HEAD_EIP (i.e. start a new block)
         
-        if fault_eip == ret_eip:
+        if trace[a].args[0] < 32 and fault_eip == ret_eip:
             start = fault_idx
         else:
             start = a
@@ -683,6 +695,27 @@ def filter_interrupts(trace):
 
     return remake_trace(trace)
 
+def split_fastcall(trace):
+    edits = []
+    for i,e in enumerate(trace):
+        if e.op == 'IFLO_SYSENTER':
+            edits.append( (i, [
+                TraceEntry(('IFLO_SYSENTER_DATA',[])),
+                TraceEntry(('IFLO_SYSENTER_CONTROL',[]))
+            ]))
+        elif e.op == 'IFLO_SYSEXIT':
+            edits.append( (i, [
+                TraceEntry(('IFLO_SYSEXIT_DATA',[])),
+                TraceEntry(('IFLO_SYSEXIT_CONTROL',[]))
+            ]))
+
+    edits.sort()
+    while edits:
+        i, rep = edits.pop()
+        trace[i:i+1] = rep
+
+    return remake_trace(trace)
+
 def translate_code(trace, tbs, tbdict, cfg):
     # It's translation time!
     transdict = {}
@@ -697,10 +730,10 @@ def translate_code(trace, tbs, tbdict, cfg):
 
         # No need to bother with these
         if not any(t.has_slice() for t in cur):
-            print "Skipping %s" % repr(cur[0])
+            #print "Skipping %s" % repr(cur[0])
             continue
 
-        print "Translating %s" % repr(first(lambda x: x.has_slice(), cur))
+        #print "Translating %s" % repr(first(lambda x: x.has_slice(), cur))
 
         if not next:
             # Last node (woo special cases)
@@ -743,6 +776,13 @@ def translate_code(trace, tbs, tbdict, cfg):
 
     return transdict
 
+kmem = {
+    'linux': 0xc0000000,
+    'xpsp2': 0x80000000,
+    'haiku': 0x80000000, # ??
+    'osx':   0x80000000, # ??
+}
+
 def get_user_memory(trace, kernel=0x80000000):
     m2p = {
         'Q': 'Q',
@@ -774,7 +814,6 @@ if __name__ == "__main__":
     if not args:
         parser.error('Trace file is required')
 
-    global target_os
     target_os = options.os
     
     #print "about to load trace",time.ctime()
@@ -795,8 +834,12 @@ if __name__ == "__main__":
     print "Filtering interrupts..."
     trace, tbs, tbdict, cfg = filter_interrupts(trace)
 
-    embedshell()
-    
+    #embedshell()
+
+    # Fix QEMU's REP craziness
+    print "Splitting TBs with reps..."
+    trace, tbs, tbdict, cfg = fix_reps(trace)
+
     # Kill functions that just need to be stubbed out entirely
     trace, tbs, tbdict, cfg = nop_functions(trace, tbs, tbdict, cfg)
 
@@ -804,12 +847,11 @@ if __name__ == "__main__":
     trace, tbs, tbdict, cfg = detect_mallocs(trace, tbs, tbdict, cfg)
     trace, tbs, tbdict, cfg = detect_reallocs(trace, tbs, tbdict, cfg)
 
-    # Fix QEMU's REP craziness
-    print "Splitting TBs with reps..."
-    trace, tbs, tbdict, cfg = fix_reps(trace)
-
     print "Healing sti splits..."
     trace, tbs, tbdict, cfg = fix_sti(trace, tbdict)
+
+    print "Splitting sysenter/sysexit..."
+    trace, tbs, tbdict, cfg = split_fastcall(trace)
 
     print "Size of trace after surgery:  %d" % len(trace)
 
@@ -821,10 +863,10 @@ if __name__ == "__main__":
     # Perform slicing and control dependency analysis
     trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)
 
-    embedshell()
-
     # Get user memory state
-    mem = get_user_memory(trace)
+    mem = get_user_memory(trace,kmem[target_os])
+
+    embedshell()
 
     # Translate it
     transdict = translate_code(trace, tbs, tbdict, cfg)
