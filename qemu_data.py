@@ -156,13 +156,21 @@ defines_uses = {
     ],
     
     # Fast sytem call mechanism
-    'IFLO_SYSENTER': [
+    'IFLO_SYSENTER_DATA': [
         lambda args: SEG('CS') + SEG('SS') + [REG('ESP'), 'CPL'],
         lambda args: ["SYSENTER_ESP", "SYSENTER_CS"],
     ],
-    'IFLO_SYSEXIT': [
+    'IFLO_SYSENTER_CONTROL': [
+        lambda args: [],
+        lambda args: ["SYSENTER_EIP"],
+    ],
+    'IFLO_SYSEXIT_DATA': [
         lambda args: SEG('CS') + SEG('SS') + [REG('ESP'), 'CPL'],
-        lambda args: ["SYSENTER_CS", REG('ECX'), REG('EDX')],
+        lambda args: ["SYSENTER_CS", REG('ECX')],
+    ],
+    'IFLO_SYSEXIT_CONTROL': [
+        lambda args: [],
+        lambda args: [REG('EDX')],
     ],
 
     'IFLO_OPS_MEM_LDL_T0_A0':  LOAD('T0', 4),
@@ -323,6 +331,8 @@ defines_uses = {
         lambda args: ['CC_SRC'],
         lambda args: ['CC_OP', 'CC_SRC', 'CC_DST', 'T1'],
     ],
+    'IFLO_STD': OBLIT('DF'),
+    'IFLO_CLD': OBLIT('DF'),
     'IFLO_CLC': [
         lambda args: ['CC_SRC'],
         lambda args: ['CC_OP', 'CC_SRC', 'CC_DST'],
@@ -772,20 +782,23 @@ defines_uses = {
 
 def is_jcc(op):
     return op in [
+        'IFLO_JNZ_T0_LABEL',
+        'IFLO_JZ_T0_LABEL',
         'IFLO_OPS_TEMPLATE_JBE_SUB',
         'IFLO_OPS_TEMPLATE_JB_SUB',
         'IFLO_OPS_TEMPLATE_JLE_SUB',
         'IFLO_OPS_TEMPLATE_JL_SUB',
         'IFLO_OPS_TEMPLATE_JNZ_ECX',
+        'IFLO_OPS_TEMPLATE_JNZ_SUB',
         'IFLO_OPS_TEMPLATE_JS_SUB',
         'IFLO_OPS_TEMPLATE_JZ_ECX',
         'IFLO_OPS_TEMPLATE_JZ_SUB',
-        'IFLO_JNZ_T0_LABEL',
-        'IFLO_JZ_T0_LABEL',
     ]
 
 def is_dynjump(op):
     return op in [
+        'IFLO_SYSEXIT_CONTROL',
+        'IFLO_SYSENTER_CONTROL',
         'IFLO_JMP_T0',
         'IFLO_CALL',
         'IFLO_SYSEXIT',
