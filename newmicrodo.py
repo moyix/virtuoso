@@ -1026,14 +1026,13 @@ def load_env(env_file):
         var,val = c.split('=')
         regs[var] = UInt(int(val, 16))
     
-    # Check for the sysenter MSRs
+    # Check for the sysenter MSRs and DR regs
     current = env_file.readline().strip().split()
     while current:
-        if current[0].startswith('sysenter'):
+        if current[0].startswith('sysenter') or current[0].startswith('DR'):
             for c in current:
                 var,val = c.split('=')
                 regs[var] = UInt(int(val, 16))
-            break
         current = env_file.readline().strip().split()
 
     return regs
@@ -1041,7 +1040,10 @@ def load_env(env_file):
 def tscgen():
     i = 0x1000
     while True:
-        yield i
+        EAX = UInt(i);
+        EDX = UInt(i >> 32);
+
+        yield EAX, EDX
         i += 0x1000
 
 PAE_SHIFT = 5

@@ -216,7 +216,7 @@ def make_cfg(tbs):
 
 def set_input(trace, in_addr, idx):
     for var, i in trace.find_inputs(in_addr):
-        #print "Replacing", `trace[i]`, "with SET_INPUT[%d] at %d" % (idx, i)
+        #print "Replacing", `trace[i]`, "with SET_INPUT[%s,%d] at %d" % (var, idx, i)
         new_te = TraceEntry(("IFLO_SET_INPUT", [var, idx]))
         trace[i] = new_te
 
@@ -361,7 +361,9 @@ def slice_trace(trace, inbufs, outbufs):
                     #dynslice(trace, uses(isn), start=i)
                     isn.mark()
             
-    multislice(trace, wlist)
+    if wlist:
+        multislice(trace, wlist)
+
     end_ts = time.time()
     print "Added branches in %s" % (datetime.timedelta(seconds=end_ts-start_ts))
 
@@ -599,6 +601,9 @@ def fix_reps(trace):
 
     edits.sort()
     print "About to make %d edits to split TBs" % len(edits)
+
+    if not edits: return remake_trace(trace)
+
     widgets = ['Fixing reps: ', Percentage(), ' ', Bar(marker=RotatingMarker()), ' ', ETA()]
     pbar = ProgressBar(widgets=widgets, maxval=len(edits)).start()
     i = 0
@@ -868,7 +873,7 @@ if __name__ == "__main__":
     # Get user memory state
     mem = get_user_memory(trace,kmem[target_os])
 
-    #embedshell()
+    embedshell()
 
     # Translate it
     transdict = translate_code(trace, tbs, tbdict, cfg)

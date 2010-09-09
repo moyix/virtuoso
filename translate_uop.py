@@ -59,6 +59,7 @@ op_handler = {
     "IFLO_ADDL_T1_IM": lambda args: "T1 += UInt(%#x)" % args[0],
     "IFLO_ADDL_T0_T1": lambda args: "T0 += T1",
     "IFLO_SUBL_T0_T1": lambda args: "T0 -= T1",
+    "IFLO_SUBL_A0_2": lambda args: "A0 -= UInt(2)",
     "IFLO_SUBL_A0_4": lambda args: "A0 -= UInt(4)",
     "IFLO_ADDL_ESP_IM": lambda args: "ESP += UInt(%#x)" % args[0],
     "IFLO_ADDL_ESP_4": lambda args: "ESP += UInt(4)",
@@ -133,7 +134,9 @@ op_handler = {
     "IFLO_STD": lambda args: "DF = -1",
     "IFLO_CLD": lambda args: "DF = 1",
 
-    "IFLO_RDTSC": lambda args: "tsc.next()",
+    "IFLO_MOVTL_T0_ENV": lambda args: ("T0 = %s" % (fieldname(field_from_env(args[1])) or "UInt(0)")),
+
+    "IFLO_RDTSC": lambda args: "EAX, EDX = tsc.next()",
 
     # These guys are ugly, no two ways about it
     "IFLO_OPS_TEMPLATE_ADC_T0_T1_CC_MEMWRITE": lambda args: ("""
@@ -276,7 +279,7 @@ T0 = UInt(eflags)
 """),
 
     "IFLO_DIVL_EAX_T0": lambda args: ("""
-num = int( UInt(EAX) | (ULong(UInt(EDX) << 32) ) )
+num = int(EAX) | (int(EDX) << 32)
 den = int(T0)
 q,r = divmod(num,den)
 EAX = UInt(q)
@@ -348,8 +351,11 @@ def fieldname(s):
         return "%s.%s" % (qemu_regs_r[int(idx)], field)
     elif kind == "SEGS":
         return "%s.%s" % (qemu_segs_r[int(idx)], field)
+    elif kind == "DR":
+        return "DR%s" % (idx,)
     else:
-        raise ValueError("Invalid register class: %s" % kind)
+        print ("Invalid register class: %s" % kind)
+        return None
 
 def uop_to_py_out(insn, label):
     try:
