@@ -5,7 +5,7 @@ if [ -z $VISUAL ]; then
 fi
 
 [ $# -eq 1 ] || (echo "usage: $0 <pickle>" && exit 1)
-TMPFILE=`mktemp -t pickle.XXXX`
+TMPFILE=`mktemp -t pickle.XXXX.py`
 TMPOUT=`mktemp -t pickle.XXXX`
 depick.py "$1" > "$TMPFILE"
 $VISUAL "$TMPFILE"
