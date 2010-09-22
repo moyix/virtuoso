@@ -724,8 +724,8 @@ def translate_code(trace, tbs, tbdict, cfg):
     # It's translation time!
     transdict = {}
     for i in range(len(tbs)-1):
-        transdict[tbs[i].label] = "raise Goto(%s)" % tbs[i+1]._label_str()
-    transdict[tbs[-1].label] = "raise Goto('__end__')"
+        transdict[tbs[i].label] = "label = %s" % tbs[i+1]._label_str()
+    transdict[tbs[-1].label] = "label = '__end__'"
 
     # Iterate over the finished CFG and translate each TB
     for c in cfg:
@@ -742,13 +742,13 @@ def translate_code(trace, tbs, tbdict, cfg):
         if not next:
             # Last node (woo special cases)
             s = simple_translate(cur)
-            s.append("raise Goto('__end__')")
+            s.append("label = '__end__'")
             transdict[cur[0].label] = "\n".join(s)
         elif len(next) == 1:
             #s =  "\n".join("%s" % insn for _, insn in cur[0].body if insn.in_slice)
             s = simple_translate(cur)
             next_tb = tbdict[next[0]][0]
-            s.append("raise Goto(%s)" % next_tb._label_str())
+            s.append("label = %s" % next_tb._label_str())
             transdict[cur[0].label] = "\n".join(s)
         elif cur[0].has_dynjump():
             transdict[cur[0].label] = "\n".join(simple_translate(cur))
@@ -772,10 +772,10 @@ def translate_code(trace, tbs, tbdict, cfg):
                 if any( insn.in_slice for _, insn in insns ):
                     insn = insns[0][1]
                     if is_jcc(insn.op):
-                        s.append("if (%s): raise Goto(%s)\n" % (tr(insn), taken))
+                        s.append("if (%s): label = %s" % (tr(insn), taken))
                     else:
                         s.append(tr(insn))
-            s.append("raise Goto(%s)" % succ)
+            s.append("else: label = %s" % succ)
             transdict[cur[0].label] = "\n".join(s)
 
     return transdict
@@ -873,7 +873,7 @@ if __name__ == "__main__":
     # Get user memory state
     mem = get_user_memory(trace,kmem[target_os])
 
-    embedshell()
+    #embedshell()
 
     # Translate it
     transdict = translate_code(trace, tbs, tbdict, cfg)
