@@ -154,19 +154,19 @@ class op_arr_t(Structure):
 
     def __setitem__(self, i, v):
         #print "Setting", i, "to", `v`
-        iferret.op_arr_clear(i, 1)
+        iferret.op_arr_clear(byref(self), i, 1)
 
     def __setslice__(self, i, j, seq):
         #print "Setting %d-%d to %s" % (i,j,seq)
         n = len(seq)
 
         if j - i < n:
-            iferret.op_arr_movedown(j, n-(j-i))
+            iferret.op_arr_movedown(byref(self), j, n-(j-i))
 
-        iferret.op_arr_clear(i, n)
+        iferret.op_arr_clear(byref(self), i, n)
 
         if j - i > n:
-            iferret.op_arr_moveup(j, (j - i) - n)
+            iferret.op_arr_moveup(byref(self), j, (j - i) - n)
 
     def __delitem__(self, i):
         del self[i:i+1]    
@@ -177,22 +177,22 @@ class op_arr_t(Structure):
         if not 0 <= i < self.num: raise IndexError(i)
         #print "Deleting from %d-%d" % (i,j)
 
-        iferret.op_arr_moveup(j, j-i)
+        iferret.op_arr_moveup(byref(self), j, j-i)
 
     def __len__(self):
         return self.num
 
     def optimize(self):
-        iferret.op_arr_fit()
+        iferret.op_arr_fit(byref(self))
 
     def find_interrupts(self):
         ints = []
         a, b = c_int(), c_int()
 
-        ret = iferret.op_arr_find_interrupt(0, pointer(a), pointer(b))
+        ret = iferret.op_arr_find_interrupt(byref(self), 0, pointer(a), pointer(b))
         while ret == 1:
             ints.append( (a.value, b.value) )
-            ret = iferret.op_arr_find_interrupt(b, pointer(a), pointer(b))
+            ret = iferret.op_arr_find_interrupt(byref(self), b, pointer(a), pointer(b))
 
         if ret == -1:
             raise ValueError("Unbalanced interrupts")
@@ -202,10 +202,10 @@ class op_arr_t(Structure):
     def find_inputs(self, addr):
         ins = []
         t = c_int()
-        ret = iferret.op_arr_find_input(0, addr, pointer(t))
+        ret = iferret.op_arr_find_input(byref(self), 0, addr, pointer(t))
         while ret != -1:
             ins.append( ("T%d" % t.value, ret) )
-            ret = iferret.op_arr_find_input(ret+1, addr, pointer(t))
+            ret = iferret.op_arr_find_input(byref(self), ret+1, addr, pointer(t))
         return ins
 
 class py_op_arr:
@@ -246,10 +246,11 @@ class py_op_arr:
         return self.trace.find_inputs(addr)
 
 def load_trace(base, start=0, num=1):
-    iferret.init(base, start, num)
-    oa = op_arr_t.in_dll(iferret, "op_arr")
+    iferret.init.restype = POINTER(op_arr_t)
+    oa = iferret.init(base, start, num)
+    #oa = op_arr_t.in_dll(iferret, "op_arr")
     #trace = ImmutableList(oa.ops)
-    trace = py_op_arr(oa)
+    trace = py_op_arr(oa.contents)
     return trace
 
 if __name__ == "__main__":
