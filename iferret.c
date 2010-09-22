@@ -53,73 +53,76 @@ typedef struct op_arr_struct {
   iferret_op_t *ops;
 } op_arr_t;
 
-op_arr_t op_arr;
+//op_arr_t op_arr;
 
-void op_arr_init() {
-    op_arr.num = 0;
-    op_arr.max = INITIAL_OP_ARR_SIZE;
-    op_arr.ops = (iferret_op_t *) calloc(INITIAL_OP_ARR_SIZE, sizeof (iferret_op_t));
+op_arr_t * op_arr_init() {
+    op_arr_t *op_arr = (op_arr_t *) malloc(sizeof(op_arr_t));
+    op_arr->num = 0;
+    op_arr->max = INITIAL_OP_ARR_SIZE;
+    op_arr->ops = (iferret_op_t *) calloc(INITIAL_OP_ARR_SIZE, sizeof (iferret_op_t));
+    return op_arr;
 }
 
-void op_arr_grow() {
-    op_arr.max *= 2;
+void op_arr_grow(op_arr_t *op_arr) {
+    op_arr->max *= 2;
     //printf("Growing log to %ld entries (%ld bytes)\n", op_arr.max, op_arr.max*sizeof (iferret_op_t));
-    op_arr.ops = (iferret_op_t *) realloc(op_arr.ops, op_arr.max*sizeof (iferret_op_t));
+    op_arr->ops = (iferret_op_t *) realloc(op_arr->ops, op_arr->max*sizeof (iferret_op_t));
 }
 
-void op_arr_fit() {
-    op_arr.ops = (iferret_op_t *) realloc(op_arr.ops, op_arr.num*sizeof (iferret_op_t));
-    op_arr.max = op_arr.num;
+void op_arr_fit(op_arr_t *op_arr) {
+    op_arr->ops = (iferret_op_t *) realloc(op_arr->ops, op_arr->num*sizeof (iferret_op_t));
+    op_arr->max = op_arr->num;
 }
 
-void op_arr_clear(int s, int n) {
+void op_arr_clear(op_arr_t *op_arr, int s, int n) {
     //printf("Zeroing out %d entries starting at %d\n", n, s);
-    memset(&op_arr.ops[s], 0, sizeof(iferret_op_t)*n);
+    memset(&op_arr->ops[s], 0, sizeof(iferret_op_t)*n);
 }
 
-void op_arr_movedown(int s, int n) {
+void op_arr_movedown(op_arr_t *op_arr, int s, int n) {
     int i;
 
-    if (op_arr.num + n > op_arr.max) {
-        op_arr_grow();
+    if (op_arr->num + n > op_arr->max) {
+        op_arr_grow(op_arr);
     }
 
-    memmove(&op_arr.ops[s+n], &op_arr.ops[s], (op_arr.num - s)*sizeof(iferret_op_t));
+    memmove(&op_arr->ops[s+n], &op_arr->ops[s], (op_arr->num - s)*sizeof(iferret_op_t));
 
-    op_arr.num += n;
+    op_arr->num += n;
 }
 
-void op_arr_moveup(int s, int n) {
+void op_arr_moveup(op_arr_t *op_arr, int s, int n) {
     int i;
 
-    memmove(&op_arr.ops[s-n], &op_arr.ops[s], (op_arr.num - s)*sizeof(iferret_op_t));
+    memmove(&op_arr->ops[s-n], &op_arr->ops[s], (op_arr->num - s)*sizeof(iferret_op_t));
 
-    op_arr.num -= n;     
+    op_arr->num -= n;     
 }
 
-void op_arr_destroy() {
-    free(op_arr.ops);
+void op_arr_destroy(op_arr_t *op_arr) {
+    free(op_arr->ops);
+    free(op_arr);
 }
 
-int op_arr_find_interrupt(int s, int *start, int *end) {
+int op_arr_find_interrupt(op_arr_t *op_arr, int s, int *start, int *end) {
     int i;
     int balance;
     uint32_t addr;
-    for (i=s; i < op_arr.num; i++) {
-        if (op_arr.ops[i].num == IFLO_INTERRUPT) {
+    for (i=s; i < op_arr->num; i++) {
+        if (op_arr->ops[i].num == IFLO_INTERRUPT) {
             balance = 1;
-            addr = op_arr.ops[i].arg[1].val.u32;
+            addr = op_arr->ops[i].arg[1].val.u32;
             *start = i;
-            while(i < op_arr.num) {
+            while(i < op_arr->num) {
                 i++;
-                if (op_arr.ops[i].num == IFLO_INTERRUPT) balance++;
-                else if (op_arr.ops[i].num == IFLO_IRET_PROTECTED) balance--;
+                if (op_arr->ops[i].num == IFLO_INTERRUPT) balance++;
+                else if (op_arr->ops[i].num == IFLO_IRET_PROTECTED) balance--;
                 if (balance == 0) break;
             }
-            while (i < op_arr.num) {
+            while (i < op_arr->num) {
                 i++;
-                if (op_arr.ops[i].num == IFLO_TB_HEAD_EIP &&
-                    op_arr.ops[i].arg[0].val.u32 == addr) {
+                if (op_arr->ops[i].num == IFLO_TB_HEAD_EIP &&
+                    op_arr->ops[i].arg[0].val.u32 == addr) {
                     *end = i;
                     return 1;   // Success
                 }
@@ -130,18 +133,18 @@ int op_arr_find_interrupt(int s, int *start, int *end) {
     return 0; // No more interrupts
 }
 
-int op_arr_find_input(int s, uint32_t addr, int *t) {
+int op_arr_find_input(op_arr_t *op_arr, int s, uint32_t addr, int *t) {
     int i;
-    for (i=s; i < op_arr.num; i++) {
-        switch (op_arr.ops[i].num) {
+    for (i=s; i < op_arr->num; i++) {
+        switch (op_arr->ops[i].num) {
             case IFLO_OPS_MEM_LDL_T0_A0:
-                if (op_arr.ops[i].arg[1].val.u32 == addr) {
+                if (op_arr->ops[i].arg[1].val.u32 == addr) {
                     *t = 0;
                     return i;
                 }
                 break;
             case IFLO_OPS_MEM_LDL_T1_A0:
-                if (op_arr.ops[i].arg[1].val.u32 == addr) {
+                if (op_arr->ops[i].arg[1].val.u32 == addr) {
                     *t = 1;
                     return i;
                 }
@@ -226,11 +229,11 @@ void iferret_destroy (iferret_t *iferret) {
 }
 
 
-void iferret_log_process(char *filename) {
+void iferret_log_process(op_arr_t *op_arr, char *filename) {
   struct stat fs;
   uint32_t i, n, iferret_log_size;
   FILE *fp;
-  iferret_op_t *op = op_arr.ops;
+  iferret_op_t *op = op_arr->ops;
   iferret_syscall_t syscall;
   char command[256];
   char *op_start;
@@ -298,22 +301,22 @@ void iferret_log_process(char *filename) {
     i++;
 
     if (op->num != IFLO_INSN_DIS && op->num < IFLO_SYS_CALLS_START)
-        op_arr.num++;
+        op_arr->num++;
     else {
 #ifdef IFDEBUG
-        op_arr.num++;
+        op_arr->num++;
 #endif
     }
 
-    if (op_arr.num >= op_arr.max)
-        op_arr_grow();
+    if (op_arr->num >= op_arr->max)
+        op_arr_grow(op_arr);
 
-    op = &op_arr.ops[op_arr.num];
+    op = &op_arr->ops[op_arr->num];
     op->syscall = &syscall;
     op->syscall->command = command;
   }
 
-  //printf("Done processing %ld ops\n", op_arr.num);
+  //printf("Done processing %ld ops\n", op_arr->num);
 }
 
 
@@ -359,11 +362,12 @@ void process_opt(int argc, char **argv, iferret_t *iferret) {
   }
 }
 
-int init(char *prefix, int start, int num_logs) {
+op_arr_t * init(char *prefix, int start, int num_logs) {
   char  filename[1024];
   int i,j;
+  op_arr_t *op_arr;
 
-  op_arr_init(); 
+  op_arr = op_arr_init(); 
   iferret_log_create();
 
   // iterate over logfiles and process each in sequence
@@ -371,28 +375,29 @@ int init(char *prefix, int start, int num_logs) {
     i = start + j; 
     sprintf(filename, "%s-%d", prefix, i);
     //printf ("process: log %d: %d of %d: %s\n", i, j, iferret->num_logs, filename);
-    iferret_log_process(filename);
+    iferret_log_process(op_arr, filename);
   }
 
-  op_arr_fit(); 
+  op_arr_fit(op_arr); 
   free(iferret_log_base);
 
-  return TRUE;
+  return op_arr;
 }
 
 int main (int argc, char **argv) {
   char  filename[1024];
   int i,j;
   iferret_t *iferret;
+  op_arr_t *op_arr;
 
-  op_arr_init(); 
+  op_arr = op_arr_init(); 
   iferret_log_create();
   iferret = iferret_create();
 
   // process command line options. 
   process_opt(argc,argv,iferret);
 
-  init(iferret->log_prefix, iferret->start_log_num, iferret->num_logs);
+  op_arr = init(iferret->log_prefix, iferret->start_log_num, iferret->num_logs);
 
 //  // iterate over logfiles and process each in sequence
 //  for (j=0; j<iferret->num_logs; j++) {
@@ -403,7 +408,7 @@ int main (int argc, char **argv) {
 //    //iferret_log_spit(filename);
 //  }
 
-  op_arr_destroy();
+  op_arr_destroy(op_arr);
 
   return (0);
 }
