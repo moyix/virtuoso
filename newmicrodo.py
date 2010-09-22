@@ -1114,6 +1114,10 @@ class newmicrodo(forensics.commands.command):
         if not self.opts.micro:
             self.op.error('We need some code to execute')
 
+        # Do this early so that we can detect syntax errors quickly
+        if self.opts.interp:
+            exec(self.opts.interp.decode('string_escape'))
+
         # For RDTSC
         tsc = tscgen()
 
@@ -1159,7 +1163,11 @@ class newmicrodo(forensics.commands.command):
             DF = 1
 
         # This actually runs the translated code
-        code, userland = pickle.load(open(self.opts.micro))
+        text, userland = pickle.load(open(self.opts.micro))
+        code = {}
+        for k in text:
+            code[k] = compile(text[k], "block_%s" % (k if isinstance(k ,str) else hex(int(k))), 'exec')
+
         mem.init_userland(userland)
         label = 'START'
         import time
@@ -1168,18 +1176,23 @@ class newmicrodo(forensics.commands.command):
         while True:
             if self.opts.debug:
                 print "Executing block %s" % (label if isinstance(label,str) else hex(int(label)))
-                print "\n".join("  " + l for l in code[label].splitlines())
-                isncount += len([l for l in code[label].splitlines() if l.strip()])
+                print "\n".join("  " + l for l in text[label].splitlines())
+                isncount += len([l for l in text[label].splitlines() if l.strip()])
             try:
                 exec(code[label])
-            except Goto, g:
-                if g.label == '__end__': break
-                else: label = g.label
+                if label == '__end__': break
+#            except Goto, g:
+#                if g.label == '__end__': break
+#                else: label = g.label
             except Exception, e:
                 print ">>>> ERROR:",e,"<<<<"
                 #print code[label]
-                import pdb
-                pdb.post_mortem(sys.exc_info()[2])
+                if self.opts.debug:
+                    import pdb
+                    pdb.post_mortem(sys.exc_info()[2])
+                else:
+                    print "Failed."
+                    sys.exit(1)
         t2 = time.time()
         print "Time taken: %f ms" % ((t2-t1)*1000)
         if self.opts.debug:
@@ -1210,7 +1223,6 @@ class newmicrodo(forensics.commands.command):
 
         if self.opts.interp:
             print "Decoded data:"
-            exec(self.opts.interp.decode('string_escape'))
             f(data)
 
         print 
