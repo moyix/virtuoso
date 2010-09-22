@@ -3320,6 +3320,10 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         inst.length = 4;
         strcpy(disas_string, "prefetch crap (4 byte)");
     }
+    else if (data[0] == 0x0f && data[1] == 0x18 && data[2] == 0x0d) {
+        inst.length = 7;
+        strcpy(disas_string, "prefetcht0 [mem]");
+    }
     else {
         if (get_instruction(&inst, data, MODE_32) == 0) {
             printf("ERROR: get_instruction failed at %#x : ", pc_start);
