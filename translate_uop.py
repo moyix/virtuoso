@@ -93,7 +93,7 @@ op_handler = {
     "IFLO_CMPXCHG8B_PART1": lambda args: "mem.write(A0, ECX << 32 | EBX, 'Q')",
     "IFLO_OPS_TEMPLATE_SAR_T0_T1": lambda args: "T0 = T0 >> T1",
     "IFLO_TESTL_T0_T1_CC": lambda args: "CC_DST = T0 & T1",
-    "IFLO_JMP_T0": lambda args: "raise Goto(int(T0))",
+    "IFLO_JMP_T0": lambda args: "label = int(T0)",
     "IFLO_CMPL_T0_T1_CC": lambda args: "CC_SRC = T1 ; CC_DST = T0 - T1",
     "IFLO_UPDATE1_CC": lambda args: "CC_DST = T0",
     "IFLO_UPDATE2_CC": lambda args: "CC_SRC = T1; CC_DST = T0",
@@ -112,7 +112,7 @@ op_handler = {
     "IFLO_MALLOC": lambda args: "EAX = mem.alloc(ARG)",
     "IFLO_REALLOC": lambda args: "EAX = mem.realloc(%s,%s)" % (args[0], args[1]),
     "IFLO_GET_ARG": lambda args: "ARG = ULInt32(mem.read(ESP + (4*%d) + 4, 4))" % args[0],
-    "IFLO_CALL": lambda args: "T0 = 0; raise Goto('%s')" % args[0],
+    "IFLO_CALL": lambda args: "T0 = 0; label = '%s'" % args[0],
     'IFLO_MOVL_T0_ARG': lambda args: "T0 = ARG",
     'IFLO_MOVL_A0_ARG': lambda args: "A0 = ARG",
 
@@ -128,8 +128,8 @@ op_handler = {
 
     "IFLO_SYSENTER_DATA": lambda args: "ESP = sysenter_esp ; CPL = 0",
     "IFLO_SYSEXIT_DATA": lambda args: "ESP = ECX; CPL = 3",
-    "IFLO_SYSENTER_CONTROL": lambda args: "raise Goto(int(sysenter_eip))",
-    "IFLO_SYSEXIT_CONTROL": lambda args: "raise Goto(int(EDX))",
+    "IFLO_SYSENTER_CONTROL": lambda args: "label = int(sysenter_eip)",
+    "IFLO_SYSEXIT_CONTROL": lambda args: "label = int(EDX)",
 
     "IFLO_STD": lambda args: "DF = -1",
     "IFLO_CLD": lambda args: "DF = 1",
@@ -323,7 +323,7 @@ CC_SRC, DF, EFL = load_eflags(new_eflags, eflags_mask, EFL)
 
 CPL = rpl
 
-raise Goto(int(new_eip))"""),
+label = int(new_eip)"""),
 
     # SET{Z,B,LE?}
     "IFLO_SETLE_T0_CC": lambda args: "eflags = cc_table[CC_OP].compute_all(CC_SRC,CC_DST); T0 = UInt((((eflags ^ (eflags >> 4)) & 0x80) or (eflags & CC_Z)) != 0)",
