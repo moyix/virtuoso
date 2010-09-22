@@ -653,6 +653,10 @@ void cpu_dump_state(CPUState *env, FILE *f,
                 cpu_fprintf(f, " ");
         }
     }
+    cpu_fprintf(f, "DR0=%08x DR1=%08x DR2=%08x DR3=%08x\n"
+                   "DR4=%08x DR5=%08x DR6=%08x DR7=%08x\n",
+                   env->dr[0], env->dr[1], env->dr[2], env->dr[3],
+                   env->dr[4], env->dr[5], env->dr[6], env->dr[7]);
     cpu_fprintf(f, "sysenter_cs=%08x sysenter_esp=%08x sysenter_eip=%08x\n",
             env->sysenter_cs, env->sysenter_esp, env->sysenter_eip);
 }
