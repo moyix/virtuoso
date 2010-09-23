@@ -244,6 +244,8 @@ class py_op_arr:
         return self.trace.find_interrupts()
     def find_inputs(self, addr):
         return self.trace.find_inputs(addr)
+    def __hash__(self):
+        return id(self)
 
 def load_trace(base, start=0, num=1):
     iferret.init.restype = POINTER(op_arr_t)
