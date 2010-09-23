@@ -341,54 +341,56 @@ def slice_trace(trace, inbufs, outbufs):
     start_ts = time.time()
     dynslice(trace, outbufs, output_track=True)
     end_ts = time.time()
-    print "Slicing done in %s, calculating control dependencies..." % datetime.timedelta(seconds=end_ts-start_ts)
+    print "Slicing done in %s" % datetime.timedelta(seconds=end_ts-start_ts)
 
-    tbs = make_tbs(trace)
-    tbdict = make_tbdict(tbs)
-
-    # Calculate control dependencies
-    cfg = make_cfg(tbs)
+def control_dep_slice(tbdict, cfg):
+    print "Calculating control dependencies..."
 
     start_ts = time.time()
 
-    wlist = []
+    wlist = defaultdict(list)
     for c in cfg:
         if len(cfg[c]) < 2: continue
         for t in tbdict[c]:
             for i, isn in t.body:
                 if is_jcc(isn.op) or is_dynjump(isn.op):
-                    wlist.append( (i, uses(isn)) )
-                    #dynslice(trace, uses(isn), start=i)
+                    wlist[t.trace].append( (i, uses(isn)) )
                     isn.mark()
-            
-    if wlist:
-        multislice(trace, wlist)
+    wlist = dict(wlist)
+
+    for trace in wlist:
+        multislice(trace, wlist[trace])
 
     end_ts = time.time()
     print "Added branches in %s" % (datetime.timedelta(seconds=end_ts-start_ts))
 
+def slice_closure(tbdict):
     print "Performing slice closure..."
     fp_iterations = 0
     outerst = time.time()
     while True:
         innerst = time.time()
-        wlist = []
+        wlist = defaultdict(list)
         for t in tbdict:
-            for insns in zip(*[r.body for r in tbdict[t]]):
-                if (any(i.in_slice for _, i in insns) and not
-                    all(i.in_slice for _, i in insns)):
-                    wlist += [(i, uses(x)) for i, x in insns if not x.in_slice]
-                    for _, isn in insns: isn.mark()
+            tbs = tbdict[t]
+            for insns in zip(*[r.body for r in tbs]):
+                if (any(insn.in_slice for _,insn in insns) and not
+                    all(insn.in_slice for _,insn in insns)):
+
+                    for j, (n,x) in enumerate(insns):
+                        if not x.in_slice:
+                            wlist[tbs[j].trace].append( (n, uses(x)) )
+                            x.mark()
+
         if not wlist: break
-        multislice(trace, wlist)
+        for trace in wlist:
+            multislice(trace, wlist[trace])
         fp_iterations += 1
         innered = time.time()
-        print "Sliced %d new instructions in %s" % (len(wlist), datetime.timedelta(seconds=innered-innerst))
+        print "Sliced %d new instructions in %s" % (sum(len(w) for w in wlist.values()), datetime.timedelta(seconds=innered-innerst))
     outered = time.time()
     print "Reached fixed point after %d iterations, time: %s" % (fp_iterations, datetime.timedelta(seconds=outered-outerst))
     
-    return trace, tbs, tbdict, cfg
-
 # Domain knowledge: a list of memory allocation functions
 # Format: address, number of argument bytes, size_param, name
 all_mallocs = {
@@ -421,7 +423,7 @@ all_reallocs = {
 all_nops = {
     "xpsp2": [
         (0x7c91043d, 12, 'RtlFreeHeap'),
- #       (0x8054af07,  8, 'ExFreePoolWithTag'),
+#        (0x8054af07,  8, 'ExFreePoolWithTag'),
     ],
     "osx": [],
     "haiku": [],
@@ -720,12 +722,13 @@ def split_fastcall(trace):
 
     return remake_trace(trace)
 
-def translate_code(trace, tbs, tbdict, cfg):
+def translate_code(tbses, tbdict, cfg):
     # It's translation time!
     transdict = {}
-    for i in range(len(tbs)-1):
-        transdict[tbs[i].label] = "label = %s" % tbs[i+1]._label_str()
-    transdict[tbs[-1].label] = "label = '__end__'"
+    for tbs in tbses:
+        for i in range(len(tbs)-1):
+            transdict[tbs[i].label] = "label = %s" % tbs[i+1]._label_str()
+        transdict[tbs[-1].label] = "label = '__end__'"
 
     # Iterate over the finished CFG and translate each TB
     for c in cfg:
@@ -815,6 +818,7 @@ if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option('-o', '--os', help='OS that generated the trace (for malloc removal)', dest='os', default='xpsp2')
     parser.add_option('-s', '--stats', help='print stats at end', dest='stats', default=False, action='store_true')
+    parser.add_option('-O', '--output', help='save generated code to FILE', dest='output', default=None)
     options, args = parser.parse_args()
     if not args:
         parser.error('Trace file is required')
@@ -823,66 +827,85 @@ if __name__ == "__main__":
 
     target_os = options.os
     
-    #print "about to load trace",time.ctime()
-    trace, inbufs, outbufs = load_trace(args[0])
-    #print "about to make tbs",time.ctime()
-    tbs = make_tbs(trace)
-    #print "about to make tbdict",time.ctime()
-    tbdict = make_tbdict(tbs)
-    #print "about to make cfg",time.ctime()
-    cfg = make_cfg(tbs)
+    # Trace preprocessing
+    traces = []
+    tbses = [] # What has the hobbit got in its nasty little tbses?
+    master_tbdict = defaultdict(list)
+    master_cfg = defaultdict(set)
+    for arg in args:
+        print "------------ Preprocessing %s ------------" % arg
+        trace, inbufs, outbufs = load_trace(arg)
+        tbs = make_tbs(trace)
+        tbdict = make_tbdict(tbs)
+        cfg = make_cfg(tbs)
 
-    embedshell = IPython.Shell.IPShellEmbed(argv=[])
-    #embedshell = lambda: None
+        embedshell = IPython.Shell.IPShellEmbed(argv=[])
+        #embedshell = lambda: None
 
-    print "Size of trace before surgery: %d" % len(trace)
+        print "Size of trace before surgery: %d" % len(trace)
 
-    # Get rid of interrupts
-    print "Filtering interrupts..."
-    trace, tbs, tbdict, cfg = filter_interrupts(trace)
+        # Get rid of interrupts
+        print "Filtering interrupts..."
+        trace, tbs, tbdict, cfg = filter_interrupts(trace)
 
-    #embedshell()
+        # Fix QEMU's REP craziness
+        print "Splitting TBs with reps..."
+        trace, tbs, tbdict, cfg = fix_reps(trace)
 
-    # Fix QEMU's REP craziness
-    print "Splitting TBs with reps..."
-    trace, tbs, tbdict, cfg = fix_reps(trace)
+        # Kill functions that just need to be stubbed out entirely
+        trace, tbs, tbdict, cfg = nop_functions(trace, tbs, tbdict, cfg)
 
-    # Kill functions that just need to be stubbed out entirely
-    trace, tbs, tbdict, cfg = nop_functions(trace, tbs, tbdict, cfg)
+        # Replace mallocs with summaries
+        trace, tbs, tbdict, cfg = detect_mallocs(trace, tbs, tbdict, cfg)
+        trace, tbs, tbdict, cfg = detect_reallocs(trace, tbs, tbdict, cfg)
 
-    # Replace mallocs with summaries
-    trace, tbs, tbdict, cfg = detect_mallocs(trace, tbs, tbdict, cfg)
-    trace, tbs, tbdict, cfg = detect_reallocs(trace, tbs, tbdict, cfg)
+        print "Healing sti splits..."
+        trace, tbs, tbdict, cfg = fix_sti(trace, tbdict)
 
-    print "Healing sti splits..."
-    trace, tbs, tbdict, cfg = fix_sti(trace, tbdict)
+        print "Splitting sysenter/sysexit..."
+        trace, tbs, tbdict, cfg = split_fastcall(trace)
 
-    print "Splitting sysenter/sysexit..."
-    trace, tbs, tbdict, cfg = split_fastcall(trace)
+        print "Size of trace after surgery:  %d" % len(trace)
 
-    print "Size of trace after surgery:  %d" % len(trace)
+        print "Optimizing trace..."
+        trace.optimize()
 
-    print "Optimizing trace..."
-    trace.optimize()
+        slice_trace(trace, inbufs, outbufs)
+        traces.append(trace)
+        tbses.append(tbs)
+        for k in cfg:
+            master_cfg[k].update(cfg[k])
+        for k in tbdict:
+            master_tbdict[k] += tbdict[k]
+
+    master_cfg = dict(master_cfg)
+    master_tbdict = dict(master_tbdict)
 
     #embedshell()
 
     # Perform slicing and control dependency analysis
-    trace, tbs, tbdict, cfg = slice_trace(trace, inbufs, outbufs)
+    control_dep_slice(master_tbdict, master_cfg)
+    slice_closure(master_tbdict)
 
     # Get user memory state
-    mem = get_user_memory(trace,kmem[target_os])
+    mem = {}
+    for trace in traces:
+        mem.update(get_user_memory(trace,kmem[target_os]))
 
     #embedshell()
 
     # Translate it
-    transdict = translate_code(trace, tbs, tbdict, cfg)
+    transdict = translate_code(tbses, master_tbdict, master_cfg)
 
-    import os.path
-    dname, fname = os.path.split(args[0])
-    fname = fname.rsplit('.', 1)[0]
-    fname = fname + '.pkl'
-    fname = os.path.join(dname, fname)
+    if not options.output:
+        import os.path
+        dname, fname = os.path.split(args[0])
+        fname = fname.rsplit('.', 1)[0]
+        fname = fname + '.pkl'
+        fname = os.path.join(dname, fname)
+    else:
+        fname = options.output
+
     print "Saving translated code to", fname
     f = open(fname, 'w')
     pickle.dump((transdict, mem), f, pickle.HIGHEST_PROTOCOL)
