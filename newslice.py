@@ -814,6 +814,42 @@ def get_user_memory(trace, kernel=0x80000000):
                 mem[i] = c
     return mem
 
+def memdbg(f,insn):
+    m2p = {
+        'Q': 'Q',
+        'L': 'I',
+        'W': 'H',
+        'B': 'B',
+    }
+    m2s = {
+        'Q': 8,
+        'L': 4,
+        'W': 2,
+        'B': 1,
+    }
+    m = memrex.search(insn.op)
+    if m:
+        addr = insn.args[2]
+        val = insn.args[-1]
+        tp, sz = m.groups()
+
+        buf = pack("<%s" % m2p[sz], insn.args[-1])
+
+        if tp == 'LD':
+            print >>f, "DEBUG: Reading %d bytes at %#x" % (m2s[sz], addr)
+            print >>f, "DEBUG: Read", buf.encode('hex')
+        else:
+            print >>f, "DEBUG: Writing %#x to address %#x" % (val, addr)
+
+def tracedbg(trace, fname):
+    f = open(fname, 'w')
+    for e in trace:
+        if e.op == 'IFLO_TB_HEAD_EIP':
+            print >>f, "Executing block %s" % (e.args[0] if isinstance(e.args[0],str) else hex(int(e.args[0])))
+        elif is_memop(e) and e.in_slice:
+            memdbg(f, e)
+    f.close()
+
 if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option('-o', '--os', help='OS that generated the trace (for malloc removal)', dest='os', default='xpsp2')
@@ -892,7 +928,7 @@ if __name__ == "__main__":
     for trace in traces:
         mem.update(get_user_memory(trace,kmem[target_os]))
 
-    #embedshell()
+    embedshell()
 
     # Translate it
     transdict = translate_code(tbses, master_tbdict, master_cfg)
