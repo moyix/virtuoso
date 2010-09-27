@@ -33,6 +33,7 @@ from time import ctime,asctime,gmtime
 from struct import unpack,pack
 from collections import defaultdict
 import cPickle as pickle
+import mmap
 
 from forensics.win32.obj import *
 
@@ -730,11 +731,14 @@ class OutSpace:
         return data.values()[0]
 
 class PCOW(object):
-    def __init__(self, base):
-        self.base = base
+    def __init__(self, fname):
+        #self.base = base
+        f = open(fname, 'rb')
+        self.map = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY)
         self.scratch = {}
         self.debug = False
-        self.extended_area = 0x80000000
+        self.extended_base = 0x80000000
+        self.extended_area = self.extended_base
         
         # Set up TPR, phys address 0xfee00080
         self.write(0xfee00080, '\x00\x00\x00\x00')
@@ -746,22 +750,27 @@ class PCOW(object):
 
     def read(self, addr, length):
         if self.debug: print "DEBUG: Reading %d bytes at %#x" % (length, addr)
-        data = []
-        for i in range(addr,addr+length):
-            if i in self.scratch:
-                data.append(self.scratch[i])
-            else:
-                b = self.base.read(i,1)
-                if not b:
-                    raise ValueError("Memory read error at %#x" % i)
+        if addr >= self.extended_base:
+            data = []
+            for i in range(addr,addr+length):
+                if i in self.scratch:
+                    data.append(self.scratch[i])
                 else:
-                    data.append(b)
-        if self.debug: print "DEBUG: Read", "".join(data).encode('hex')
-        return "".join(data)
+                    raise ValueError("Memory read error at %#x" % i)
+            if self.debug: print "DEBUG: Read", "".join(data).encode('hex')
+            return "".join(data)
+        else:
+            self.map.seek(addr)
+            return self.map.read(length)
+            
 
     def write(self, addr, buf):
-        for (i,c) in enumerate(buf):
-            self.scratch[int(addr+i)] = c
+        if addr >= self.extended_base:
+            for (i,c) in enumerate(buf):
+                self.scratch[int(addr+i)] = c
+        else:
+            self.map.seek(addr)
+            self.map.write(buf)
 
     def get_scratch(self):
         data = {}
@@ -866,6 +875,9 @@ class VCOW:
                 self.base.write(int(addr+i),c)
 
     def alloc(self, size, zfill=True):
+        # XXX: Remove me
+        return UInt(0x1433f8)
+
         if not size: raise ValueError("Invalid size %d for malloc" % size)
         size = int(size)
 
@@ -1106,8 +1118,9 @@ class newmicrodo(forensics.commands.command):
     def execute(self):
         theProfile = Profile()
         #(addr_space, symtab, types) = load_and_identify_image(self.op, self.opts)
-        thefile = FileAddressSpace(self.opts.filename)
-        flat = PCOW(thefile)
+        #thefile = FileAddressSpace(self.opts.filename)
+        #flat = PCOW(thefile)
+        flat = PCOW(self.opts.filename)
 
         if not self.opts.env:
             self.op.error('Must provide a valid CPU environment (use "info registers")')
