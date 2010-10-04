@@ -242,6 +242,9 @@ defines_uses = {
     'IFLO_MOVL_T0_ARG': MOV('T0','ARG'),
     'IFLO_MOVL_A0_ARG': MOV('A0','ARG'),
     'IFLO_CALL': IGNORE,
+
+    # Silly
+    'IFLO_NOOP': IGNORE,
     
     # Evil conditionals. We hates them.    
     # Note: if you add one here, also add it to the list
@@ -267,6 +270,7 @@ defines_uses = {
         lambda args: ['T0'],
     ],
 
+    'IFLO_INTERRUPT': IGNORE, # Will have to deal with this at some point
     'IFLO_IRET_PROTECTED': [
         lambda args: [REG('ESP'), 'EFLAGS', 'CPL', 'CC_SRC', 'DF'] + SEG('CS') + (SEG('SS') if args[1] else []),
         lambda args: [REG('ESP'), 'CPL'] + SEG('SS') + memrange(args[0], 0x14 if args[1] else 0xc),
@@ -284,7 +288,6 @@ defines_uses = {
     'IFLO_PID_CHANGE': IGNORE,
     'IFLO_UID_CHANGE': IGNORE,
     'IFLO_SYSEXIT_RET': IGNORE,
-    'IFLO_INTERRUPT': IGNORE,
     'IFLO_LABEL_INPUT': IGNORE,
     'IFLO_LABEL_OUTPUT': IGNORE,
     'IFLO_MOVL_EIP_IM': IGNORE,

@@ -12,7 +12,7 @@ def nodestr(n):
     else:
         return "%#x" % n
 
-def make_cfg_dot(tbs,tbdict,fname):
+def make_cfg_dot(cfg,tbdict,fname):
     of = open(fname,'w')
     print >>of, "digraph G {"
     print >>of, "node [shape=record]"
@@ -20,10 +20,16 @@ def make_cfg_dot(tbs,tbdict,fname):
     nodeset = set()
     edges = defaultdict(int)
 
-    for i in range(len(tbs)-1):
-        nodeset.add(tbs[i].label)
-        edges[tbs[i].label,tbs[i+1].label] += 1
-    nodeset.add(tbs[i+1].label)
+    for s in cfg:
+        nodeset.add(s)
+        for t in cfg[s]:
+            nodeset.add(t)
+            edges[s,t] += 1
+
+#    for i in range(len(tbs)-1):
+#        nodeset.add(tbs[i].label)
+#        edges[tbs[i].label,tbs[i+1].label] += 1
+#    nodeset.add(tbs[i+1].label)
 
     for n in nodeset:
         if any(t.has_slice() for t in tbdict[n]):

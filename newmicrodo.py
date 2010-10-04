@@ -730,6 +730,41 @@ class OutSpace:
         assert len(data) == 1
         return data.values()[0]
 
+class APIC(object):
+    def __init__(self):
+        self.queue = []
+        self.tpr = 0x0
+        self.debug = False
+    def trigger(self):
+        return self.queue and self.queue[-1] > self.tpr
+    def run_interrupt(self, code, text, mem, env, idt):
+        if self.debug:
+            print ">>>> Going into interrupt handler for %#x" % self.queue[-1]
+        locals().update(env)
+        exec("ESP = ESP - UInt(0xc)")
+        label = idt[self.queue.pop()]
+        while True:
+            if self.debug:
+                print "Executing block %s" % (label if isinstance(label,str) else hex(int(label)))
+                print "\n".join("  " + l for l in text[label].splitlines())
+                #isncount += len([l for l in text[label].splitlines() if l.strip()])
+            try:
+                exec(code[label])
+                if label == '__end__': break
+            except Exception, e:
+                print ">>>> ERROR:",e,"<<<<"
+                #print code[label]
+                if self.debug:
+                    import pdb
+                    pdb.post_mortem(sys.exc_info()[2])
+                else:
+                    print "Failed."
+                    sys.exit(1)
+
+APIC_BASE = 0xfee00000
+APIC_TPR  = APIC_BASE + 0x80
+APIC_ICR  = APIC_BASE + 0x300
+
 class PCOW(object):
     def __init__(self, fname):
         #self.base = base
@@ -739,9 +774,10 @@ class PCOW(object):
         self.debug = False
         self.extended_base = 0x80000000
         self.extended_area = self.extended_base
+        self.apic = APIC()
         
         # Set up TPR, phys address 0xfee00080
-        self.write(0xfee00080, '\x00\x00\x00\x00')
+        #self.write(0xfee00080, '\x00\x00\x00\x00')
 
     def reserve(self, num_pages):
         old = self.extended_area
@@ -750,6 +786,14 @@ class PCOW(object):
 
     def read(self, addr, length):
         if self.debug: print "DEBUG: Reading %d bytes at %#x" % (length, addr)
+        if addr == APIC_ICR:
+            assert length == 4
+            vec = pack("<I", self.apic.queue[-1])
+            return vec
+        elif addr == APIC_TPR:
+            assert length == 4
+            tpr = pack("<I", self.apic.tpr)
+            return tpr
         if addr >= self.extended_base:
             data = []
             for i in range(addr,addr+length):
@@ -763,9 +807,17 @@ class PCOW(object):
             self.map.seek(addr)
             return self.map.read(length)
             
-
     def write(self, addr, buf):
-        if addr >= self.extended_base:
+        if self.debug: print "DEBUG: Writing %s to %#x" % (buf.encode('hex'), addr)
+        if addr in range(0x12168dc,0x12168dc+4):
+            print "EEEEEEE YIKES YIKES YIKES"
+        if addr == APIC_ICR:
+            vec = unpack("<I", buf)[0] & 0xff
+            self.apic.queue.insert(0, vec)
+        elif addr == APIC_TPR:
+            tpr = unpack("<I", buf)[0]
+            self.apic.tpr = tpr
+        elif addr >= self.extended_base:
             for (i,c) in enumerate(buf):
                 self.scratch[int(addr+i)] = c
         else:
@@ -852,15 +904,19 @@ class VCOW:
         if self.debug: print "DEBUG: Reading %d bytes at %#x" % (length, addr)
 
         data = []
-        for i in range(addr,addr+length):
-            if i in self.userland:
-                data.append(self.userland[i])
-            else:
-                b = self.base.read(i,1)
-                if not b:
-                    raise ValueError("Memory read error at %#x" % i)
+        if int(addr) in self.userland:
+            for i in range(addr,addr+length):
+                if i in self.userland:
+                    data.append(self.userland[i])
                 else:
-                    data.append(b)
+                    b = self.base.read(i,1)
+                    if not b:
+                        raise ValueError("Memory read error at %#x" % i)
+                    else:
+                        data.append(b)
+        else:
+            data = self.base.read(int(addr), length)
+
         if self.debug: print "DEBUG: Read", "".join(data).encode('hex')
         return "".join(data)
 
@@ -868,16 +924,16 @@ class VCOW:
         buf = pack("<" + pack_char, int(val))
         if self.debug: print "DEBUG: Writing %#x to address %#x" % (val, addr)
 
-        for (i,c) in enumerate(buf):
-            if int(addr+i) in self.userland:
-                self.userland[int(addr+i)] = c
-            else:
-                self.base.write(int(addr+i),c)
+        if int(addr) in self.userland:
+            for (i,c) in enumerate(buf):
+                if int(addr+i) in self.userland:
+                    self.userland[int(addr+i)] = c
+                else:
+                    self.base.write(int(addr+i),c)
+        else:
+            self.base.write(int(addr), buf)
 
     def alloc(self, size, zfill=True):
-        # XXX: Remove me
-        return UInt(0x1433f8)
-
         if not size: raise ValueError("Invalid size %d for malloc" % size)
         size = int(size)
 
@@ -1049,6 +1105,19 @@ def load_env(env_file):
 
     return regs
 
+def save_env(lvars):
+    cpuvars = ['EIP', 'FS', 'CPL', 'IDT', 'sysenter_eip', 'DS',
+               'TR', 'EAX', 'ESI', 'LDT', 'ECX', 'DR2', 'GS',
+               'ESP', 'sysenter_cs', 'EFL', 'CS', 'ES', 'CR2',
+               'CR3', 'CR0', 'GDT', 'CR4', 'SS', 'DR0', 'DR3',
+               'EDI', 'DR5', 'DR4', 'DR7', 'DR6', 'DR1', 'EBP',
+               'EDX', 'EBX', 'sysenter_esp']
+    env = {}
+    for k in cpuvars:
+        env[k] = lvars[k]
+
+    return env
+
 def tscgen():
     i = 0x1000
     while True:
@@ -1154,6 +1223,7 @@ class newmicrodo(forensics.commands.command):
         if self.opts.debug:
             mem.debug = True
             flat.debug = False
+            flat.apic.debug = True
             out.debug = True
 
         # Inputs to the block of micro-ops we want to to execute
@@ -1168,15 +1238,13 @@ class newmicrodo(forensics.commands.command):
             print "  inputs = [ %s ]" % (", ".join("%#x" % i for i in inputs))
             print
 
-        # With real introspection, these would be actual values
-        # from the env.
         if (EFL & DF_MASK) >> DF_SHIFT:
             DF = -1
         else:
             DF = 1
 
         # This actually runs the translated code
-        text, userland = pickle.load(open(self.opts.micro))
+        text, userland, idt = pickle.load(open(self.opts.micro))
         code = {}
         for k in text:
             code[k] = compile(text[k], "block_%s" % (k if isinstance(k ,str) else hex(int(k))), 'exec')
@@ -1194,9 +1262,10 @@ class newmicrodo(forensics.commands.command):
             try:
                 exec(code[label])
                 if label == '__end__': break
-#            except Goto, g:
-#                if g.label == '__end__': break
-#                else: label = g.label
+                if mem.base.base.apic.trigger():
+                    env = save_env(locals())
+                    mem.base.base.apic.run_interrupt(code, text, mem, env, idt)
+                    if self.opts.debug: print "Done running interrupt; resuming execution at %#x" % label
             except Exception, e:
                 print ">>>> ERROR:",e,"<<<<"
                 #print code[label]

@@ -725,10 +725,17 @@ def split_fastcall(trace):
 def translate_code(tbses, tbdict, cfg):
     # It's translation time!
     transdict = {}
-    for tbs in tbses:
-        for i in range(len(tbs)-1):
-            transdict[tbs[i].label] = "label = %s" % tbs[i+1]._label_str()
-        transdict[tbs[-1].label] = "label = '__end__'"
+    for c in cfg:
+        if len(cfg[c]) > 0:
+            target = list(cfg[c])[0]
+            transdict[c] = "label = %s" % ("'%s'" % target if isinstance(target,str) else hex(int(target)))
+        else:
+            transdict[c] = "label = '__end__'"
+        
+#    for tbs in tbses:
+#        for i in range(len(tbs)-1):
+#            transdict[tbs[i].label] = "label = %s" % tbs[i+1]._label_str()
+#        transdict[tbs[-1].label] = "label = '__end__'"
 
     # Iterate over the finished CFG and translate each TB
     for c in cfg:
@@ -850,6 +857,95 @@ def tracedbg(trace, fname):
             memdbg(f, e)
     f.close()
 
+def find_self_interrupts(trace, apic_base=0xfee00000):
+    apic_icr = apic_base + 0x300
+    apic_tpr = apic_base + 0x80
+    selfints = []
+    SELFINT, TPRSET, INTSTART, INTEND = range(4)
+    state = SELFINT
+    self_int, tpr_set, int_start, int_end = (0,0,0,0)
+    for i,e in enumerate(trace):
+        if state == SELFINT and e.op.startswith('IFLO_OPS_MEM_STL') and e.args[1] == apic_icr:
+            self_int = i
+            state = TPRSET
+        elif state == TPRSET and e.op.startswith('IFLO_OPS_MEM_STL') and e.args[1] == apic_tpr:
+            tpr_set = i
+            state = INTSTART
+        elif state == INTSTART and e.op == 'IFLO_INTERRUPT':
+            int_start = i
+            state = INTEND
+        elif state == INTEND and e.op == 'IFLO_IRET_PROTECTED':
+            int_end = i
+            selfints.append( (self_int, tpr_set, int_start, int_end) )
+            state = SELFINT
+
+    return selfints
+
+def isolate_self_ints(trace):
+    apic_base = 0xfee00000
+    apic_tpr = apic_base + 0x80
+    selfints = find_self_interrupts(trace)
+    
+    idt = {}
+    int_edges = set()
+    to_delete = []
+    wlist = []
+    for self_int, tpr_set, int_start, int_end in selfints:
+        int_site = first(lambda x: x.op == 'IFLO_TB_HEAD_EIP', reversed(trace[int_start-50:int_start]))
+        int_handler = trace[int_start+1]
+        ret = first(lambda x: x.op == 'IFLO_TB_HEAD_EIP', reversed(trace[int_end-50:int_end]))
+        retsite = first(lambda x: x.op == 'IFLO_TB_HEAD_EIP', trace[int_end:int_end+20])
+        int_edges.add( (int_site.args[0], int_handler.args[0]) )
+        int_edges.add( (ret.args[0], retsite.args[0]) )
+        to_delete += [int_start, int_end]
+
+        vec = trace[int_start].args[0]
+
+        print "Detected self-interrupt, edges: %#x -> %#x, %#x -> %#x, vector: %#x (%#x)" % (
+            int_site.args[0], int_handler.args[0],
+            ret.args[0], retsite.args[0],
+            vec, trace[self_int].args[-1] & 0xff,
+        ) 
+
+        idt[vec] = int_handler.args[0]
+
+        # Gotta include the one right before the ICR set as well
+        i = self_int
+        while i > 0:
+            e = trace[i]
+            if e.op.startswith('IFLO_OPS_MEM_STL') and e.args[1] == apic_tpr:
+                e.mark()
+                wlist.append( (i, uses(e)) )
+                break
+            i -= 1
+
+        # Noops used here as temporary placeholders. We will
+        # delete them after slicing, but deletion now would mess
+        # up our indices
+        trace[int_start] = TraceEntry(('IFLO_NOOP', []))
+        trace[int_end] = TraceEntry(('IFLO_NOOP', []))
+        wlist.append( (self_int, uses(trace[self_int])) )
+        wlist.append( (tpr_set, uses(trace[tpr_set])) )
+        trace[self_int].mark()
+        trace[tpr_set].mark()
+        
+    if wlist:
+        multislice(trace, wlist)
+
+    # Remove the actual interrupt/irets
+    to_delete.sort()
+    while to_delete:
+        del trace[to_delete.pop()]
+
+    trace, tbs, tbdict, cfg = remake_trace(trace)
+    for s,d in int_edges:
+        try:
+            cfg[s].remove(d)
+        except KeyError:
+            pass
+    
+    return trace, tbs, tbdict, cfg, idt
+
 if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option('-o', '--os', help='OS that generated the trace (for malloc removal)', dest='os', default='xpsp2')
@@ -868,6 +964,7 @@ if __name__ == "__main__":
     tbses = [] # What has the hobbit got in its nasty little tbses?
     master_tbdict = defaultdict(list)
     master_cfg = defaultdict(set)
+    master_idt = {}
     for arg in args:
         print "------------ Preprocessing %s ------------" % arg
         trace, inbufs, outbufs = load_trace(arg)
@@ -906,6 +1003,8 @@ if __name__ == "__main__":
         print "Optimizing trace..."
         trace.optimize()
 
+        trace, tbs, tbdict, cfg, idt = isolate_self_ints(trace)
+
         slice_trace(trace, inbufs, outbufs)
         traces.append(trace)
         tbses.append(tbs)
@@ -914,10 +1013,12 @@ if __name__ == "__main__":
         for k in tbdict:
             master_tbdict[k] += tbdict[k]
 
+        master_idt.update(idt)
+
     master_cfg = dict(master_cfg)
     master_tbdict = dict(master_tbdict)
 
-    #embedshell()
+    embedshell()
 
     # Perform slicing and control dependency analysis
     control_dep_slice(master_tbdict, master_cfg)
@@ -944,7 +1045,7 @@ if __name__ == "__main__":
 
     print "Saving translated code to", fname
     f = open(fname, 'w')
-    pickle.dump((transdict, mem), f, pickle.HIGHEST_PROTOCOL)
+    pickle.dump((transdict, mem, idt), f, pickle.HIGHEST_PROTOCOL)
     f.close()
     
     if options.stats:
