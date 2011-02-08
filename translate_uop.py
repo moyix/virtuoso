@@ -25,6 +25,7 @@ shift2fixed_sign = {
 }
 
 op_handler = {
+    "IFLO_BSWAPL_T0": lambda args: "T0 = UInt(unpack('<I', pack('<I', int(T0))[::-1])[0])",
     "IFLO_OPREG_TEMPL_CMOVL_R_T1_T0": lambda args: "if(T0): %s = UInt(T1)" % qemu_regs_r[args[0]],
     "IFLO_LABEL_OUTPUT": lambda args: "print mem.read(%#x,%d).encode('hex')" % (args[0],args[1]),
     "IFLO_OPREG_TEMPL_ADDL_A0_R": lambda args: "A0 += %s" % qemu_regs_r[args[0]],
@@ -71,6 +72,10 @@ op_handler = {
     "IFLO_OPS_TEMPLATE_MOVL_T0_DSHIFT": lambda args: "T0 = DF << %d" % args[0],
     "IFLO_OPS_TEMPLATE_SHR_T0_T1": lambda args: "T0 = T0 >> T1",
     "IFLO_OPS_TEMPLATE_SHL_T0_T1": lambda args: "T0 = T0 << T1",
+    "IFLO_OPS_TEMPLATE_ADD_BIT_A0_T1": lambda args: "A0 += ((%s(T1) >> (3 + %d)) << %d)" % (shift2fixed_sign[args[0]], args[0], args[0]),
+    
+    "IFLO_OPS_TEMPLATE_BTS_T0_T1_CC": lambda args: "count = T1 & SHIFT_MASK(%d) ; T1 = T0 >> count; T0 |=  ((Int(1)) << count)" % args[0],
+    "IFLO_OPS_TEMPLATE_BTR_T0_T1_CC": lambda args: "count = T1 & SHIFT_MASK(%d) ; T1 = T0 >> count; T0 &= ~((Int(1)) << count)" % args[0],
 
     "IFLO_OPREG_TEMPL_MOVB_R_T0": lambda args: "%s = T0 & 0xFF" % qemu_regs_r[args[0]],
     "IFLO_TB_HEAD_EIP": lambda args: "",
@@ -99,6 +104,7 @@ op_handler = {
     "IFLO_UPDATE2_CC": lambda args: "CC_SRC = T1; CC_DST = T0",
     "IFLO_UPDATE_NEG_CC": lambda args: "CC_SRC = -T0 ; CC_DST = T0",
     "IFLO_UPDATE_INC_CC": lambda args: "CC_SRC = cc_table[CC_OP].compute_c(CC_SRC,CC_DST); CC_DST = T0",
+    "IFLO_MOVSLQ_EDX_EAX": lambda args: "EDX = UInt(Int(EAX) >> 31)",
 
     "IFLO_IMULL_EAX_T0": lambda args: "res = int(EAX)*int(T0); EAX = CC_DST = UInt(res); EDX = UInt(res >> 32); CC_SRC = UInt(res) != res",
     "IFLO_IMULL_T0_T1": lambda args: "res = int(T0)*int(T1) ; T0 = CC_DST = UInt(res) ; CC_SRC = UInt(res) != res",
@@ -108,6 +114,7 @@ op_handler = {
 
     "IFLO_ADDL_A0_SEG": lambda args: "A0 += %s" % fieldname(field_from_env(args[1])),
     "IFLO_MOVL_SEG_T0": lambda args: "%s = load_seg(mem, T0, GDT, LDT)" % qemu_segs_r[args[0]],
+    "IFLO_MOVL_T0_SEG": lambda args: "T0 = %s.selector" % qemu_segs_r[args[0]],
 
     "IFLO_MALLOC": lambda args: "EAX = mem.alloc(ARG)",
     "IFLO_REALLOC": lambda args: "EAX = mem.realloc(%s,%s)" % (args[0], args[1]),
@@ -279,12 +286,37 @@ T0 = UInt(eflags)
 """),
 
     "IFLO_DIVL_EAX_T0": lambda args: ("""
-num = int(EAX) | (int(EDX) << 32)
-den = int(T0)
-q,r = divmod(num,den)
+num = ULong(UInt(EAX) | (ULong(UInt(EDX)) << 32))
+den = UInt(T0)
+
+q = ULong(int(num) / int(den))
+r = UInt(int(num) % int(den))
+
 EAX = UInt(q)
 EDX = UInt(r)
 """),
+
+    "IFLO_IDIVL_EAX_T0": lambda args: ("""
+num = Long( UInt(EAX) | ULong(UInt(EDX) << 32) )
+den = Int(T0)
+
+q = Long(int(num) / int(den))
+r = Int(int(num) % int(den))
+
+EAX = UInt(q)
+EDX = UInt(r)
+"""),
+
+    "IFLO_OPS_TEMPLATE_SAR_T0_T1_CC": lambda args: ("""
+count = SHIFT1_MASK(DATA_BITS(%d))
+if count:
+    src = %s(T0)
+    T0 = src >> count
+    src = src >> (count - 1)
+    CC_SRC = src
+    CC_DST = T0
+    CC_OP = CC_OP_SARB + %d
+""" % (args[0],shift2fixed_sign[args[0]],args[0])),
 
     "IFLO_OPS_TEMPLATE_ADC_T0_T1_CC": lambda args: ("""
 cf = cc_table[CC_OP].compute_c(CC_SRC,CC_DST)
