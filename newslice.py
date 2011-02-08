@@ -26,6 +26,8 @@ from struct import pack
 import re
 memrex = re.compile('IFLO_OPS_MEM_(ST|LD)[US]?([BWLQ])')
 
+quiet = True
+
 # Default -- can be changed by option
 target_os = "xpsp2"
 
@@ -35,6 +37,11 @@ junk = set(['IFLO_EXIT_TB', 'IFLO_GOTO_TB0', 'IFLO_GOTO_TB1',
             'IFLO_MOVL_T0_0', 'IFLO_INSN_DIS'])
 
 # Some small utility functions
+
+# Gets the "real" size of the trace
+def get_trace_size(trace):
+    total = sum(1 for x in trace if x.op not in junk)
+    return total
 
 def tr(op):
     s = uop_to_py(op)
@@ -90,14 +97,15 @@ def multislice(insns, worklist, output_track=False, debug=False):
     if start == -1: start = len(insns) - 1
     if output_track: outbufs = set(bufs)
     
-    widgets = ['Slicing: ', Percentage(), ' ', Bar(marker=RotatingMarker()), ' ', ETA()]
-    pbar = ProgressBar(widgets=widgets, maxval=start+1).start()
+    if not quiet:
+        widgets = ['Slicing: ', Percentage(), ' ', Bar(marker=RotatingMarker()), ' ', ETA()]
+        pbar = ProgressBar(widgets=widgets, maxval=start+1).start()
 
     work = set(bufs)
     if debug: print "Initial working set:", work
     for i in range(start, -1, -1):
         #print "Examining instruction",i,"(working set: %d)" % len(work)
-        pbar.update(start-i+1)
+        if not quiet: pbar.update(start-i+1)
         insn = insns[i]
         if i == next_i:
             work |= set(next_bufs)
@@ -220,22 +228,22 @@ def set_input(trace, in_addr, idx):
         new_te = TraceEntry(("IFLO_SET_INPUT", [var, idx]))
         trace[i] = new_te
 
-def load_trace(infile, start=0, num=1):
-    print "Loading trace into memory..."
+def load_trace(infile, start=0, num=1, quiet=False):
+    if not quiet: print "Loading trace into memory..."
     trace = iferretpy.load_trace(infile, start, num)
 
-    print "Finding output buffers"
+    if not quiet: print "Finding output buffers"
     out_idx = first(lambda i: trace[i].op == 'IFLO_LABEL_OUTPUT', (i for i in range(len(trace)-1, -1, -1)))
     out_op = trace[out_idx]
     outbufs = memrange(out_op.args[0], out_op.args[1])
 
-    print "Finding input buffers"
+    if not quiet: print "Finding input buffers"
     inbufs = []
     in_insns = [(i,ins) for i, ins in enumerate(trace[:100]) if ins.op == 'IFLO_LABEL_INPUT']
     for i, ins in in_insns:
         inbufs += memrange(ins.args[0], ins.args[1])
     in_idx = max((i for i,_ in in_insns))
-    print "Found input at %s, output at %d" % (", ".join(str(i) for i,_ in in_insns), out_idx)
+    if not quiet: print "Found input at %s, output at %d" % (", ".join(str(i) for i,_ in in_insns), out_idx)
 
     # Set up the inputs
     #set_input(trace, inbufs)
@@ -292,6 +300,9 @@ def get_function_arg(trace, arg, esp, callsite):
 # All this junk is for the apparently simple task of trying to
 # translate a translation block (TB) into a Python code block.
 
+# Also, it's kind of brittle. TODO: investigate just replacing this
+# with a simple taken.next, not_taken.next
+
 def get_taken_tb(tbs):
     return [t for t in tbs if t.has_jcc() and t.get_branch().args[-1]][0]
 
@@ -305,7 +316,7 @@ def get_branch_target(tbs):
     if not remaining <= junk:
         raise ValueError("Real instructions remain after a branch! TB Split Fail")
     elif 'IFLO_MOVL_EIP_IM' in remaining:
-        _, eipmov = first(lambda x: x[1].op == 'IFLO_MOVL_EIP_IM', taken.body)
+        eipmov = first(lambda x: x.op == 'IFLO_MOVL_EIP_IM', taken.rbody[i+1:])
         return eipmov.args[0]
     else:
         return "unknown"
@@ -404,10 +415,15 @@ all_mallocs = {
     ],
     "haiku": [],
     "linux": [
-        #(0x080483f8,  0, 0, 'malloc'),
-        #(0x080483ec,  0, 0, 'malloc'),
-        (0x08048a20,  0, 0, 'malloc'),
-        (0x080488d0,  0, 1, 'calloc'),
+        #(0x080483ec,  0, 0, 'malloc'), # modlist
+        #(0x08048a20,  0, 0, 'malloc'),  # ps
+        #(0x080488d0,  0, 1, 'calloc'),  # ps
+        (0x08048aac, 0, 0, 'malloc'),   # getpsname 
+        (0x0804893c, 0, 1, 'calloc'),   # getpsname 
+    ],
+    "fc5": [
+        (0x08048838, 0, 0, 'malloc'), # ps
+        (0x08048918, 0, 1, 'calloc'), # ps
     ],
 }
 
@@ -416,7 +432,11 @@ all_reallocs = {
     "osx": [],
     "haiku": [],
     "linux": [
-        (0x080488b0,  0, 0, 1, 'realloc'),
+        #(0x080488b0, 0, 0, 1, 'realloc'),  # ps
+        (0x0804891c, 0, 0, 1, 'realloc'),  # getpsname 
+    ],
+    "fc5": [
+        (0x08048888, 0, 0, 1, 'realloc'),  # ps
     ],
 }
 
@@ -428,7 +448,11 @@ all_nops = {
     "osx": [],
     "haiku": [],
     "linux": [
-        (0x08048960,  0, 'free'),
+        #(0x08048960,  0, 'free'), # ps
+        (0x080489dc,  0, 'free'), # getpsname
+    ],
+    "fc5": [
+        (0x08048938, 0, 'free'), # ps
     ],
 }
 
@@ -595,23 +619,25 @@ def fix_reps(trace):
             current_tb = t.args[0]
         elif t.op == 'IFLO_OPS_TEMPLATE_JNZ_ECX' and t.args[-1]:
             new_t = TraceEntry((t.op,t.args))
-            new_te = TraceEntry(('IFLO_TB_HEAD_EIP', [labels[current_tb]]))
+            new_te = TraceEntry(('IFLO_TB_HEAD_EIP', ["labels_%x" % current_tb]))
             edit = ((i,i+1), [new_t,new_te])
 
             edits.append(edit)
-            current_tb = labels[current_tb]
+            current_tb = "labels_%x" % current_tb
 
     edits.sort()
     print "About to make %d edits to split TBs" % len(edits)
 
     if not edits: return remake_trace(trace)
 
-    widgets = ['Fixing reps: ', Percentage(), ' ', Bar(marker=RotatingMarker()), ' ', ETA()]
-    pbar = ProgressBar(widgets=widgets, maxval=len(edits)).start()
+    if not quiet:
+        widgets = ['Fixing reps: ', Percentage(), ' ', Bar(marker=RotatingMarker()), ' ', ETA()]
+        pbar = ProgressBar(widgets=widgets, maxval=len(edits)).start()
+
     i = 0
     while edits:
         i += 1
-        pbar.update(i)
+        if not quiet: pbar.update(i)
         (st, ed), repl = edits.pop()
         trace[st:ed] = repl
 
@@ -731,13 +757,13 @@ def translate_code(tbses, tbdict, cfg):
             transdict[c] = "label = %s" % ("'%s'" % target if isinstance(target,str) else hex(int(target)))
         else:
             transdict[c] = "label = '__end__'"
-        
-#    for tbs in tbses:
-#        for i in range(len(tbs)-1):
-#            transdict[tbs[i].label] = "label = %s" % tbs[i+1]._label_str()
-#        transdict[tbs[-1].label] = "label = '__end__'"
 
+    if not quiet:
+        widgets = ['Translating: ', Percentage(), ' ', Bar(marker=RotatingMarker()), ' ', ETA()]
+        pbar = ProgressBar(widgets=widgets, maxval=len(cfg)).start()
+        
     # Iterate over the finished CFG and translate each TB
+    num_translated = 0
     for c in cfg:
         cur = tbdict[c]
         next = list(cfg[c])
@@ -746,8 +772,6 @@ def translate_code(tbses, tbdict, cfg):
         if not any(t.has_slice() for t in cur):
             #print "Skipping %s" % repr(cur[0])
             continue
-
-        #print "Translating %s" % repr(first(lambda x: x.has_slice(), cur))
 
         if not next:
             # Last node (woo special cases)
@@ -787,11 +811,15 @@ def translate_code(tbses, tbdict, cfg):
                         s.append(tr(insn))
             s.append("else: label = %s" % succ)
             transdict[cur[0].label] = "\n".join(s)
+        
+        num_translated += 1
+        if not quiet: pbar.update(num_translated)
 
     return transdict
 
 kmem = {
     'linux': 0xc0000000,
+    'fc5':   0xc0000000,
     'xpsp2': 0x80000000,
     'haiku': 0x80000000, # ??
     'osx':   0x80000000, # ??
@@ -958,6 +986,12 @@ if __name__ == "__main__":
         parser.error('No such file')
 
     target_os = options.os
+
+    # Enable/disable progress bars
+    if sys.stdout.isatty():
+        quiet = False
+    else:
+        quiet = True
     
     # Trace preprocessing
     traces = []
@@ -975,7 +1009,7 @@ if __name__ == "__main__":
         embedshell = IPython.Shell.IPShellEmbed(argv=[])
         #embedshell = lambda: None
 
-        print "Size of trace before surgery: %d" % len(trace)
+        print "Size of trace before surgery: %d" % get_trace_size(trace)
 
         # Get rid of interrupts
         print "Filtering interrupts..."
@@ -998,7 +1032,7 @@ if __name__ == "__main__":
         print "Splitting sysenter/sysexit..."
         trace, tbs, tbdict, cfg = split_fastcall(trace)
 
-        print "Size of trace after surgery:  %d" % len(trace)
+        print "Size of trace after surgery:  %d" % get_trace_size(trace)
 
         print "Optimizing trace..."
         trace.optimize()
@@ -1018,7 +1052,7 @@ if __name__ == "__main__":
     master_cfg = dict(master_cfg)
     master_tbdict = dict(master_tbdict)
 
-    embedshell()
+    #embedshell()
 
     # Perform slicing and control dependency analysis
     control_dep_slice(master_tbdict, master_cfg)
@@ -1029,7 +1063,7 @@ if __name__ == "__main__":
     for trace in traces:
         mem.update(get_user_memory(trace,kmem[target_os]))
 
-    embedshell()
+    #embedshell()
 
     # Translate it
     transdict = translate_code(tbses, master_tbdict, master_cfg)
@@ -1049,7 +1083,7 @@ if __name__ == "__main__":
     f.close()
     
     if options.stats:
-        total = sum(1 for x in trace if x.op not in junk)
+        total = get_trace_size(trace)
         slice = sum(1 for x in trace if x.op not in junk and x.in_slice)
         print "Sliced/Total: %d/%d" % (slice, total)
         tbmarked = sum(1 for t in tbs if t.has_slice())
