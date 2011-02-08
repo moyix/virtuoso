@@ -40,6 +40,7 @@ def ARITH(dest, src):
 
 # Transfer functions
 defines_uses = {
+    'IFLO_BSWAPL_T0': IDENT('T0'),
     'IFLO_MOVL_T1_A0': MOV('T1', 'A0'),
     'IFLO_OPREG_TEMPL_MOVL_A0_R': [
         lambda args: ['A0'],
@@ -530,11 +531,11 @@ defines_uses = {
         lambda args: ['CC_OP', 'CC_SRC', 'CC_DST', 'T1', 'T0', 'A0'],
     ],
     'IFLO_OPS_TEMPLATE_SAR_T0_T1_CC': [
-        lambda args: ['CC_SRC', 'CC_DST', 'CC_OP'],
+        lambda args: ['T0', 'CC_SRC', 'CC_DST', 'CC_OP'],
         lambda args: ['T1', 'T0'],
     ],
     'IFLO_OPS_TEMPLATE_SAR_T0_T1_CC_MEMWRITE': [
-        lambda args: ['CC_SRC', 'CC_DST', 'CC_OP'] + memrange(args[1], 1 << args[0]),
+        lambda args: ['T0', 'CC_SRC', 'CC_DST', 'CC_OP'] + memrange(args[1], 1 << args[0]),
         lambda args: ['T1', 'T0', 'A0'],
     ],
     'IFLO_OPS_TEMPLATE_SBB_T0_T1_CC': [
