@@ -52,6 +52,8 @@
 // hits and misses log from target-i386/iferret_syscall.c
 extern uint64_t iferret_syscall_hits;
 extern uint64_t iferret_syscall_misses;
+extern uint32_t iferret_log_inc;
+extern uint32_t iferret_log_rollup_count;
 
 /*
  * Supported types:
@@ -378,7 +380,7 @@ static void do_info_cpu_stats (void)
 
 static void do_quit(void)
 {
-    iferret_log_rollup("do_quit");
+    //iferret_log_rollup("do_quit");
     exit(0);
 }
 
@@ -475,6 +477,12 @@ static void do_log(const char *items)
         }
     }
     cpu_set_log(mask);
+}
+
+static void do_newlog(void) {
+    iferret_log_rollup("newlog");
+    iferret_log_inc++;
+    iferret_log_rollup_count = 0;
 }
 
 static void do_stop(void)
@@ -1327,6 +1335,8 @@ static term_cmd_t term_cmds[] = {
       "tag|id", "restore a VM snapshot from its tag or id" },
     { "delvm", "s", do_delvm,
       "tag|id", "delete a VM snapshot from its tag or id" },
+    { "newlog", "", do_newlog,
+       "", "change to a new logfile" },
     { "stop", "", do_stop,
       "", "stop emulation", },
     { "c|cont", "", do_cont,

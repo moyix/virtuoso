@@ -107,9 +107,10 @@ void op_arr_destroy(op_arr_t *op_arr) {
 int op_arr_find_interrupt(op_arr_t *op_arr, int s, int *start, int *end) {
     int i;
     int balance;
+    unsigned char self_vec = 0;
     uint32_t addr;
     for (i=s; i < op_arr->num; i++) {
-        if (op_arr->ops[i].num == IFLO_INTERRUPT) {
+        if (op_arr->ops[i].num == IFLO_INTERRUPT && op_arr->ops[i].arg[0].val.u32 != self_vec) {
             balance = 1;
             addr = op_arr->ops[i].arg[1].val.u32;
             *start = i;
@@ -128,6 +129,9 @@ int op_arr_find_interrupt(op_arr_t *op_arr, int s, int *start, int *end) {
                 }
             }
             return -1;  // Unbalanced interrupts
+        }
+        else if (op_arr->ops[i].num == IFLO_OPS_MEM_STL_T0_A0 && op_arr->ops[i].arg[1].val.u32 == 0xfee00300) {
+            self_vec = op_arr->ops[i].arg[6].val.u32 & 0xff;
         }
     }
     return 0; // No more interrupts

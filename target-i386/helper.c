@@ -36,6 +36,8 @@ int cpu_virtual_memory_read(CPUState *env, uint32_t addr, char *out, uint32_t le
 
 extern uint8_t iferret_says_flush;
 extern char *iferret_log_prefix;
+extern uint32_t iferret_log_inc;
+extern uint32_t iferret_log_rollup_count;
 
 /*
 // addr is a 32-bit address.  
@@ -4854,18 +4856,21 @@ void write_eip_to_iferret_log(target_ulong pc) {
 }
 
 void helper_setlogstate(int state) {
+    int oldstate;
     if(state != iferret_info_flow)
         iferret_says_flush = 1;
 
+    oldstate = iferret_info_flow;
     iferret_info_flow = state;
     if(state == 1) {
         iferret_log_op_write_44(IFLO_LABEL_INPUT, phys_addr(ECX), EDX);
-        printf("Enabled iferret logging.\n");
+        if(oldstate != state)
         {
+            printf("Enabled iferret logging.\n");
             int i;
             FILE *f;
             char name[256];
-            strcpy(name, iferret_log_prefix);
+            sprintf(name, "%s.%d", iferret_log_prefix, iferret_log_inc);
             strcat(name, ".mem");
             f = fopen(name, "w");
             for (i = 0; i < phys_ram_size ; i += 0x1000) {
@@ -4874,7 +4879,7 @@ void helper_setlogstate(int state) {
             printf("Done dumping RAM to %s\n", name);
             fclose(f);
 
-            strcpy(name, iferret_log_prefix);
+            sprintf(name, "%s.%d", iferret_log_prefix, iferret_log_inc);
             strcat(name, ".env");
             f = fopen(name, "w");
             cpu_dump_state(env, f, fprintf, X86_DUMP_FPU);
@@ -4885,6 +4890,9 @@ void helper_setlogstate(int state) {
     else {
         iferret_log_op_write_44(IFLO_LABEL_OUTPUT, phys_addr(ECX), EDX);
         printf("Disabled iferret logging.\n");
+        iferret_log_rollup("newlog");
+        iferret_log_inc++;
+        iferret_log_rollup_count = 0;
     }
 }
 
