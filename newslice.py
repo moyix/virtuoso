@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.6
+# ©2011 Massachusetts Institute of Technology
 
 import IPython
 

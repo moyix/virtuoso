@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# ©2011 Massachusetts Institute of Technology
 
 from cPickle import load
 from distorm import Decode, Decode32Bits

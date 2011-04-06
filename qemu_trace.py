@@ -1,3 +1,5 @@
+# ©2011 Massachusetts Institute of Technology
+
 from translate_uop import uop_to_py,uop_to_py_out
 from qemu_data import is_jcc
 import csv

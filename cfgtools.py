@@ -1,3 +1,5 @@
+# © 2011 Massachusetts Institute of Technology
+
 from collections import defaultdict
 
 def nodename(n):
