@@ -1,4 +1,5 @@
 #!/bin/sh
+# ©2011 Massachusetts Institute of Technology
 
 if [ -z $VISUAL ]; then
     VISUAL=vim

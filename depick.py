@@ -1,9 +1,10 @@
 #!/usr/bin/env python
+# ©2011 Massachusetts Institute of Technology
 
 import sys
 from cPickle import load
 
-transdict,userland = load(open(sys.argv[1]))
+transdict,userland,idt = load(open(sys.argv[1]))
 print "transdict = {}"
 print
 for k in transdict:
@@ -13,3 +14,5 @@ for k in transdict:
     print
 
 print "userland = %s" % userland
+
+print "idt = %s" % idt
