@@ -1,3 +1,4 @@
+/* ©2011 Massachusetts Institute of Technology */
 #include <kernel/OS.h>
 #include <kernel/image.h>
 #include <stdio.h>

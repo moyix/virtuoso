@@ -1,3 +1,4 @@
+/* ©2011 Massachusetts Institute of Technology */
 #include <stdio.h>
 #include <windows.h>
 

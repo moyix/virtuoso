@@ -1,3 +1,4 @@
+/* ©2011 Massachusetts Institute of Technology */
 #define MAGIC_IN  0xdeadbeef
 #define MAGIC_OUT 0xdeadf00d
 

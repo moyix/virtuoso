@@ -1,3 +1,4 @@
+/* ©2011 Massachusetts Institute of Technology */
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/sysctl.h>
