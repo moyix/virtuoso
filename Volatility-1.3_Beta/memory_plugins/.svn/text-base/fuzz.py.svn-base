@@ -1,0 +1,390 @@
+# Volatility
+# Copyright (C) 2008 Volatile Systems
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details. 
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+#
+
+"""
+@author:       Brendan Dolan-Gavitt
+@license:      GNU General Public License 2.0 or later
+@contact:      brendandg@gatech.edu
+@organization: Georgia Institute of Technology
+"""
+
+import sys
+import time
+import random
+import socket
+
+from vutils import *
+from forensics.object import *
+from forensics.win32.tasks import process_list, process_imagename
+
+from struct import pack
+from vix import Vix,VixException
+from thirdparty.ping import alive
+
+# Notes on strategies:
+#   zero: just writes zeros to the location [DONE]
+#   random: completely random value of the appropriate size [DONE]
+#   random-primitive: same, but pointers must now point to valid memory [DONE]
+#   random-complex: field values taken from other valid instances at random [DONE -- improve?]
+
+def tsprint(s):
+    """Print a timestamped string"""
+    print "[%s] %s" % (time.ctime(), s)
+    sys.stdout.flush()
+
+def canon(types,field,value):
+    """Return a canonical representation of value"""
+    _,tp = get_obj_offset(types,field)
+    pack_char = builtin_types[tp][1]
+    return pack(pack_char, value).encode('hex')
+
+# The various generators
+def rand_val(tp):
+    """
+    Return a random value in the range of the type.
+    Note: does not treat pointers specially.
+    """
+    signed_types =   ['int', 'long', 'short', 'long long']
+    unsigned_types = ['unsigned int', 'unsigned long', 'unsigned short',
+                      'unsigned char', 'unsigned long long', 'address',
+                      'pointer']
+    sz = builtin_size(tp)
+    if tp == 'char': # special case
+        return chr(random.randint(0,127))
+    elif tp in signed_types:
+        lower = -(2**(sz*8-1))
+        upper =  (2**(sz*8-1)) - 1
+    elif tp in unsigned_types:
+        lower = 0
+        upper = 2**(sz*8) - 1
+    else:
+        raise ValueError("Unsupported primitive type")
+
+    return random.randint(lower, upper)
+
+def rand_pointer(addr_space, avail_pages):
+    """Return a random address from kernel memory"""
+    addr, sz = random.choice(avail_pages)
+    while addr < 0x80000000 or not addr_space.is_valid_address(addr):
+        addr, sz = random.choice(avail_pages)
+    addr = addr + random.randint(0, sz-1)
+    return addr
+
+def rand_complex(addr_space, types, instances_in, field):
+    instances = instances_in[:]
+    while instances:
+        i = random.randint(0, len(instances)-1)
+        val = read_obj(addr_space, types, field, instances[i])
+        if val:
+            return val
+        del instances[i]
+    # If we got here then all instances of val were zero.
+    # Just return it, can't do any better.
+    return val
+
+class fuzz(forensics.commands.command):
+
+    # Declare meta information associated with this plugin
+    
+    meta_info = forensics.commands.command.meta_info 
+    meta_info['author'] = 'Brendan Dolan-Gavitt'
+    meta_info['copyright'] = 'Copyright (c) 2007,2008 Brendan Dolan-Gavitt'
+    meta_info['contact'] = 'brendandg@gatech.edu'
+    meta_info['license'] = 'GNU General Public License 2.0 or later'
+    meta_info['url'] = 'http://moyix.blogspot.com/'
+    meta_info['os'] = 'WIN_32_XP_SP2'
+    meta_info['version'] = '1.0'
+
+    instances = None
+    instance_addr = None
+    available_pages = None
+
+    def help(self):
+        return  "A lightweight fuzzer for kernel data structures"
+
+    def parser(self):
+        forensics.commands.command.parser(self)
+
+        self.op.add_option('-c', '--config',
+            help='load configuration from FILE',
+            metavar='FILE', action='store', type='string',
+            dest='config')
+        self.op.add_option('-l', '--logfile',
+            help='save results to a file',
+            action='store', type='string', dest='log')
+        self.op.add_option('-z', '--fuzz-file',
+            help='load fields to fuzz from FILE',
+            action='store', type='string', dest='fuzz')
+        self.op.add_option('-p', '--partial',
+            help='resume partially finished run starting at FIELD',
+            action='store', type='string', dest='partial')
+
+    # Functionality tests: must return True or False, and the name must
+    # start with "test"
+    def test_ping(self):
+        return alive(self.cfg['host_ip'], self.cfg['vm_ip'])
+
+    def test_connect(self):
+        try:
+            s = socket.socket()
+            s.connect( (self.cfg['vm_ip'], self.cfg['vm_port']) )
+            res = True
+        except socket.error,e:
+            res = False
+        try:
+            s.close()
+        except socket.error,e:
+            tsprint("Close failed: %s" % e)
+            pass
+        return res
+
+    def test_vm_tools(self):
+        return self.vix.WaitForToolsInGuest(timeout=3)
+    
+    def test_vm_login(self):
+        try:
+            self.vix.LoginInGuest(self.cfg['username'], self.cfg['password'])
+            return True
+        except:
+            return False
+
+    def test_vm_file_exists(self):
+        try:
+            res = self.vix.FileExistsInGuest(self.cfg['vm_file'])
+            return res
+        except:
+            return False
+    
+    def test_delay(self):
+        time.sleep(3)
+        return True
+    
+    # Harness for all tests. Stop at the first failure and return
+    # the name of the failed test. Tests are run in the order they
+    # occur in the file.
+    def run_tests(self):
+        results = dict( (name, False) for name in self.cfg['tests'] )
+        
+        for name in self.cfg['tests']:
+            test = getattr(self, "test_%s" % name)
+            result = test()
+            if not result:
+                tsprint("Test %s... %s" % (name, "FAIL"))
+                return name
+            tsprint("Test %s... %s" % (name, "PASS"))
+        return ""
+
+    # Helper for fuzz_member -- creates a cache of instances of the
+    # target type being fuzzed, and also caches the address of the specific
+    # target instance.
+    # In the future, maybe also initialize a list of valid kernel pages here?
+    def instances_init(self, addr_space, symtab, types, instance_name):
+        """Cache the instance list and address of the target"""
+        self.instances = process_list(addr_space, types, symtab)
+        for i in self.instances:
+            if process_imagename(addr_space, types, i) == instance_name:
+                self.instance_addr = i
+                # When doing the random-complex type we don't want our own
+                # values to contaminate the funzzing
+                self.instances.remove(i)
+                break
+        if not self.instance_addr:
+            raise Exception("Unable to find %s in memory!" % instance_name)
+
+    # Where the magic happens. Generate fuzz data and write it out to the
+    # field in memory.
+    def fuzz_member(self, instance, field, pattern):
+        """
+        Write the given fuzz pattern to the field of the given instance.
+        Returns a hex string indicating what bytes were written.
+        """
+        (addr_space, symtab, types) = load_and_identify_image(self.op, self.opts)
+        # Cache instance list
+        if not self.instances and not self.instance_addr:
+            self.instances_init(addr_space, symtab, types, instance)
+        
+        # Cache available pages if we're in random primitive mode
+        if pattern == "random_primitive":
+            self.available_pages = addr_space.get_available_pages()
+        
+        if pattern == "zero":
+            tsprint("Writing zero pattern to %s @%x" % (field, self.instance_addr))
+            write_obj(addr_space, types, field, self.instance_addr, 0)
+            return canon(types,field,0)
+        elif pattern == "random":
+            _, tp = get_obj_offset(types, field)
+            value = rand_val(tp)
+            write_obj(addr_space, types, field, self.instance_addr, value)
+            return canon(types,field,value)
+        elif pattern == "random_primitive":
+            _, tp = get_obj_offset(types, field)
+            if tp == 'pointer':
+                value = rand_pointer(addr_space, self.available_pages)
+            else:
+                value = rand_val(tp)
+            write_obj(addr_space, types, field, self.instance_addr, value)
+            return canon(types,field,value)
+        elif pattern == "random_complex":
+            value = rand_complex(addr_space, types, self.instances, field)
+            write_obj(addr_space, types, field, self.instance_addr, value)
+            return canon(types,field,value)
+        else:
+            raise ValueError("Unknown fuzz pattern %s" % pattern)
+
+    def load_fuzz_data(self, fuzz_file):
+        # File format: field_number, count, field_name
+        data = []
+        fuzz = open(fuzz_file)
+        for line in fuzz:
+            cols = line.strip().split(",")
+            # Skip never-accessed fields
+            if not int(cols[1]): continue
+            # Special case: arrays end with numbers
+            try:
+                index = int(cols[-1])
+                cols = cols[:-1] + [index]
+            except ValueError:
+                pass
+            data.append( (int(cols[1]), cols[2:]) )
+        
+        # We want to run most commonly used fields first
+        data.sort()
+
+        # Resume a run, if requested
+        if self.opts.partial:
+            partial = self.opts.partial.split('.')
+            try:
+                index = int(partial[-1])
+                partial = partial[:-1] + [index]
+            except ValueError:
+                pass
+            for i,row in enumerate(data):
+                if row[1] == partial:
+                    break
+            tsprint("Resuming previous run from %s" % self.opts.partial)
+            return data[:i+1]
+        else:
+            return data
+
+    # VM operations -- init, pause, resume, restore
+    def vm_init(self):
+        """Connect to the VMWare server host and open the VM"""
+        self.vix = Vix()
+        tsprint("Connecting to VMWare server instance...")
+        self.vix.Connect(hostname=self.cfg['hostname'],
+                         username=self.cfg['username'],
+                         password=self.cfg['password'])
+        tsprint("Opening %s" % self.cfg['vmname'])
+        self.vix.Open(self.cfg['vmname'])
+        tsprint("Getting handle to root snapshot...")
+        self.vix.GetRootSnapshot() # For when we want to revert
+
+    def vm_restore(self):
+        """Revert to the root snapshot."""
+        while True:
+            try:
+                self.vix.RevertToSnapshot()
+                return
+            except VixException, v:
+                tsprint("Revert failed: %s" % v)
+
+    def vm_suspend(self):
+        """Pause the VM"""
+        while True:
+            try:
+                self.vix.Suspend()
+                return
+            except VixException, v:
+                tsprint("Suspend failed: %s" % v)
+
+    def vm_resume(self):
+        """Resume the VM"""
+        while True:
+            try:
+                self.vix.PowerOn()
+                return
+            except VixException, v:
+                tsprint("Resume failed: %s" % v)
+
+    def execute(self):
+        # Load config
+        if not self.opts.config:
+            self.op.error("Must provide a configuration file (-c)")
+        self.cfg = eval(open(self.opts.config).read())
+        # Hack so that load_and_identify_image will work
+        self.opts.filename = self.cfg['vmem']
+        instance = self.cfg['instance']
+        pattern = self.cfg['pattern']
+
+        # Load prioritized list of fields to fuzz
+        if not self.opts.fuzz:
+            self.op.error("Must provide a list of fields to fuzz (-z)")
+        self.fuzz_fields = self.load_fuzz_data(self.opts.fuzz)
+
+        # Open the log file
+        if not self.opts.log:
+            self.op.error("Must provide a log file for saved data (-l)")
+        if self.opts.partial:
+            log = open(self.opts.log, "a")
+        else:
+            log = open(self.opts.log, "w")
+        # Log header
+        if not self.opts.partial:
+            print >>log, "%s,%s,%s,%s,%s" % ("instance", "field", "pattern",
+                                             "data", "failed")
+
+        # Print the command line for posterity
+        tsprint(" ".join(sys.argv))
+
+        # As a control, ensure that all tests pass before any fuzzing
+        self.vm_init()
+        tsprint("Restoring to original state...")
+        self.vm_restore()
+        tsprint("Sleeping %ds to allow execution to continue..." % self.cfg['delay'])
+        time.sleep(self.cfg['delay'])
+        tsprint("Checking system functionality...")
+        failed = self.run_tests()
+        if failed:
+            tsprint("Aborting! Control test failed, VM is not set up correctly.")
+            sys.exit(1)
+
+        # Fuzz loop
+        while self.fuzz_fields:
+            count, field = self.fuzz_fields.pop()
+            for i in range(self.cfg['passes']):
+                tsprint("Restoring to original state...")
+                self.vm_restore()
+                tsprint("Pausing...")
+                self.vm_suspend()
+                tsprint("Modifying target field %s" % ".".join(str(f) for f in field))
+                data = self.fuzz_member(instance, field, pattern)
+                tsprint("Resuming VM...")
+                self.vm_resume()
+                tsprint("Sleeping %ds to allow execution to continue..." % self.cfg['delay'])
+                time.sleep(self.cfg['delay'])
+                tsprint("Checking system functionality...")
+                failed = self.run_tests()
+                tsprint("Writing results...")
+                print >>log, "%s,%s,%s,%s,%s" % (instance, ".".join(str(f) for f in field),
+                                                 pattern, data, failed)
+                log.flush()
+                tsprint("%s,%s,%s,%s,%s" % (instance, ".".join(str(f) for f in field),
+                                            pattern, data, failed))
+       
+        log.close()
+        tsprint("Run completed successfully.")

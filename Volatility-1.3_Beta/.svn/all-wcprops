@@ -1,0 +1,119 @@
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/projects/!svn/ver/111/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta
+END
+vtypes_old.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/vtypes_old.py
+END
+vtypes.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/vtypes.py
+END
+annotations.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/annotations.py
+END
+vmodules.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/vmodules.py
+END
+setup.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/setup.py
+END
+README.win
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/README.win
+END
+LICENSE.txt
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/LICENSE.txt
+END
+volatility
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/volatility
+END
+LEGAL.txt
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/LEGAL.txt
+END
+AUTHORS.txt
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/AUTHORS.txt
+END
+CHANGELOG.txt
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/CHANGELOG.txt
+END
+MANIFEST
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/MANIFEST
+END
+vsyms.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/vsyms.py
+END
+ndis_types.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/ndis_types.py
+END
+PKG-INFO
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/PKG-INFO
+END
+README.txt
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/README.txt
+END
+MANIFEST.in
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/MANIFEST.in
+END
+CREDITS.txt
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/projects/!svn/ver/47/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/CREDITS.txt
+END
+vutils.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/projects/!svn/ver/65/fall2008/cs8803/trunk/ds_fuzz/src/Volatility-1.3_Beta/vutils.py
+END
