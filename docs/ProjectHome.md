@@ -1,0 +1,3 @@
+Virtuoso is a whole-system binary code extractor that generates out-of-box code for use in introspection. Using Virtuoso, developers can create introspection programs to monitor virtual machines on a variety of different operating systems.
+
+More details can be found in our 2011 IEEE Symposium on Security and Privacy paper, [Virtuoso: Narrowing the Semantic Gap in Virtual Machine Introspection](http://www.cc.gatech.edu/~brendan/virtuoso.pdf).
