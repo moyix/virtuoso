@@ -1,0 +1,14 @@
+1. Get the required dependencies for QEMU. In debian, this can be done
+   with:
+    apt-get build-dep qemu 
+
+2. Downlaod and install libdasm from
+    http://code.google.com/p/libdasm/
+
+3. Enter iferret-logging-new and execute:
+    ./cleanup.sh
+    make install
+    make -f Makefile-iferretso
+
+   This should place the logging-enabled QEMU binary in the install/bin
+   directory.
