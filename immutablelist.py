@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # © 2011 Massachusetts Institute of Technology
 
 from bisect import bisect_right, bisect_left

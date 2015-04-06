@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # ©2011 Massachusetts Institute of Technology
 
 from translate_uop import uop_to_py,uop_to_py_out
