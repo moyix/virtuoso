@@ -1,0 +1,1 @@
+/home/moyix/src/qemu-0.9.1/Makefile.target
