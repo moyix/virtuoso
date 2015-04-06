@@ -1,0 +1,12 @@
+
+// syscall 3 is sys_read.  arg 2 is ptr.  arg 3 is len. 
+// so we will be 
+syscall_param 3 buff_122 2 3 process_name gunzip , read add_syscall_num add_buff_name add_buff_len;
+
+// label any write acces to memory by a malicious process.
+memory_access write , written_by_mal;
+
+// label any read by pid 4571 with filename, process, read, and timestamp
+file_access read pid 4571 , add_filename add_rw add_time;
+
+

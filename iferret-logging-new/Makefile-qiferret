@@ -1,0 +1,43 @@
+
+all: qiferret
+
+
+TD=target-i386
+ 
+QAINTDIR=$(HOME)/hg/taint
+QEMUDIR=$(HOME)/hg/iferret-logging-new
+
+
+
+# Use these for qaint
+INCDIRS = -I . -I $(QAINTDIR)/common -I $(QEMUDIR) -I $(QEMUDIR)/target-i386 
+LIBDIRS = -L$(QAINTDIR)/qaint/lib
+LIBS = -lqaint -lpthread -static
+
+
+CFLAGS = -fno-inline -Dinline="" $(INCDIRS) $(LIBDIRS) -DIFERRET_BACKEND -DQAINT -pg
+
+
+
+OBJS = iferret.o iferret_info_flow.o iferret_open_fd.o iferret_log.o iferret_syscall_stack.o iferret_op_str.o int_set.o int_string_hashtable.o int_int_hashtable.o vslht.o
+SRCS = $(OBJS,.o=.c) 
+
+
+
+iferret_op_str.o: $(TD)/iferret_op_str.c
+	$(CC) $(CFLAGS) -c $(TD)/iferret_op_str.c 
+
+
+iferret_syscall_stack.o: $(TD)/iferret_syscall_stack.c
+	$(CC) $(CFLAGS) -c $(TD)/iferret_syscall_stack.c 
+
+
+
+qiferret: $(OBJS)
+	g++  -o qiferret $(INCDIRS) $(LIBDIRS) $(OBJS)  $(LIBS) -DQAINT
+
+
+
+clean:
+	rm -f $(OBJS)
+

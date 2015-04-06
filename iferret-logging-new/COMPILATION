@@ -1,0 +1,12 @@
+Configure with
+
+cd target-i386
+
+./make-iferret-code.pl
+
+cd ..
+
+./configure --disable-kqemu --prefix=/home/tleek/hg/iferret-logging-new/install --target-list=i386-softmmu  --disable-linux-user --disable-darwin-user  --extra-cflags="-I /home/tleek/hg/taint"
+
+make
+

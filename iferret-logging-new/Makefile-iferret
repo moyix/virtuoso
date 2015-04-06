@@ -1,0 +1,78 @@
+
+TD=target-i386
+ 
+QAINTDIR=$(HOME)/hg/taint
+OTAINTDIR=$(HOME)/hg/otaint
+QEMUDIR=$(HOME)/hg/iferret-logging-new
+
+
+
+# Use these for qaint
+QINCDIRS = -I . -I $(QAINTDIR)/common -I $(QEMUDIR) -I $(QEMUDIR)/target-i386 
+QLIBDIRS = -L$(QAINTDIR)/qaint/lib
+QLIBS = -lqaint -lpthread -static
+
+# for qaint
+CFLAGS =  -fno-inline -Dinline="" -DIFERRET_BACKEND 
+
+
+
+# for otaint
+OINCDIRS = -I . -I $(OTAINTDIR) -I $(QEMUDIR)/target-i386
+OLIBDIRS = -L$(OTAINTDIR)
+
+
+OBJS = iferret.o iferret_info_flow.o iferret_open_fd.o iferret_log.o iferret_syscall_stack.o iferret_op_str.o int_set.o int_string_hashtable.o int_int_hashtable.o vslht.o
+SRCS = $(OBJS,.o=.c) 
+
+
+
+
+
+iferret_info_flow.o: iferret_info_flow.c
+	$(CC) $(CFLAGS) -c iferret_info_flow.c
+
+iferret_open_fd.o: iferret_open_fd.c
+	$(CC) $(CFLAGS) -c iferret_open_fd.c 
+
+
+iferret_log.o: iferret_log.c
+	$(CC) $(CFLAGS) -c iferret_log.c 
+
+iferret_op_str.o: $(TD)/iferret_op_str.c
+	$(CC) $(CFLAGS) -c $(TD)/iferret_op_str.c 
+
+iferret_syscall.o: $(TD)/iferret_syscall.c
+	$(CC) $(CFLAGS) -c $(TD)/iferret_syscall.c 
+
+iferret_syscall_stack.o: $(TD)/iferret_syscall_stack.c
+	$(CC) $(CFLAGS) -c $(TD)/iferret_syscall_stack.c 
+
+int_set.o: int_set.c
+	$(CC) $(CFLAGS) -c int_set.c 
+
+int_string_hashtable.o: int_string_hashtable.c
+	$(CC) $(CFLAGS) -c int_string_hashtable.c 
+
+int_int_hashtable.o: int_int_hashtable.c
+	$(CC) $(CFLAGS) -c int_int_hashtable.c 
+
+vslht.o: vslht.c
+	$(CC) $(CFLAGS) -c vslht.c 
+
+
+
+
+
+
+qiferret: $(OBJS)
+	g++  -o qiferret $(QINCDIRS) $(QLIBDIRS) $(OBJS)  $(QLIBS) -DQAINT
+
+oiferret: $(OBJS)
+#	gcc $(OINCDIRS) -c iferret.c -DOTAINT
+	gcc  -o oiferret  $(OINCDIRS) $(OLIBDIRS) -I $(QEMUDIR)/target-i386 $(OBJS) $(OTAINTDIR)/taintlib.o $(OTAINTDIR)/taint_wrap.o -I /usr/local/lib/ocaml $(OINCDIRS) -L`/usr/local/bin/ocamlopt -where` -lasmrun -lcurses -lm -DOTAINT
+
+
+clean:
+	rm -f $(OBJS)
+

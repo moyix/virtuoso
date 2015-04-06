@@ -1,0 +1,46 @@
+
+// The file instructing iferret how and what to assign info-flow labels to consists of zero 
+// or more labeling instructions, each a single line. 
+iferret_labeling_file = labeling_instruction* 
+
+// Each instruction specifies something that needs to get labeled and how to label it.  
+labeling_instruction = what_to_label , how_to_label 
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+// The what_to_label part can take on a number of forms.  Here are a few possibilities. 
+
+// For any system call with number "syscall_num", executed by a process in the malicious set, 
+//   label the buffer pointed to by p (a 32-bit pointer), where p is the "p_arg_num"'th argument 
+//   to that syscall, and n is the length of that buffer, taken as the "n_arg_num"'th argument 
+//   to the syscall.  "buff_name" is a name for the buffer.  
+//   If "[proc]" exists, only label for this process. 
+what_to_label = syscall_param syscall_num buff_name p_arg_num n_arg_num [process]
+syscall_num = ddd
+p_arg_num = d
+process = (pid pid | pname process_name)
+pid = dddd
+process_name = ('a'-'z','A'-'Z','0-9')+
+
+// Whenever memory is accessed by a malicious process, label that memory.  
+// If "rw"=read then only label reads.  If "rw"=write then only label writes.
+// Can be restricted by process. 
+what_to_label = memory_access rw [process]
+rw = ("read"|"write")
+
+// Whenever any malicious process accesses a file with name "file_name", label the bytes read or written
+// Can be restricted by process, too. 
+what_to_label = file_access file_name rw [process]
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+// The how_to_label part is much simpler except that its contents  depend upon both the
+// what_to_label part and dynamically computed information.  If the [add_syscall_num] option exists,
+// e.g., then the string "syscall_num-233" will be part of the label.  If the [add_filename] option
+// exists and the what_to_label part told us to label all writes, then the name of the file will 
+// be part of the label.  
+how_to_label = label_suffix syscall_param [add_syscall_num] [add_buff_name] [add_buff_len] [add_time]
+how_to_label = label_suffix memory_access [add_rw] [add_proc] [time]
+how_to_label = label_suffix file_access [add_rw] [add_proc] [add_filename] [add_time]
+
